@@ -26,7 +26,7 @@ Os dados ficam em `data/state.json`, neste computador. A primeira execução cri
 - Backup exporta JSON. Restaurar importa um arquivo Doce Agenda v1 após validação e confirmação. Na versão local, uma cópia anterior é criada em `data/state.json.backup-*`; no piloto público, ela fica no armazenamento do navegador usado.
 - O piloto não tem conexão automática com WhatsApp, calendário integrado, formulário público de entrada, anexos/fotos ou lista de compras.
 
-O próximo passo é observar a amiga usando o fluxo de disponibilidade e personalização, sem tratar o piloto técnico como validação de mercado. Consulte [PROXIMAS_IMPLEMENTACOES.md](../PROXIMAS_IMPLEMENTACOES.md) para o diagnóstico, o que já foi implementado e as etapas futuras.
+O próximo passo é observar a amiga usando o fluxo de disponibilidade e personalização, sem tratar o piloto técnico como validação de mercado. Consulte [docs/PROXIMAS_IMPLEMENTACOES.md](docs/PROXIMAS_IMPLEMENTACOES.md) para o diagnóstico, o que já foi implementado e as etapas futuras.
 
 ## Verificação
 
