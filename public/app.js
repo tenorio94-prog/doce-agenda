@@ -49,6 +49,7 @@ const isCommitted = (order) => ["Confirmado", "Em produção", "Pronto", "Entreg
 const orderPayments = (orderId) => state.payments.filter((payment) => String(payment.orderId) === String(orderId));
 const confirmedPayments = (orderId) => orderPayments(orderId).filter((payment) => payment.status === "Conferido");
 const confirmedPaid = (orderId) => confirmedPayments(orderId).reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
+const hasReceivedPayment = (orderId) => confirmedPaid(orderId) > 0;
 const balanceFor = (order) => isCommitted(order) && confirmedPayments(order.id).length ? Number(order.total || 0) - confirmedPaid(order.id) : null;
 const balanceLabel = (balance) => balance === null ? "Ainda não conferido" : balance < 0 ? `Excedente ${money(Math.abs(balance))}` : money(balance);
 const statusSlug = (status) => ({
@@ -187,14 +188,14 @@ const shortTime = (value) => {
   const minutes = date.getMinutes();
   return minutes ? `${date.getHours()}h${String(minutes).padStart(2, "0")}` : `${date.getHours()}h`;
 };
-// A confirmed order with a known value and no confirmed payment yet: "falta o sinal".
-const needsDeposit = (order) => isCommitted(order) && !isFinished(order) && Number(order.total || 0) > 0 && !confirmedPayments(order.id).length;
+// A confirmed order with a known value and no amount actually received: "falta o sinal".
+const needsDeposit = (order) => isCommitted(order) && !isFinished(order) && Number(order.total || 0) > 0 && !hasReceivedPayment(order.id);
 
 function rowMarkup(order, options = {}) {
   const date = parseDate(order.dueAt);
   const dayLabel = date ? dateLabel(order.dueAt, { weekday: "short", day: "2-digit", month: "short" }) : "Sem data definida";
   const balance = balanceFor(order);
-  const paid = confirmedPayments(order.id).length > 0 && !isCancelled(order);
+  const paid = hasReceivedPayment(order.id) && !isCancelled(order);
   const stamp = paid ? `<span class="stamp">${balance !== null && balance <= 0 ? "Pago" : "Sinal pago"}</span>` : "";
   const summary = balance === null ? "" : `<span${balance > 0 ? ' class="row-balance"' : ""} title="Após pagamentos conferidos">${esc(balance < 0 ? balanceLabel(balance) : `Saldo ${money(balance)}`)}</span>`;
   const sample = order.isSample || order.isDemo || order.sample ? `<span class="sample-tag">Exemplo</span>` : "";
@@ -445,12 +446,12 @@ function detailMarkup(order) {
   const whenLabel = `${order.dueAt ? `${dateLabel(order.dueAt, { weekday: "short", day: "numeric", month: "short" }).replace(/\./g, "")} · ${shortTime(order.dueAt)}` : "Sem data"}`;
   const paidNow = confirmedPaid(order.id);
   const informedNow = payments.filter((payment) => payment.status === "Informado").reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
-  const lastConfirmed = payments.find((payment) => payment.status === "Conferido");
+  const lastConfirmed = payments.find((payment) => payment.status === "Conferido" && Number(payment.amount) > 0);
   const stampDay = lastConfirmed ? (parseDate(lastConfirmed.confirmedAt || lastConfirmed.createdAt) || null) : null;
   const stampDate = stampDay ? new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short" }).format(stampDay).replace(/\./g, "").replace(" de ", " ").toUpperCase() : "";
-  const depositCard = !isCommitted(order) || isCancelled(order) ? "" : confirmedPayments(order.id).length
+  const depositCard = !isCommitted(order) || isCancelled(order) ? "" : hasReceivedPayment(order.id)
     ? `<section class="deposit-card is-paid" aria-label="Sinal"><div class="deposit-top"><span class="deposit-label">Sinal</span><span>Total ${esc(money(order.total))}</span></div><div class="deposit-main"><div class="deposit-amount">${esc(money(paidNow))}</div><span class="stamp stamp-large"><span>${balance !== null && balance <= 0 ? "Pago" : "Sinal pago"}</span>${stampDate ? `<small>${esc(stampDate)}</small>` : ""}</span></div><div class="deposit-note">${balance !== null && balance > 0 ? `Falta ${esc(money(balance))} na ${order.mode === "Entrega" ? "entrega" : "retirada"}` : "Pagamento completo"}</div></section>`
-    : `<section class="deposit-card is-pending" aria-label="Sinal"><div class="deposit-top"><span class="deposit-label">Sinal</span><span>Total ${esc(money(order.total))}</span></div><div class="deposit-amount">${informedNow > 0 ? esc(money(informedNow)) : "—"}</div><div class="deposit-note">${informedNow > 0 ? "Informado pela cliente, ainda não conferido" : "Ainda não recebido"}</div></section>`;
+    : `<section class="deposit-card is-pending" aria-label="Sinal"><div class="deposit-top"><span class="deposit-label">Sinal</span><span>Total ${esc(money(order.total))}</span></div><div class="deposit-amount">${informedNow > 0 ? esc(money(informedNow)) : confirmedPayments(order.id).length ? esc(money(0)) : "—"}</div><div class="deposit-note">${informedNow > 0 ? "Informado pela cliente, ainda não conferido" : confirmedPayments(order.id).length ? "Conferido: nenhum valor recebido" : "Ainda não recebido"}</div></section>`;
   const pending = order.pendingChange ? `<div class="pending-banner"><strong>Alteração ainda pendente:</strong> ${esc(order.pendingChange)}</div>` : "";
   const details = order.details ? esc(order.details) : "Nenhum detalhe foi registrado ainda.";
   return `<div class="detail-shell">
