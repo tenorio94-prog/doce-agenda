@@ -8,7 +8,7 @@ const sourcePublic = path.join(webRoot, "public");
 const deployPublic = path.join(webRoot, "deploy-demo", "public");
 
 const requiredAssets = ["index.html", "app.js", "data-client.js", "tokens.css", "style.css", "logo.svg", "favicon.svg"];
-const requiredFonts = ["Lora.ttf", "Manrope.ttf", "Lora-OFL.txt", "Manrope-OFL.txt"];
+const requiredFonts = ["Fredoka.ttf", "Figtree.ttf", "Fredoka-OFL.txt", "Figtree-OFL.txt"];
 const adapterName = "browser-store.js";
 const exists = async (filePath) => access(filePath).then(() => true, () => false);
 

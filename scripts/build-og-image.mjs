@@ -4,7 +4,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { chromium } from "file:///C:/Users/Restore/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/index.mjs";
 
 // Generate the link-preview image with `node scripts/build-og-image.mjs`.
-// It renders scripts/og-image.html (local fonts, logo and a real app capture)
+// It renders scripts/og-image.html (local fonts, logo and HTML-drawn order cards)
 // at 1200x630 and writes public/landing/assets/og.jpg. No network is used and
 // nothing is published; rerun it whenever the capture or the headline changes.
 
@@ -23,8 +23,8 @@ try {
   const page = await browser.newPage({ viewport: { width: 1200, height: 630 }, deviceScaleFactor: 1 });
   await page.goto(pathToFileURL(source).href, { waitUntil: "networkidle" });
   await page.evaluate(() => document.fonts.ready);
-  const fontsOk = await page.evaluate(() => document.fonts.check("60px Lora") && document.fonts.check("16px Manrope"));
-  if (!fontsOk) throw new Error("Lora e Manrope precisam carregar de public/fonts/.");
+  const fontsOk = await page.evaluate(() => document.fonts.check("60px Fredoka") && document.fonts.check("16px Figtree"));
+  if (!fontsOk) throw new Error("Fredoka e Figtree precisam carregar de public/fonts/.");
   await page.screenshot({ path: output, type: "jpeg", quality: 88 });
 } finally {
   await browser.close();

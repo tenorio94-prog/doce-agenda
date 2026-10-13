@@ -5,30 +5,37 @@
 <title>Doce Agenda — imagem de compartilhamento</title>
 <style>
 /* Fonte da imagem public/landing/assets/og.jpg (1200x630). Gerada por scripts/build-og-image.mjs. */
-@font-face{font-family:Lora;src:url("../public/fonts/Lora.ttf") format("truetype");font-weight:400 700}
-@font-face{font-family:Manrope;src:url("../public/fonts/Manrope.ttf") format("truetype");font-weight:200 800}
-:root{--ink:#392923;--muted:#715f55;--terracotta:#a34432;--cream:#f3eadc;--arch:#e6d3bc}
+@font-face{font-family:Fredoka;src:url("../public/fonts/Fredoka.ttf") format("truetype");font-weight:300 700;font-stretch:75% 125%}
+@font-face{font-family:Figtree;src:url("../public/fonts/Figtree.ttf") format("truetype");font-weight:300 900}
+:root{--ameixa:#2b1a2c;--glace:#f7c5d0;--pistache:#d3e7c1;--baunilha:#fbe9a9;--carimbo:#2e6a46;--papel:#fffaf2;--soft:#4a3550}
 *{box-sizing:border-box}
 html,body{margin:0;width:1200px;height:630px;overflow:hidden}
-body{position:relative;background:var(--cream);color:var(--ink);font-family:Manrope,sans-serif}
-.brand{position:absolute;left:84px;top:72px;display:block;width:300px;height:auto}
-h1{position:absolute;left:84px;top:196px;width:590px;margin:0;font-family:Lora,Georgia,serif;font-size:60px;font-weight:500;line-height:1.14;letter-spacing:-.035em;text-wrap:balance}
-h1 em{color:var(--terracotta);font-style:normal;font-weight:400}
-.tag{position:absolute;left:84px;bottom:68px;margin:0;color:var(--muted);font-size:20px;font-weight:600;letter-spacing:.01em}
-/* Arco: topo arredondado como a foto do herói da landing (MA-3). */
-.arch{position:absolute;right:76px;bottom:0;width:480px;height:560px;border-radius:240px 240px 0 0;background:var(--arch);overflow:hidden}
-/* Captura real (agenda.webp, 390x844) recortada: cabeçalho da lista e os dois cartões de pedido. */
-.shot{position:absolute;left:24px;bottom:56px;width:432px;height:332px;border-radius:14px;overflow:hidden;box-shadow:0 18px 44px rgba(57,41,35,.2);background:#fbf7f0 url("../public/landing/assets/agenda.webp") no-repeat;background-size:444.6px 962.2px;background-position:-5.7px -256.5px}
-.fictional{position:absolute;left:0;right:0;top:132px;margin:0;text-align:center;color:var(--muted);font-size:16px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+body{position:relative;background:var(--glace);color:var(--ameixa);font-family:Figtree,sans-serif}
+.brand{position:absolute;left:84px;top:64px;display:block;width:290px;height:auto}
+h1{position:absolute;left:84px;top:178px;width:600px;margin:0;font-family:Fredoka,sans-serif;font-size:66px;font-weight:600;line-height:1.04;letter-spacing:-.02em}
+.tag{position:absolute;left:84px;bottom:64px;margin:0;color:var(--soft);font-size:22px;font-weight:600}
+.stack{position:absolute;right:72px;top:68px;width:392px;display:flex;flex-direction:column;gap:14px}
+.day{padding:20px 24px;border-radius:28px;background:var(--pistache);display:flex;align-items:baseline;gap:14px;font-family:Fredoka,sans-serif}
+.day b{font-size:84px;font-weight:600;line-height:.9;letter-spacing:-.03em}
+.day span{font-size:24px;font-weight:500;line-height:1.1}
+.card{position:relative;display:flex;gap:16px;padding:18px 22px;border-radius:24px;background:#fff}
+.card.pending{background:var(--baunilha)}
+.time{min-width:58px;font-family:Fredoka,sans-serif;font-size:26px;font-weight:600}
+.text{display:flex;flex-direction:column;gap:2px;font-size:17px;color:var(--soft)}
+.text b{font-size:21px;color:var(--ameixa)}
+.stamp{position:absolute;right:18px;top:50%;margin-top:-22px;padding:5px 11px;border:3px solid var(--carimbo);border-radius:8px;background:rgba(255,255,255,.88);color:var(--carimbo);font-family:Fredoka,sans-serif;font-size:16px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;transform:rotate(-8deg)}
+.fictional{margin:0;padding-left:8px;color:var(--soft);font-size:15px;font-weight:600}
 </style>
 </head>
 <body>
 <img class="brand" src="../public/logo.svg" alt="Doce Agenda">
-<h1>O combinado de cada encomenda, <em>em um só lugar.</em></h1>
+<h1>O combinado de cada encomenda, em um só lugar.</h1>
 <p class="tag">Agenda de encomendas para confeiteiras</p>
-<div class="arch">
+<div class="stack">
+  <div class="day"><b>3</b><span>encomendas para entregar</span></div>
+  <div class="card"><span class="time">15h</span><span class="text"><b>Bolo de aniversário</b>Marina · retirada</span><span class="stamp">Sinal pago</span></div>
+  <div class="card pending"><span class="time">17h</span><span class="text"><b>Torta de limão</b>Paulo · falta o sinal</span></div>
   <p class="fictional">Exemplo fictício</p>
-  <div class="shot" role="img" aria-label="Cartões de pedido da agenda (exemplo fictício)"></div>
 </div>
 </body>
 </html>

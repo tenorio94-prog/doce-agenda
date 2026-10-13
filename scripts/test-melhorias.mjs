@@ -53,7 +53,8 @@ try {
     // Sample detail
     await page.locator(".sample-card .order-row").click();
     await page.locator("#detail-dialog[open]").waitFor();
-    assert.equal((await page.locator("#detail-title").innerText()).trim(), "Marina");
+    assert.equal((await page.locator("#detail-title").innerText()).trim(), "Bolo de chocolate • 1,5 kg");
+    assert.match(await page.locator("#detail-content .detail-product").innerText(), /para Marina/);
     const inView = async (sel) => page.locator(sel).evaluate((el) => { const r = el.getBoundingClientRect(); return r.top >= 0 && r.bottom <= innerHeight; });
     assert.equal(await inView('#detail-dialog [data-action="copy-summary"]'), true, "copy visible without scrolling");
     assert.equal(await inView('#detail-dialog [data-action="edit-order"]'), true, "edit visible without scrolling");
@@ -66,7 +67,7 @@ try {
     await page.locator("#save-order-button").click();
     const toast = page.locator("#toast");
     await toast.locator(".toast-action").waitFor();
-    assert.match(await toast.innerText(), /Pedido salvo\./);
+    assert.match(await toast.innerText(), /Encomenda salva\./);
     assert.equal(await toast.locator(".toast-action").innerText(), "Copiar resumo");
     assert.equal(await overflow(), 0, `overflow after save ${width}`);
     await page.screenshot({ path: path.join(shots, `${tag}-toast-${width}.png`) });

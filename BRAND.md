@@ -2,57 +2,54 @@
 
 **Nome de trabalho:** Doce Agenda. Nome provisório, sem pesquisa de disponibilidade ou registro de marca.
 
-**Produto:** ferramenta web para confeiteiras organizarem pedidos e consultarem a semana.
+**Produto:** ferramenta web para confeiteiras organizarem encomendas e consultarem a semana.
 
 **Promessa:** pedidos e agenda da semana em um só lugar, do combinado à entrega. A marca fala de organização e acompanhamento; não promete vendas, ausência de erros ou resultados financeiros.
 
-## Personalidade e tom
+**Direção:** "Glacê + carimbo". A referência de design é o canvas "Versão final" (site, marca, Hoje, Nova encomenda, Pedido).
 
-Acolhedora, organizada e profissional. Escreva em português simples, com instruções curtas, nomes de campo claros e verbos diretos. Soe humana e respeitosa, sem infantilizar a confeiteira ou exagerar no açúcar, nos diminutivos e nos emojis. O "doce" vem de calor, cuidado e acabamento, não de ornamento.
+## Tom
 
-Dentro do app, use **pedido**. "Encomenda" fica só para textos de divulgação.
+Direto e acolhedor, sem diminutivo. Instruções curtas e verbos diretos. Nos botões e títulos do app: "Nova encomenda", "Salvar encomenda", "Quem pediu?", "O quê?", "Quando?". Mensagens de sucesso: "o que aconteceu + próximo passo" ("Encomenda salva. Copiar resumo"). Erros em português, nunca texto técnico de biblioteca.
 
-Mensagens de sucesso seguem o padrão "o que aconteceu + próximo passo":
-- "Pedido salvo. Copiar resumo"
-- "Pagamento informado. Confira antes de marcar como recebido."
+## Logo
 
-Mensagens de erro são sempre em português e dizem o que a pessoa pode fazer. Nunca mostre texto técnico de biblioteca.
+"doce agenda" em Fredoka, com um fio de glacê e uma gota embaixo. A gota é o ícone do app (`public/favicon.svg`; os PNGs do manifest saem de `node scripts/build-icons.mjs`). O logo (`public/logo.svg`) tem o texto convertido em curvas e é gerado por `python scripts/build-logo.py`.
 
-## Tipografia
+## Cores e o que significam
 
-- **Lora:** título de cada página, nome da cliente no detalhe do pedido e títulos da página de apresentação.
-- **Manrope:** interface e todo dado (horários, valores, contagens), com algarismos alinhados (`lining-nums tabular-nums`).
-
-As fontes ficam em `public/fonts/`, sem CDN. Nenhum texto abaixo de 12 px.
-
-## Cores e seus papéis
-
-| Cor | Valor | Papel |
+| Cor | Valor | Quando usar |
 |---|---|---|
-| Papel | `#fbf7f0` | fundo |
-| Cartão | `#fffefa` | cartões e modais |
-| Creme | `#f3eadc` | agrupamento e calor da marca (faixa do demo, blocos de contexto) |
-| Tinta | `#392923` | texto principal |
-| Suave | `#6f5b51` | texto secundário |
-| Coral | `#a34432` (escuro `#843524`, claro `#f8e8e1`) | só ação e marca: um botão principal por tela, links, "Novo" |
-| Sálvia | `#42644c` | "está combinado, está certo": confirmado, conferido, salvo, foco |
-| Dourado | `#79521d` | "falta algo": aguardando, saldo pendente |
-| Erro | `#a32e34` | problema; sempre com ícone e texto, nunca sozinho |
+| Glacê | `#f7c5d0` | a marca: topo das telas, cabeçalho das janelas e destaques |
+| Baunilha | `#fbe9a9` | atenção: falta o sinal, faixa de demonstração |
+| Pistache | `#d3e7c1` | tudo certo: pronta, resumo do dia |
+| Branco | `#ffffff` | pedido normal, sem pendência |
+| Ameixa | `#2b1a2c` | texto e botão principal |
+| Carimbo | `#2e6a46` | carimbo de sinal pago e anel de foco |
+| Papel | `#fffaf2` | fundo |
 
-O coral não é cor de situação. Cada situação do pedido tem sua cor, igual no selo e na barra lateral do cartão, e o selo sempre traz o texto. Bordas de campos usam `#9f8b7f`, que garante contraste de 3:1.
+Texto secundário `#66536a` e `#4a3550`; link `#8f2a4f`. Bordas de campos `#9c8290` (contraste 3,49:1; o `#d9c6cf` do canvas não passa dos 3:1 exigidos para controles). Todos os valores vivem em `public/tokens.css`; as folhas antigas usam aliases dele e podem ser migradas aos poucos.
 
-## Assinatura e forma
+## Letras
 
-A marca é a assinatura tipográfica "Doce Agenda" com o traço curvo (`public/logo.svg`). O traço não indica funcionalidade e não vira indicador de interface. O guia completo está em `brand/identidade-v2/GUIA-MARCA.md`.
+- **Fredoka:** só títulos, horários e números.
+- **Figtree:** todo o resto.
 
-O arco (topo arredondado da foto da página de apresentação) é a única forma própria da marca. Use só em superfícies de divulgação: página de apresentação e imagem de compartilhamento. Dentro do app, nenhuma forma decorativa.
+Ambas em `public/fonts/` (SIL OFL 1.1), servidas localmente. Nenhum texto abaixo de 12 px.
 
-Ícone instalado e imagem de compartilhamento são gerados por `node scripts/build-icons.mjs` e `node scripts/build-og-image.mjs`.
+## Carimbo
+
+"Sinal pago" aparece quando a confeiteira confirma que recebeu (pagamento conferido), com a data. O sinal só conta depois de confirmado. Sem animação com `prefers-reduced-motion`.
+
+## Forma
+
+Cartões com cantos de 24 a 28 px e botões em pílula. O fio de glacê com gotas separa o topo da página do conteúdo.
 
 ## Regras
 
 - Nenhuma dependência externa: sem fontes de CDN, analytics, widgets ou bibliotecas de ícones.
 - Alvos de toque de pelo menos 44 px.
-- Foco de teclado sempre visível: anel sálvia de 3 px.
-- Respeitar `prefers-reduced-motion`; microinterações discretas.
+- Foco de teclado sempre visível (anel de 3 px em `--carimbo`).
+- Respeitar `prefers-reduced-motion`.
 - Modo claro apenas (`color-scheme: light`).
+- Imagem de compartilhamento: `node scripts/build-og-image.mjs`.

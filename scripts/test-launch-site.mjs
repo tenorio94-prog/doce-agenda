@@ -126,14 +126,10 @@ try {
     height: img.naturalHeight,
   })));
   assert.ok(images.some((image) => image.width > 0 && image.height > 0), "Landing logo or photo must load.");
-  assert.ok(
-    images.some((image) => image.width > 0 && image.height > 0 && !/logo|marca/i.test(`${image.src} ${image.alt}`)),
-    `Landing must load its product photo; loaded images: ${JSON.stringify(images)}`,
-  );
   assert.equal(await landing.evaluate(async () => {
     await document.fonts.ready;
-    return document.fonts.check("12px Lora") && document.fonts.check("12px Manrope");
-  }), true, "Lora and Manrope must load.");
+    return (await Promise.all([document.fonts.load("16px Fredoka"), document.fonts.load("16px Figtree")])).every((faces) => faces.length > 0);
+  }), true, "Fredoka and Figtree must load.");
 
   // Resolve same-origin anchor targets with GETs, including the legacy pilot route.
   const linkedTargets = await landing.locator("a[href]").evaluateAll((links) =>
@@ -160,7 +156,7 @@ try {
   assert.equal(await metaContent('meta[property="og:image"]'), "https://doce-agenda-piloto.netlify.app/landing/assets/og.jpg");
   assert.equal(await metaContent('meta[property="og:image:width"]'), "1200");
   assert.equal(await metaContent('meta[property="og:image:height"]'), "630");
-  assert.equal(await metaContent('meta[name="theme-color"]'), "#fbf7f0");
+  assert.equal(await metaContent('meta[name="theme-color"]'), "#f7c5d0");
   const ogImage = await landingContext.request.get(new URL("/landing/assets/og.jpg", origin).href);
   assert.equal(ogImage.status(), 200, "og.jpg must be served.");
   assert.equal(ogImage.headers()["content-type"], "image/jpeg");
@@ -175,8 +171,8 @@ try {
   assert.equal(manifest.name, "Doce Agenda");
   assert.equal(manifest.lang, "pt-BR");
   assert.equal(manifest.display, "standalone");
-  assert.equal(manifest.theme_color, "#fbf7f0");
-  assert.equal(manifest.background_color, "#fbf7f0");
+  assert.equal(manifest.theme_color, "#f7c5d0");
+  assert.equal(manifest.background_color, "#fffaf2");
   assert.equal(manifest.start_url, "/app/");
   assert.equal(manifest.scope, "/app/");
   for (const size of [192, 512]) {
@@ -193,7 +189,7 @@ try {
   const heroNote = landing.locator(".hero-note");
   assert.equal(await heroNote.count(), 1, "Hero should have a single note line.");
   assert.match(await heroNote.innerText(), /Grátis no piloto · Sem cartão · Funciona no celular.*Estamos construindo junto com confeiteiras/s);
-  assert.equal(await heroNote.evaluate((element) => getComputedStyle(element).fontSize), "13px");
+  assert.equal(await heroNote.evaluate((element) => getComputedStyle(element).fontSize), "14px");
   const demoFaq = landing.locator("details", { hasText: "E a demonstração, guarda meus pedidos?" });
   assert.equal(await demoFaq.count(), 1, "FAQ must include the demo storage question.");
   assert.match(await demoFaq.locator("p").textContent(), /Só neste navegador\. Se você limpar os dados do navegador, eles somem\. No próprio demo dá para baixar uma cópia de segurança\./);

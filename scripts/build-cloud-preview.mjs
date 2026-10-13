@@ -45,7 +45,7 @@ await build({ entryPoints: [path.join(root, 'cloud', 'app-bootstrap.js')], outfi
 let landing = await readFile(path.join(output, 'index.html'), 'utf8');
 landing = landing.replace('href="/app/">Abrir minha agenda', 'href="/cadastro/?mode=login">Entrar')
   .replaceAll('href="/app/">Experimentar o piloto', 'href="/cadastro/">Criar minha conta')
-  .replace('href="/app/">Experimentar sem cadastro', 'href="/demo/">Experimentar sem cadastro')
+  .replaceAll('href="/app/">Experimentar sem cadastro', 'href="/demo/">Experimentar sem cadastro')
   .replace('class="text-link" href="/app/">Abrir minha agenda', 'class="text-link" href="/cadastro/">Criar minha conta')
   .replace('href="/app/">Experimentar a demonstração sem cadastro', 'href="/demo/">Experimentar a demonstração sem cadastro')
   .replace('<a class="text-link" href="#como-funciona">Como funciona</a>', '<a class="text-link" href="/demo/">Ver demonstração</a>')

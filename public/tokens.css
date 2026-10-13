@@ -1,46 +1,71 @@
-/* Tokens compartilhados do Doce Agenda. Carregado antes de style.css, landing.css e account.css.
-   Cada folha ainda declara seus próprios valores; migre para estes tokens um componente por vez. */
+/* Tokens compartilhados do Doce Agenda: paleta "Glacê + carimbo", fontes e aliases.
+   Carregado antes de style.css, landing.css e account.css, nas três páginas.
+   Fredoka (títulos, horários e números) e Figtree (todo o resto): SIL OFL 1.1, servidas
+   localmente de /fonts, sem CDN. */
+@font-face { font-family: "Fredoka"; src: url("/fonts/Fredoka.ttf") format("truetype"); font-style: normal; font-weight: 300 700; font-stretch: 75% 125%; font-display: swap; }
+@font-face { font-family: "Figtree"; src: url("/fonts/Figtree.ttf") format("truetype"); font-style: normal; font-weight: 300 900; font-display: swap; }
+
 :root {
   color-scheme: light;
 
-  /* Superfícies */
-  --paper: #fbf7f0;
-  --card: #fffefa;
-  --cream: #f3eadc;
-  --line: #e7dcd1;
-  --border-input: #9f8b7f; /* 3,21:1 no cartão (WCAG 1.4.11) */
+  /* Marca: o que cada cor significa (ver BRAND.md) */
+  --glace: #f7c5d0;      /* a marca: topo das telas e destaques */
+  --baunilha: #fbe9a9;   /* atenção: falta o sinal */
+  --pistache: #d3e7c1;   /* tudo certo: pronta, resumo do dia */
+  --branco: #ffffff;     /* pedido normal, sem pendência */
+  --ameixa: #2b1a2c;     /* texto e botão principal */
+  --carimbo: #2e6a46;    /* carimbo de sinal pago */
 
-  /* Texto */
-  --ink: #392923;
-  --muted: #6f5b51;
-  --faint: #7a665b; /* não usar sobre --cream em texto pequeno */
-
-  /* Ação e marca */
-  --action: #a34432;
-  --action-hover: #843524;
-  --action-soft: #f8e8e1;
-
-  /* Semântica */
-  --ok: #42644c;    --ok-soft: #e8f0e8;    /* confirmado, conferido, salvo, foco */
-  --wait: #79521d;  --wait-soft: #fbf0d9;  /* aguardando, falta algo */
-  --work: #46566f;  --work-soft: #e9edf2;  /* em produção */
-  --ready: #2f5d52; --ready-soft: #e3eeea; /* pronto */
-  --done: #5c5049;  --done-soft: #ece6df;  /* entregue */
-  --error: #a32e34; --error-soft: #fce9e7; /* sempre com ícone + texto */
-  --focus: #42644c;
+  /* Superfícies e texto */
+  --papel: #fffaf2;
+  --ink: var(--ameixa);  /* 15,7:1 no papel */
+  --ink-soft: #4a3550;   /* 9,0:1 na baunilha */
+  --muted: #66536a;      /* 6,7:1 no papel, 4,6:1 no glacê */
+  --link: #8f2a4f;       /* 7,7:1 no papel, 5,3:1 no glacê */
+  --line: #ecdfe3;       /* bordas decorativas de cartão */
+  --border-input: #9c8290; /* bordas de controles: 3,49:1 (WCAG 1.4.11) */
+  --placeholder: #7a667d;
+  --segmented: #f3e6ea;
+  --error: #a32e34;
+  --error-soft: #fce9e7;
+  --focus: var(--carimbo);
 
   /* Tipografia */
-  --font-title: "Lora", Georgia, "Times New Roman", serif;
-  --font-body: "Manrope", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-title: "Fredoka", ui-rounded, "Segoe UI", system-ui, sans-serif;
+  --font-body: "Figtree", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --text-xs: 12px; --text-sm: 13px; --text-md: 15px;
   --text-lg: 18px; --text-xl: 22px; --text-2xl: 28px;
-  --text-display: clamp(38px, 6vw, 76px);
+  --text-display: clamp(42px, 6.6vw, 84px);
 
   /* Espaço, raio, toque */
   --space-1: 4px; --space-2: 8px; --space-3: 12px;
   --space-4: 16px; --space-5: 24px; --space-6: 32px; --space-7: 48px;
-  --radius-sm: 9px; --radius-md: 12px; --radius-lg: 16px; --radius-arch: 160px;
+  --radius-sm: 16px; --radius-md: 24px; --radius-lg: 28px; --radius-pill: 999px;
   --tap: 44px;
-  --shadow-1: 0 4px 16px rgb(74 47 35 / 4%);
-  --shadow-2: 0 16px 42px rgb(74 47 35 / 8%);
+  --shadow-1: 0 4px 16px rgb(43 26 44 / 6%);
+  --shadow-2: 0 16px 42px rgb(43 26 44 / 10%);
+
+  /* Aliases das folhas antigas, para migrar um componente por vez */
+  --paper: var(--papel);
+  --card: var(--branco);
+  --surface: var(--branco);
+  --cream: var(--segmented);
+  --faint: var(--muted);
+  --coral: var(--ameixa);          /* ação principal */
+  --coral-dark: var(--link);       /* links e destaques */
+  --coral-soft: var(--glace);
+  --action: var(--ameixa);
+  --action-hover: var(--ink-soft);
+  --terracotta: var(--link);
+  --terracotta-dark: #6f1f3c;
+  --sage: var(--carimbo);
+  --sage-soft: var(--pistache);
+  --gold: #6b4a00;
+  --gold-soft: var(--baunilha);
+  --da-border: var(--border-input);
+  --da-title: var(--font-title);
+  --da-body: var(--font-body);
+  --serif: var(--font-title);
+  --sans: var(--font-body);
+  --shadow: var(--shadow-2);
 }

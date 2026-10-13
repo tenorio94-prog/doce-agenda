@@ -357,14 +357,14 @@ try {
   // Visible keyboard focus and field borders (WCAG 2.4.7 / 1.4.11).
   await errorPage.goto(`${origin}/cadastro/`, { waitUntil: "networkidle" });
   const fieldBorder = await errorPage.locator("#signup-email").evaluate((node) => getComputedStyle(node).borderTopColor);
-  assert.equal(fieldBorder, "rgb(159, 139, 127)", "Field border must be #9f8b7f.");
+  assert.equal(fieldBorder, "rgb(156, 130, 144)", "Field border must be #9c8290.");
   await errorPage.locator("#signup-email").focus();
-  await errorPage.waitForFunction(() => getComputedStyle(document.getElementById("signup-email")).borderTopColor === "rgb(66, 100, 76)"); // border transition (.15s)
+  await errorPage.waitForFunction(() => getComputedStyle(document.getElementById("signup-email")).borderTopColor === "rgb(46, 106, 70)"); // border transition (.15s)
   const focusStyle = await errorPage.locator("#signup-email").evaluate((node) => {
     const style = getComputedStyle(node);
     return { style: style.outlineStyle, width: style.outlineWidth, color: style.outlineColor, offset: style.outlineOffset, shadow: style.boxShadow, border: style.borderTopColor };
   });
-  assert.deepEqual(focusStyle, { style: "solid", width: "3px", color: "rgb(66, 100, 76)", offset: "2px", shadow: "none", border: "rgb(66, 100, 76)" }, "Focused field must show a 3px sage ring.");
+  assert.deepEqual(focusStyle, { style: "solid", width: "3px", color: "rgb(46, 106, 70)", offset: "2px", shadow: "none", border: "rgb(46, 106, 70)" }, "Focused field must show a 3px sage ring.");
   // Type scale for the signup card: hint and terms at 13px, eyebrows at 12px with .08em tracking.
   const metrics = await errorPage.evaluate(() => {
     const read = (selector) => { const style = getComputedStyle(document.querySelector(selector)); return { size: style.fontSize, spacing: style.letterSpacing }; };
@@ -427,7 +427,7 @@ try {
       await installTestProvider(page);
       await page.goto(`${origin}/cadastro/${query}`, { waitUntil: "networkidle" });
       await page.evaluate(() => document.fonts.ready);
-      assert.equal(await page.evaluate(() => document.fonts.check("16px Lora") && document.fonts.check("16px Manrope")), true, `Local fonts must load at ${width}px in ${mode}.`);
+      assert.equal(await page.evaluate(async () => (await Promise.all([document.fonts.load("16px Fredoka"), document.fonts.load("16px Figtree")])).every((faces) => faces.length > 0)), true, `Local fonts must load at ${width}px in ${mode}.`);
       const form = page.locator(`#${mode}-form`);
       assert.equal(await form.isVisible(), true, `Expected ${mode} form at ${width}px.`);
       assert.equal(await page.locator("#signup-business-name").count(), 1, "Business name control should be in shared markup.");

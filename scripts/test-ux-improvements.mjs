@@ -293,15 +293,16 @@ try {
   assert.deepEqual(await accountPage.evaluate(() => window.__resetCalls), []);
   await accountContext.close();
 
-  // The landing renders all three source screenshots and keeps its local signup/demo paths.
+  // The landing shows the day preview and keeps its local signup/demo paths.
   const landingContext = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
   const landing = await landingContext.newPage(); watch(landing);
   await landing.goto(origin, { waitUntil: "networkidle" });
-  const imageResults = await landing.locator(".product-tour-grid img").evaluateAll(async (images) => Promise.all(images.map(async (image) => { image.loading = "eager"; await image.decode(); return { src: new URL(image.src).pathname, width: image.naturalWidth, height: image.naturalHeight }; })));
-  assert.equal(imageResults.length, 3); assert.ok(imageResults.every((image) => image.width > 0 && image.height > 0));
+  const logo = await landing.locator("header .brand img").evaluate(async (image) => { await image.decode(); return { width: image.naturalWidth, height: image.naturalHeight }; });
+  assert.ok(logo.width > 0 && logo.height > 0, "Logo must load.");
+  assert.equal(await landing.locator(".preview-stack .stamp").count(), 1);
   assert.ok(await landing.locator('a[href="/cadastro/"]').count() >= 1);
   assert.ok(await landing.locator('a[href="/demo/"]').count() >= 1);
-  const tour = landing.locator(".product-tour"); await tour.scrollIntoViewIfNeeded();
+  const tour = landing.locator(".preview-stack"); await tour.scrollIntoViewIfNeeded();
   await tour.screenshot({ path: path.join(screenshotRoot, "landing-desktop.png") });
   await landing.setViewportSize({ width: 390, height: 844 }); await tour.scrollIntoViewIfNeeded();
   await tour.screenshot({ path: path.join(screenshotRoot, "landing-mobile.png") });

@@ -4,13 +4,13 @@ import { fileURLToPath } from "node:url";
 import { chromium } from "file:///C:/Users/Restore/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/index.mjs";
 
 // Generate the installed-app icons with `node scripts/build-icons.mjs`.
-// The source is design/brand-refresh/app-icon.svg. The PNGs are full-bleed
+// The source is public/favicon.svg. The PNGs are full-bleed
 // squares (the SVG's rounded corners are dropped) because iOS and Android apply
 // their own mask; the "D" stays inside the maskable safe zone. Nothing is published.
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const webRoot = path.resolve(scriptDir, "..");
-const source = path.join(webRoot, "design", "brand-refresh", "app-icon.svg");
+const source = path.join(webRoot, "public", "favicon.svg");
 const outDir = path.join(webRoot, "public", "icons");
 const targets = [
   { file: "apple-touch-icon.png", size: 180 },
@@ -20,7 +20,7 @@ const targets = [
 
 const svg = (await readFile(source, "utf8")).replace(/(<rect[^>]*?)\srx="[^"]*"/, "$1");
 if (!svg.includes("<rect") || /<rect[^>]*\srx=/.test(svg)) {
-  throw new Error("Não consegui remover o raio do ícone em app-icon.svg.");
+  throw new Error("Não consegui remover o raio do ícone em favicon.svg.");
 }
 const dataUrl = `data:image/svg+xml;base64,${Buffer.from(svg).toString("base64")}`;
 

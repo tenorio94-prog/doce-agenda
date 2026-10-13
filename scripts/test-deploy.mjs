@@ -5,7 +5,7 @@ import {fileURLToPath} from 'node:url';
 import path from 'node:path';
 import {chromium} from 'file:///C:/Users/Restore/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/index.mjs';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
-const files={'/':'index.html','/app.js':'app.js','/data-client.js':'data-client.js','/browser-store.js':'browser-store.js','/tokens.css':'tokens.css','/style.css':'style.css','/logo.svg':'logo.svg','/favicon.svg':'favicon.svg','/fonts/Lora.ttf':'fonts/Lora.ttf','/fonts/Manrope.ttf':'fonts/Manrope.ttf'};
+const files={'/':'index.html','/app.js':'app.js','/data-client.js':'data-client.js','/browser-store.js':'browser-store.js','/tokens.css':'tokens.css','/style.css':'style.css','/logo.svg':'logo.svg','/favicon.svg':'favicon.svg','/fonts/Fredoka.ttf':'fonts/Fredoka.ttf','/fonts/Figtree.ttf':'fonts/Figtree.ttf'};
 let server;let origin=process.env.DEPLOY_TEST_ORIGIN;
 if(!origin){server=http.createServer(async(req,res)=>{const pathname=new URL(req.url,'http://localhost').pathname;const f=files[pathname];if(!f){res.writeHead(404);res.end();return;}const contentType={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.svg':'image/svg+xml','.ttf':'font/ttf'}[path.extname(f)];res.writeHead(200,{'Content-Type':contentType});res.end(await readFile(path.join(root,'deploy-demo/public',f)));});await new Promise(r=>server.listen(0,'127.0.0.1',r));origin=`http://localhost:${server.address().port}`;}
 const browser=await chromium.launch({headless:true,executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe'});
@@ -16,7 +16,7 @@ try{
  await page.locator('#order-form [name=client]').fill('Cliente teste • fictícia');await page.locator('#order-form [name=product]').fill('Bolo de cenoura • teste');
  await page.locator('#order-form [name=dueDate]').fill('2026-10-01');await page.locator('#order-form [name=dueTime]').fill('16:00');await page.locator('#order-form [name=total]').fill('150');await page.locator('#order-form [name=status]').selectOption('Confirmado');
  await page.locator('#save-order-button').click();await page.waitForFunction(()=>!document.querySelector('#order-dialog').open);
- assert.equal(await page.evaluate(async()=>{await document.fonts.ready;return document.fonts.check('12px Lora')&&document.fonts.check('12px Manrope');}),true,'Local Lora and Manrope fonts must load from the test server.');
+ assert.equal(await page.evaluate(async()=>{await document.fonts.ready;return (await Promise.all([document.fonts.load('16px Fredoka'),document.fonts.load('16px Figtree')])).every((faces)=>faces.length>0);}),true,'Local Fredoka and Figtree fonts must load from the test server.');
  let state=await page.evaluate(async()=>await(await window.DoceStore.fetch('/api/state')).json());const o=state.orders.find(x=>x.client==='Cliente teste • fictícia');assert.ok(o);
  await page.reload();await page.locator('#view-today h1').waitFor();state=await page.evaluate(async()=>await(await window.DoceStore.fetch('/api/state')).json());assert.ok(state.orders.some(x=>x.id===o.id));
  await page.locator('[data-view="orders"].nav-item').click();await page.locator(`#view-orders [data-open-order="${o.id}"]`).first().click();await page.locator('#detail-dialog').waitFor();
