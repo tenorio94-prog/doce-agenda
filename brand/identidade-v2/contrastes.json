@@ -1,0 +1,158 @@
+{
+  "proposta": [
+    {
+      "uso": "Texto / fundo",
+      "frente": "#392923",
+      "fundo": "#FBF7F0",
+      "razao": 12.9762,
+      "minimo": 4.5,
+      "passa": true
+    },
+    {
+      "uso": "Texto / cartão",
+      "frente": "#392923",
+      "fundo": "#FFFEFA",
+      "razao": 13.7316,
+      "minimo": 4.5,
+      "passa": true
+    },
+    {
+      "uso": "Apoio / fundo",
+      "frente": "#6F5B51",
+      "fundo": "#FBF7F0",
+      "razao": 5.9749,
+      "minimo": 4.5,
+      "passa": true
+    },
+    {
+      "uso": "Apoio / cartão",
+      "frente": "#6F5B51",
+      "fundo": "#FFFEFA",
+      "razao": 6.3228,
+      "minimo": 4.5,
+      "passa": true
+    },
+    {
+      "uso": "Botão: branco / ação",
+      "frente": "#FFFFFF",
+      "fundo": "#A34432",
+      "razao": 6.1221,
+      "minimo": 4.5,
+      "passa": true
+    },
+    {
+      "uso": "Botão hover: branco / ação",
+      "frente": "#FFFFFF",
+      "fundo": "#843524",
+      "razao": 8.3472,
+      "minimo": 4.5,
+      "passa": true
+    },
+    {
+      "uso": "Link / fundo",
+      "frente": "#A34432",
+      "fundo": "#FBF7F0",
+      "razao": 5.7327,
+      "minimo": 4.5,
+      "passa": true
+    },
+    {
+      "uso": "Sucesso / fundo de sucesso",
+      "frente": "#42644C",
+      "fundo": "#E8F0E8",
+      "razao": 5.7174,
+      "minimo": 4.5,
+      "passa": true
+    },
+    {
+      "uso": "Aviso / fundo de aviso",
+      "frente": "#79521D",
+      "fundo": "#FBF0D9",
+      "razao": 6.1126,
+      "minimo": 4.5,
+      "passa": true
+    },
+    {
+      "uso": "Erro / fundo de erro",
+      "frente": "#A32E34",
+      "fundo": "#FCE9E7",
+      "razao": 5.9875,
+      "minimo": 4.5,
+      "passa": true
+    },
+    {
+      "uso": "Pendente / fundo pendente",
+      "frente": "#71553B",
+      "fundo": "#F3EADC",
+      "razao": 5.7472,
+      "minimo": 4.5,
+      "passa": true
+    },
+    {
+      "uso": "Contorno de controle / cartão",
+      "frente": "#9F8B7F",
+      "fundo": "#FFFEFA",
+      "razao": 3.2144,
+      "minimo": 3,
+      "passa": true
+    },
+    {
+      "uso": "Contorno de controle / fundo",
+      "frente": "#9F8B7F",
+      "fundo": "#FBF7F0",
+      "razao": 3.0376,
+      "minimo": 3,
+      "passa": true
+    },
+    {
+      "uso": "Foco / cartão",
+      "frente": "#42644C",
+      "fundo": "#FFFEFA",
+      "razao": 6.5875,
+      "minimo": 3,
+      "passa": true
+    },
+    {
+      "uso": "Foco / fundo",
+      "frente": "#42644C",
+      "fundo": "#FBF7F0",
+      "razao": 6.2251,
+      "minimo": 3,
+      "passa": true
+    },
+    {
+      "uso": "Área do botão / fundo",
+      "frente": "#A34432",
+      "fundo": "#FBF7F0",
+      "razao": 5.7327,
+      "minimo": 3,
+      "passa": true
+    }
+  ],
+  "atual": [
+    {
+      "uso": "Botão atual: branco / coral",
+      "frente": "#FFFFFF",
+      "fundo": "#CB6858",
+      "razao": 3.71
+    },
+    {
+      "uso": "Apoio atual / fundo",
+      "frente": "#85756D",
+      "fundo": "#FBF8F3",
+      "razao": 4.1622
+    },
+    {
+      "uso": "Nota fraca atual / cartão",
+      "frente": "#B2A49C",
+      "fundo": "#FFFEFA",
+      "razao": 2.3965
+    },
+    {
+      "uso": "Foco atual 32% / fundo",
+      "frente": "#ECCAC1",
+      "fundo": "#FBF8F3",
+      "razao": 1.438
+    }
+  ]
+}

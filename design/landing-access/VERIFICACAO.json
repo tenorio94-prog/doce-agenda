@@ -1,0 +1,230 @@
+{
+  "date": "2026-10-01T20:58:10.346Z",
+  "checks": [
+    {
+      "screen": "landing",
+      "width": 320,
+      "scroll": 320,
+      "heading": "O combinado de cada encomenda, em um só lugar.",
+      "fonts": true
+    },
+    {
+      "screen": "signup",
+      "width": 320,
+      "scroll": 320,
+      "heading": "Crie sua conta",
+      "fonts": true
+    },
+    {
+      "screen": "login",
+      "width": 320,
+      "scroll": 320,
+      "heading": "Entre na sua conta",
+      "fonts": true
+    },
+    {
+      "screen": "recovery",
+      "width": 320,
+      "scroll": 320,
+      "heading": "Vamos ajudar você a entrar",
+      "fonts": true
+    },
+    {
+      "screen": "verify",
+      "width": 320,
+      "scroll": 320,
+      "heading": "Confira sua caixa de entrada",
+      "fonts": true
+    },
+    {
+      "screen": "setup",
+      "width": 320,
+      "scroll": 320,
+      "heading": "Vamos organizar sua agenda",
+      "fonts": true
+    },
+    {
+      "screen": "firstorder",
+      "width": 320,
+      "scroll": 320,
+      "heading": "Cadastre o primeiro pedido",
+      "fonts": true
+    },
+    {
+      "screen": "done",
+      "width": 320,
+      "scroll": 320,
+      "heading": "Prévia do pedido na agenda",
+      "fonts": true
+    },
+    {
+      "screen": "landing",
+      "width": 390,
+      "scroll": 390,
+      "heading": "O combinado de cada encomenda, em um só lugar.",
+      "fonts": true
+    },
+    {
+      "screen": "signup",
+      "width": 390,
+      "scroll": 390,
+      "heading": "Crie sua conta",
+      "fonts": true
+    },
+    {
+      "screen": "login",
+      "width": 390,
+      "scroll": 390,
+      "heading": "Entre na sua conta",
+      "fonts": true
+    },
+    {
+      "screen": "recovery",
+      "width": 390,
+      "scroll": 390,
+      "heading": "Vamos ajudar você a entrar",
+      "fonts": true
+    },
+    {
+      "screen": "verify",
+      "width": 390,
+      "scroll": 390,
+      "heading": "Confira sua caixa de entrada",
+      "fonts": true
+    },
+    {
+      "screen": "setup",
+      "width": 390,
+      "scroll": 390,
+      "heading": "Vamos organizar sua agenda",
+      "fonts": true
+    },
+    {
+      "screen": "firstorder",
+      "width": 390,
+      "scroll": 390,
+      "heading": "Cadastre o primeiro pedido",
+      "fonts": true
+    },
+    {
+      "screen": "done",
+      "width": 390,
+      "scroll": 390,
+      "heading": "Prévia do pedido na agenda",
+      "fonts": true
+    },
+    {
+      "screen": "landing",
+      "width": 430,
+      "scroll": 430,
+      "heading": "O combinado de cada encomenda, em um só lugar.",
+      "fonts": true
+    },
+    {
+      "screen": "signup",
+      "width": 430,
+      "scroll": 430,
+      "heading": "Crie sua conta",
+      "fonts": true
+    },
+    {
+      "screen": "login",
+      "width": 430,
+      "scroll": 430,
+      "heading": "Entre na sua conta",
+      "fonts": true
+    },
+    {
+      "screen": "recovery",
+      "width": 430,
+      "scroll": 430,
+      "heading": "Vamos ajudar você a entrar",
+      "fonts": true
+    },
+    {
+      "screen": "verify",
+      "width": 430,
+      "scroll": 430,
+      "heading": "Confira sua caixa de entrada",
+      "fonts": true
+    },
+    {
+      "screen": "setup",
+      "width": 430,
+      "scroll": 430,
+      "heading": "Vamos organizar sua agenda",
+      "fonts": true
+    },
+    {
+      "screen": "firstorder",
+      "width": 430,
+      "scroll": 430,
+      "heading": "Cadastre o primeiro pedido",
+      "fonts": true
+    },
+    {
+      "screen": "done",
+      "width": 430,
+      "scroll": 430,
+      "heading": "Prévia do pedido na agenda",
+      "fonts": true
+    },
+    {
+      "screen": "landing",
+      "width": 1440,
+      "scroll": 1440,
+      "heading": "O combinado de cada encomenda, em um só lugar.",
+      "fonts": true
+    },
+    {
+      "screen": "signup",
+      "width": 1440,
+      "scroll": 1440,
+      "heading": "Crie sua conta",
+      "fonts": true
+    },
+    {
+      "screen": "login",
+      "width": 1440,
+      "scroll": 1440,
+      "heading": "Entre na sua conta",
+      "fonts": true
+    },
+    {
+      "screen": "recovery",
+      "width": 1440,
+      "scroll": 1440,
+      "heading": "Vamos ajudar você a entrar",
+      "fonts": true
+    },
+    {
+      "screen": "verify",
+      "width": 1440,
+      "scroll": 1440,
+      "heading": "Confira sua caixa de entrada",
+      "fonts": true
+    },
+    {
+      "screen": "setup",
+      "width": 1440,
+      "scroll": 1440,
+      "heading": "Vamos organizar sua agenda",
+      "fonts": true
+    },
+    {
+      "screen": "firstorder",
+      "width": 1440,
+      "scroll": 1440,
+      "heading": "Cadastre o primeiro pedido",
+      "fonts": true
+    },
+    {
+      "screen": "done",
+      "width": 1440,
+      "scroll": 1440,
+      "heading": "Prévia do pedido na agenda",
+      "fonts": true
+    }
+  ],
+  "pageErrors": []
+}

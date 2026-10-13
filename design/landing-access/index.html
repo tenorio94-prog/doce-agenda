@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#fbf7f0">
+  <meta name="description" content="Protótipo de navegação da Doce Agenda para organizar pedidos, prazos, combinados e pagamentos.">
+  <title>Doce Agenda — pedidos da sua confeitaria</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="prototype.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Pular para o conteúdo</a>
+  <div class="prototype-banner" role="note">Protótipo de navegação <span aria-hidden="true">•</span> cadastro e entrada ainda não disponíveis no piloto</div>
+  <header class="site-header wrap">
+    <a class="brand" href="index.html" aria-label="Doce Agenda, página inicial"><img src="../../public/logo.svg" alt="Doce Agenda" width="185" height="48"></a>
+    <nav class="header-nav" aria-label="Navegação principal">
+      <a class="nav-text" href="#como-funciona">Como funciona</a>
+      <a class="nav-text" href="#perguntas">Perguntas</a>
+      <a class="button button-quiet header-login" href="?screen=login">Entrar</a>
+    </nav>
+  </header>
+  <main id="main">
+    <div id="landing" class="landing-view">
+      <section class="hero wrap" aria-labelledby="hero-title">
+        <div class="hero-copy">
+          <p class="eyebrow"><span class="eyebrow-dot" aria-hidden="true"></span> ORGANIZAÇÃO FEITA PARA A SUA ROTINA</p>
+          <h1 id="hero-title">O combinado de cada encomenda, <em>em um só lugar.</em></h1>
+          <p class="hero-lede">Pedidos, prazos, detalhes e pagamentos reunidos para você saber o que já está combinado e o que pede atenção.</p>
+          <div class="hero-actions">
+            <a class="button button-primary" href="https://doce-agenda-piloto.netlify.app" target="_blank" rel="noreferrer">Conhecer o piloto <span aria-hidden="true">↗</span></a>
+            <a class="button button-outline" href="?screen=signup">Criar minha agenda <span aria-hidden="true">→</span></a>
+          </div>
+          <p class="hero-note"><span aria-hidden="true">✳</span> Piloto em desenvolvimento. Os dados ficam neste navegador.</p>
+        </div>
+        <div class="hero-visual" aria-label="Prévia demonstrativa da agenda, com pedidos fictícios">
+          <div class="visual-orbit orbit-one"></div><div class="visual-orbit orbit-two"></div>
+          <div class="dashboard-card">
+            <div class="dashboard-top"><div class="mini-brand"><img src="../../public/logo.svg" alt="Doce Agenda" width="125" height="34"></div></div>
+            <div class="dashboard-tabs" aria-label="Seções demonstrativas"><span class="selected">Hoje</span><span>Pedidos</span><span>Semana</span></div>
+            <div class="dashboard-heading"><div><span class="mini-label">QUARTA-FEIRA, 14 DE MAIO</span><h2>Agenda do dia</h2></div><span class="day-count">2 pedidos</span></div>
+            <article class="mock-order"><div class="order-top"><div><strong>Marina Costa</strong><span>Bolo de aniversário</span></div><span class="status-tag">Confirmado</span></div><div class="order-line"><span>Hoje, 15h · Retirada</span><strong>R$ 280,00</strong></div><div class="order-progress"><span>Saldo</span><strong>R$ 80,00</strong></div></article>
+            <article class="mock-order second-order"><div class="order-top"><div><strong>Joana Lima</strong><span>Caixa de doces</span></div><span class="status-tag status-pending">Orçamento</span></div><div class="order-line"><span>Hoje, 17h · Entrega</span><strong>R$ 150,00</strong></div></article>
+            <div class="dashboard-footer"><span class="footer-check">✓</span><span>Dados fictícios para demonstração</span></div>
+          </div>
+          <div class="floating-note"><span class="float-icon">✦</span><span><strong>Combinado registrado</strong><small>Detalhes à mão quando precisar</small></span></div>
+          <span class="visual-caption">UMA PRÉVIA DA AGENDA</span>
+        </div>
+      </section>
+      <section id="como-funciona" class="features-section">
+        <div class="wrap section-wrap">
+          <div class="section-intro"><p class="eyebrow">MENOS COISAS PARA LEMBRAR</p><h2>Da conversa ao pedido,<br><em>com clareza no caminho.</em></h2><p>Tenha as informações que você já acompanha no dia a dia reunidas por encomenda.</p></div>
+          <div class="feature-grid">
+            <article class="feature-card"><span class="feature-icon icon-terracotta" aria-hidden="true">◷</span><h3>Prazos à vista</h3><p>Veja datas de entrega ou retirada, situação e próxima ação para cada pedido.</p></article>
+            <article class="feature-card"><span class="feature-icon icon-sage" aria-hidden="true">✎</span><h3>Combinados organizados</h3><p>Anote detalhes, mudanças ainda pendentes e consulte o histórico do pedido.</p></article>
+            <article class="feature-card"><span class="feature-icon icon-gold" aria-hidden="true">＋</span><h3>Pagamentos conferidos</h3><p>Registre valores recebidos e confira cada pagamento antes de atualizar o saldo.</p></article>
+            <article class="feature-card"><span class="feature-icon icon-lilac" aria-hidden="true">▦</span><h3>Sua semana, do seu jeito</h3><p>Consulte a semana e configure dias fechados, antecedência mínima e limite por data.</p></article>
+          </div>
+        </div>
+      </section>
+      <section class="steps-section wrap"><div class="steps-heading"><p class="eyebrow">UM COMEÇO SIMPLES</p><h2>Seu primeiro pedido<br><em>começa pelo essencial.</em></h2><p>Cadastre o que já sabe. Você pode completar outros detalhes depois.</p></div><ol class="steps-list"><li><span>01</span><div><strong>Identifique o pedido</strong><p>Nome da cliente, produto e valor total.</p></div></li><li><span>02</span><div><strong>Marque o prazo</strong><p>Inclua a data e o horário quando já estiverem combinados.</p></div></li><li><span>03</span><div><strong>Acompanhe o combinado</strong><p>Guarde detalhes, próxima ação e pagamentos conferidos.</p></div></li></ol></section>
+      <section id="perguntas" class="faq-section"><div class="wrap faq-wrap"><div><p class="eyebrow">PERGUNTAS FREQUENTES</p><h2>Antes de começar</h2></div><div class="faq-list"><details><summary>O piloto funciona no celular?</summary><p>Sim. O piloto público pode ser aberto em celular. A agenda fica salva no navegador usado naquele aparelho.</p></details><details><summary>Meus dados aparecem em outros aparelhos?</summary><p>Não. O piloto atual salva os dados localmente neste navegador, sem conta ou sincronização entre dispositivos. Limpar os dados do navegador pode apagá-los. Use Backup para baixar uma cópia JSON.</p></details><details><summary>Os pagamentos são confirmados automaticamente?</summary><p>Não. Um valor informado só entra no recebido depois que você o confere.</p></details><details><summary>A Doce Agenda envia mensagens para minhas clientes?</summary><p>Não. Você pode copiar o resumo do pedido para usar em outra conversa, mas o app não envia mensagens nem se conecta ao WhatsApp.</p></details></div></div></section>
+      <section class="closing-cta wrap"><div><p class="eyebrow">DOCE AGENDA</p><h2>O combinado de cada encomenda,<br><em>em um só lugar.</em></h2></div><div class="closing-actions"><a class="button button-primary" href="https://doce-agenda-piloto.netlify.app" target="_blank" rel="noreferrer">Conhecer o piloto <span aria-hidden="true">↗</span></a><a href="?screen=signup" class="text-link">Criar minha agenda <span aria-hidden="true">→</span></a></div></section>
+    </div>
+    <section id="flow" class="flow-view" hidden aria-live="polite"></section>
+  </main>
+  <footer class="site-footer"><div class="wrap footer-inner"><a class="brand" href="index.html"><img src="../../public/logo.svg" alt="Doce Agenda" width="145" height="38"></a><p>Seu combinado, em um só lugar.</p><small>Protótipo demonstrativo. Nenhum dado é enviado ou salvo.</small></div></footer>
+</body>
+</html>
+

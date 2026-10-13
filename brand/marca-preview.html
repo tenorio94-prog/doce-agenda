@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#fff8f0">
+  <title>Doce Agenda — identidade visual</title>
+  <link rel="icon" href="../public/favicon.svg" type="image/svg+xml">
+  <style>
+    :root {
+      color-scheme: light;
+      --cream: #fff8f0;
+      --coral: #c45b44;
+      --cocoa: #52372d;
+      --paper: #fffdf9;
+      --line: #dfcfc3;
+      font-family: Arial, system-ui, sans-serif;
+      color: var(--cocoa);
+      background: var(--cream);
+      font-synthesis: none;
+      text-rendering: optimizeLegibility;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-width: 320px; line-height: 1.55; }
+    a { color: var(--cocoa); text-underline-offset: .2em; }
+    a:focus-visible, button:focus-visible {
+      outline: 3px solid var(--coral);
+      outline-offset: 3px;
+    }
+    .skip-link {
+      position: absolute; left: .75rem; top: -5rem; z-index: 5;
+      padding: .65rem .85rem; background: var(--cocoa); color: var(--cream);
+      border-radius: .5rem;
+    }
+    .skip-link:focus { top: .75rem; }
+    .wrap { width: min(100% - 2rem, 68rem); margin-inline: auto; }
+    .topbar { min-height: 5.5rem; display: flex; align-items: center; border-bottom: 1px solid var(--line); }
+    .topbar img { width: min(16rem, 78vw); height: auto; }
+    main { padding-block: clamp(2rem, 5vw, 4.5rem); }
+    .eyebrow { margin: 0 0 .7rem; font-size: .78rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+    h1, h2, p { margin-top: 0; }
+    h1 { max-width: 14ch; margin-bottom: .8rem; font-size: clamp(2.25rem, 7vw, 4.5rem); line-height: 1.05; letter-spacing: -.04em; }
+    h1 span { color: var(--coral); }
+    .lead { max-width: 40rem; margin-bottom: 1.5rem; font-size: clamp(1.1rem, 2.5vw, 1.35rem); }
+    .button {
+      display: inline-flex; min-height: 2.9rem; align-items: center; justify-content: center;
+      padding: .6rem 1rem; border: 2px solid var(--cocoa); border-radius: .65rem;
+      background: var(--cocoa); color: var(--cream); font: inherit; font-weight: 700;
+      text-decoration: none;
+    }
+    .button:hover { background: #3e2922; }
+    .grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 1rem; margin-top: clamp(2.5rem, 6vw, 4rem); }
+    .card { min-width: 0; padding: clamp(1.1rem, 2.5vw, 1.6rem); border: 1px solid var(--line); border-radius: 1rem; background: var(--paper); }
+    .palette { grid-column: span 5; }
+    .type { grid-column: span 7; }
+    .surface { grid-column: span 12; }
+    .card h2 { margin-bottom: 1rem; font-size: 1.1rem; }
+    .swatches { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .65rem; }
+    .swatch { min-width: 0; }
+    .color { height: 3.5rem; border: 1px solid var(--line); border-radius: .6rem; }
+    .color.cream { background: var(--cream); }
+    .color.coral { background: var(--coral); }
+    .color.cocoa { background: var(--cocoa); }
+    .swatch p { margin: .45rem 0 0; font-size: .82rem; overflow-wrap: anywhere; }
+    .sample-large { margin: 0 0 .6rem; font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 700; line-height: 1.15; letter-spacing: -.035em; }
+    .sample-small { margin-bottom: 0; }
+    .sample-small strong { display: block; margin-bottom: .2rem; }
+    .demo {
+      display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(14rem, .75fr);
+      gap: 1rem; align-items: stretch;
+    }
+    .demo-intro { padding: .3rem; }
+    .demo-intro p { max-width: 34rem; }
+    .order-card { padding: 1rem; border: 1px solid var(--line); border-radius: .75rem; background: var(--cream); }
+    .order-title { display: flex; justify-content: space-between; gap: .75rem; align-items: start; }
+    .order-title strong { font-size: 1rem; }
+    .badge { flex: none; padding: .2rem .55rem; border: 1px solid var(--cocoa); border-radius: 99px; font-size: .78rem; font-weight: 700; }
+    .order-card p { margin: .75rem 0; }
+    .order-card hr { border: 0; border-top: 1px solid var(--line); margin: .85rem 0; }
+    .week { display: grid; gap: .5rem; }
+    .week-row { display: flex; justify-content: space-between; gap: .75rem; padding: .6rem .7rem; border-left: 4px solid var(--coral); border-radius: .35rem; background: var(--paper); }
+    .week-row time { font-weight: 700; white-space: nowrap; }
+    footer { padding-block: 1.5rem 2rem; border-top: 1px solid var(--line); font-size: .9rem; }
+    footer p { margin: 0; }
+    @media (max-width: 44rem) {
+      .palette, .type, .surface { grid-column: 1 / -1; }
+      .demo { grid-template-columns: 1fr; }
+      .topbar { min-height: 4.5rem; }
+      .swatches { gap: .45rem; }
+      .swatch p { font-size: .75rem; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+  <header class="topbar">
+    <div class="wrap">
+      <img src="../public/logo.svg" alt="Doce Agenda">
+    </div>
+  </header>
+
+  <main class="wrap" id="conteudo">
+    <p class="eyebrow">Identidade visual provisória</p>
+    <h1>Seus pedidos, do combinado à <span>entrega.</span></h1>
+    <p class="lead">Uma agenda clara para acompanhar encomendas e consultar a semana.</p>
+    <a class="button" href="#sistema">Conheça o sistema visual</a>
+
+    <div class="grid" id="sistema">
+      <section class="card palette" aria-labelledby="cores">
+        <h2 id="cores">Cores da marca</h2>
+        <div class="swatches">
+          <div class="swatch"><div class="color cream" aria-hidden="true"></div><p>Creme<br>#FFF8F0</p></div>
+          <div class="swatch"><div class="color coral" aria-hidden="true"></div><p>Coral<br>#C45B44</p></div>
+          <div class="swatch"><div class="color cocoa" aria-hidden="true"></div><p>Cacau<br>#52372D</p></div>
+        </div>
+      </section>
+
+      <section class="card type" aria-labelledby="tipo">
+        <h2 id="tipo">Tipografia</h2>
+        <p class="sample-large">Arial, system-ui</p>
+        <p class="sample-small"><strong>Pedidos organizados. Semana à vista.</strong>Texto corrido em cacau sobre fundo creme, com tamanho confortável e boa distância entre linhas.</p>
+      </section>
+
+      <section class="card surface" aria-labelledby="aplicacao">
+        <h2 id="aplicacao">Aplicação na agenda</h2>
+        <div class="demo">
+          <div class="demo-intro">
+            <p class="eyebrow">Visão da semana</p>
+            <p>Informações essenciais em primeiro plano, com detalhes fáceis de conferir.</p>
+            <div class="order-card">
+              <div class="order-title"><strong>Encomenda de exemplo</strong><span class="badge">Confirmado</span></div>
+              <p>Bolo personalizado<br>Retirada · sábado, 14h</p>
+              <hr>
+              <p><strong>Próxima ação</strong><br>Conferir o saldo e avisar quando estiver pronto.</p>
+            </div>
+          </div>
+          <div class="week" aria-label="Exemplo de agenda semanal">
+            <div class="week-row"><span>Sex. · 02 out.</span><time>16h</time></div>
+            <div class="week-row"><span>Sáb. · 03 out.</span><time>14h</time></div>
+            <div class="week-row"><span>Dom. · 04 out.</span><time>10h</time></div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer>
+    <div class="wrap"><p>Doce Agenda é um nome de trabalho. Identidade visual em exploração.</p></div>
+  </footer>
+</body>
+</html>

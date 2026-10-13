@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#fbf7f0">
+  <meta name="description" content="Acesse sua conta Doce Agenda ou crie uma conta para sua confeitaria.">
+  <title>Conta — Doce Agenda</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/account/account.css">
+  <!-- O controlador de autenticação real deve ser carregado antes da interface. -->
+  <script defer src="/account/config.js"></script>
+  <script defer src="/account/account-controller.js"></script>
+  <script defer src="/account/account-ui.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Pular para o conteúdo</a>
+  <header class="site-header">
+    <a class="brand" href="/" aria-label="Doce Agenda, página inicial">
+      <img src="/logo.svg" alt="Doce Agenda" width="178" height="41">
+    </a>
+    <a class="header-link" href="/demo/">Conhecer a demonstração</a>
+  </header>
+
+  <main id="main" class="account-layout">
+    <section class="intro" aria-labelledby="intro-title">
+      <p class="eyebrow">DOCE AGENDA</p>
+      <h1 id="intro-title">Seu combinado,<br><em>em um só lugar.</em></h1>
+      <p class="intro-copy">Organize pedidos, prazos e pagamentos da sua confeitaria com mais clareza no dia a dia.</p>
+      <div class="intro-detail" aria-hidden="true">
+        <span class="detail-icon"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16M8 14h3m2 0h3"/></svg></span>
+        <span>Uma rotina mais organizada começa pelo essencial.</span>
+      </div>
+    </section>
+
+    <section class="account-card" aria-labelledby="form-title">
+      <nav class="mode-tabs" aria-label="Acesso à conta">
+        <a id="tab-signup" class="mode-tab" href="/cadastro/" aria-current="page">Criar conta</a>
+        <a id="tab-login" class="mode-tab" href="/cadastro/?mode=login">Entrar</a>
+      </nav>
+
+      <div class="card-content">
+        <p class="eyebrow card-eyebrow" id="mode-eyebrow">UM COMEÇO SIMPLES</p>
+        <h2 id="form-title">Crie sua conta</h2>
+        <p class="form-intro" id="form-intro">Use seu e-mail para começar a organizar sua confeitaria.</p>
+
+        <div id="service-notice" class="notice notice-pending" role="status" hidden>
+          O cadastro está sendo preparado. Por enquanto, você pode conhecer a demonstração.
+          <a href="/demo/">Abrir demonstração</a>
+        </div>
+        <div id="status-message" class="notice" role="status" aria-live="polite" hidden></div>
+        <div id="error-message" class="notice notice-error" role="alert" hidden></div>
+
+        <form id="signup-form" class="account-form" novalidate>
+          <label class="field" for="signup-business-name">
+            <span>Nome da confeitaria</span>
+            <input id="signup-business-name" name="businessName" type="text" autocomplete="organization" maxlength="100" required>
+          </label>
+          <label class="field" for="signup-email">
+            <span>E-mail</span>
+            <input id="signup-email" name="email" type="email" autocomplete="email" inputmode="email" maxlength="254" required>
+          </label>
+          <label class="field" for="signup-password">
+            <span>Senha</span>
+            <span class="password-control">
+              <input id="signup-password" name="password" type="password" autocomplete="new-password" minlength="8" required>
+              <button class="reveal-password" type="button" data-password-toggle="signup-password" aria-label="Mostrar senha" aria-pressed="false">Mostrar</button>
+            </span>
+            <small class="field-hint">Use pelo menos 8 caracteres.</small>
+          </label>
+          <label class="field" for="signup-password-confirm">
+            <span>Confirme a senha</span>
+            <span class="password-control">
+              <input id="signup-password-confirm" name="passwordConfirm" type="password" autocomplete="new-password" minlength="8" required>
+              <button class="reveal-password" type="button" data-password-toggle="signup-password-confirm" aria-label="Mostrar confirmação de senha" aria-pressed="false">Mostrar</button>
+            </span>
+          </label>
+          <button id="signup-submit" class="button button-primary" type="submit">Criar conta</button>
+        </form>
+
+        <form id="login-form" class="account-form" hidden>
+          <label class="field" for="login-email">
+            <span>E-mail</span>
+            <input id="login-email" name="email" type="email" autocomplete="email" inputmode="email" maxlength="254" required>
+          </label>
+          <label class="field" for="login-password">
+            <span>Senha</span>
+            <span class="password-control">
+              <input id="login-password" name="password" type="password" autocomplete="current-password" required>
+              <button class="reveal-password" type="button" data-password-toggle="login-password" aria-label="Mostrar senha" aria-pressed="false">Mostrar</button>
+            </span>
+          </label>
+          <div class="form-row"><a class="text-link" href="/cadastro/?mode=recovery">Esqueci minha senha</a></div>
+          <button id="login-submit" class="button button-primary" type="submit">Entrar</button>
+        </form>
+
+        <form id="recovery-form" class="account-form" hidden>
+          <label class="field" for="recovery-email">
+            <span>E-mail</span>
+            <input id="recovery-email" name="email" type="email" autocomplete="email" inputmode="email" maxlength="254" required>
+          </label>
+          <button id="recovery-submit" class="button button-primary" type="submit">Enviar instruções</button>
+          <div class="form-row form-row-center"><a class="text-link" href="/cadastro/?mode=login">Voltar para entrar</a></div>
+        </form>
+        <div id="recovery-support" class="recovery-support" hidden>
+          <p>Para recuperar o acesso, fale com a pessoa que convidou você. Por segurança, sua senha atual não pode ser consultada.</p>
+          <a class="button button-secondary" href="/cadastro/?mode=login">Voltar para entrar</a>
+        </div>
+
+        <form id="update-form" class="account-form" hidden>
+          <label class="field" for="update-password">
+            <span>Nova senha</span>
+            <span class="password-control">
+              <input id="update-password" name="password" type="password" autocomplete="new-password" minlength="8" required>
+              <button class="reveal-password" type="button" data-password-toggle="update-password" aria-label="Mostrar nova senha" aria-pressed="false">Mostrar</button>
+            </span>
+            <small class="field-hint">Use pelo menos 8 caracteres.</small>
+          </label>
+          <label class="field" for="update-password-confirm">
+            <span>Confirme a nova senha</span>
+            <span class="password-control">
+              <input id="update-password-confirm" name="passwordConfirm" type="password" autocomplete="new-password" minlength="8" required>
+              <button class="reveal-password" type="button" data-password-toggle="update-password-confirm" aria-label="Mostrar confirmação da nova senha" aria-pressed="false">Mostrar</button>
+            </span>
+          </label>
+          <button id="update-submit" class="button button-primary" type="submit">Salvar nova senha</button>
+        </form>
+
+        <div id="provider-divider" class="provider-divider" hidden><span>ou</span></div>
+        <button id="google-button" class="button button-google" type="button" hidden>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M21.35 12.2c0-.7-.06-1.38-.18-2.03H12v3.84h5.23a4.48 4.48 0 0 1-1.94 2.94v2.4h3.14c1.84-1.7 2.92-4.2 2.92-7.15Z"/><path fill="#34A853" d="M12 21.72c2.63 0 4.84-.87 6.45-2.37l-3.14-2.4c-.87.58-1.98.93-3.31.93-2.55 0-4.71-1.72-5.48-4.03H3.28v2.47A9.73 9.73 0 0 0 12 21.72Z"/><path fill="#FBBC05" d="M6.52 13.85a5.85 5.85 0 0 1 0-3.7V7.68H3.28a9.73 9.73 0 0 0 0 8.64l3.24-2.47Z"/><path fill="#EA4335" d="M12 6.12c1.43 0 2.71.49 3.72 1.47l2.8-2.8C16.83 3.18 14.63 2.2 12 2.2a9.73 9.73 0 0 0-8.72 5.48l3.24 2.47C7.29 7.84 9.45 6.12 12 6.12Z"/></svg>
+          Continuar com Google
+        </button>
+        <p class="terms-note" id="terms-note">Ao criar uma conta, você poderá acessar sua agenda em outros dispositivos.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer"><span>Doce Agenda</span><span>Seu combinado, em um só lugar.</span></footer>
+</body>
+</html>

@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Doce Agenda — proposta de identidade</title>
+<link rel="stylesheet" href="tokens.css">
+<style>
+body{padding:32px}main{max-width:1376px;margin:auto}.board{display:grid;grid-template-columns:minmax(0,1fr) 390px;gap:56px;padding:48px;border:1px solid var(--da-line);border-radius:24px;background:var(--da-bg)}
+.brand-logo{width:250px;max-width:100%;height:auto}.eyebrow{font-size:13px;font-weight:700;color:var(--da-action);letter-spacing:.05em}
+.hero h1{font-size:clamp(32px,4vw,58px);max-width:14ch;margin:30px 0 20px;letter-spacing:-.02em}.hero .lead{font-size:18px;max-width:42ch;color:var(--da-muted)}
+.palette{display:flex;flex-wrap:wrap;gap:8px;margin:24px 0}.swatch{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:10px;border:1px solid var(--da-line);font-size:13px;background:var(--da-surface)}.color{width:22px;height:22px;border-radius:6px;background:var(--c)}
+.principles{display:grid;gap:16px;margin:32px 0}.principles p{margin:0;font-size:15px;color:var(--da-muted)}.principles strong{display:block;margin:0 0 4px;color:var(--da-ink)}
+.type-strip{border-top:1px solid var(--da-line);padding-top:24px;margin-top:32px}.type-strip .serif{font:600 28px/1.3 var(--da-title);margin:0}.type-strip p{margin:8px 0;color:var(--da-muted)}.type-strip .da-money{color:var(--da-ink);margin-top:16px}
+.phone{padding:20px 16px;background:var(--da-surface);border:1px solid var(--da-control-border);border-radius:24px;box-shadow:var(--da-shadow);align-self:start;min-width:0}
+.phone-header{display:flex;align-items:center;justify-content:space-between;gap:8px}.phone-header img{width:205px;max-width:calc(100% - 56px)}.icon{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.icon-button{width:48px;height:48px;border:0;background:transparent;color:var(--da-action);display:grid;place-items:center;border-radius:12px}
+.nav{display:flex;gap:8px;padding:8px 0 16px;border-bottom:1px solid var(--da-line);margin-bottom:20px}.nav span{flex:1;min-height:48px;display:grid;place-items:center;font-size:14px;font-weight:600;color:var(--da-muted)}.nav .active{color:var(--da-action);box-shadow:inset 0 -2px var(--da-action)}
+.phone h2{font-size:30px;margin:0 0 8px}.phone .intro{font-size:14px;color:var(--da-muted);margin:0 0 20px}
+.stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:20px 0}.stats .da-card{padding:12px}.stats .da-money{font-size:24px;margin-top:8px}.phone .da-order{margin:12px 0 16px}
+.phone .da-banner{margin-top:20px}.subnote{font-size:13px;color:var(--da-muted)}
+.section{margin:32px 0;padding:32px;border:1px solid var(--da-line);border-radius:20px;background:var(--da-surface)}
+.section h2{margin:0 0 12px}.logos{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px}.logo-card{padding:24px;background:var(--da-bg);border-radius:16px;min-width:0}.logo-card>img{width:100%;height:56px;object-fit:contain;object-position:left}
+.logo-card h3{font-size:20px;margin:16px 0 8px}.logo-card p{font-size:14px;color:var(--da-muted)}.sizes{display:flex;align-items:center;gap:16px;margin:20px 0}.sizes img{width:32px;height:32px}.sizes .large{width:64px;height:64px}
+.mono{display:grid;place-items:center;background:#392923;padding:8px;border-radius:10px}.mono img{filter:brightness(0) invert(1)}
+.applications{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:24px;align-items:start}.applications img{width:100%;height:auto;border:1px solid var(--da-line);border-radius:12px}
+.components{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}.components>div{min-width:0}.components .da-card{margin-bottom:16px}
+.icons{display:flex;gap:16px;flex-wrap:wrap}.icons img{width:80px;height:80px}
+a{color:var(--da-action);font-weight:600;text-underline-offset:4px}code{font-size:14px;overflow-wrap:anywhere}footer{padding:24px;color:var(--da-muted);font-size:14px}
+@media(max-width:1000px){body{padding:16px}.board{gap:24px;padding:24px;grid-template-columns:minmax(0,1fr) 350px}.hero h1{font-size:40px}.logos{gap:16px}.logo-card{padding:16px}}
+@media(max-width:760px){body{padding:16px}.board{grid-template-columns:1fr;padding:16px;gap:32px}.hero h1{font-size:36px}.phone{width:100%}.section{padding:16px}.logos,.components,.applications{grid-template-columns:1fr}.brand-logo{width:220px}.phone .da-money{font-size:24px}.stats .da-card:nth-child(n+3){grid-column:1/-1}}
+@media print{body{padding:0}.section,.board{break-inside:avoid}.phone{box-shadow:none}}
+</style>
+</head>
+<body><main>
+<section id="board" class="board" aria-label="Direção visual proposta">
+ <div class="hero">
+  <p class="eyebrow">PROPOSTA DE IDENTIDADE · CONCEITO 01</p>
+  <img class="brand-logo" src="assets/01-agenda-de-bancada-logo.svg" alt="Doce Agenda — agenda de bancada">
+  <h1>Seu combinado, em um só lugar.</h1>
+  <p class="lead">Pedidos, prazos e pagamentos em ordem. Uma linguagem acolhedora e adulta, com a clareza que a rotina de encomendas pede.</p>
+  <div class="palette" aria-label="Paleta principal">
+   <span class="swatch"><i class="color" style="--c:#A34432"></i>Terracota</span>
+   <span class="swatch"><i class="color" style="--c:#FBF7F0"></i>Creme</span>
+   <span class="swatch"><i class="color" style="--c:#392923"></i>Cacau</span>
+   <span class="swatch"><i class="color" style="--c:#42644C"></i>Sálvia</span>
+  </div>
+  <div class="principles">
+   <p><strong>Acolhimento adulto</strong>Proximidade com quem trabalha. Sem infantilizar.</p>
+   <p><strong>Clareza operacional</strong>Data, pedido e saldo com hierarquia de leitura.</p>
+   <p><strong>Firmeza com os valores</strong>Números legíveis. Pagamento informado e conferido são distintos.</p>
+  </div>
+  <div class="type-strip">
+   <p class="serif">Lora · caráter na abertura</p>
+   <p>Manrope · clareza na rotina e nos valores</p>
+   <span class="da-money">R$ 1.280,50</span>
+   <p class="subnote">Amostra tipográfica, sem representar resultados financeiros.</p>
+  </div>
+ </div>
+ <div>
+  <p class="eyebrow">APLICAÇÃO PROPOSTA · DADOS FICTÍCIOS</p>
+  <article class="phone" aria-label="Exemplo estático da tela Hoje">
+   <div class="phone-header"><img src="assets/01-agenda-de-bancada-logo.svg" alt="Doce Agenda"><button class="icon-button" type="button" aria-label="Exemplo de botão Baixar backup"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0-4-4m4 4 4-4M5 17v4h14v-4"/></svg></button></div>
+   <div class="nav" aria-label="Exemplo de navegação"><span class="active">Hoje</span><span>Pedidos</span><span>Semana</span></div>
+   <h2>Bom dia!</h2><p class="intro">Seus pedidos de hoje, à mão.</p>
+   <button type="button" class="da-button">+ Novo pedido</button>
+   <div class="stats">
+    <div class="da-card"><span class="da-label">Pedidos hoje</span><span class="da-money">1</span></div>
+    <div class="da-card"><span class="da-label">Em andamento</span><span class="da-money">1</span></div>
+    <div class="da-card"><span class="da-label">Total confirmado</span><span class="da-money">R$ 180,00</span></div>
+    <div class="da-card"><span class="da-label">Saldo a receber</span><span class="da-money">R$ 120,00</span></div>
+   </div>
+   <h3 style="margin:24px 0 12px">A agenda de hoje</h3>
+   <article class="da-card da-order">
+    <div class="da-order-head"><strong>Cliente exemplo</strong><span class="da-status">Confirmado</span></div>
+    <p>Bolo de cenoura · 1,5 kg</p><small>16h · Retirada</small>
+    <div><span class="da-label">Saldo a receber</span><span class="da-money">R$ 120,00</span></div>
+   </article>
+   <div class="da-banner">Os pedidos ficam neste navegador. Baixe um backup para guardar uma cópia.</div>
+   <p class="subnote">Estudo visual: controles desta página não executam ações.</p>
+  </article>
+ </div>
+</section>
+<section class="section" id="logos">
+ <h2>Três conceitos, uma decisão</h2><p class="subnote">Símbolos mostrados em 32 px e 64 px. Os logos com nome têm letras convertidas em curvas.</p>
+ <div class="logos">
+  <article class="logo-card"><img src="assets/01-agenda-de-bancada-logo.svg" alt="Logo Agenda de bancada"><h3>01 · Agenda de bancada</h3><p>Calendário + uma camada de bolo. Reduz o conceito atual a uma leitura mais limpa. Recomendado para testar reconhecimento de categoria.</p><div class="sizes"><img src="assets/01-agenda-de-bancada-simbolo.svg" alt="Símbolo de agenda em 32 px"><img class="large" src="assets/01-agenda-de-bancada-simbolo.svg" alt="Símbolo de agenda em 64 px"><span class="mono"><img src="assets/01-agenda-de-bancada-simbolo.svg" alt="Símbolo em branco sobre cacau"></span></div><a href="assets/01-agenda-de-bancada-logo.svg">Abrir SVG</a></article>
+  <article class="logo-card"><img src="assets/02-d-de-rotina-logo.svg" alt="Logo D de rotina"><h3>02 · D de rotina</h3><p>Inicial com três linhas de lista. A leitura é de ferramenta de trabalho; depende mais do nome para comunicar confeitaria.</p><div class="sizes"><img src="assets/02-d-de-rotina-simbolo.svg" alt="D de rotina em 32 px"><img class="large" src="assets/02-d-de-rotina-simbolo.svg" alt="D de rotina em 64 px"><span class="mono"><img src="assets/02-d-de-rotina-simbolo.svg" alt="D em branco sobre cacau"></span></div><a href="assets/02-d-de-rotina-logo.svg">Abrir SVG</a></article>
+  <article class="logo-card"><img src="assets/03-etiqueta-do-combinado-logo.svg" alt="Logo Etiqueta do combinado"><h3>03 · Etiqueta do combinado</h3><p>Etiqueta com conferência. Aproxima o app do combinado de encomenda; a categoria fica a cargo do nome e das aplicações.</p><div class="sizes"><img src="assets/03-etiqueta-do-combinado-simbolo.svg" alt="Etiqueta em 32 px"><img class="large" src="assets/03-etiqueta-do-combinado-simbolo.svg" alt="Etiqueta em 64 px"><span class="mono"><img src="assets/03-etiqueta-do-combinado-simbolo.svg" alt="Etiqueta em branco sobre cacau"></span></div><a href="assets/03-etiqueta-do-combinado-logo.svg">Abrir SVG</a></article>
+ </div>
+</section>
+<section class="section"><h2>Ícones da direção recomendada</h2><div class="icons"><img src="assets/icone-quadrado.svg" alt="Ícone quadrado"><img src="assets/icone-arredondado.svg" alt="Ícone arredondado"><img src="assets/favicon.svg" alt="Favicon"></div><p class="subnote">Ícone quadrado: fundo sem máscara para o sistema recortar. Camadas adaptativas entregues separadas; glifo central na área segura. Usar o símbolo simplificado, sem o nome.</p></section>
+<section class="section"><h2>Componentes estáticos</h2><p class="subnote">Exemplos de identidade e código reutilizável; não são novas funcionalidades do app.</p>
+ <div class="components">
+  <div><article class="da-card"><span class="da-label">Saldo a receber</span><span class="da-money">R$ 120,00</span><span class="da-label">Total R$ 180,00 · conferido R$ 60,00</span></article><article class="da-card da-order"><div class="da-order-head"><strong>Cliente exemplo</strong><span class="da-status">Confirmado</span></div><p>Bolo de cenoura</p><small>10/10/2026, 16h · Retirada</small></article><button class="da-button" type="button">Salvar pedido</button></div>
+  <div><div class="da-banner">Seus pedidos ficam neste navegador. Baixe um backup para guardar uma cópia.</div><article class="da-empty"><img src="assets/01-agenda-de-bancada-simbolo.svg" width="40" height="40" alt=""><h3>Nenhum pedido por aqui ainda.</h3><p>Cadastre o próximo para acompanhar prazo e pagamento.</p><button class="da-button" type="button">Novo pedido</button></article></div>
+ </div>
+</section>
+<section class="section"><h2>Aplicações de marca</h2><p class="subnote">Conceitos de resumo para compartilhar e imagem de divulgação. Exportação ou envio pelo WhatsApp ainda não existem no app; estas são peças visuais independentes.</p><div class="applications"><div><img src="assets/compartilhamento.svg" alt="Imagem de divulgação: pedidos, prazos e pagamentos em ordem. Dados fictícios."><p>Imagem 1200 × 630, derivada da marca e da hierarquia de um pedido.</p></div><div><img src="assets/resumo-pedido.svg" alt="Resumo fictício: total 180 reais, conferido 60 reais, saldo 120 reais. Não é comprovante bancário."><p>Resumo 720 × 920. Branco e cacau predominam para leitura em mensagens.</p></div></div></section>
+<section class="section"><h2>Arquivos e documentação</h2><p><a href="GUIA-MARCA.md">Guia completo</a> · <a href="CONTRASTES.md">Contrastes calculados</a> · <a href="tokens.css">Tokens e componentes CSS</a> · <a href="prints/app-atual-mobile.png">Print do app atual</a></p><p class="subnote">Fontes locais Lora e Manrope (Google Fonts), licenças OFL incluídas em assets/fonts. Sem requisições externas na apresentação.</p></section>
+<footer>Doce Agenda · proposta de identidade v2 · nenhuma alteração na aplicação publicada.</footer>
+</main></body></html>

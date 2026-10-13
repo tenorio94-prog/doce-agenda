@@ -1,0 +1,619 @@
+{
+  "capturedAt": "2026-09-30T19:44:30.989Z",
+  "app": "http://localhost:4174",
+  "viewport": {
+    "width": 1280,
+    "height": 900,
+    "deviceScaleFactor": 2
+  },
+  "screenshots": {
+    "form.png": {
+      "dimensions": {
+        "width": 1300,
+        "height": 1620,
+        "bytes": 109965
+      },
+      "cssDimensions": {
+        "width": 650,
+        "height": 810
+      },
+      "crop": {
+        "type": "dialog",
+        "selector": "#order-dialog",
+        "x": 315,
+        "y": 45
+      },
+      "elements": {
+        "title": {
+          "x": 339,
+          "y": 94,
+          "width": 169.38,
+          "height": 31,
+          "centerX": 423.69,
+          "centerY": 109.5,
+          "screenshotX": 24,
+          "screenshotY": 49
+        },
+        "client": {
+          "x": 339,
+          "y": 163,
+          "width": 602,
+          "height": 41,
+          "centerX": 640,
+          "centerY": 183.5,
+          "screenshotX": 24,
+          "screenshotY": 118
+        },
+        "product": {
+          "x": 339,
+          "y": 268.14,
+          "width": 602,
+          "height": 41,
+          "centerX": 640,
+          "centerY": 288.64,
+          "screenshotX": 24,
+          "screenshotY": 223.14
+        },
+        "details": {
+          "x": 339,
+          "y": 355.14,
+          "width": 602,
+          "height": 74.17,
+          "centerX": 640,
+          "centerY": 392.23,
+          "screenshotX": 24,
+          "screenshotY": 310.14
+        },
+        "dueAt": {
+          "x": 339,
+          "y": 475.31,
+          "width": 294,
+          "height": 41,
+          "centerX": 486,
+          "centerY": 495.81,
+          "screenshotX": 24,
+          "screenshotY": 430.31
+        },
+        "total": {
+          "x": 339,
+          "y": 667.45,
+          "width": 294,
+          "height": 41,
+          "centerX": 486,
+          "centerY": 687.95,
+          "screenshotX": 24,
+          "screenshotY": 622.45
+        },
+        "status": {
+          "x": 647,
+          "y": 667.45,
+          "width": 294,
+          "height": 41,
+          "centerX": 794,
+          "centerY": 687.95,
+          "screenshotX": 332,
+          "screenshotY": 622.45
+        },
+        "save": {
+          "x": 799.06,
+          "y": 1068.73,
+          "width": 141.94,
+          "height": 42,
+          "centerX": 870.03,
+          "centerY": 1089.73,
+          "screenshotX": 484.06,
+          "screenshotY": 1023.73
+        }
+      }
+    },
+    "form-top.png": {
+      "dimensions": {
+        "width": 1300,
+        "height": 1366,
+        "bytes": 92526
+      },
+      "cssDimensions": {
+        "width": 650,
+        "height": 683
+      },
+      "crop": {
+        "type": "dialog-top-region",
+        "selector": "#order-dialog",
+        "x": 315,
+        "y": 45
+      },
+      "elements": {
+        "title": {
+          "x": 339,
+          "y": 94,
+          "width": 169.38,
+          "height": 31,
+          "centerX": 423.69,
+          "centerY": 109.5,
+          "screenshotX": 24,
+          "screenshotY": 49
+        },
+        "client": {
+          "x": 339,
+          "y": 163,
+          "width": 602,
+          "height": 41,
+          "centerX": 640,
+          "centerY": 183.5,
+          "screenshotX": 24,
+          "screenshotY": 118
+        },
+        "product": {
+          "x": 339,
+          "y": 268.14,
+          "width": 602,
+          "height": 41,
+          "centerX": 640,
+          "centerY": 288.64,
+          "screenshotX": 24,
+          "screenshotY": 223.14
+        },
+        "dueAt": {
+          "x": 339,
+          "y": 475.31,
+          "width": 294,
+          "height": 41,
+          "centerX": 486,
+          "centerY": 495.81,
+          "screenshotX": 24,
+          "screenshotY": 430.31
+        },
+        "total": {
+          "x": 339,
+          "y": 667.45,
+          "width": 294,
+          "height": 41,
+          "centerX": 486,
+          "centerY": 687.95,
+          "screenshotX": 24,
+          "screenshotY": 622.45
+        }
+      }
+    },
+    "form-bottom.png": {
+      "dimensions": {
+        "width": 1300,
+        "height": 1620,
+        "bytes": 117065
+      },
+      "cssDimensions": {
+        "width": 650,
+        "height": 810
+      },
+      "crop": {
+        "type": "dialog",
+        "selector": "#order-dialog",
+        "x": 315,
+        "y": 45
+      },
+      "elements": {
+        "dueAt": {
+          "x": 339,
+          "y": 561.45,
+          "width": 294,
+          "height": 41,
+          "centerX": 486,
+          "centerY": 581.95,
+          "screenshotX": 24,
+          "screenshotY": 516.45
+        },
+        "contact": {
+          "x": 647,
+          "y": 561.45,
+          "width": 294,
+          "height": 41,
+          "centerX": 794,
+          "centerY": 581.95,
+          "screenshotX": 332,
+          "screenshotY": 516.45
+        },
+        "pendingChange": {
+          "x": 339,
+          "y": 648.45,
+          "width": 602,
+          "height": 56.78,
+          "centerX": 640,
+          "centerY": 676.84,
+          "screenshotX": 24,
+          "screenshotY": 603.45
+        },
+        "cancel": {
+          "x": 684.69,
+          "y": 788.73,
+          "width": 105.38,
+          "height": 42,
+          "centerX": 737.38,
+          "centerY": 809.73,
+          "screenshotX": 369.69,
+          "screenshotY": 743.73
+        },
+        "save": {
+          "x": 799.06,
+          "y": 788.73,
+          "width": 141.94,
+          "height": 42,
+          "centerX": 870.03,
+          "centerY": 809.73,
+          "screenshotX": 484.06,
+          "screenshotY": 743.73
+        }
+      }
+    },
+    "order.png": {
+      "dimensions": {
+        "width": 2560,
+        "height": 1800,
+        "bytes": 247089
+      },
+      "cssDimensions": {
+        "width": 1280,
+        "height": 900
+      },
+      "crop": {
+        "type": "viewport",
+        "x": 0,
+        "y": 0
+      },
+      "elements": {
+        "heading": {
+          "x": 72,
+          "y": 202,
+          "width": 412.09,
+          "height": 40.69,
+          "centerX": 278.05,
+          "centerY": 222.34
+        },
+        "upcomingHeading": {
+          "x": 72,
+          "y": 846.11,
+          "width": 102.61,
+          "height": 22,
+          "centerX": 123.3,
+          "centerY": 857.11
+        },
+        "orderCard": {
+          "x": 72,
+          "y": 883.11,
+          "width": 1136,
+          "height": 80,
+          "centerX": 640,
+          "centerY": 923.11
+        },
+        "orderClient": {
+          "x": 102,
+          "y": 896.11,
+          "width": 155.7,
+          "height": 16,
+          "centerX": 179.85,
+          "centerY": 904.11
+        },
+        "orderStatus": {
+          "x": 1116.75,
+          "y": 931.11,
+          "width": 78.25,
+          "height": 19,
+          "centerX": 1155.88,
+          "centerY": 940.61
+        }
+      }
+    },
+    "detail-empty.png": {
+      "dimensions": {
+        "width": 1400,
+        "height": 1280,
+        "bytes": 128158
+      },
+      "cssDimensions": {
+        "width": 700,
+        "height": 639.2
+      },
+      "crop": {
+        "type": "dialog",
+        "selector": "#detail-dialog",
+        "x": 290,
+        "y": 130.39
+      },
+      "elements": {
+        "title": {
+          "x": 314,
+          "y": 179.39,
+          "width": 524.75,
+          "height": 31,
+          "centerX": 576.38,
+          "centerY": 194.89,
+          "screenshotX": 24,
+          "screenshotY": 49
+        },
+        "status": {
+          "x": 850.75,
+          "y": 163.89,
+          "width": 78.25,
+          "height": 19,
+          "centerX": 889.88,
+          "centerY": 173.39,
+          "screenshotX": 560.75,
+          "screenshotY": 33.5
+        },
+        "date": {
+          "x": 314,
+          "y": 241.39,
+          "width": 652,
+          "height": 20,
+          "centerX": 640,
+          "centerY": 251.39,
+          "screenshotX": 24,
+          "screenshotY": 111
+        },
+        "agreedDetails": {
+          "x": 314,
+          "y": 279.39,
+          "width": 652,
+          "height": 69.58,
+          "centerX": 640,
+          "centerY": 314.18,
+          "screenshotX": 24,
+          "screenshotY": 149
+        },
+        "total": {
+          "x": 314,
+          "y": 360.97,
+          "width": 320.5,
+          "height": 73,
+          "centerX": 474.25,
+          "centerY": 397.47,
+          "screenshotX": 24,
+          "screenshotY": 230.58
+        },
+        "noPayments": {
+          "x": 314,
+          "y": 573.16,
+          "width": 652,
+          "height": 14,
+          "centerX": 640,
+          "centerY": 580.16,
+          "screenshotX": 24,
+          "screenshotY": 442.77
+        },
+        "history": {
+          "x": 314,
+          "y": 637.16,
+          "width": 652,
+          "height": 32.44,
+          "centerX": 640,
+          "centerY": 653.38,
+          "screenshotX": 24,
+          "screenshotY": 506.77
+        }
+      }
+    },
+    "detail-informed.png": {
+      "dimensions": {
+        "width": 1400,
+        "height": 1440,
+        "bytes": 151344
+      },
+      "cssDimensions": {
+        "width": 700,
+        "height": 718.64
+      },
+      "crop": {
+        "type": "dialog",
+        "selector": "#detail-dialog",
+        "x": 290,
+        "y": 90.67
+      },
+      "elements": {
+        "title": {
+          "x": 314,
+          "y": 139.67,
+          "width": 524.75,
+          "height": 31,
+          "centerX": 576.38,
+          "centerY": 155.17,
+          "screenshotX": 24,
+          "screenshotY": 49
+        },
+        "total": {
+          "x": 314,
+          "y": 321.25,
+          "width": 320.5,
+          "height": 73,
+          "centerX": 474.25,
+          "centerY": 357.75,
+          "screenshotX": 24,
+          "screenshotY": 230.58
+        },
+        "balance": {
+          "x": 645.5,
+          "y": 321.25,
+          "width": 320.5,
+          "height": 73,
+          "centerX": 805.75,
+          "centerY": 357.75,
+          "screenshotX": 355.5,
+          "screenshotY": 230.58
+        },
+        "payment": {
+          "x": 314,
+          "y": 531.44,
+          "width": 652,
+          "height": 52,
+          "centerX": 640,
+          "centerY": 557.44,
+          "screenshotX": 24,
+          "screenshotY": 440.77
+        },
+        "paymentStatus": {
+          "x": 810.45,
+          "y": 546.94,
+          "width": 143.55,
+          "height": 21,
+          "centerX": 882.23,
+          "centerY": 557.44,
+          "screenshotX": 520.45,
+          "screenshotY": 456.27
+        },
+        "history": {
+          "x": 314,
+          "y": 633.44,
+          "width": 652,
+          "height": 75.88,
+          "centerX": 640,
+          "centerY": 671.38,
+          "screenshotX": 24,
+          "screenshotY": 542.77
+        }
+      }
+    },
+    "detail-confirmed.png": {
+      "dimensions": {
+        "width": 1400,
+        "height": 1528,
+        "bytes": 152106
+      },
+      "cssDimensions": {
+        "width": 700,
+        "height": 762.08
+      },
+      "crop": {
+        "type": "dialog",
+        "selector": "#detail-dialog",
+        "x": 290,
+        "y": 68.95
+      },
+      "elements": {
+        "title": {
+          "x": 314,
+          "y": 117.95,
+          "width": 524.75,
+          "height": 31,
+          "centerX": 576.38,
+          "centerY": 133.45,
+          "screenshotX": 24,
+          "screenshotY": 49
+        },
+        "status": {
+          "x": 850.75,
+          "y": 102.45,
+          "width": 78.25,
+          "height": 19,
+          "centerX": 889.88,
+          "centerY": 111.95,
+          "screenshotX": 560.75,
+          "screenshotY": 33.5
+        },
+        "balance": {
+          "x": 645.5,
+          "y": 299.53,
+          "width": 320.5,
+          "height": 73,
+          "centerX": 805.75,
+          "centerY": 336.03,
+          "screenshotX": 355.5,
+          "screenshotY": 230.58
+        },
+        "payment": {
+          "x": 314,
+          "y": 509.72,
+          "width": 652,
+          "height": 52,
+          "centerX": 640,
+          "centerY": 535.72,
+          "screenshotX": 24,
+          "screenshotY": 440.77
+        },
+        "paymentStatus": {
+          "x": 911.83,
+          "y": 530.22,
+          "width": 42.17,
+          "height": 11,
+          "centerX": 932.91,
+          "centerY": 535.72,
+          "screenshotX": 621.83,
+          "screenshotY": 461.27
+        },
+        "history": {
+          "x": 314,
+          "y": 611.72,
+          "width": 652,
+          "height": 119.31,
+          "centerX": 640,
+          "centerY": 671.38,
+          "screenshotX": 24,
+          "screenshotY": 542.77
+        }
+      }
+    },
+    "week.png": {
+      "dimensions": {
+        "width": 2560,
+        "height": 1800,
+        "bytes": 124961
+      },
+      "cssDimensions": {
+        "width": 1280,
+        "height": 900
+      },
+      "crop": {
+        "type": "viewport",
+        "x": 0,
+        "y": 0
+      },
+      "elements": {
+        "heading": {
+          "x": 72,
+          "y": 127,
+          "width": 328.53,
+          "height": 40.69,
+          "centerX": 236.27,
+          "centerY": 147.34
+        },
+        "weekRange": {
+          "x": 1030.84,
+          "y": 162.69,
+          "width": 145,
+          "height": 14,
+          "centerX": 1103.34,
+          "centerY": 169.69
+        },
+        "selectedDay": {
+          "x": 562.28,
+          "y": 210.69,
+          "width": 155.42,
+          "height": 77,
+          "centerX": 639.99,
+          "centerY": 249.19
+        },
+        "agendaDate": {
+          "x": 93,
+          "y": 328.69,
+          "width": 1094,
+          "height": 22,
+          "centerX": 640,
+          "centerY": 339.69
+        },
+        "orderCard": {
+          "x": 93,
+          "y": 363.69,
+          "width": 1094,
+          "height": 80,
+          "centerX": 640,
+          "centerY": 403.69
+        },
+        "orderStatus": {
+          "x": 1095.75,
+          "y": 411.69,
+          "width": 78.25,
+          "height": 19,
+          "centerX": 1134.88,
+          "centerY": 421.19
+        }
+      }
+    }
+  }
+}
