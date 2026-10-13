@@ -15,7 +15,7 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:3px solid var(-
 .header-link:hover,.text-link:hover{text-decoration:underline}
 .account-layout{width:min(1160px,calc(100% - 48px));flex:1;margin-inline:auto;display:grid;grid-template-columns:minmax(0,1fr) minmax(380px,460px);align-items:center;gap:clamp(55px,9vw,130px);padding-block:64px 76px}
 .intro{max-width:510px;padding-bottom:6px}
-.eyebrow{margin:0 0 18px;color:var(--action);font-size:11px;font-weight:800;letter-spacing:.15em;line-height:1.45}
+.eyebrow{margin:0 0 18px;color:var(--action);font-size:12px;font-weight:800;letter-spacing:.08em;line-height:1.45}
 .intro h1{margin:0;font-family:var(--serif);font-size:clamp(48px,5.4vw,70px);font-weight:500;letter-spacing:-.045em;line-height:1.08}
 .intro h1 em{color:var(--action);font-style:normal;font-weight:400}
 .intro-copy{max-width:440px;margin:23px 0 0;color:var(--muted);font-size:17px;line-height:1.75}
@@ -28,45 +28,47 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:3px solid var(-
 .mode-tab[aria-current="page"]{color:var(--action)}
 .mode-tab[aria-current="page"]::after{position:absolute;right:10%;bottom:-1px;left:10%;height:3px;border-radius:3px 3px 0 0;background:var(--action);content:""}
 .card-content{padding:27px 34px 30px}
-.card-eyebrow{margin-bottom:8px;font-size:10px}
+.card-eyebrow{margin-bottom:8px}
 .card-content h2{margin:0;font-family:var(--serif);font-size:31px;font-weight:600;letter-spacing:-.025em;line-height:1.25}
 .form-intro{margin:8px 0 21px;color:var(--muted);font-size:13px;line-height:1.6}
 .account-form{display:grid;gap:14px}
 .field{display:grid;gap:6px;color:var(--ink);font-size:13px;font-weight:700}
-.field input{width:100%;min-width:0;height:48px;padding:0 13px;border:1px solid #b5a297;border-radius:10px;background:#fffefa;color:var(--ink);font:500 16px/1.3 var(--sans);transition:border-color .15s ease,box-shadow .15s ease}
+.field input{width:100%;min-width:0;height:48px;padding:0 13px;border:1px solid #9f8b7f;border-radius:10px;background:#fffefa;color:var(--ink);font:500 16px/1.3 var(--sans);transition:border-color .15s ease}
 .field input::placeholder{color:#85756c}
-.field input:focus{border-color:var(--sage);box-shadow:0 0 0 2px rgb(66 100 76 / 13%);outline:none}
+.field input:focus-visible{outline:3px solid var(--sage);outline-offset:2px;border-color:var(--sage)}
 .password-control{position:relative;display:block}
 .password-control input{padding-right:82px}
 .reveal-password{position:absolute;top:4px;right:4px;min-width:66px;min-height:40px;padding:0 8px;border:0;border-radius:7px;background:transparent;color:var(--action);font:700 12px var(--sans);cursor:pointer}
 .reveal-password:hover{background:#f8eee9}
-.field-hint{color:var(--muted);font-size:11px;font-weight:500}
+.field-hint{color:var(--muted);font-size:13px;font-weight:500}
 .form-row{display:flex;align-items:center;justify-content:flex-end;margin-top:-2px}
 .form-row-center{justify-content:center;margin-top:1px}
 .text-link{font-size:12px;font-weight:650}
 .button{display:inline-flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:48px;padding:10px 16px;border:1px solid transparent;border-radius:10px;font:750 14px/1.25 var(--sans);text-align:center;cursor:pointer;transition:background-color .16s ease,transform .16s ease,border-color .16s ease}
 .button:active{transform:scale(.99)}
 .button:disabled{cursor:not-allowed;opacity:.58}
+.button[aria-busy="true"]::before{width:16px;height:16px;flex:none;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:button-spin .8s linear infinite;content:""}
+@keyframes button-spin{to{transform:rotate(360deg)}}
 .button-primary{margin-top:3px;background:var(--action);color:#fff}
 .button-primary:hover:not(:disabled){background:var(--action-hover)}
 .button-google{border-color:var(--line);background:var(--surface);color:var(--ink)}
 .button-google:hover:not(:disabled){border-color:#c6ada0;background:#fffaf5}
 .button-google svg{width:18px;height:18px;flex:none}
-.provider-divider{display:flex;align-items:center;gap:12px;margin:18px 0;color:#887970;font-size:11px}
+.provider-divider{display:flex;align-items:center;gap:12px;margin:18px 0;color:#887970;font-size:12px}
 .provider-divider::before,.provider-divider::after{height:1px;flex:1;background:var(--line);content:""}
-.terms-note{margin:18px 0 0;color:#7e6d63;font-size:11px;line-height:1.6;text-align:center}
-.notice{margin:0 0 16px;padding:12px 13px;border:1px solid #d9e3d8;border-radius:10px;background:#edf3ec;color:#34523b;font-size:12px;line-height:1.6}
-.notice a{display:inline-block;margin-top:5px;color:#34523b;font-weight:750}
+.terms-note{margin:18px 0 0;color:#7e6d63;font-size:13px;line-height:1.6;text-align:center}
+.notice{margin:0 0 16px;padding:12px 13px;border:1px solid #d9e3d8;border-radius:10px;background:#edf3ec;color:#34523b;font-size:13px;line-height:1.6}
+.notice .button{margin-top:12px}
 .notice-pending{border-color:#e6d6bd;background:#fbf2e4;color:#684d2f}
-.notice-pending a{color:#684d2f}
 .notice-error{border-color:#f0d0cd;background:#fcefed;color:#812a30}
 .recovery-support{display:grid;gap:14px;margin-top:18px}
 .recovery-support p{margin:0;color:var(--muted);font-size:13px;line-height:1.65}
 .button-secondary{border-color:var(--line);background:var(--surface);color:var(--action);text-decoration:none}
+.retry-button{margin:-6px 0 16px}
 .button-secondary:hover{background:#fffaf5;border-color:#c6ada0}
-.site-footer{width:min(1160px,calc(100% - 48px));min-height:66px;margin-inline:auto;display:flex;align-items:center;justify-content:space-between;gap:20px;border-top:1px solid var(--line);color:var(--muted);font-size:11px}
+.site-footer{width:min(1160px,calc(100% - 48px));min-height:66px;margin-inline:auto;display:flex;align-items:center;justify-content:space-between;gap:20px;border-top:1px solid var(--line);color:var(--muted);font-size:12px}
 @media(max-width:850px){.account-layout{grid-template-columns:minmax(0,1fr) minmax(340px,420px);gap:36px}.intro h1{font-size:clamp(42px,6vw,55px)}.intro-copy{font-size:15px}.card-content{padding-inline:26px}}
-@media(max-width:760px){.site-header{width:calc(100% - 36px);min-height:72px}.brand img{width:154px}.header-link{font-size:12px}.account-layout{width:calc(100% - 36px);grid-template-columns:1fr;gap:20px;align-content:start;padding-block:20px 38px}.account-card{order:0;width:min(100%,480px);justify-self:center}.intro{order:1;max-width:520px;padding:0 4px;text-align:center}.intro .eyebrow,.intro-copy,.intro-detail{display:none}.intro h1{font-size:25px;line-height:1.25;letter-spacing:-.025em}.intro h1 br{display:none}.intro h1 em{margin-left:.18em}.mode-tabs{padding-inline:18px}.mode-tab{min-height:54px;font-size:13px}.card-content{padding:24px 22px 25px}.card-content h2{font-size:28px}.form-intro{margin-bottom:18px}.site-footer{width:calc(100% - 36px);min-height:58px;font-size:10px}}
-@media(max-width:380px){.site-header,.account-layout,.site-footer{width:calc(100% - 28px)}.brand img{width:140px}.header-link{font-size:11px}.account-layout{padding-top:28px}.card-content{padding-inline:17px}.mode-tabs{padding-inline:12px}}
+@media(max-width:760px){.site-header{width:calc(100% - 36px);min-height:72px}.brand img{width:154px}.header-link{font-size:12px}.account-layout{width:calc(100% - 36px);grid-template-columns:1fr;gap:20px;align-content:start;padding-block:20px 38px}.account-card{order:0;width:min(100%,480px);justify-self:center}.intro{order:1;max-width:520px;padding:0 4px;text-align:center}.intro .eyebrow,.intro-copy,.intro-detail{display:none}.intro h1{font-size:25px;line-height:1.25;letter-spacing:-.025em}.intro h1 br{display:none}.intro h1 em{margin-left:.18em}.mode-tabs{padding-inline:18px}.mode-tab{min-height:54px;font-size:13px}.card-content{padding:24px 22px 25px}.card-content h2{font-size:28px}.form-intro{margin-bottom:18px}.site-footer{width:calc(100% - 36px);min-height:58px;font-size:12px}}
+@media(max-width:380px){.site-header,.account-layout,.site-footer{width:calc(100% - 28px)}.brand img{width:140px}.header-link{font-size:12px}.account-layout{padding-top:28px}.card-content{padding-inline:17px}.mode-tabs{padding-inline:12px}}
 @media(hover:hover) and (pointer:fine){.button-primary:hover:not(:disabled){transform:translateY(-1px)}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}

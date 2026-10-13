@@ -5,7 +5,7 @@ import {fileURLToPath} from 'node:url';
 import path from 'node:path';
 import {chromium} from 'file:///C:/Users/Restore/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/index.mjs';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
-const files={'/':'index.html','/app.js':'app.js','/data-client.js':'data-client.js','/browser-store.js':'browser-store.js','/style.css':'style.css','/logo.svg':'logo.svg','/favicon.svg':'favicon.svg','/fonts/Lora.ttf':'fonts/Lora.ttf','/fonts/Manrope.ttf':'fonts/Manrope.ttf'};
+const files={'/':'index.html','/app.js':'app.js','/data-client.js':'data-client.js','/browser-store.js':'browser-store.js','/tokens.css':'tokens.css','/style.css':'style.css','/logo.svg':'logo.svg','/favicon.svg':'favicon.svg','/fonts/Lora.ttf':'fonts/Lora.ttf','/fonts/Manrope.ttf':'fonts/Manrope.ttf'};
 let server;let origin=process.env.DEPLOY_TEST_ORIGIN;
 if(!origin){server=http.createServer(async(req,res)=>{const pathname=new URL(req.url,'http://localhost').pathname;const f=files[pathname];if(!f){res.writeHead(404);res.end();return;}const contentType={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.svg':'image/svg+xml','.ttf':'font/ttf'}[path.extname(f)];res.writeHead(200,{'Content-Type':contentType});res.end(await readFile(path.join(root,'deploy-demo/public',f)));});await new Promise(r=>server.listen(0,'127.0.0.1',r));origin=`http://localhost:${server.address().port}`;}
 const browser=await chromium.launch({headless:true,executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe'});
@@ -14,7 +14,7 @@ const page=await ctx.newPage();await page.clock.install({time:new Date('2026-10-
 try{
  await page.goto(origin);await page.locator('#view-today h1').waitFor();await page.locator('.nav-new-order').click();await page.waitForFunction(()=>document.querySelector('#order-dialog').open);assert.equal(await page.locator('#order-dialog').evaluate(el=>el.open),true,'The mobile new-order navigation should open the form.');
  await page.locator('#order-form [name=client]').fill('Cliente teste • fictícia');await page.locator('#order-form [name=product]').fill('Bolo de cenoura • teste');
- await page.locator('#order-form [name=dueAt]').fill('2026-10-01T16:00');await page.locator('#order-form [name=total]').fill('150');await page.locator('#order-form [name=status]').selectOption('Confirmado');
+ await page.locator('#order-form [name=dueDate]').fill('2026-10-01');await page.locator('#order-form [name=dueTime]').fill('16:00');await page.locator('#order-form [name=total]').fill('150');await page.locator('#order-form [name=status]').selectOption('Confirmado');
  await page.locator('#save-order-button').click();await page.waitForFunction(()=>!document.querySelector('#order-dialog').open);
  assert.equal(await page.evaluate(async()=>{await document.fonts.ready;return document.fonts.check('12px Lora')&&document.fonts.check('12px Manrope');}),true,'Local Lora and Manrope fonts must load from the test server.');
  let state=await page.evaluate(async()=>await(await window.DoceStore.fetch('/api/state')).json());const o=state.orders.find(x=>x.client==='Cliente teste • fictícia');assert.ok(o);
@@ -95,7 +95,7 @@ try{
  const stateOf=()=>regressionPage.evaluate(async()=>await(await window.DoceStore.fetch('/api/state')).json());
  const waitForState=async(check)=>{for(let i=0;i<60;i++){const current=await stateOf();if(check(current))return current;await regressionPage.waitForTimeout(50);}throw new Error(`Timed out waiting for browser state: ${JSON.stringify(await stateOf())}`);};
  const fillOrder=async({client,product,dueAt,cake=false})=>{
-  await regressionPage.locator('.nav-new-order').click();await regressionPage.locator('#order-form [name=client]').fill(client);await regressionPage.locator('#order-form [name=product]').fill(product);await regressionPage.locator('#order-form [name=dueAt]').fill(dueAt);await regressionPage.locator('#order-form [name=total]').fill('75');await regressionPage.locator('#order-form [name=status]').selectOption('Confirmado');
+  await regressionPage.locator('.nav-new-order').click();await regressionPage.locator('#order-form [name=client]').fill(client);await regressionPage.locator('#order-form [name=product]').fill(product);await regressionPage.locator('#order-form [name=dueDate]').fill(dueAt.slice(0,10));await regressionPage.locator('#order-form [name=dueTime]').fill(dueAt.slice(11,16));await regressionPage.locator('#order-form [name=total]').fill('75');await regressionPage.locator('#order-form [name=status]').selectOption('Confirmado');
   await regressionPage.locator('#order-form .optional-fields > summary').click();const toggle=regressionPage.locator('#order-form [name=hasCake]');if(cake)await toggle.check();else if(await toggle.isChecked())await toggle.uncheck();
  };
  await regressionPage.locator('.settings-button').click();await regressionPage.locator('#view-settings h1').waitFor();await regressionPage.locator('#availability-form').waitFor();
@@ -112,7 +112,7 @@ try{
  let regressionState=await stateOf();assert.ok(regressionState.orders.some(x=>x.client==='Docinhos sem modelo'&&x.cake===null));
  // Reopening a weekly-closed Saturday with a limit of two allows two orders; the third requires an explicit reason.
  for(const client of ['Bolo sábado 1','Bolo sábado 2']){await fillOrder({client,product:'Bolo simples',dueAt:'2026-10-10T15:00'});await regressionPage.locator('#save-order-button').click();await regressionPage.waitForFunction(()=>!document.querySelector('#order-dialog').open);}
- await fillOrder({client:'Exceção sábado',product:'Bolo excepcional',dueAt:'2026-10-10T16:00'});await regressionPage.locator('#save-order-button').click();await regressionPage.locator('#order-form-error').waitFor({state:'visible'});assert.match(await regressionPage.locator('#order-form-error').innerText(),/limite de encomendas/i);assert.equal(await regressionPage.locator('#capacity-override-box').isVisible(),true);
+ await fillOrder({client:'Exceção sábado',product:'Bolo excepcional',dueAt:'2026-10-10T16:00'});await regressionPage.locator('#save-order-button').click();await regressionPage.locator('#order-form-error').waitFor({state:'visible'});assert.match(await regressionPage.locator('#order-form-error').innerText(),/limite de pedidos/i);assert.equal(await regressionPage.locator('#capacity-override-box').isVisible(),true);
  await regressionPage.locator('#capacity-override-box [name=overrideReason]').fill('Exceção combinada com a cliente');await regressionPage.locator('#save-order-button').click();await regressionPage.waitForFunction(()=>!document.querySelector('#order-dialog').open);
  regressionState=await stateOf();assert.ok(regressionState.orders.find(x=>x.client==='Exceção sábado').history.some(item=>item.text.includes('Exceção combinada com a cliente')));
  // Confirming an active cake model without its required size shows an inline error; a valid select saves the label snapshot.

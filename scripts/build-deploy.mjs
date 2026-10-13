@@ -7,7 +7,7 @@ const webRoot = path.resolve(scriptDir, "..");
 const sourcePublic = path.join(webRoot, "public");
 const deployPublic = path.join(webRoot, "deploy-demo", "public");
 
-const requiredAssets = ["index.html", "app.js", "data-client.js", "style.css", "logo.svg", "favicon.svg"];
+const requiredAssets = ["index.html", "app.js", "data-client.js", "tokens.css", "style.css", "logo.svg", "favicon.svg"];
 const requiredFonts = ["Lora.ttf", "Manrope.ttf", "Lora-OFL.txt", "Manrope-OFL.txt"];
 const adapterName = "browser-store.js";
 const exists = async (filePath) => access(filePath).then(() => true, () => false);

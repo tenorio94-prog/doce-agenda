@@ -88,6 +88,7 @@ const pilotFiles = [
   "data-client.js",
   "favicon.svg",
   "logo.svg",
+  "tokens.css",
   "style.css",
 ];
 for (const fileName of pilotFiles) {
@@ -98,6 +99,16 @@ await cp(path.join(pilotSource, "fonts"), path.join(launchPublic, "fonts"), {
   recursive: true,
   errorOnExist: false,
 });
+
+// The manifest and installed-app icons come straight from public/ (build-deploy
+// does not stage them) and sit at the site root: /manifest.webmanifest, /icons/.
+const manifestSource = path.join(webRoot, "public", "manifest.webmanifest");
+const iconsSource = path.join(webRoot, "public", "icons");
+for (const required of [manifestSource, iconsSource]) {
+  if (!(await exists(required))) throw new Error(`Arquivo de instalação não encontrado: ${required}`);
+}
+await copyFile(manifestSource, path.join(launchPublic, "manifest.webmanifest"));
+await cp(iconsSource, path.join(launchPublic, "icons"), { recursive: true, errorOnExist: false });
 
 const pilotHtml = path.join(pilotSource, "index.html");
 if (!(await exists(pilotHtml))) throw new Error(`Build do piloto sem index.html: ${pilotHtml}`);

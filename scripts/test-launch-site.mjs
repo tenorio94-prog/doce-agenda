@@ -148,6 +148,56 @@ try {
     assert.ok(response.status() < 400, `Local link should load: ${response.status()} ${href}`);
   }
 
+  // Link preview (LP-2) and installed-app metadata (MA-5): tags, image and manifest.
+  const metaContent = (selector) => landing.locator(selector).first().getAttribute("content");
+  assert.equal(await landing.locator('link[rel="canonical"]').getAttribute("href"), "https://doce-agenda-piloto.netlify.app/");
+  assert.equal(await metaContent('meta[property="og:type"]'), "website");
+  assert.equal(await metaContent('meta[property="og:locale"]'), "pt_BR");
+  assert.equal(await metaContent('meta[property="og:site_name"]'), "Doce Agenda");
+  assert.match(await metaContent('meta[property="og:title"]'), /^Doce Agenda: pedidos, prazos e sinal no mesmo lugar$/);
+  assert.ok(await metaContent('meta[property="og:description"]'), "og:description must be present.");
+  assert.equal(await metaContent('meta[name="twitter:card"]'), "summary_large_image");
+  assert.equal(await metaContent('meta[property="og:image"]'), "https://doce-agenda-piloto.netlify.app/landing/assets/og.jpg");
+  assert.equal(await metaContent('meta[property="og:image:width"]'), "1200");
+  assert.equal(await metaContent('meta[property="og:image:height"]'), "630");
+  assert.equal(await metaContent('meta[name="theme-color"]'), "#fbf7f0");
+  const ogImage = await landingContext.request.get(new URL("/landing/assets/og.jpg", origin).href);
+  assert.equal(ogImage.status(), 200, "og.jpg must be served.");
+  assert.equal(ogImage.headers()["content-type"], "image/jpeg");
+  const ogBytes = await ogImage.body();
+  assert.ok(ogBytes.length > 0 && ogBytes.length < 300 * 1024, `og.jpg must be under 300 KB, got ${ogBytes.length}.`);
+  assert.equal(await landing.locator('link[rel="apple-touch-icon"]').getAttribute("href"), "/icons/apple-touch-icon.png");
+  const manifestHref = await landing.locator('link[rel="manifest"]').getAttribute("href");
+  assert.equal(manifestHref, "/manifest.webmanifest");
+  const manifestResponse = await landingContext.request.get(new URL(manifestHref, origin).href);
+  assert.equal(manifestResponse.status(), 200, "The web manifest must be served.");
+  const manifest = JSON.parse(await manifestResponse.text());
+  assert.equal(manifest.name, "Doce Agenda");
+  assert.equal(manifest.lang, "pt-BR");
+  assert.equal(manifest.display, "standalone");
+  assert.equal(manifest.theme_color, "#fbf7f0");
+  assert.equal(manifest.background_color, "#fbf7f0");
+  assert.equal(manifest.start_url, "/app/");
+  assert.equal(manifest.scope, "/app/");
+  for (const size of [192, 512]) {
+    const icon = manifest.icons.find((item) => item.sizes === `${size}x${size}`);
+    assert.ok(icon, `Manifest must list a ${size}x${size} icon.`);
+    const iconResponse = await landingContext.request.get(new URL(icon.src, origin).href);
+    assert.equal(iconResponse.status(), 200, `Manifest icon should load: ${icon.src}`);
+    assert.equal(iconResponse.headers()["content-type"], "image/png");
+  }
+  const touchIcon = await landingContext.request.get(new URL("/icons/apple-touch-icon.png", origin).href);
+  assert.equal(touchIcon.status(), 200, "apple-touch-icon must be served.");
+
+  // Hero note (LP-3) and the demo-storage FAQ question (LP-1).
+  const heroNote = landing.locator(".hero-note");
+  assert.equal(await heroNote.count(), 1, "Hero should have a single note line.");
+  assert.match(await heroNote.innerText(), /Grátis no piloto · Sem cartão · Funciona no celular.*Estamos construindo junto com confeiteiras/s);
+  assert.equal(await heroNote.evaluate((element) => getComputedStyle(element).fontSize), "13px");
+  const demoFaq = landing.locator("details", { hasText: "E a demonstração, guarda meus pedidos?" });
+  assert.equal(await demoFaq.count(), 1, "FAQ must include the demo storage question.");
+  assert.match(await demoFaq.locator("p").textContent(), /Só neste navegador\. Se você limpar os dados do navegador, eles somem\. No próprio demo dá para baixar uma cópia de segurança\./);
+
   const cta = landing.locator('a[href="/app/"], a[href="/app"], a[href^="/app/?"]').first();
   assert.equal(await cta.count(), 1, "A landing CTA must link to /app/.");
   const faqItems = landing.locator("details");
@@ -198,7 +248,8 @@ try {
   await app.locator(".nav-new-order").click();
   await app.locator("#order-form [name=client]").fill("Orçamento fictício");
   await app.locator("#order-form [name=product]").fill("Bolo teste de chocolate");
-  await app.locator("#order-form [name=dueAt]").fill("");
+  await app.locator("#order-form [name=dueDate]").fill("");
+  await app.locator("#order-form [name=dueTime]").fill("");
   await app.locator("#order-form [name=status]").selectOption("Orçamento");
   await app.locator("#save-order-button").click();
   await app.waitForFunction(() => !document.querySelector("#order-dialog").open);

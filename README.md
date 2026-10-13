@@ -32,6 +32,8 @@ O próximo passo é observar a amiga usando o fluxo de disponibilidade e persona
 
 Para verificar as regras do servidor local, execute `node --test test.mjs`; o teste usa diretório temporário e não toca nos dados reais. Para revisar a versão estática no Chrome, prepare `deploy-demo/public` com `node scripts/build-deploy.mjs` e depois execute `node scripts/test-deploy.mjs`; as capturas ficam em `deploy-demo-check/`. O deploy público e seu armazenamento são separados; atualizar os arquivos publicados não apaga o `localStorage` existente.
 
+A cada mudança visual do app, antes de publicar: regenere as capturas do tour da página de apresentação (`public/landing/assets/agenda.webp`, `semana.webp` e `pagamento.webp`; hoje esse passo é manual) e, se a marca mudar, rode `node scripts/build-og-image.mjs` e `node scripts/build-icons.mjs`. `node scripts/test-melhorias.mjs` verifica no demo a faixa de demonstração, o exemplo visível, o aviso de armazenamento e o resumo após salvar.
+
 Arquivos de interface em `public/`; servidor e armazenamento em `server.mjs`; identidade em `BRAND.md`.
 
 ## Página de apresentação

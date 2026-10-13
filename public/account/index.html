@@ -7,6 +7,9 @@
   <meta name="description" content="Acesse sua conta Doce Agenda ou crie uma conta para sua confeitaria.">
   <title>Conta — Doce Agenda</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="stylesheet" href="/tokens.css">
   <link rel="stylesheet" href="/account/account.css">
   <!-- O controlador de autenticação real deve ser carregado antes da interface. -->
   <script defer src="/account/config.js"></script>
@@ -45,11 +48,12 @@
         <p class="form-intro" id="form-intro">Use seu e-mail para começar a organizar sua confeitaria.</p>
 
         <div id="service-notice" class="notice notice-pending" role="status" hidden>
-          O cadastro está sendo preparado. Por enquanto, você pode conhecer a demonstração.
-          <a href="/demo/">Abrir demonstração</a>
+          <span id="service-notice-text">O cadastro está sendo preparado. Por enquanto, você pode conhecer a demonstração.</span>
+          <a class="button button-secondary" href="/demo/">Abrir demonstração</a>
         </div>
         <div id="status-message" class="notice" role="status" aria-live="polite" hidden></div>
         <div id="error-message" class="notice notice-error" role="alert" hidden></div>
+        <button id="retry-button" class="button button-secondary retry-button" type="button" hidden>Tentar de novo</button>
 
         <form id="signup-form" class="account-form" novalidate>
           <label class="field" for="signup-business-name">

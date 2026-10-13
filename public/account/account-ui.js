@@ -11,6 +11,10 @@
   let mode = ["login", "recovery", "update"].includes(params.get("mode")) ? params.get("mode") : "signup";
   let capabilities = { configured: false, email: false, google: false };
   let busy = false;
+  let checking = true;
+  let checkFailed = false;
+  let pendingRetry = null;
+  let authListening = false;
 
   const setNotice = (message, kind = "success") => {
     const node = $("status-message");
@@ -23,15 +27,44 @@
   const clearNotices = () => {
     $("status-message").hidden = true;
     $("error-message").hidden = true;
+    $("retry-button").hidden = true;
+    pendingRetry = null;
   };
 
-  const showError = (error, fallback) => {
-    const message = error && typeof error.message === "string" && error.message.trim()
-      ? error.message.trim()
-      : fallback;
+  // Closed list of known cases; anything else gets the caller's Portuguese fallback.
+  // The raw library message never reaches the screen (it goes to the console for support).
+  const friendlyError = (error, fallback) => {
+    const raw = String(error?.message || "");
+    const code = String(error?.code || error?.error_code || "");
+    const status = Number(error?.status) || 0;
+    const is = (pattern) => pattern.test(raw) || pattern.test(code);
+    if (error?.name === "AuthRetryableFetchError" || is(/failed to fetch|networkerror|network request failed|load failed|fetch failed/i)) {
+      return { network: true, message: "Não conseguimos falar com o servidor. Confira a internet ou desative o bloqueador de anúncios e tente de novo." };
+    }
+    if (is(/invalid login credentials|invalid_credentials/i)) return { message: "E-mail ou senha não conferem." };
+    if (is(/already (registered|exists)|user_already_exists|email_exists/i)) return { message: "Já existe uma conta com esse e-mail. Use a aba Entrar." };
+    if (is(/email not confirmed|email_not_confirmed/i)) return { message: "Confirme seu e-mail antes de entrar. Procure a mensagem de confirmação na sua caixa de entrada." };
+    if (is(/different from the old password|same_password/i)) return { message: "A nova senha precisa ser diferente da senha anterior." };
+    if (is(/password should be at least|weak_password|weak and easy to guess/i)) return { message: "Escolha uma senha mais forte, com pelo menos 8 caracteres." };
+    if (status === 429 || is(/rate limit|rate_limit|only request this after|too many requests/i)) return { message: "Muitas tentativas em pouco tempo. Aguarde alguns minutos e tente de novo." };
+    if (is(/signups? (are |is )?(not allowed|disabled)|signup_disabled|email_provider_disabled/i)) return { message: "O cadastro por e-mail não está disponível agora. Você pode conhecer a demonstração enquanto isso." };
+    if (is(/provider is not enabled|unsupported provider|provider_disabled/i)) return { message: "O acesso com Google não está disponível agora." };
+    if (is(/unable to validate email|email_address_invalid/i)) return { message: "Confira o e-mail digitado." };
+    if (is(/auth session missing|session_not_found|otp_expired|token has expired|bad_jwt|invalid jwt/i)) return { message: "O link expirou. Peça um novo em Esqueci minha senha." };
+    if (is(/sendo preparado/i)) return { message: "O cadastro ainda está sendo preparado. Você pode conhecer a demonstração enquanto isso." };
+    return { message: fallback };
+  };
+
+  // `retry` is offered for network failures, or always when `alwaysRetry` is set (availability check).
+  const showError = (error, fallback, retry, alwaysRetry = false) => {
+    const { message, network } = friendlyError(error, fallback);
+    if (error) console.warn("[Doce Agenda] Erro de acesso (detalhe técnico para suporte):", error?.message ?? error, { name: error?.name, code: error?.code, status: error?.status });
     $("error-message").textContent = message;
     $("error-message").hidden = false;
     $("status-message").hidden = true;
+    $("service-notice").hidden = true;
+    pendingRetry = retry && (network || alwaysRetry) ? retry : null;
+    $("retry-button").hidden = !pendingRetry;
   };
 
   const isBusy = (value) => {
@@ -50,12 +83,20 @@
   const updateAvailability = () => {
     const available = canUseEmail();
     document.querySelectorAll(".account-form button[type=submit]").forEach((button) => {
-      button.disabled = busy || !available;
+      button.disabled = checking || busy || !available;
+      if (checking) {
+        button.dataset.label ||= button.textContent;
+        button.textContent = "Verificando…";
+        button.setAttribute("aria-busy", "true");
+      } else {
+        if (button.dataset.label) button.textContent = button.dataset.label;
+        delete button.dataset.label;
+        if (!busy) button.removeAttribute("aria-busy");
+      }
     });
     $("google-button").disabled = busy || !capabilities.configured || !capabilities.google;
     $("google-button").hidden = !capabilities.configured || !capabilities.google || !["signup", "login"].includes(mode);
     $("provider-divider").hidden = $("google-button").hidden;
-    $("service-notice").hidden = capabilities.configured && capabilities.email;
     if (mode === 'recovery' && capabilities.recoveryEmail === false) {
       $("recovery-form").hidden = true;
       $("recovery-support").hidden = false;
@@ -65,11 +106,12 @@
       $("recovery-support").hidden = true;
     }
     if (capabilities.configured && !capabilities.email) {
-      $("service-notice").textContent = capabilities.google
+      $("service-notice-text").textContent = capabilities.google
         ? "O acesso por e-mail está sendo preparado. Você pode continuar com Google."
         : "O acesso por e-mail está sendo preparado. Você pode conhecer a demonstração enquanto isso.";
-      $("service-notice").hidden = false;
     }
+    // The amber notice only appears once the check answered "not configured"; never next to an error.
+    $("service-notice").hidden = checking || checkFailed || canUseEmail() || !$("error-message").hidden;
   };
 
   const setMode = (nextMode) => {
@@ -153,7 +195,7 @@
         if (await redirectIfSession(result)) return;
         setNotice("Confira seu e-mail para confirmar o cadastro. Depois, volte para entrar na sua conta.", "pending");
       } catch (error) {
-        showError(error, "Não foi possível criar a conta. Confira os dados e tente novamente.");
+        showError(error, "Não foi possível criar a conta. Confira os dados e tente novamente.", () => forms.signup.requestSubmit());
       } finally { isBusy(false); }
     });
 
@@ -168,7 +210,7 @@
         if (result?.error) throw result.error;
         if (!(await redirectIfSession(result))) setNotice("Não foi possível confirmar sua sessão. Tente entrar novamente.");
       } catch (error) {
-        showError(error, "Não foi possível entrar. Confira seu e-mail e senha e tente novamente.");
+        showError(error, "Não foi possível entrar. Confira seu e-mail e senha e tente novamente.", () => forms.login.requestSubmit());
       } finally { isBusy(false); }
     });
 
@@ -183,7 +225,7 @@
         if (result?.error) throw result.error;
         setNotice("Se houver uma conta com esse e-mail, você receberá as instruções para redefinir sua senha.");
       } catch (error) {
-        showError(error, "Não foi possível enviar as instruções agora. Tente novamente.");
+        showError(error, "Não foi possível enviar as instruções agora. Tente novamente.", () => forms.recovery.requestSubmit());
       } finally { isBusy(false); }
     });
 
@@ -207,8 +249,14 @@
         setNotice("Senha atualizada. Você já pode entrar com a nova senha.");
         window.history.replaceState({}, "", "/cadastro/?mode=login");
       } catch (error) {
-        showError(error, "Não foi possível atualizar a senha. Tente novamente.");
+        showError(error, "Não foi possível atualizar a senha. Tente novamente.", () => forms.update.requestSubmit());
       } finally { isBusy(false); }
+    });
+
+    $("retry-button").addEventListener("click", () => {
+      const retry = pendingRetry;
+      clearNotices();
+      if (retry) retry();
     });
 
     $("google-button").addEventListener("click", async () => {
@@ -221,24 +269,27 @@
         // OAuth implementations usually navigate away; redirect when the provider returns a session directly.
         await redirectIfSession(result);
       } catch (error) {
-        showError(error, "Não foi possível continuar com Google. Tente novamente.");
+        showError(error, "Não foi possível continuar com Google. Tente novamente.", () => $("google-button").click());
       } finally { isBusy(false); }
     });
   };
 
-  const start = async () => {
-    bindPasswordToggles();
-    bindForms();
-    setMode(mode);
+  const checkAccess = async () => {
     const controller = auth();
     if (!controller?.getCapabilities) {
+      checking = false;
       updateAvailability();
       return;
     }
+    checking = true;
+    checkFailed = false;
+    updateAvailability();
     try {
       capabilities = { ...capabilities, ...(await controller.getCapabilities()) };
+      checking = false;
       updateAvailability();
-      if (controller.onAuthStateChange) {
+      if (controller.onAuthStateChange && !authListening) {
+        authListening = true;
         controller.onAuthStateChange((eventOrPayload, sessionArg) => {
           const event = typeof eventOrPayload === "string" ? eventOrPayload : eventOrPayload?.event;
           const session = sessionArg || eventOrPayload?.session;
@@ -250,12 +301,25 @@
         if (window.location.hash.includes("type=recovery")) setMode("update");
         return;
       }
+      // Without a configured provider there is no session to look for; the amber notice already explains it.
+      if (!capabilities.configured) return;
       const result = await controller.getSession?.();
       if (result?.error) throw result.error;
       if (hasSession(result)) window.location.assign("/app/");
     } catch (error) {
-      showError(error, "Não foi possível verificar o acesso agora. Tente novamente.");
+      // checkFailed only when the availability answer itself never arrived.
+      checkFailed = checking;
+      checking = false;
+      updateAvailability();
+      showError(error, "Não foi possível verificar o acesso agora. Tente novamente.", checkAccess, true);
     }
+  };
+
+  const start = () => {
+    bindPasswordToggles();
+    bindForms();
+    setMode(mode);
+    return checkAccess();
   };
 
   start();

@@ -1,0 +1,46 @@
+/* Tokens compartilhados do Doce Agenda. Carregado antes de style.css, landing.css e account.css.
+   Cada folha ainda declara seus próprios valores; migre para estes tokens um componente por vez. */
+:root {
+  color-scheme: light;
+
+  /* Superfícies */
+  --paper: #fbf7f0;
+  --card: #fffefa;
+  --cream: #f3eadc;
+  --line: #e7dcd1;
+  --border-input: #9f8b7f; /* 3,21:1 no cartão (WCAG 1.4.11) */
+
+  /* Texto */
+  --ink: #392923;
+  --muted: #6f5b51;
+  --faint: #7a665b; /* não usar sobre --cream em texto pequeno */
+
+  /* Ação e marca */
+  --action: #a34432;
+  --action-hover: #843524;
+  --action-soft: #f8e8e1;
+
+  /* Semântica */
+  --ok: #42644c;    --ok-soft: #e8f0e8;    /* confirmado, conferido, salvo, foco */
+  --wait: #79521d;  --wait-soft: #fbf0d9;  /* aguardando, falta algo */
+  --work: #46566f;  --work-soft: #e9edf2;  /* em produção */
+  --ready: #2f5d52; --ready-soft: #e3eeea; /* pronto */
+  --done: #5c5049;  --done-soft: #ece6df;  /* entregue */
+  --error: #a32e34; --error-soft: #fce9e7; /* sempre com ícone + texto */
+  --focus: #42644c;
+
+  /* Tipografia */
+  --font-title: "Lora", Georgia, "Times New Roman", serif;
+  --font-body: "Manrope", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --text-xs: 12px; --text-sm: 13px; --text-md: 15px;
+  --text-lg: 18px; --text-xl: 22px; --text-2xl: 28px;
+  --text-display: clamp(38px, 6vw, 76px);
+
+  /* Espaço, raio, toque */
+  --space-1: 4px; --space-2: 8px; --space-3: 12px;
+  --space-4: 16px; --space-5: 24px; --space-6: 32px; --space-7: 48px;
+  --radius-sm: 9px; --radius-md: 12px; --radius-lg: 16px; --radius-arch: 160px;
+  --tap: 44px;
+  --shadow-1: 0 4px 16px rgb(74 47 35 / 4%);
+  --shadow-2: 0 16px 42px rgb(74 47 35 / 8%);
+}

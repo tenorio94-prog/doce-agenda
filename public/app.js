@@ -104,6 +104,7 @@ function setConnection(mode, message) {
   element.classList.toggle("is-online", mode === "online");
   element.classList.toggle("is-error", mode === "error");
   $("#connection-text").textContent = message;
+  $("#connection-short").textContent = mode === "online" ? "Salvo" : message;
 }
 
 function setError(message = "Verifique sua conexão e tente novamente.") {
@@ -128,7 +129,7 @@ async function loadState({ silent = false } = {}) {
     state.orderTemplate = data.orderTemplate || structuredClone(DEFAULT_ORDER_TEMPLATE);
     $("#error-notice").hidden = true;
     $("#loading-state").hidden = true;
-    setConnection("online", "Salvo neste computador");
+    setConnection("online", window.DoceApi.mode === "cloud" ? "Salvo na sua conta" : window.DoceApi.mode === "browser" ? "Salvo neste navegador" : "Salvo neste computador");
     render();
   } catch (error) {
     $("#loading-state").hidden = true;
@@ -157,13 +158,23 @@ async function apiRequest(path, { method = "GET", body } = {}) {
   return response.status === 204 ? null : response.json().catch(() => null);
 }
 
-function showToast(message) {
+function showToast(message, action) {
   const toast = $("#toast");
   toast.textContent = message;
+  toast.classList.toggle("has-action", !!action);
+  if (action) {
+    const button = document.createElement("button");
+    button.type = "button"; button.className = "toast-action"; button.textContent = action.label;
+    button.addEventListener("click", () => { toast.hidden = true; action.run(); });
+    toast.append(" ", button);
+  }
   toast.hidden = false;
   clearTimeout(state.toastTimer);
-  state.toastTimer = setTimeout(() => { toast.hidden = true; }, 2800);
+  state.toastTimer = setTimeout(() => { toast.hidden = true; }, action ? 6000 : 2800);
 }
+
+// Sample orders saved by earlier versions carry the "fictício" suffix in the name; the tag already says it.
+const clientName = (order) => sampleOrder(order) ? String(order.client || "").replace(/\s*•\s*exemplo fictício$/i, "") : order.client;
 
 function todayOrders() {
   const today = localDateKey(new Date());
@@ -174,12 +185,12 @@ function rowMarkup(order, options = {}) {
   const date = parseDate(order.dueAt);
   const delivery = date ? `${dateLabel(order.dueAt, { weekday: "short", day: "2-digit", month: "short" })} · ${new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit" }).format(date)}` : "Sem data definida";
   const balance = balanceFor(order);
-  const summary = balance === null ? "" : `<span title="Após pagamentos conferidos">${esc(balance < 0 ? balanceLabel(balance) : `Saldo ${money(balance)}`)}</span>`;
-  const sample = order.isSample || order.isDemo || order.sample ? `<span class="sample-tag">Exemplo fictício</span>` : "";
-  return `<article class="order-row" data-open-order="${esc(order.id)}" tabindex="0" role="button" aria-label="Abrir pedido de ${esc(order.client)}">
+  const summary = balance === null ? "" : `<span${balance > 0 ? ' class="row-balance"' : ""} title="Após pagamentos conferidos">${esc(balance < 0 ? balanceLabel(balance) : `Saldo ${money(balance)}`)}</span>`;
+  const sample = order.isSample || order.isDemo || order.sample ? `<span class="sample-tag">Exemplo</span>` : "";
+  return `<article class="order-row${isCancelled(order) ? " is-cancelled" : ""}" data-open-order="${esc(order.id)}" tabindex="0" role="button" aria-label="Abrir pedido de ${esc(clientName(order))}">
     <span class="row-accent status-${statusSlug(order.status)}" aria-hidden="true"></span>
     <div class="row-main">
-      <div class="row-title-line"><span class="row-client">${esc(order.client || "Cliente sem nome")}</span>${sample}</div>
+      <div class="row-title-line"><span class="row-client">${esc(clientName(order) || "Cliente sem nome")}</span>${sample}</div>
       <div class="row-product">${esc(order.product || "Produto sem descrição")}</div>
       <div class="row-meta"><span><span class="inline-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>${esc(delivery)}</span><span>${esc(order.mode || "Retirada")}</span>${summary}</div>
     </div>
@@ -215,19 +226,19 @@ function renderToday() {
   const sample = state.orders.find((order) => order.isSample || order.isDemo || order.sample);
   const firstUse = !state.orders.some((order) => !(order.isSample || order.isDemo || order.sample));
   const nextAction = nextActionMarkup();
-  const financeNote = unknown ? (balances.length ? 'Saldo parcial conhecido · ' : 'Nenhum saldo conhecido: ') + unknown + (unknown === 1 ? ' pedido ainda sem recebimento conferido.' : ' pedidos ainda sem recebimento conferido.') : 'Calculado após os recebimentos conferidos. Excedentes não reduzem o saldo de outros pedidos.';
+  const financeNote = unknown ? (balances.length ? 'Saldo parcial conhecido · ' : 'Nenhum saldo conhecido: ') + unknown + (unknown === 1 ? ' pedido ainda sem recebimento conferido.' : ' pedidos ainda sem recebimento conferido.') : '';
   panel.innerHTML = `<div class="page-heading today-heading"><div><h1 id="today-title">Hoje</h1></div><span class="date-label">${esc(new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "numeric", month: "long" }).format(new Date()))}</span></div>
-    ${firstUse ? `<section class="welcome-panel"><h2>Cadastre sua primeira encomenda</h2><p>Comece com cliente, produto e valor. Complete os detalhes quando estiverem combinados.</p><div class="welcome-actions"><button class="button button-primary" type="button" data-action="new-order">Novo pedido</button></div></section>` : ''}
-    ${sample ? `<details class="sample-examples"><summary>Exemplo fictício — não entra na sua agenda</summary><div class="sample-example-list">${state.orders.filter(sampleOrder).map((order) => `<button class="text-link" type="button" data-open-order="${esc(order.id)}">Ver exemplo: ${esc(order.client || order.product || "pedido")}</button>`).join("")}</div></details>` : ''}
-    <div class="content-grid ${nextAction ? '' : 'today-single'}"><section class="today-agenda section-card surface" aria-labelledby="today-list-title"><div class="section-head"><h2 id="today-list-title">Pedidos de hoje${todays.length ? ` <span class="today-count">· ${todays.length}</span>` : ''}</h2><button class="text-link" type="button" data-view="week">Ver semana</button></div>${todays.length ? `<div class="order-list">${todays.map((order) => rowMarkup(order)).join("")}</div>` : `<div class="today-empty"><h3>Nenhum pedido agendado para hoje.</h3><p>${upcoming.length ? 'Os próximos pedidos estão logo abaixo.' : 'Pedidos sem data aparecem em Pedidos.'}</p></div>`}</section>${nextAction ? `<aside class="content-aside">${nextAction}</aside>` : ''}</div>
-    ${pendingChanges.length ? `<section class="pending-card surface"><div class="section-head"><h2>Alterações para revisar</h2><span class="pending-count">${pendingChanges.length}</span></div><div class="pending-list">${pendingChanges.slice(0, 3).map((order) => `<button class="pending-row" type="button" data-open-order="${esc(order.id)}"><span><strong>${esc(order.client)}</strong><small>${esc(order.product)}</small></span><span class="pending-chevron" aria-hidden="true">↗</span><span class="pending-banner"><strong>Pedido de mudança:</strong> ${esc(order.pendingChange)}</span></button>`).join("")}</div></section>` : ""}
+    ${firstUse ? `<section class="welcome-panel"><h2>Cadastre seu primeiro pedido</h2><p>Comece com cliente, produto e valor. Complete os detalhes quando estiverem combinados.</p><div class="welcome-actions"><button class="button button-primary" type="button" data-action="new-order">Novo pedido</button></div></section>` : ''}
+    ${sample && firstUse ? `<section class="sample-card" aria-label="Pedido de exemplo">${rowMarkup(sample)}<p>Toque para ver como fica um pedido completo. O exemplo não entra na sua agenda.</p></section>` : sample ? `<details class="sample-examples"><summary>Exemplo fictício — não entra na sua agenda</summary><div class="sample-example-list">${state.orders.filter(sampleOrder).map((order) => `<button class="text-link" type="button" data-open-order="${esc(order.id)}">Ver exemplo: ${esc(clientName(order) || order.product || "pedido")}</button>`).join("")}</div></details>` : ''}
+    <div class="today-columns"><div class="today-main"><div class="content-grid ${nextAction ? '' : 'today-single'}"><section class="today-agenda section-card surface" aria-labelledby="today-list-title"><div class="section-head"><h2 id="today-list-title">Pedidos de hoje${todays.length ? ` <span class="today-count">· ${todays.length}</span>` : ''}</h2><button class="text-link" type="button" data-view="week">Ver semana</button></div>${todays.length ? `<div class="order-list">${todays.map((order) => rowMarkup(order)).join("")}</div>` : `<div class="today-empty"><h3>Nenhum pedido agendado para hoje.</h3><p>${upcoming.length ? 'Os próximos pedidos estão logo abaixo.' : 'Pedidos sem data aparecem em Pedidos.'}</p></div>`}</section>${nextAction ? `<aside class="content-aside">${nextAction}</aside>` : ''}</div>
+    ${pendingChanges.length ? `<section class="pending-card surface"><div class="section-head"><h2>Alterações para revisar</h2><span class="pending-count">${pendingChanges.length}</span></div><div class="pending-list">${pendingChanges.slice(0, 3).map((order) => `<button class="pending-row" type="button" data-open-order="${esc(order.id)}"><span><strong>${esc(order.client)}</strong><small>${esc(order.product)}</small></span><span class="pending-chevron" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></span><span class="pending-banner"><strong>Pedido de mudança:</strong> ${esc(order.pendingChange)}</span></button>`).join("")}</div></section>` : ""}
     ${upcoming.length ? `<section class="coming-soon"><div class="section-head"><h2>Logo mais</h2><button class="text-link" type="button" data-view="orders">Todos os pedidos →</button></div><div class="order-list">${upcoming.map((order) => rowMarkup(order)).join("")}</div></section>` : ""}
-    ${state.orders.some((order) => !sampleOrder(order)) ? `<section class="finance-summary" aria-labelledby="finance-title"><div class="section-head"><h2 id="finance-title">Resumo financeiro</h2></div><div class="stats-grid">
+    </div><div class="today-side">${state.orders.some((order) => !sampleOrder(order)) ? `<section class="finance-summary" aria-labelledby="finance-title"><div class="section-head"><h2 id="finance-title">Resumo financeiro</h2></div><div class="stats-grid">
       <article class="stat-card"><div class="stat-top">Em andamento</div><div class="stat-value">${state.orders.filter((order) => !sampleOrder(order) && !isFinished(order)).length}</div><div class="stat-note">pedidos ainda não encerrados</div></article>
-      <article class="stat-card"><div class="stat-top">Valor dos pedidos confirmados</div><div class="stat-value">${esc(money(totalConfirmed))}</div><div class="stat-note">inclui produção, prontos e entregues; não é dinheiro recebido</div></article>
-      <article class="stat-card"><div class="stat-top">Saldo a receber</div><div class="stat-value ${!balances.length && committed.length ? 'is-unknown' : ''}">${balances.length || !committed.length ? esc(money(totalBalance)) : "Ainda não conferido"}</div><div class="stat-note">somente recebimentos conferidos</div></article>
-    </div><p class="finance-note">${esc(financeNote)}</p></section>` : ''}
-    <p class="storage-note">${window.DoceApi.mode === 'cloud' ? 'Dados salvos na sua conta. Recarregue a agenda para ver alterações feitas em outro aparelho.' : 'Dados salvos neste computador. Sem sincronização entre aparelhos.'} <button class="text-link" type="button" data-action="export">Baixar backup</button></p>`;
+      <article class="stat-card"><div class="stat-top">Valor dos pedidos confirmados</div><div class="stat-value">${esc(money(totalConfirmed))}</div><div class="stat-note">Soma dos pedidos confirmados. Ainda não é dinheiro recebido.</div></article>
+      <article class="stat-card"><div class="stat-top">Saldo a receber</div><div class="stat-value ${!balances.length && committed.length ? 'is-unknown' : ''}">${balances.length || !committed.length ? esc(money(totalBalance)) : "Ainda não conferido"}</div><div class="stat-note">Conta só pagamentos que você conferiu.</div></article>
+    </div>${financeNote ? `<p class="finance-note">${esc(financeNote)}</p>` : ''}<details class="finance-how"><summary>Como calculamos?</summary><p>O valor dos pedidos confirmados soma os pedidos confirmados, em produção, prontos e entregues. Cancelados e orçamentos ficam de fora.</p><p>O saldo de cada pedido é o valor total menos os pagamentos que você conferiu. Pagamentos só informados não entram na conta.</p><p>Se um pedido recebeu mais do que o combinado, o excedente não reduz o saldo de outros pedidos.</p></details></section>` : ''}
+    ${storageNoteMarkup()}</div></div>`;
   panel.hidden = state.activeView !== "today";
 }
 
@@ -246,7 +257,7 @@ function renderOrders() {
   const statusWasFocused = document.activeElement?.id === "status-filter";
   const caret = queryWasFocused ? document.activeElement.selectionStart : null;
   const orders = filteredOrders();
-  panel.innerHTML = `<div class="page-heading"><div><span class="eyebrow">TUDO NO MESMO LUGAR</span><h1 id="orders-title">Seus pedidos</h1><p>Do primeiro orçamento à entrega, com o combinado sempre à mão.</p></div><button class="button button-primary page-add" data-action="new-order" type="button">＋ Novo pedido</button></div>
+  panel.innerHTML = `<div class="page-heading"><div><h1 id="orders-title">Seus pedidos</h1><p>Do primeiro orçamento à entrega, com o combinado sempre à mão.</p></div><button class="button button-primary page-add" data-action="new-order" type="button"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> Novo pedido</button></div>
     <div class="toolbar"><label class="search-wrap"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 4.5 4.5"/></svg><input class="search-input" id="order-search" type="search" placeholder="Buscar cliente, produto ou detalhe…" value="${esc(state.search)}" aria-label="Buscar pedidos"></label><select class="filter-select" id="status-filter" aria-label="Filtrar por situação"><option value="all" ${state.statusFilter === "all" ? "selected" : ""}>Todas as situações</option>${ORDER_STATUSES.map((status) => `<option value="${esc(status)}" ${state.statusFilter === status ? "selected" : ""}>${esc(status)}</option>`).join("")}</select></div>
     <p class="order-results" aria-live="polite"><strong>${orders.length}</strong> ${orders.length === 1 ? "pedido encontrado" : "pedidos encontrados"}</p>
     ${orders.length ? `<div class="orders-full-list">${orders.map((order) => rowMarkup(order)).join("")}</div>` : state.orders.some((order) => !sampleOrder(order)) ? emptyState("Nada por aqui com esse filtro", "Tente outro nome ou situação para encontrar o pedido.", false) : emptyState("Seu próximo pedido começa aqui", "Cadastre o combinado com a cliente e acompanhe pagamentos, mudanças e data de entrega.", true)}`;
@@ -272,14 +283,14 @@ function availabilityPanelMarkup(selectedKey) {
   const weekdayNames = ["Domingo", "Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado"];
   const affected = state.orders.filter((order) => committedForCapacity(order) && order.dueAt?.slice(0, 10) === selectedKey);
   return `<section class="availability-settings surface"><details id="availability-panel-details" open>
-    <summary>Regras recorrentes</summary><p>Defina dias fechados, antecedência e um limite de encomendas por data. O limite conta pedidos confirmados, não horas de produção.</p>
-    <form id="availability-form"><fieldset><legend>Dias em que não recebe encomendas</legend><div class="closed-weekdays">${weekdayNames.map((name, index) => `<label><input type="checkbox" name="closedWeekdays" value="${index}" ${closedDays.includes(index) ? "checked" : ""}>${name}</label>`).join("")}</div></fieldset>
-      <div class="availability-fields"><label class="field"><span>Antecedência mínima (horas)</span><input name="minimumNoticeHours" type="number" min="0" max="8760" step="1" value="${Number(config.minimumNoticeHours) || 0}"></label><label class="field"><span>Limite de encomendas por data</span><input name="dailyOrderLimit" type="number" min="1" max="50" step="1" value="${Number.isInteger(config.dailyOrderLimit) ? config.dailyOrderLimit : ""}"><small>Deixe vazio para não definir limite.</small></label></div>
+    <summary>Regras da semana</summary><p>Defina dias fechados, antecedência e um limite de pedidos por data. O limite conta pedidos confirmados, não horas de produção.</p>
+    <form id="availability-form"><fieldset><legend>Dias em que não recebe pedidos</legend><div class="closed-weekdays">${weekdayNames.map((name, index) => `<label><input type="checkbox" name="closedWeekdays" value="${index}" aria-label="${name}" ${closedDays.includes(index) ? "checked" : ""}><span aria-hidden="true">${name.slice(0, 3)}</span></label>`).join("")}</div></fieldset>
+      <div class="availability-fields"><label class="field"><span>Antecedência mínima (horas)</span><input name="minimumNoticeHours" type="number" min="0" max="8760" step="1" value="${Number(config.minimumNoticeHours) || 0}"></label><label class="field"><span>Limite de pedidos por data</span><input name="dailyOrderLimit" type="number" min="1" max="50" step="1" value="${Number.isInteger(config.dailyOrderLimit) ? config.dailyOrderLimit : ""}"><small>Deixe vazio para não definir limite.</small></label></div>
       <button class="button button-primary" type="submit">Salvar regras semanais</button></form></details>
-    <details id="date-availability-details" open><summary>Somente nesta data</summary><form id="date-availability-form" data-date="${esc(selectedKey)}"><h3>Exceção para ${esc(calendarDateLabel(selectedKey, { weekday: "long", day: "numeric", month: "long", year: "numeric" }))}</h3><p>${day.count} encomendas ocupam esta data${Number.isInteger(day.limit) ? ` · limite ${day.limit}` : " · limite não definido"}${day.full ? " · limite atingido" : ""}${day.closed ? " · data fechada" : ""}.</p>${day.closed && affected.length ? `<p class="availability-warning"><strong>${affected.length} pedidos já combinados continuam nesta data:</strong> ${esc(affected.map((order) => order.client).join(", "))}. A regra não os move nem cancela.</p>` : ""}
+    <details id="date-availability-details" open><summary>Exceções por data</summary><label class="field settings-date-field"><span>Data da exceção</span><input id="settings-date" type="date" value="${esc(selectedKey)}"></label><form id="date-availability-form" data-date="${esc(selectedKey)}"><h3>Exceção para ${esc(calendarDateLabel(selectedKey, { weekday: "long", day: "numeric", month: "long", year: "numeric" }))}</h3><p>${day.count} ${day.count === 1 ? "pedido ocupa" : "pedidos ocupam"} esta data${Number.isInteger(day.limit) ? ` · limite ${day.limit}` : " · limite não definido"}${day.full ? " · limite atingido" : ""}${day.closed ? " · data fechada" : ""}.</p>${day.closed && affected.length ? `<p class="availability-warning"><strong>${affected.length} ${affected.length === 1 ? "pedido já combinado continua" : "pedidos já combinados continuam"} nesta data:</strong> ${esc(affected.map((order) => order.client).join(", "))}. A regra não os move nem cancela.</p>` : ""}
       <label class="availability-closed"><input name="closed" type="checkbox" ${day.closed ? "checked" : ""}> Não vou aceitar pedidos neste dia</label><p>Desmarque para abrir esta data, mesmo se o dia da semana estiver fechado.</p>
       <label class="field"><span>Limite específico nesta data (opcional)</span><input name="limit" type="number" min="1" max="50" step="1" value="${Number.isInteger(override.limit) ? override.limit : ""}"><small>Deixe vazio para usar o limite das regras recorrentes.</small></label>
-      <button class="button button-quiet" type="submit">Salvar para este dia</button><button class="text-link" type="button" data-action="clear-day-override" data-date="${selectedKey}">Usar regras semanais</button><p class="availability-note">Orçamentos e solicitações não ocupam vagas. Pedidos de exemplo são ignorados. Limites se aplicam ao confirmar; encomendas já combinadas continuam visíveis mesmo se fechar a data.</p></form></details>
+      <button class="button button-quiet" type="submit">Salvar para este dia</button><button class="text-link" type="button" data-action="clear-day-override" data-date="${selectedKey}">Usar regras semanais</button><p class="availability-note">Orçamentos e solicitações não ocupam vagas. Pedidos de exemplo são ignorados. Limites se aplicam ao confirmar; pedidos já combinados continuam visíveis mesmo se fechar a data.</p></form></details>
   <details class="order-template-settings"><summary>Modelo de personalização do bolo</summary><p>Defina os campos e opções que você oferece. Campos marcados como obrigatórios só são exigidos ao confirmar um pedido.</p>${orderTemplateSettingsMarkup()}</details></section>`;
 }
 
@@ -295,7 +306,7 @@ function renderSettings() {
   const focusForm = focused?.form?.id;
   const focusName = ["date-availability-form", "availability-form"].includes(focusForm) ? focused.name : "";
   const focusSelection = focusName && typeof focused.selectionStart === "number" ? focused.selectionStart : null;
-  content.innerHTML = `<div class="page-heading"><div><span class="eyebrow">PREFERÊNCIAS DA AGENDA</span><h1 id="settings-title">Ajustes</h1><p>Configure a disponibilidade e os detalhes que você combina nos pedidos.</p></div></div><label class="field settings-date-field"><span>Data para definir uma exceção</span><input id="settings-date" type="date" value="${esc(state.settingsDate)}"></label>${availabilityPanelMarkup(state.settingsDate)}`;
+  content.innerHTML = `<div class="page-heading"><div><h1 id="settings-title">Ajustes</h1><p>Configure a disponibilidade e os detalhes que você combina nos pedidos.</p></div></div>${availabilityPanelMarkup(state.settingsDate)}`;
   panel.hidden = state.activeView !== "settings";
   if (focusId) $("#settings-date")?.focus({ preventScroll: true });
   if (focusName) { const target = panel.querySelector(`#${focusForm} [name="${CSS.escape(focusName)}"]`); target?.focus(); if (target && focusSelection !== null) target.setSelectionRange(focusSelection, focusSelection); }
@@ -315,21 +326,32 @@ function renderWeek() {
   const scheduled = sortOrders(state.orders.filter((order) => !sampleOrder(order) && !isCancelled(order) && order.dueAt && localDateKey(parseDate(order.dueAt) || new Date(0)) === selectedKey));
   const range = `${dateLabel(days[0], { day: "numeric", month: "short" })} – ${dateLabel(days[6], { day: "numeric", month: "short", year: "numeric" })}`;
   const todayKey = localDateKey(new Date());
-  panel.innerHTML = `<div class="page-heading"><div><span class="eyebrow">AGENDA SEMANAL</span><h1 id="week-title">Sua semana</h1><p>Veja os pedidos marcados em cada dia.</p></div><div class="week-controls"><button class="icon-button week-step" data-week-shift="-1" type="button" aria-label="Semana anterior">‹</button><span class="week-range">${esc(range)}</span><button class="icon-button week-step" data-week-shift="1" type="button" aria-label="Próxima semana">›</button></div></div>
+  panel.innerHTML = `<div class="page-heading"><div><h1 id="week-title">Sua semana</h1><p>Veja os pedidos marcados em cada dia.</p></div><div class="week-controls"><button class="icon-button week-step" data-week-shift="-1" type="button" aria-label="Semana anterior"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg></button><span class="week-range">${esc(range)}</span><button class="icon-button week-step" data-week-shift="1" type="button" aria-label="Próxima semana"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button></div></div>
     <div class="week-days" role="group" aria-label="Escolher dia da semana">${days.map((day) => {
       const key = localDateKey(day);
       const count = state.orders.filter((order) => !sampleOrder(order) && !isCancelled(order) && order.dueAt && localDateKey(parseDate(order.dueAt) || new Date(0)) === key).length;
       const availability = availabilityFor(key);
       const classes = ["day-button", key === todayKey ? "is-today" : "", key === selectedKey ? "is-selected" : "", availability.closed ? "is-closed" : "", availability.full ? "is-full" : ""].filter(Boolean).join(" ");
       const statusText = availability.closed ? "fechado" : availability.full ? "limite atingido" : Number.isInteger(availability.limit) ? `limite ${availability.limit}` : "limite não definido";
-      return `<button class="${classes}" data-select-day="${key}" type="button" aria-label="${esc(dateLabel(day, { weekday: "long", day: "numeric", month: "long" }))}, ${count} pedidos, ${statusText}" aria-pressed="${key === selectedKey}"><span class="day-name">${esc(new Intl.DateTimeFormat("pt-BR", { weekday: "short" }).format(day).replace(".", ""))}</span><span class="day-number">${day.getDate()}</span><span class="day-count">${count || "·"}</span>${availability.closed ? `<small class="day-availability">Fechado</small>` : availability.full ? `<small class="day-availability">Lotado</small>` : ""}</button>`;
+      return `<button class="${classes}" data-select-day="${key}" type="button" aria-label="${key === todayKey ? "Hoje, " : ""}${esc(dateLabel(day, { weekday: "long", day: "numeric", month: "long" }))}, ${count} ${count === 1 ? "pedido" : "pedidos"}, ${statusText}" aria-pressed="${key === selectedKey}"><span class="day-name">${esc(new Intl.DateTimeFormat("pt-BR", { weekday: "short" }).format(day).replace(".", ""))}</span><span class="day-number">${day.getDate()}</span><span class="day-count">${count || (key === todayKey ? "hoje" : "·")}</span>${availability.closed ? `<small class="day-availability">Fechado</small>` : availability.full ? `<small class="day-availability">Lotado</small>` : ""}</button>`;
     }).join("")}</div>
-    <section class="week-agenda surface"><h2 class="agenda-date">${esc(new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "numeric", month: "long" }).format(selected))}<span>${scheduled.length ? `${scheduled.length} ${scheduled.length === 1 ? "encomenda" : "encomendas"}` : ""}</span></h2>${scheduled.length ? `<div class="order-list">${scheduled.map((order) => rowMarkup(order)).join("")}</div>` : `<div class="agenda-empty"><strong>Dia livre de encomendas marcadas</strong>Pedidos sem data continuam em Seus pedidos.</div>`}<button class="text-link" type="button" data-action="adjust-selected-date" data-date="${selectedKey}">Ajustar esta data</button></section>`;
+    <section class="week-agenda surface"><h2 class="agenda-date">${esc(new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "numeric", month: "long" }).format(selected))}<span>${scheduled.length ? `${scheduled.length} ${scheduled.length === 1 ? "pedido" : "pedidos"}` : ""}</span></h2>${scheduled.length ? `<div class="order-list">${scheduled.map((order) => rowMarkup(order)).join("")}</div>` : `<div class="agenda-empty"><strong>Dia livre de pedidos marcados</strong>Pedidos sem data continuam em Seus pedidos.</div>`}<button class="text-link" type="button" data-action="adjust-selected-date" data-date="${selectedKey}">Ajustar esta data</button></section>`;
   panel.hidden = state.activeView !== "week";
   if (focusSelector) panel.querySelector(focusSelector)?.focus({ preventScroll: true });
 }
 
+function storageNoteMarkup() {
+  const mode = window.DoceApi.mode;
+  const text = mode === "cloud" ? "Salvo na sua conta. Para ver mudanças feitas em outro aparelho, recarregue a agenda."
+    : mode === "browser" ? "Seus pedidos ficam só neste navegador. Se limpar os dados do navegador, eles somem."
+    : "Seus pedidos ficam salvos neste computador, sem sincronização entre aparelhos.";
+  const cloud = `<path d="M7 18a4 4 0 0 1-.5-7.97A6 6 0 0 1 18 9.5a4.25 4.25 0 0 1-.5 8.5H7Z"/>`;
+  const icon = `<svg viewBox="0 0 24 24">${cloud}${mode === "cloud" ? "" : `<path d="m4 4 16 16"/>`}</svg>`;
+  return `<div class="storage-note"><span class="storage-note-icon" aria-hidden="true">${icon}</span><p>${text}</p><button class="text-link" type="button" data-action="export">Baixar cópia de segurança</button></div>`;
+}
+
 function render() {
+  $("#demo-bar").hidden = window.DoceApi.mode !== "browser";
   renderToday(); renderOrders(); renderWeek(); renderSettings();
   $$("[data-view]").forEach((button) => {
     if (!button.matches(".nav-item, .settings-button")) return;
@@ -354,11 +376,10 @@ function openOrderForm(order = null) {
   $("#cake-order-fields").innerHTML = cakeFormMarkup(order);
   form.dataset.id = order ? String(order.id) : "";
   $("#order-dialog-title").textContent = order ? "Editar pedido" : "Novo pedido";
-  $("#order-form-eyebrow").textContent = order ? "ATUALIZAR COMBINADO" : "NOVA ENCOMENDA";
   $("#save-order-button").textContent = order ? "Salvar alterações" : "Salvar pedido";
   const formValues = {
     client: order?.client || "", product: order?.product || "", details: order?.details || "", dueAt: dateTimeInput(order?.dueAt),
-    mode: order?.mode || "Retirada", location: order?.location || "", total: order?.total ?? 0,
+    mode: order?.mode || "Retirada", location: order?.location || "", total: order ? moneyInput(order.total) : "",
     status: order?.status || "Orçamento", nextAction: order?.nextAction || "", nextAt: dateTimeInput(order?.nextAt),
     pendingChange: order?.pendingChange || "", contact: order?.contact || "",
   };
@@ -366,6 +387,9 @@ function openOrderForm(order = null) {
     const field = form.elements.namedItem(key);
     if (field) field.value = value;
   });
+  form.elements.namedItem("dueDate").value = formValues.dueAt.slice(0, 10);
+  form.elements.namedItem("dueTime").value = formValues.dueAt.slice(11, 16);
+  clearFieldErrors(form);
   const cakeToggle = form.elements.namedItem("hasCake");
   cakeToggle.checked = !!order?.cake || /\bbolos?\b/i.test(formValues.product);
   cakeToggle.dataset.touched = "";
@@ -378,9 +402,11 @@ function openOrderForm(order = null) {
 
 function syncDateRequirement() {
   const confirmed = isCommitted({ status: $("#order-status").value });
-  const dueAt = $("#order-form").elements.namedItem("dueAt");
-  dueAt.required = confirmed;
-  $("#order-form").querySelector("[name=dueAt]").setAttribute("aria-required", String(confirmed));
+  ["dueDate", "dueTime"].forEach((name) => {
+    const field = $("#order-form").elements.namedItem(name);
+    field.required = confirmed;
+    field.setAttribute("aria-required", String(confirmed));
+  });
 }
 
 function formatWhenHistory(value) {
@@ -398,12 +424,12 @@ function detailMarkup(order) {
   const pending = order.pendingChange ? `<div class="pending-banner"><strong>Alteração ainda pendente:</strong> ${esc(order.pendingChange)}</div>` : "";
   const details = order.details ? esc(order.details) : "Nenhum detalhe foi registrado ainda.";
   return `<div class="detail-shell">
-    <div class="detail-topline"><div><span class="eyebrow">DETALHES DA ENCOMENDA</span><h2 class="detail-client" id="detail-title">${esc(order.client || "Cliente sem nome")}</h2><p class="detail-product">${esc(order.product || "Produto sem descrição")}</p></div><div class="detail-top-actions">${statusPill(order.status)}<button class="icon-button close-dialog" type="button" data-close="detail-dialog" aria-label="Fechar detalhes">×</button></div></div>
+    <div class="detail-topline"><div><h2 class="detail-client" id="detail-title">${esc(clientName(order) || "Cliente sem nome")}</h2><p class="detail-product">${esc(order.product || "Produto sem descrição")}</p></div><div class="detail-top-actions">${statusPill(order.status)}<button class="icon-button close-dialog" type="button" data-close="detail-dialog" aria-label="Fechar detalhes"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div></div>
     ${sample}<div class="detail-meta-line"><span class="meta-chip">${esc(dueAt)}</span><span class="meta-chip">${esc(order.mode || "Retirada")}</span>${order.contact ? `<span class="meta-chip">${esc(order.contact)}</span>` : ""}</div>
     <div class="detail-summary"><div class="detail-summary-label">COMBINADO ATUAL</div>${details}${cakeDetailsMarkup(order)}</div>
     ${pending}
     <div class="detail-split"><div class="detail-tile"><div class="detail-tile-label">Valor total</div><div class="detail-tile-value large">${esc(money(order.total))}</div></div><div class="detail-tile"><div class="detail-tile-label">${isCommitted(order) ? "Saldo a receber" : "Recebido conferido"}</div><div class="detail-tile-value ${balance === null && isCommitted(order) ? "is-unknown" : "large"}">${balance === null ? (isCommitted(order) ? "Ainda não conferido" : esc(money(confirmedPayments(order.id).length ? confirmedPaid(order.id) : 0))) : esc(balanceLabel(balance))}${balance !== null && balance < 0 ? `<small>Confira os recebimentos registrados.</small>` : ""}</div></div>${location}${order.nextAction ? `<div class="detail-tile"><div class="detail-tile-label">Próxima ação${order.nextAt ? ` · ${esc(dateTimeLabel(order.nextAt))}` : ""}</div><div class="detail-tile-value">${esc(order.nextAction)}</div></div>` : ""}</div>
-    <section class="payment-section"><div class="detail-section-title"><h3>Pagamentos</h3><button class="button button-small" data-action="add-payment" data-id="${esc(order.id)}" type="button">＋ Registrar</button></div>${payments.length ? `<div class="payment-list">${payments.map((payment) => `<div class="payment-item"><div class="payment-main"><div class="payment-amount">${esc(money(payment.amount))}</div><div class="payment-note">${esc(payment.note || "Sem observação")} · ${esc(formatWhenHistory(payment.createdAt))}</div></div><div class="payment-status"><span>${payment.status === "Conferido" ? "Recebimento conferido" : "Cliente informou"}</span>${payment.status !== "Conferido" ? `<button type="button" data-action="confirm-payment" data-id="${esc(payment.id)}">Marcar conferido</button>` : ""}</div></div>`).join("")}</div>` : `<p class="detail-empty">Nenhum pagamento registrado.</p>`}</section>
+    <section class="payment-section"><div class="detail-section-title"><h3>Pagamentos</h3><button class="button button-small" data-action="add-payment" data-id="${esc(order.id)}" type="button"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> Registrar</button></div>${payments.length ? `<div class="payment-list">${payments.map((payment) => `<div class="payment-item"><div class="payment-main"><div class="payment-amount">${esc(money(payment.amount))}</div><div class="payment-note">${esc(payment.note || "Sem observação")} · ${esc(formatWhenHistory(payment.createdAt))}</div></div><div class="payment-status"><span>${payment.status === "Conferido" ? "Recebimento conferido" : "Cliente informou"}</span>${payment.status !== "Conferido" ? `<button type="button" data-action="confirm-payment" data-id="${esc(payment.id)}">Marcar conferido</button>` : ""}</div></div>`).join("")}</div>` : `<p class="detail-empty">Nenhum pagamento registrado.</p>`}</section>
     <details class="history-section"><summary>Histórico (${history.length})</summary>${history.length ? `<div class="history-list">${history.map((item) => `<div class="history-item"><strong>${esc(formatWhenHistory(item.at))}</strong>${esc(item.text || "Atualização do pedido")}</div>`).join("")}</div>` : `<p class="detail-empty">As alterações do pedido aparecerão aqui.</p>`}</details>
     <div class="detail-actions"><button class="button button-quiet" data-action="copy-summary" data-id="${esc(order.id)}" type="button">Copiar resumo para WhatsApp</button><button class="button button-primary" data-action="edit-order" data-id="${esc(order.id)}" type="button">Editar pedido</button></div>
   </div>`;
@@ -510,7 +536,7 @@ async function inspectRestoreFile(file) {
     if (backup.version !== 1 || !Array.isArray(backup.orders) || !Array.isArray(backup.payments)) throw new Error("Este arquivo não parece um backup do Doce Agenda versão 1.");
     if (backup.orders.length > 10000 || backup.payments.length > 50000) throw new Error("O backup contém mais registros que o limite aceito.");
     state.restoreData = backup;
-    preview.textContent = `Arquivo reconhecido: ${backup.orders.length} pedidos e ${backup.payments.length} pagamentos. Restaurar substituirá os dados atuais ${window.DoceApi.mode === 'cloud' ? 'da sua conta' : 'neste dispositivo'}.`;
+    preview.textContent = `Arquivo reconhecido: ${backup.orders.length} ${backup.orders.length === 1 ? "pedido" : "pedidos"} e ${backup.payments.length} ${backup.payments.length === 1 ? "pagamento" : "pagamentos"}. Restaurar substituirá os dados atuais ${window.DoceApi.mode === 'cloud' ? 'da sua conta' : 'neste dispositivo'}.`;
     button.disabled = false;
   } catch (error) { preview.textContent = error.message || "Não consegui ler esse arquivo JSON."; }
 }
@@ -541,7 +567,7 @@ async function saveAvailability(event, form = event.target) {
     dateOverrides: state.availability.dateOverrides || {},
   };
   if (!Number.isInteger(body.minimumNoticeHours) || body.minimumNoticeHours < 0 || body.minimumNoticeHours > 8760) return showToast("Antecedência deve ser entre 0 e 8.760 horas.");
-  if (body.dailyOrderLimit !== null && (!Number.isInteger(body.dailyOrderLimit) || body.dailyOrderLimit < 1 || body.dailyOrderLimit > 50)) return showToast("O limite diário deve estar entre 1 e 50 encomendas, ou ficar vazio.");
+  if (body.dailyOrderLimit !== null && (!Number.isInteger(body.dailyOrderLimit) || body.dailyOrderLimit < 1 || body.dailyOrderLimit > 50)) return showToast("O limite diário deve estar entre 1 e 50 pedidos, ou ficar vazio.");
   try {
     await apiRequest("/availability", { method: "PUT", body });
     await loadState({ silent: true });
@@ -607,15 +633,46 @@ function setFormError(selector, message) {
   const el = $(selector); el.textContent = message; el.hidden = false;
 }
 
+// Accepts "150", "150,5", "150.50" and "1.250,00". Empty means zero (value not known yet).
+function parseMoney(value) {
+  const text = String(value ?? "").trim().replace(/^R\$\s*/i, "").replace(/\s/g, "");
+  if (!text) return 0;
+  if (!/^\d{1,3}(\.\d{3})*(,\d{1,2})?$|^\d+([.,]\d{1,2})?$/.test(text)) return NaN;
+  if (text.includes(",")) return Number(text.replace(/\./g, "").replace(",", "."));
+  return Number(/^\d{1,3}(\.\d{3})+$/.test(text) ? text.replace(/\./g, "") : text);
+}
+const moneyInput = (value) => { const number = Number(value) || 0; return Number.isInteger(number) ? String(number) : number.toFixed(2).replace(".", ","); };
+
+// Error next to the field (UI-6); the summary box at the top repeats it for screen readers.
+function clearFieldErrors(form) {
+  $$(".field-error", form).forEach((node) => node.remove());
+  $$("[aria-invalid]", form).forEach((field) => { field.removeAttribute("aria-invalid"); field.removeAttribute("aria-describedby"); });
+}
+function setFieldError(form, name, message) {
+  const field = form.elements.namedItem(name);
+  const note = document.createElement("small");
+  note.className = "field-error"; note.id = `${form.id}-${name}-error`; note.textContent = message;
+  field.setAttribute("aria-invalid", "true"); field.setAttribute("aria-describedby", note.id);
+  field.closest(".field").append(note);
+  setFormError(`#${form.id}-error`, message);
+  field.focus();
+}
+
 async function submitOrder(event) {
   event.preventDefault();
   syncDateRequirement();
   const form = event.currentTarget;
   const errorBox = $("#order-form-error"); errorBox.hidden = true;
+  clearFieldErrors(form);
+  const dueDate = form.elements.namedItem("dueDate").value;
+  const dueTime = form.elements.namedItem("dueTime").value;
+  form.elements.namedItem("dueAt").value = dueDate && dueTime ? `${dueDate}T${dueTime}` : "";
   if (!form.reportValidity()) return;
+  if (dueDate && !dueTime) return setFieldError(form, "dueTime", "Informe também o horário.");
+  if (dueTime && !dueDate) return setFieldError(form, "dueDate", "Informe também a data.");
   const formData = new FormData(form);
-  const total = Number(formData.get("total"));
-  if (!Number.isFinite(total) || total < 0) return setFormError("#order-form-error", "Informe um valor total válido, igual ou maior que zero.");
+  const total = parseMoney(formData.get("total"));
+  if (!Number.isFinite(total) || total < 0) return setFieldError(form, "total", "Informe um valor válido, como 150 ou 150,50.");
   const body = {
     client: String(formData.get("client") || "").trim(), product: String(formData.get("product") || "").trim(),
     details: String(formData.get("details") || "").trim(), dueAt: String(formData.get("dueAt") || ""),
@@ -636,20 +693,22 @@ async function submitOrder(event) {
     if (overrideReason.length < 4) return setFormError("#order-form-error", "Registre ao menos 4 caracteres explicando a exceção de disponibilidade.");
     body.capacityOverride = { allowed: true, reason: overrideReason };
   }
-  if (isCommitted(body) && !body.dueAt) return setFormError("#order-form-error", "Informe a data e o horário para confirmar este pedido.");
+  if (isCommitted(body) && !body.dueAt) return setFieldError(form, "dueDate", "Informe a data e o horário para confirmar este pedido.");
   const saveButton = $("#save-order-button");
   saveButton.disabled = true; saveButton.textContent = "Salvando…";
   try {
     const id = form.dataset.id;
-    await apiRequest(id ? `/orders/${encodeURIComponent(id)}` : "/orders", { method: id ? "PUT" : "POST", body });
+    const saved = await apiRequest(id ? `/orders/${encodeURIComponent(id)}` : "/orders", { method: id ? "PUT" : "POST", body });
     $("#order-dialog").close();
     closeDetails();
     await loadState({ silent: true });
-    showToast(id ? "Pedido atualizado." : "Pedido criado.");
+    const savedOrder = orderById(id || saved?.id || saved?.order?.id);
+    if (savedOrder) $$(".order-row").filter((row) => row.dataset.openOrder === savedOrder.id).forEach((row) => row.classList.add("is-fresh"));
+    showToast("Pedido salvo.", savedOrder && { label: "Copiar resumo", run: () => copyText(makeWhatsAppSummary(savedOrder)).then(() => showToast("Resumo copiado para enviar no WhatsApp.")).catch((error) => showToast(error.message)) });
   } catch (error) {
     if (["DATE_CLOSED", "DAILY_LIMIT", "NOTICE"].includes(error.code)) {
       $("#capacity-override-box").hidden = false;
-      const explanation = error.code === "DATE_CLOSED" ? "A data está fechada para novas encomendas." : error.code === "DAILY_LIMIT" ? "O limite de encomendas desta data foi atingido." : "Esta encomenda não atende à antecedência mínima definida.";
+      const explanation = error.code === "DATE_CLOSED" ? "A data está fechada para novos pedidos." : error.code === "DAILY_LIMIT" ? "O limite de pedidos desta data foi atingido." : "Este pedido não atende à antecedência mínima definida.";
       return setFormError("#order-form-error", `${explanation} Se decidiu abrir uma exceção, registre o motivo abaixo e salve novamente.`);
     }
     setFormError("#order-form-error", error.message || "Não foi possível salvar o pedido.");
@@ -771,6 +830,15 @@ function attachEvents() {
   $("#restore-file").addEventListener("change", (event) => inspectRestoreFile(event.target.files?.[0]));
   $("#restore-confirm").addEventListener("click", restoreBackup);
   $("#order-status").addEventListener("change", syncDateRequirement);
+  $("#order-form").addEventListener("click", (event) => {
+    const shortcut = event.target.closest("[data-due-shortcut]");
+    if (!shortcut) return;
+    const day = new Date(); day.setDate(day.getDate() + Number(shortcut.dataset.dueShortcut));
+    const form = event.currentTarget;
+    form.elements.namedItem("dueDate").value = localDateKey(day);
+    form.elements.namedItem("dueDate").dispatchEvent(new Event("input", { bubbles: true }));
+    form.elements.namedItem("dueTime").focus();
+  });
   $("#retry-button").addEventListener("click", () => loadState());
   $("#export-button").addEventListener("click", exportBackup);
   $("#restore-button").addEventListener("click", openRestoreDialog);
