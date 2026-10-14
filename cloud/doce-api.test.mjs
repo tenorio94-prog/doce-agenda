@@ -102,6 +102,18 @@ const envelope = (path, method = 'GET', expectedRevision, body) => ({
   ...(body === undefined ? {} : { body }),
 });
 
+test('monthly endpoint is authenticated, owner-scoped and returns no customer records',async()=>{
+  const parts=Object.fromEntries(new Intl.DateTimeFormat('en-CA',{timeZone:'America/Sao_Paulo',year:'numeric',month:'2-digit'}).formatToParts(new Date()).map(p=>[p.type,p.value]));
+  const key=`${parts.year}-${parts.month}`,state=createEmptyState();
+  state.orders=[{id:'own-order',client:'PRIVATE CLIENT',contact:'+5511999990000',product:'Bolo',status:'Entregue',total:123.45,dueAt:`${key}-01T23:30`,createdAt:`${key}-01T12:00:00Z`}];
+  const h=makeHarness({row:{owner_user_id:'auth-user-id',state,revision:4}});
+  const denied=await h.send(envelope(`/api/resumo-mensal?mes=${key}`),{token:null});assert.equal(denied.status,401);assert.equal(h.calls.selects.length,0);
+  const response=await h.send(envelope(`/api/resumo-mensal?mes=${key}&owner_user_id=other-user`));assert.equal(response.status,200);
+  const data=await response.json();assert.equal(data.ordersCount,1);assert.equal(data.soldCents,12345);assert.ok(!JSON.stringify(data).includes('PRIVATE CLIENT'));assert.ok(!JSON.stringify(data).includes('5511999990000'));
+  assert.deepEqual(h.calls.selects[0].filters,[['owner_user_id','auth-user-id']]);assert.equal(h.calls.rpc.length,0);assert.equal(response.headers.get('X-Agenda-Revision'),'4');
+  const invalid=await h.send(envelope('/api/resumo-mensal?mes=bad'));assert.equal(invalid.status,400);
+});
+
 test('preflight is limited to configured origins and exposes the revision header', async () => {
   const { send, calls } = makeHarness();
   const allowed = await send(undefined, { method: 'OPTIONS', origin: LOCAL_ORIGIN, token: null });

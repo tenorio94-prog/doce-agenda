@@ -827,6 +827,22 @@ main { min-height: calc(100vh - 190px); }
 .chip { min-height: 44px; padding: 0 14px; border: 1px solid #9c8290; border-radius: 999px; background: var(--card); color: var(--ink); font: inherit; font-size: 13px; font-weight: 650; }
 .chip:focus-visible { outline: 3px solid var(--sage); outline-offset: 2px; }
 .due-inputs { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
+.month-controls{max-width:100%;gap:8px}
+.month-range{min-width:0;text-align:center;font-weight:600}
+.month-stats .stat-value{font-variant-numeric:tabular-nums;font-size:clamp(22px,4vw,32px);overflow-wrap:anywhere}
+.month-stats .stat-label,.month-stats .stat-value{display:block}
+.month-stats .stat-label{color:var(--ink-soft);font-size:14px}
+.month-details{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-top:24px}
+.month-details .surface{padding:20px;min-width:0}
+.month-details h2{font-size:24px}
+.month-ranking{list-style:none;margin:16px 0 0;padding:0}
+.month-ranking li{display:flex;justify-content:space-between;align-items:baseline;gap:16px;padding:12px 0;border-bottom:1px solid var(--line)}
+.month-ranking li span{min-width:0;overflow-wrap:anywhere}
+.month-ranking li strong{flex-shrink:0;font-size:14px;font-variant-numeric:tabular-nums}
+.month-note{color:var(--ink-soft);font-size:14px;line-height:1.5}
+.month-lead-value{font-family:var(--font-title);font-size:32px;margin:16px 0 8px;font-variant-numeric:tabular-nums}
+.month-definition{margin-top:24px}
+@media(max-width:700px){.main-nav{grid-template-columns:repeat(5,minmax(0,1fr))}.month-details{grid-template-columns:minmax(0,1fr)}#view-month>.page-heading{flex-direction:column;align-items:stretch;gap:16px}.month-controls{width:100%;justify-content:space-between}.month-range{flex:1;white-space:nowrap}}
 .due-inputs label { display: block; min-width: 0; }
 @media (max-width: 359px) { .due-inputs { grid-template-columns: 1fr; } }
 .field .field-error { color: #a32e34; font-size: 13px; font-weight: 650; }

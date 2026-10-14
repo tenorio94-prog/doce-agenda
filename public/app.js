@@ -20,6 +20,7 @@ const state = {
   restoreData: null, activeView: "today", search: "", statusFilter: "all",
   weekOffset: 0, selectedDay: localDateKey(new Date()), settingsDate: localDateKey(new Date()), detailOrderId: null,
   paymentOrderId: null, toastTimer: null,
+  month: null, monthData: null, monthLoading: false, monthError: '', monthRequest: 0,
 };
 
 const $ = (selector, root = document) => root.querySelector(selector);
@@ -51,7 +52,8 @@ const orderPayments = (orderId) => state.payments.filter((payment) => String(pay
 const confirmedPayments = (orderId) => orderPayments(orderId).filter((payment) => payment.status === "Conferido");
 const confirmedPaid = (orderId) => confirmedPayments(orderId).reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
 const hasReceivedPayment = (orderId) => confirmedPaid(orderId) > 0;
-const balanceFor = (order) => isCommitted(order) && confirmedPayments(order.id).length ? Number(order.total || 0) - confirmedPaid(order.id) : null;
+const balanceFor = (order) => order.totalKnown !== false && isCommitted(order) && confirmedPayments(order.id).length ? Number(order.total || 0) - confirmedPaid(order.id) : null;
+const orderTotalLabel = (order) => order.totalKnown === false ? 'A combinar' : money(order.total);
 const balanceLabel = (balance) => balance === null ? "Ainda não conferido" : balance < 0 ? `Excedente ${money(Math.abs(balance))}` : money(balance);
 const statusSlug = (status) => ({
   "Orçamento": "quote", "Aguardando confirmação": "waiting", "Confirmado": "confirmed",
@@ -130,6 +132,7 @@ async function loadState({ silent = false } = {}) {
     state.availability = data.availability || structuredClone(DEFAULT_AVAILABILITY);
     state.orderTemplate = data.orderTemplate || structuredClone(DEFAULT_ORDER_TEMPLATE);
     state.orderPage = data.orderPage || {active:false,slug:'',displayName:'',welcome:'',whatsapp:'',products:[]};
+    state.monthData = null; state.monthError = ''; state.monthLoading = false; state.monthRequest++;
     $("#error-notice").hidden = true;
     $("#loading-state").hidden = true;
     setConnection("online", window.DoceApi.mode === "cloud" ? "Salvo na sua conta" : window.DoceApi.mode === "browser" ? "Salvo neste navegador" : "Salvo neste computador");
@@ -213,7 +216,7 @@ function rowMarkup(order, options = {}) {
       ${deposit ? `<div class="row-flag">Falta o sinal</div>` : ""}
       <div class="row-meta"><span class="row-date">${esc(dayLabel)}</span>${summary}</div>
     </div>
-    <div class="row-side"><span class="row-total">${esc(money(order.total))}</span>${statusPill(order.status)}</div>
+    <div class="row-side"><span class="row-total">${esc(orderTotalLabel(order))}</span>${statusPill(order.status)}</div>
     ${stamp}
   </article>`;
 }
@@ -379,9 +382,63 @@ function storageNoteMarkup() {
   return `<div class="storage-note"><span class="storage-note-icon" aria-hidden="true">${icon}</span><p>${text}</p><button class="text-link" type="button" data-action="export">Baixar cópia de segurança</button></div>`;
 }
 
+function currentBusinessMonth() {
+  const parts = Object.fromEntries(new Intl.DateTimeFormat('en-CA', {timeZone:'America/Sao_Paulo',year:'numeric',month:'2-digit'}).formatToParts(new Date()).map(p=>[p.type,p.value]));
+  return `${parts.year}-${parts.month}`;
+}
+function shiftedMonth(month, offset) {
+  const [year, number] = month.split('-').map(Number);
+  return new Date(Date.UTC(year, number - 1 + offset, 1)).toISOString().slice(0, 7);
+}
+function shiftMonth(offset) {
+  const target = shiftedMonth(state.month || currentBusinessMonth(), offset);
+  if (target > currentBusinessMonth() || target < '1900-01') return;
+  state.month = target; state.monthData = null; state.monthError = ''; state.monthLoading = false; state.monthRequest++;
+  renderMonth();
+}
+async function loadMonth() {
+  const request = ++state.monthRequest, month = state.month;
+  state.monthLoading = true;
+  try {
+    const data = await apiRequest(`/resumo-mensal?mes=${encodeURIComponent(month)}`);
+    if (request !== state.monthRequest) return;
+    state.monthData = data; state.monthError = '';
+  } catch (error) {
+    if (request !== state.monthRequest) return;
+    state.monthError = error.message || 'Não foi possível carregar o mês.';
+  } finally {
+    if (request === state.monthRequest) { state.monthLoading = false; renderMonth(); }
+  }
+}
+function renderMonth() {
+  const panel = $('#view-month'); panel.hidden = state.activeView !== 'month';
+  if (panel.hidden) return;
+  state.month ||= currentBusinessMonth();
+  const focused = document.activeElement?.dataset.monthShift;
+  const data = state.monthData;
+  const label = new Intl.DateTimeFormat('pt-BR',{month:'long',year:'numeric',timeZone:'UTC'}).format(new Date(`${state.month}-01T12:00:00Z`));
+  const card = (name,value) => `<article class="stat-card"><span class="stat-label">${name}</span><strong class="stat-value">${esc(value)}</strong></article>`;
+  let content;
+  if (state.monthError) content = `<div class="notice error-notice" role="alert"><p>${esc(state.monthError)}</p><button type="button" class="button button-small" data-action="retry-month">Tentar de novo</button></div>`;
+  else if (!data) content = '<p class="month-feedback" role="status">Carregando seu mês…</p>';
+  else if (!data.ordersCount) content = emptyState('Seu mês começa com uma encomenda', 'Aqui vão aparecer seus pedidos confirmados ou entregues, os valores e os recebimentos conferidos deste mês.', false);
+  else {
+    content = `<div class="stats-grid month-stats">${card('Pedidos',data.ordersCount)}${card('Vendido',money(data.soldCents/100))}${card('Recebido',money(data.receivedCents/100))}${card('A receber',money(data.receivableCents/100))}</div>`;
+    if (data.ordersWithoutValue) content += `<p class="month-note">${data.ordersWithoutValue} ${data.ordersWithoutValue===1?'pedido sem valor informado não entrou':'pedidos sem valor informado não entraram'} em Vendido. ${data.ordersWithoutValue===1?'Ele continua':'Eles continuam'} na contagem de Pedidos.</p>`;
+    if (data.ordersCount < 3) content += '<p class="month-note">Com mais pedidos, mostramos aqui os dias e produtos que mais saem.</p>';
+    else {
+      const item = row => `<li><span>${esc(row.name)}</span><strong>${row.count} ${row.count===1?'pedido':'pedidos'}</strong></li>`;
+      content += `<div class="month-details"><section class="surface"><h2>Dias mais cheios</h2><ol class="month-ranking">${data.busiestDays.map(item).join('')}</ol></section><section class="surface"><h2>O que mais sai</h2><ol class="month-ranking">${data.topProducts.map(item).join('')}</ol></section><section class="surface"><h2>Prazo médio de aviso</h2><p class="month-lead-value">${data.averageNoticeDays===null?'Sem datas de criação':`${esc(new Intl.NumberFormat('pt-BR',{maximumFractionDigits:1}).format(data.averageNoticeDays))} ${data.averageNoticeDays===1?'dia':'dias'}`}</p><p class="month-note">Entre o registro e a retirada ou entrega.${data.noticeOrdersCount<data.ordersCount?` Calculado com ${data.noticeOrdersCount} pedidos que têm data de criação.`:''}</p></section></div>`;
+    }
+  }
+  panel.innerHTML = `<div class="page-heading"><div><h1 id="month-title">Meu mês</h1><p>Como foram as encomendas do mês.</p></div><div class="week-controls month-controls"><button class="icon-button" type="button" data-month-shift="-1" aria-label="Mês anterior" ${state.month==='1900-01'?'disabled':''}>←</button><span class="month-range" aria-live="polite">${esc(label)}</span><button class="icon-button" type="button" data-month-shift="1" aria-label="Próximo mês" ${state.month>=(data?.currentMonth||currentBusinessMonth())?'disabled':''}>→</button></div></div><div class="month-content" aria-busy="${state.monthLoading}" aria-live="polite">${content}</div><p class="month-note month-definition">Conta pedidos Confirmados e Entregues pela data de retirada ou entrega. Recebido inclui apenas pagamentos conferidos desses pedidos, mesmo que tenham sido recebidos em outro mês. Não inclui orçamentos, solicitações nem exemplos.</p>`;
+  if (focused !== undefined) panel.querySelector(`[data-month-shift="${CSS.escape(focused)}"]`)?.focus({preventScroll:true});
+  if (!state.monthData && !state.monthError && !state.monthLoading) loadMonth();
+}
+
 function render() {
   $("#demo-bar").hidden = window.DoceApi.mode !== "browser";
-  renderToday(); renderOrders(); renderWeek(); renderSettings();
+  renderToday(); renderOrders(); renderWeek(); renderSettings(); renderMonth();
   $$("[data-view]").forEach((button) => {
     if (!button.matches(".nav-item, .settings-button")) return;
     const current = button.dataset.view === state.activeView;
@@ -411,7 +468,7 @@ function openOrderForm(order = null) {
   $("#save-order-button").textContent = order ? "Salvar alterações" : "Salvar encomenda";
   const formValues = {
     client: order?.client || "", product: order?.product || "", details: order?.details || "", dueAt: dateTimeInput(order?.dueAt),
-    mode: order?.mode || "Retirada", location: order?.location || "", total: order ? moneyInput(order.total) : "",
+    mode: order?.mode || "Retirada", location: order?.location || "", total: order && order.totalKnown !== false ? moneyInput(order.total) : "",
     status: order?.status==='Solicitação' ? 'Orçamento' : order?.status || "Orçamento", nextAction: order?.nextAction || "", nextAt: dateTimeInput(order?.nextAt),
     pendingChange: order?.pendingChange || "", contact: order?.contact || "",
   };
@@ -461,8 +518,8 @@ function detailMarkup(order) {
   const stampDay = lastConfirmed ? (parseDate(lastConfirmed.confirmedAt || lastConfirmed.createdAt) || null) : null;
   const stampDate = stampDay ? new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short" }).format(stampDay).replace(/\./g, "").replace(" de ", " ").toUpperCase() : "";
   const depositCard = !isCommitted(order) || isCancelled(order) ? "" : hasReceivedPayment(order.id)
-    ? `<section class="deposit-card is-paid" aria-label="Sinal"><div class="deposit-top"><span class="deposit-label">Sinal</span><span>Total ${esc(money(order.total))}</span></div><div class="deposit-main"><div class="deposit-amount">${esc(money(paidNow))}</div><span class="stamp stamp-large"><span>${balance !== null && balance <= 0 ? "Pago" : "Sinal pago"}</span>${stampDate ? `<small>${esc(stampDate)}</small>` : ""}</span></div><div class="deposit-note">${balance !== null && balance > 0 ? `Falta ${esc(money(balance))} na ${order.mode === "Entrega" ? "entrega" : "retirada"}` : "Pagamento completo"}</div></section>`
-    : `<section class="deposit-card is-pending" aria-label="Sinal"><div class="deposit-top"><span class="deposit-label">Sinal</span><span>Total ${esc(money(order.total))}</span></div><div class="deposit-amount">${informedNow > 0 ? esc(money(informedNow)) : confirmedPayments(order.id).length ? esc(money(0)) : "—"}</div><div class="deposit-note">${informedNow > 0 ? "Informado pela cliente, ainda não conferido" : confirmedPayments(order.id).length ? "Conferido: nenhum valor recebido" : "Ainda não recebido"}</div></section>`;
+    ? `<section class="deposit-card is-paid" aria-label="Sinal"><div class="deposit-top"><span class="deposit-label">Sinal</span><span>Total ${esc(orderTotalLabel(order))}</span></div><div class="deposit-main"><div class="deposit-amount">${esc(money(paidNow))}</div><span class="stamp stamp-large"><span>${balance !== null && balance <= 0 ? "Pago" : "Sinal pago"}</span>${stampDate ? `<small>${esc(stampDate)}</small>` : ""}</span></div><div class="deposit-note">${balance !== null && balance > 0 ? `Falta ${esc(money(balance))} na ${order.mode === "Entrega" ? "entrega" : "retirada"}` : order.totalKnown === false ? "Valor total ainda a combinar" : "Pagamento completo"}</div></section>`
+    : `<section class="deposit-card is-pending" aria-label="Sinal"><div class="deposit-top"><span class="deposit-label">Sinal</span><span>Total ${esc(orderTotalLabel(order))}</span></div><div class="deposit-amount">${informedNow > 0 ? esc(money(informedNow)) : confirmedPayments(order.id).length ? esc(money(0)) : "—"}</div><div class="deposit-note">${informedNow > 0 ? "Informado pela cliente, ainda não conferido" : confirmedPayments(order.id).length ? "Conferido: nenhum valor recebido" : "Ainda não recebido"}</div></section>`;
   const pending = order.pendingChange ? `<div class="pending-banner"><strong>Alteração ainda pendente:</strong> ${esc(order.pendingChange)}</div>` : "";
   const details = order.details ? esc(order.details) : "Nenhum detalhe foi registrado ainda.";
   return `<div class="detail-shell">
@@ -471,7 +528,7 @@ function detailMarkup(order) {
     <div class="detail-summary"><div class="detail-summary-label">COMBINADO ATUAL</div>${details}${cakeDetailsMarkup(order)}</div>
     ${pending}${requestReviewMarkup(order)}
     ${depositCard}<p class="deposit-rule">O sinal só conta quando você confirma que recebeu.</p>
-    <div class="detail-split"><div class="detail-tile"><div class="detail-tile-label">Valor total</div><div class="detail-tile-value large">${esc(money(order.total))}</div></div><div class="detail-tile"><div class="detail-tile-label">${isCommitted(order) ? "Saldo a receber" : "Recebido conferido"}</div><div class="detail-tile-value ${balance === null && isCommitted(order) ? "is-unknown" : "large"}">${balance === null ? (isCommitted(order) ? "Ainda não conferido" : esc(money(confirmedPayments(order.id).length ? confirmedPaid(order.id) : 0))) : esc(balanceLabel(balance))}${balance !== null && balance < 0 ? `<small>Confira os recebimentos registrados.</small>` : ""}</div></div>${location}${order.nextAction ? `<div class="detail-tile"><div class="detail-tile-label">Próxima ação${order.nextAt ? ` · ${esc(dateTimeLabel(order.nextAt))}` : ""}</div><div class="detail-tile-value">${esc(order.nextAction)}</div></div>` : ""}</div>
+    <div class="detail-split"><div class="detail-tile"><div class="detail-tile-label">Valor total</div><div class="detail-tile-value large">${esc(orderTotalLabel(order))}</div></div><div class="detail-tile"><div class="detail-tile-label">${isCommitted(order) ? "Saldo a receber" : "Recebido conferido"}</div><div class="detail-tile-value ${balance === null && isCommitted(order) ? "is-unknown" : "large"}">${balance === null ? (isCommitted(order) ? "Ainda não conferido" : esc(money(confirmedPayments(order.id).length ? confirmedPaid(order.id) : 0))) : esc(balanceLabel(balance))}${balance !== null && balance < 0 ? `<small>Confira os recebimentos registrados.</small>` : ""}</div></div>${location}${order.nextAction ? `<div class="detail-tile"><div class="detail-tile-label">Próxima ação${order.nextAt ? ` · ${esc(dateTimeLabel(order.nextAt))}` : ""}</div><div class="detail-tile-value">${esc(order.nextAction)}</div></div>` : ""}</div>
     <section class="payment-section" ${order.status==='Solicitação'?'hidden':''}><div class="detail-section-title"><h3>Pagamentos</h3><button class="button button-small" data-action="add-payment" data-id="${esc(order.id)}" type="button"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> Registrar</button></div>${payments.length ? `<div class="payment-list">${payments.map((payment) => `<div class="payment-item"><div class="payment-main"><div class="payment-amount">${esc(money(payment.amount))}</div><div class="payment-note">${esc(payment.note || "Sem observação")} · ${esc(formatWhenHistory(payment.createdAt))}</div></div><div class="payment-status"><span>${payment.status === "Conferido" ? "Recebimento conferido" : "Cliente informou"}</span>${payment.status !== "Conferido" ? `<button type="button" data-action="confirm-payment" data-id="${esc(payment.id)}">Marcar conferido</button>` : ""}</div></div>`).join("")}</div>` : `<p class="detail-empty">Nenhum pagamento registrado.</p>`}</section>
     <details class="history-section"><summary>Histórico (${history.length})</summary>${history.length ? `<div class="history-list">${history.map((item) => `<div class="history-item"><strong>${esc(formatWhenHistory(item.at))}</strong>${esc(item.text || "Atualização do pedido")}</div>`).join("")}</div>` : `<p class="detail-empty">As alterações do pedido aparecerão aqui.</p>`}</details>
     <div class="detail-actions"><button class="button button-quiet" data-action="copy-summary" data-id="${esc(order.id)}" type="button">${order.reviewOutcome?'Copiar mensagem para a cliente':'Copiar resumo para WhatsApp'}</button><button class="button button-primary" data-action="edit-order" data-id="${esc(order.id)}" type="button" ${order.status==='Recusado'?'hidden':''}>${order.status==='Solicitação'?'Editar e aceitar':'Editar encomenda'}</button></div>
@@ -499,7 +556,7 @@ function openPaymentForm(orderId) {
   const informedCount = payments.length - checkedCount;
   const checkedTotal = payments.filter((payment) => payment.status === "Conferido").reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
   const receiptSummary = `${checkedCount} conferido${checkedCount === 1 ? "" : "s"} (${money(checkedTotal)})${informedCount ? ` · ${informedCount} ainda não conferido` : ""}`;
-  $("#payment-context").innerHTML = order ? `<strong>${esc(order.client || "Cliente sem nome")}</strong><span>${esc(order.product || "Produto sem descrição")}</span><span>Total combinado: ${esc(money(order.total))}</span><span>${esc(receiptSummary)}</span>` : "";
+  $("#payment-context").innerHTML = order ? `<strong>${esc(order.client || "Cliente sem nome")}</strong><span>${esc(order.product || "Produto sem descrição")}</span><span>Total combinado: ${esc(orderTotalLabel(order))}</span><span>${esc(receiptSummary)}</span>` : "";
   const form = $("#payment-form");
   form.reset();
   $("#payment-form-error").hidden = true;
@@ -518,7 +575,7 @@ function makeWhatsAppSummary(order) {
   for (const [key, value] of Object.entries(order.cake?.values || {})) if (String(value || "").trim()) lines.push(`${cakeLabels[key] || key}: ${value}`);
   lines.push(`${order.mode || "Retirada"}: ${order.dueAt ? dateTimeLabel(order.dueAt) : "data e horário a combinar"}`);
   if (order.location) lines.push(`Local: ${order.location}`);
-  lines.push(`Total: ${money(order.total)}`);
+  lines.push(`Total: ${orderTotalLabel(order)}`);
   if (isCommitted(order)) {
     lines.push(`Pagamento conferido: ${confirmedPayments(order.id).length ? money(confirmedPaid(order.id)) : "Ainda não conferido"}`);
     lines.push(`Saldo restante: ${balanceLabel(balanceFor(order))}`);
@@ -668,7 +725,7 @@ async function saveOrderTemplate(event, form = event.target) {
 }
 
 function setActiveView(view) {
-  if (!["today", "orders", "week", "settings"].includes(view)) return;
+  if (!["today", "orders", "week", "settings", "month"].includes(view)) return;
   state.activeView = view;
   render();
   $("#main-content").focus({ preventScroll: true });
@@ -723,7 +780,7 @@ async function submitOrder(event) {
     client: String(formData.get("client") || "").trim(), product: String(formData.get("product") || "").trim(),
     details: String(formData.get("details") || "").trim(), dueAt: String(formData.get("dueAt") || ""),
     mode: String(formData.get("mode") || "Retirada"), location: String(formData.get("location") || "").trim(),
-    total, status: String(formData.get("status") || "Orçamento"), nextAction: String(formData.get("nextAction") || "").trim(),
+    total, totalKnown: String(formData.get("total") || '').trim() !== '', status: String(formData.get("status") || "Orçamento"), nextAction: String(formData.get("nextAction") || "").trim(),
     nextAt: String(formData.get("nextAt") || ""), pendingChange: String(formData.get("pendingChange") || "").trim(),
     contact: String(formData.get("contact") || "").trim(),
   };
@@ -806,6 +863,8 @@ function handleClick(event) {
   if (close) { $(`#${CSS.escape(close.dataset.close)}`).close(); return; }
   const view = event.target.closest("[data-view]");
   if (view) { event.preventDefault(); setActiveView(view.dataset.view); return; }
+  const monthShift = event.target.closest('[data-month-shift]');
+  if (monthShift) { shiftMonth(Number(monthShift.dataset.monthShift)); return; }
   const newOrder = event.target.closest('[data-action="new-order"]');
   if (newOrder) { openOrderForm(); return; }
   const open = event.target.closest("[data-open-order]");
@@ -824,6 +883,7 @@ function handleClick(event) {
       const order = orderById(id); closeDetails(); if (order) openOrderForm(order); break;
     }
     case 'show-requests': state.statusFilter='Solicitação';state.search='';setActiveView('orders');break;
+    case 'retry-month': state.monthError='';state.monthData=null;renderMonth();break;
     case 'copy-order-link': copyText(`https://lucast.app/p/${state.orderPage.slug}`).then(()=>showToast('Link copiado.')).catch(e=>showToast(e.message));break;
     case 'link-metrics': loadLinkMetrics();break;
     case 'accept-request': reviewRequest(id,action.dataset.status);break;

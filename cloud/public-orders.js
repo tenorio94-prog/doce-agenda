@@ -45,7 +45,7 @@ export function createPublicRequest(state, input, code, now = new Date().toISOSt
     }
     cake={templateVersion:state.orderTemplate.version,values,labels};
   }
-  const order = {id:crypto.randomUUID(),client,contact,product:productName,details,dueAt,mode:input.mode,location,total:0,status:'Solicitação',origin:'link',publicCode:code,
+  const order = {id:crypto.randomUUID(),client,contact,product:productName,details,dueAt,mode:input.mode,location,total:0,totalKnown:false,status:'Solicitação',origin:'link',publicCode:code,
     consentAt:now,consentVersion:'2026-10-13',createdAt:now,updatedAt:now,cake,nextAction:'Revisar solicitação recebida pelo link',nextAt:'',pendingChange:'',
     history:[{at:now,text:'Solicitação recebida pelo link. Dados enviados com consentimento; aguardando revisão.'}]};
   const next = structuredClone(state);

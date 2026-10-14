@@ -1,4 +1,5 @@
 import { createEmptyState, transactState } from './state-engine.js';
+import { monthlySummary } from './monthly-summary.js';
 
 const MAX_BODY_BYTES = 5 * 1024 * 1024;
 const TABLE = 'pilot_agendas';
@@ -102,7 +103,7 @@ async function readJsonLimited(request: Request): Promise<unknown> {
 
 function allowedRoute(path: string, method: string): boolean {
   if (method === 'GET') {
-    return ['/api/state', '/api/export', '/api/availability', '/api/order-template', '/api/order-page', '/api/order-page/slug-available', '/api/order-page/metrics'].includes(path);
+    return ['/api/state', '/api/export', '/api/availability', '/api/order-template', '/api/order-page', '/api/order-page/slug-available', '/api/order-page/metrics', '/api/resumo-mensal'].includes(path);
   }
   if (method === 'PUT') {
     return path === '/api/availability' || path === '/api/order-template' || path === '/api/order-page'
@@ -262,6 +263,13 @@ export function createDoceApiHandler(dependencies: HandlerDependencies = {}) {
       return jsonResponse(origin, apiError('O estado mudou em outra sessão. Atualize e tente novamente.', 409, 'REVISION_CONFLICT'), 409, revision);
     }
 
+    if (route.path.split('?')[0] === '/api/resumo-mensal') {
+      try {
+        return jsonResponse(origin, monthlySummary(row.state, new URL(route.path, 'http://internal').searchParams.get('mes')), 200, revision);
+      } catch (error: any) {
+        return jsonResponse(origin, apiError(error.status === 400 ? error.message : 'Não foi possível calcular o resumo.', error.status === 400 ? 400 : 500), error.status === 400 ? 400 : 500, revision);
+      }
+    }
     if (route.path.split('?')[0] === '/api/order-page/slug-available') {
       const slug = new URL(route.path, 'http://internal').searchParams.get('slug') || '';
       if (!/^[a-z0-9][a-z0-9-]{1,38}[a-z0-9]$/.test(slug)) return jsonResponse(origin,{available:false},200,revision);

@@ -1,4 +1,5 @@
 import { defaultOrderPage, orderPageInput } from './order-link-model.js';
+import { monthlySummary } from './monthly-summary.js';
 const STATUSES = ['Solicitação', 'Orçamento', 'Aguardando confirmação', 'Confirmado', 'Em produção', 'Pronto', 'Entregue', 'Cancelado', 'Recusado'];
 const DRAFT_STATUSES = ['Solicitação', 'Orçamento', 'Aguardando confirmação', 'Cancelado', 'Recusado'];
 const COMMITTED_STATUSES = ['Confirmado', 'Em produção', 'Pronto', 'Entregue'];
@@ -67,12 +68,16 @@ function date(value) {
 }
 
 function orderInput(body) {
+  if (body.totalKnown !== undefined && typeof body.totalKnown !== 'boolean') fail('Indicação de valor inválida.');
   const order = {
     client: text(body.client, 120), product: text(body.product, 300), details: text(body.details), dueAt: date(body.dueAt),
     mode: text(body.mode, 30) || 'Retirada', location: text(body.location, 400), total: money(body.total),
     status: text(body.status, 40) || 'Orçamento', nextAction: text(body.nextAction, 300), nextAt: date(body.nextAt),
     pendingChange: text(body.pendingChange), contact: text(body.contact, 120),
   };
+  if (body.totalKnown !== undefined) order.totalKnown = body.totalKnown;
+  // Older app versions do not send totalKnown when a public request receives its price.
+  if (order.totalKnown === false && order.total > 0) order.totalKnown = true;
   if (!order.client || !order.product) fail('Preencha cliente e produto.');
   if (!STATUSES.includes(order.status)) fail('Situação inválida.');
   if (!['Retirada', 'Entrega'].includes(order.mode)) fail('Modalidade inválida.');
@@ -247,6 +252,10 @@ function response(body, status = 200, state, mutated = false) {
 
 export function transactState(state, url, options = {}) {
   try {
+    const requested = new URL(url, 'http://localhost');
+    if ((options.method || 'GET').toUpperCase() === 'GET' && requested.pathname === '/api/resumo-mensal') {
+      return response(monthlySummary(state, requested.searchParams.get('mes')), 200, state);
+    }
     const nextState = normalizeState(state);
     const originalState = clone(nextState);
     const path = new URL(url, 'http://localhost').pathname;

@@ -32,6 +32,7 @@
         <button class="nav-item active" data-view="today" type="button" aria-current="page"><span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-6v-7h-4v7H4a1 1 0 0 1-1-1V10Z"/></svg></span>Hoje</button>
         <button class="nav-item" data-view="orders" type="button"><span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 5H6a2 2 0 0 0-2 2v13h16V7a2 2 0 0 0-2-2h-2"/><rect x="8" y="3" width="8" height="4" rx="1"/><path d="M8 12h8M8 16h8"/></svg></span>Pedidos<span class="nav-count" id="nav-order-count">0</span></button>
         <button class="nav-item" data-view="week" type="button"><span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18M8 14h.01M12 14h.01M16 14h.01M8 17h.01M12 17h.01"/></svg></span>Semana</button>
+        <button class="nav-item" data-view="month" type="button"><span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 20h16M6 16v-5M12 16V4M18 16V8"/></svg></span>Meu mês</button>
         <button class="nav-item nav-new-order" data-action="new-order" type="button"><span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span><span class="nav-new-label">Novo</span></button>
       </nav>
 
@@ -45,6 +46,7 @@
         <section class="view-panel" id="view-today" aria-labelledby="today-title" hidden></section>
         <section class="view-panel" id="view-orders" aria-labelledby="orders-title" hidden></section>
         <section class="view-panel" id="view-week" aria-labelledby="week-title" hidden></section>
+        <section class="view-panel" id="view-month" aria-labelledby="month-title" hidden></section>
         <section class="view-panel" id="view-settings" aria-labelledby="settings-title" hidden><div id="settings-content"></div><section class="settings-data-tools surface" aria-label="Backup e restauração"><div><h2>Cópia de segurança</h2><p>Exporte seus dados ou restaure um arquivo salvo anteriormente.</p></div><div><button class="button button-quiet" id="export-button" type="button" title="Baixar cópia de segurança" aria-label="Baixar cópia de segurança">Baixar backup</button> <button class="button button-quiet" id="restore-button" type="button" title="Restaurar dados" aria-label="Restaurar dados">Restaurar dados</button></div></section></section>
       </main>
 

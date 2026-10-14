@@ -3,6 +3,7 @@ import {readFile,writeFile,rename,mkdir,copyFile} from 'node:fs/promises';
 import {dirname,join,extname} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {randomUUID} from 'node:crypto';
+import {monthlySummary} from './cloud/monthly-summary.js';
 
 const root=dirname(fileURLToPath(import.meta.url));
 const statuses=['Orçamento','Aguardando confirmação','Confirmado','Em produção','Pronto','Entregue','Cancelado'];
@@ -17,7 +18,10 @@ const text=(v,max=2000)=>{if(v!==undefined&&typeof v!=='string')fail('Texto inv�
 const money=v=>{if(typeof v!=='number'||!Number.isFinite(v)||v<0||v>1000000)fail('Valor deve ser entre zero e R$ 1.000.000.');return Math.round(v*100)/100;};
 function date(v){v=text(v,30);if(v){const n=Date.parse(v+'Z');if(!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(v)||!Number.isFinite(n)||new Date(n).toISOString().slice(0,16)!==v)fail('Data e horário inválidos.');}return v;}
 function orderInput(body){
+ if(body.totalKnown!==undefined&&typeof body.totalKnown!=='boolean')fail('Indicação de valor inválida.');
  const o={client:text(body.client,120),product:text(body.product,300),details:text(body.details),dueAt:date(body.dueAt),mode:text(body.mode,30)||'Retirada',location:text(body.location,400),total:money(body.total),status:text(body.status,40)||'Orçamento',nextAction:text(body.nextAction,300),nextAt:date(body.nextAt),pendingChange:text(body.pendingChange),contact:text(body.contact,120)};
+ if(body.totalKnown!==undefined)o.totalKnown=body.totalKnown;
+ if(o.totalKnown===false&&o.total>0)o.totalKnown=true;
  if(!o.client||!o.product)fail('Preencha cliente e produto.');
  if(!statuses.includes(o.status))fail('Situação inválida.');
  if(!['Retirada','Entrega'].includes(o.mode))fail('Modalidade inválida.');
@@ -96,6 +100,7 @@ export async function createApp({dataDir=join(root,'data')}={}){
   const url=new URL(req.url,'http://localhost');const path=url.pathname;
   if(req.method==='GET'&&['/api/state','/api/export'].includes(path)){send(res,200,state,path==='/api/export'?{'Content-Disposition':'attachment; filename="doce-agenda-backup.json"'}:{});return;}
   if(path.startsWith('/api/')){
+   if(req.method==='GET'&&path==='/api/resumo-mensal'){send(res,200,monthlySummary(state,url.searchParams.get('mes')));return;}
    if(req.method==='GET'&&path==='/api/availability'){send(res,200,state.availability);return;}
    if(req.method==='GET'&&path==='/api/order-template'){send(res,200,state.orderTemplate);return;}
    if(!['POST','PUT'].includes(req.method))fail('Rota não encontrada.',404);
