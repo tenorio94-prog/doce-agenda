@@ -1148,14 +1148,14 @@ function orderPageMarkup() {
     : `${cloud ? '<button class="button button-primary" type="submit" name="intent" value="activate">Ativar meu link</button>' : ""}<button class="button ${cloud ? "button-quiet" : "button-primary"}" type="button" data-action="preview-link">Ver como a cliente vê</button>${cloud ? '<button class="text-link" type="submit" name="intent" value="save">Salvar sem ativar</button>' : ""}`;
   const form = `<form id="order-page-form" class="link-steps" novalidate>
     <fieldset class="link-step"><legend><span class="step-n">1</span>Sua vitrine</legend>
-      <label class="field"><span>Nome da confeitaria</span><input name="displayName" maxlength="60" value="${esc(p.displayName)}" placeholder="Ex.: Doces da Lu" autocomplete="organization"></label>
+      <label class="field"><span>Nome da confeitaria</span><input name="displayName" maxlength="60" value="${esc(p.displayName)}" placeholder="Como sua confeitaria se chama?" autocomplete="organization"></label>
       <label class="field"><span>Boas-vindas <small>(opcional)</small></span><textarea name="welcome" maxlength="280" rows="2" placeholder="Ex.: Oi! Escolha o doce e a data. Eu confirmo tudo pelo WhatsApp.">${esc(p.welcome)}</textarea></label></fieldset>
     <fieldset class="link-step"><legend><span class="step-n">2</span>O que você aceita por encomenda</legend>
       <div class="product-list" id="product-list">${products.map(productRowMarkup).join("")}</div>
       <button class="text-link add-product" type="button" data-action="add-product">+ Adicionar produto</button>
       <p class="link-step-note">A cliente também pode escolher "Outro" e descrever o que quer.</p></fieldset>
     <fieldset class="link-step"><legend><span class="step-n">3</span>Seu link</legend>
-      <label class="field"><span>Endereço</span><span class="slug-field"><span class="slug-prefix">${esc(LINK_BASE)}</span><input name="slug" maxlength="40" value="${esc(p.slug)}" ${p.slug ? 'data-edited="true"' : ""} autocapitalize="none" autocomplete="off" spellcheck="false" placeholder="doces-da-lu"></span><small>Criado a partir do nome. Pode trocar: letras, números e hífen.</small></label>
+      <label class="field"><span>Endereço</span><span class="slug-field"><span class="slug-prefix">${esc(LINK_BASE)}</span><input name="slug" maxlength="40" value="${esc(p.slug)}" ${p.slug ? 'data-edited="true"' : ""} autocapitalize="none" autocomplete="off" spellcheck="false" placeholder="preenche sozinho com o nome"></span><small>Criado a partir do nome. Pode trocar: letras, números e hífen.</small></label>
       <label class="field"><span>Seu WhatsApp <small>(opcional)</small></span><input name="whatsapp" type="tel" maxlength="30" value="${esc(p.whatsapp)}" placeholder="(11) 99999-9999" autocomplete="tel"><small>Com o número, a cliente pode te avisar no WhatsApp depois de mandar o pedido.</small></label></fieldset>
     <p class="link-privacy">Ao ativar, você recebe os dados da cliente para atender a encomenda, conforme a <a href="/privacidade/" target="_blank" rel="noopener">política de privacidade</a>.</p>
     <p id="order-page-error" class="form-error" role="alert" hidden></p>

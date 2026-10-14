@@ -20,7 +20,10 @@ function previewResponse(url){
  }
  return{code:'DA-PREVIA',summary:'Esta é só uma prévia: o pedido não foi enviado.\nQuando seu link estiver no ar, o pedido da cliente chega em Novos, na sua agenda, para você revisar.',whatsapp:''};
 }
-if(PREVIEW)document.addEventListener('DOMContentLoaded',()=>document.body.insertAdjacentHTML('afterbegin','<div class="preview-banner" role="note"><strong>Prévia.</strong> É assim que sua cliente vê o link. Nada é enviado.</div>'));
+if(PREVIEW)document.addEventListener('DOMContentLoaded',()=>{
+ const draft=previewDraft(),missing=[!draft.products?.length&&'seus produtos',(!draft.displayName||draft.displayName==='Sua confeitaria')&&'o nome da confeitaria'].filter(Boolean);
+ document.body.insertAdjacentHTML('afterbegin',`<div class="preview-banner" role="note"><strong>Prévia.</strong> É assim que sua cliente vê o link. Nada é enviado.${missing.length?`<br>Falta preencher ${missing.join(' e ')} nos Ajustes para aparecer aqui.`:''}</div>`);
+});
 async function json(url,options){if(PREVIEW)return previewResponse(url);const response=await fetch(url,options),data=await response.json();if(!response.ok)throw Object.assign(new Error(data.error||'Não foi possível continuar.'),{code:data.code,status:response.status});return data;}
 async function refreshDates(){const start=today(),end=new Date(`${start}T12:00:00Z`);end.setUTCDate(end.getUTCDate()+89);dates=await json(`${api}/availability?from=${start}&to=${end.toISOString().slice(0,10)}`);if(!dates.some(d=>d.date===selected&&d.available)){selected='';$('#date').value='';$('#chosen-date').textContent='Escolha outra data disponível.';}renderCalendar();}
 function renderCalendar(){
