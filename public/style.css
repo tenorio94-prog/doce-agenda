@@ -1200,3 +1200,56 @@ body.story-open { overflow: hidden; }
   .story-overlay, .story-stage *, .story-copy * { animation: none !important; transition: none !important; }
 }
 .story:focus { outline: none; }
+
+/* ---- Cartões: uma cor, um significado ---- */
+/* "Falta o sinal" é alerta e vence o verde de "pronto". */
+.order-row.is-ready.is-deposit-pending { border-color: var(--baunilha); background: var(--baunilha); }
+/* Entregue fica quieto e sem risco; o risco fica para cancelado. */
+.order-row.is-delivered { border-color: var(--line); background: var(--papel); }
+.order-row.is-delivered .row-product { color: var(--ink-soft); font-weight: 600; text-decoration: none; }
+.order-row.is-delivered .row-time { color: var(--muted); }
+.order-row.is-cancelled .row-product { color: var(--muted); text-decoration: line-through; text-decoration-thickness: 2px; }
+
+/* Próximo passo legível sobre qualquer cor de cartão */
+.row-advance { border-color: var(--ameixa); background: var(--branco); color: var(--ink); box-shadow: 0 2px 0 rgb(43 26 44 / 12%); transition: transform .14s cubic-bezier(.23, 1, .32, 1), box-shadow .14s ease, background-color .14s ease, color .14s ease; }
+.row-advance span { display: inline-block; margin-left: 6px; transition: transform .2s cubic-bezier(.3, 1.4, .5, 1); }
+@media (hover: hover) {
+  .row-advance:hover { background: var(--ameixa); color: var(--papel); }
+  .row-advance:hover span { transform: translateX(3px); }
+}
+.row-advance:active { box-shadow: none; transform: translateY(1px) scale(.97); }
+.detail-next { margin: 4px 0 14px; }
+.detail-next .row-advance { min-height: 48px; margin-top: 0; padding: 0 20px; font-size: 15px; }
+
+/* Próximos dias: rótulo claro do dia e cartões compactos */
+.upcoming-day + .upcoming-day { margin-top: 16px; }
+.upcoming-label { margin: 0 0 8px; color: var(--muted); font: 700 13px var(--font-body); letter-spacing: .05em; text-transform: uppercase; }
+.order-row.is-compact { grid-template-columns: 52px minmax(0, 1fr); padding: 10px 14px; border-radius: 18px; }
+.order-row.is-compact .row-time { font-size: 17px; }
+.order-row.is-compact .row-product { font-size: 15px; }
+.order-row.is-compact .row-title-line, .order-row.is-compact .row-flag { font-size: 13px; }
+.order-row.is-compact .row-flag { margin-top: 2px; }
+.order-row.is-compact .row-meta, .order-row.is-compact .row-side .status-pill { display: none; }
+.order-row.is-compact .row-side { margin-top: 2px; }
+.order-row.is-compact .row-total { font-size: 14px; }
+.order-row.is-compact .stamp { display: none; }
+.order-row.is-compact.is-paid .row-total::before { content: "✓ "; color: var(--carimbo); }
+@media (min-width: 761px) { .order-row.is-compact { grid-template-columns: 60px minmax(0, 1fr) auto; } .order-row.is-compact.is-paid .row-side { padding-top: 0; } }
+
+/* Movimento: deixar claro o que mudou */
+.order-list.is-entering > .order-row { animation: row-in .38s cubic-bezier(.2, .8, .2, 1) both; }
+.order-list.is-entering > .order-row:nth-child(2) { animation-delay: .05s; }
+.order-list.is-entering > .order-row:nth-child(3) { animation-delay: .1s; }
+.order-list.is-entering > .order-row:nth-child(n+4) { animation-delay: .15s; }
+.order-row.is-advanced { animation: row-advanced .9s cubic-bezier(.2, .8, .2, 1); }
+.order-row.is-advanced .status-pill { animation: pill-pop .5s .1s cubic-bezier(.3, 1.6, .5, 1) both; }
+.day-button { transition: background-color .2s ease, border-color .2s ease, color .2s ease, transform .14s cubic-bezier(.23, 1, .32, 1); }
+@keyframes row-in { from { opacity: 0; transform: translateY(10px); } }
+@keyframes row-advanced { from { box-shadow: 0 0 0 0 rgb(46 106 70 / 40%); } to { box-shadow: 0 0 0 14px rgb(46 106 70 / 0%); } }
+@keyframes pill-pop { from { opacity: .4; transform: scale(.6); } }
+@media (prefers-reduced-motion: reduce) {
+  .order-list.is-entering > .order-row, .order-row.is-advanced, .order-row.is-advanced .status-pill { animation: none; }
+}
+.order-row.is-compact.is-paid .row-product { padding-right: 0; }
+#view-today.today-redesign .today-main > .next-action-card { margin-top: 18px; padding: 16px 18px; border: 1.5px solid var(--line); border-radius: 24px; background: var(--branco); }
+@media (max-width: 420px) { .day-availability { font-size: 9.5px; letter-spacing: -.01em; } }
