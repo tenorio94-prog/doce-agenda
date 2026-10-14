@@ -6,6 +6,7 @@ Atualizado em **14/10/2026**, ao fim de uma sessão longa de melhorias. Este arq
 
 - Tudo o que foi feito está **no GitHub (`main`) e publicado na Cloudflare**. Última versão publicada e conferida no ar: `bd4358cf-44b7-4589-9293-1549b5d83cb6`. Pasta e GitHub sincronizados, sem alterações pendentes.
 - **Próximo assunto combinado: domínio `lucast.app`** (seção 7). O usuário retomou o tema e pediu para ser guiado passo a passo quando disser "vamos ao domínio". Ainda não houve nenhuma alteração de DNS.
+- Lucas deixou o domínio para depois e pediu um diagnóstico de código: feito em 14/10 (seção 7b), aguardando a escolha dele do que arrumar.
 - Depois disso, as features planejadas (seção 8) continuam **não iniciadas** e exigem aprovação.
 - Sugestão feita ao usuário e ainda não realizada: mostrar o app à amiga confeiteira e observar o uso real antes de grandes mudanças.
 
@@ -77,6 +78,14 @@ Plano explicado e aceito em princípio (cada passo externo com o usuário):
 3. Usuário troca os nameservers na Name.com pelos dois indicados pela Cloudflare (registro do domínio continua na Name.com).
 4. Após propagar: ligar o domínio ao Worker `doce-agenda`, conferir HTTPS, rotas (`/p/:slug`), login, link das clientes e **teste de envio e resposta do e-mail**.
 Não é um simples CNAME. Wrangler atual só tem escopo de Workers (sem DNS/zonas); não ampliar escopos sem necessidade. Liberar a origem `lucast.app` no CORS do Supabase já existe; conferir.
+
+## 7b. Diagnóstico de código (14/10, só leitura, nada alterado)
+
+Lucas deixou o domínio para depois e pediu um diagnóstico para enxugar o código sem perder nada. Estado inicial: 43 testes passando. Achados, do mais seguro ao mais arriscado, **aguardando a escolha dele**:
+1. **Faxina segura:** cerca de 40 regras em `style.css` para classes que não aparecem mais em nenhuma tela (por exemplo `week-agenda`, `tip-card`, `info-banner`, `filter-select`); scripts antigos de revisão/captura (`scripts/review-*.mjs`, `capturar_prints.mjs`); documentos antigos em `docs/` e o `README` desatualizado.
+2. **Montagem do site:** são quatro scripts encadeados (`build-cloudflare` → `build-cloud-preview` → `build-launch-site` → `build-deploy`). A landing com conta é ajustada por troca de frases. Três dessas trocas já não encontram o texto e falham sem avisar; uma quarta só funciona porque a frase aparece duas vezes. O `_redirects` é escrito duas vezes. Proposta: um único build, conferido comparando os arquivos gerados antes e depois.
+3. **Regras duplicadas:** `server.mjs` (servidor local) tem cópia própria das validações de `cloud/state-engine.js`, e as duas cópias podem divergir. Proposta: o servidor local passa a usar o motor único (ou é aposentado, se Lucas preferir).
+4. **Não mexer agora:** `style.css` (104 KB, em camadas que se sobrepõem) e `app.js` (112 KB, arquivo único). Arrumar exige comparar telas a cada passo; fazer antes de Produção A, se for o caso. Os 30 MB de prints em `design/` não afetam o site.
 
 ## 8. Próximas features — nenhuma iniciada
 
