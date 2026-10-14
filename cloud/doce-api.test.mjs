@@ -126,6 +126,9 @@ test('preflight is limited to configured origins and exposes the revision header
   const denied = await send(undefined, { method: 'OPTIONS', origin: 'https://evil.example', token: null });
   assert.equal(denied.status, 403);
   assert.equal(denied.headers.get('Access-Control-Allow-Origin'), null);
+  const cloudflare=await send(undefined,{method:'OPTIONS',origin:'https://doce-agenda.doce-agenda-local.workers.dev',token:null});
+  assert.equal(cloudflare.status,204);assert.equal(cloudflare.headers.get('Access-Control-Allow-Origin'),'https://doce-agenda.doce-agenda-local.workers.dev');
+  const otherWorker=await send(undefined,{method:'OPTIONS',origin:'https://other-account.workers.dev',token:null});assert.equal(otherWorker.status,403);
 });
 
 test('auth is verified from the bearer token before any table or RPC access', async () => {

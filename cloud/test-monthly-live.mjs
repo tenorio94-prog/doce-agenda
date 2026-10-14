@@ -16,12 +16,14 @@ assert.ok(process.env.DOCE_QA_SESSION,'Provide a synthetic QA session file.');
 const session=JSON.parse(await readFile(process.env.DOCE_QA_SESSION,'utf8'));
 assert.ok(session.email.endsWith('.invalid'),'Never mutate a real pilot account.');
 const out=await mkdtemp(path.join(os.tmpdir(),'doce-month-live-'));
+const siteOrigin=process.env.DOCE_TEST_ORIGIN||'https://lucast.app';
 const config=session.config,client=createClient(config.url,config.publishableKey,{auth:{persistSession:false,autoRefreshToken:false}});
 let revision,original,browser,secondClient;const checks=[],errors=[];
 async function authenticate(s,c=client){const result=await c.auth.signInWithPassword({email:s.email,password:s.password});assert.equal(result.error,null,'Synthetic login failed');return result.data.session.access_token;}
 let token=await authenticate(session);
 async function call(route,method='GET',body,bearer=token){
- const response=await fetch(config.url+'/functions/v1/doce-api',{method:'POST',headers:{apikey:config.publishableKey,Authorization:`Bearer ${bearer}`,Origin:'https://lucast.app','Content-Type':'application/json'},body:JSON.stringify({path:route,method,body,...(method!=='GET'?{expectedRevision:revision}:{})})});
+ const response=await fetch(config.url+'/functions/v1/doce-api',{method:'POST',headers:{apikey:config.publishableKey,Authorization:`Bearer ${bearer}`,Origin:siteOrigin,'Content-Type':'application/json'},body:JSON.stringify({path:route,method,body,...(method!=='GET'?{expectedRevision:revision}:{})})});
+ assert.equal(response.headers.get('Access-Control-Allow-Origin'),siteOrigin,'Exact site origin must be allowed');
  const data=await response.json();if(response.ok&&(route==='/api/state'||method!=='GET'))revision=Number(response.headers.get('X-Agenda-Revision'));return {status:response.status,data};
 }
 try{
@@ -39,9 +41,9 @@ try{
  const root=path.resolve(fileURLToPath(new URL('../deploy-cloud/public/',import.meta.url))),types={'.html':'text/html','.css':'text/css','.js':'text/javascript','.svg':'image/svg+xml','.ttf':'font/ttf','.png':'image/png','.webmanifest':'application/manifest+json'};
  for(const width of [360,1440]){
   const context=await browser.newContext({viewport:{width,height:900},locale:'pt-BR',timezoneId:'Pacific/Auckland',serviceWorkers:'block'});
-  if(process.env.DOCE_MONTHLY_ASSETS==='local')await context.route('https://lucast.app/**',async route=>{let pathname=new URL(route.request().url()).pathname;if(pathname.endsWith('/'))pathname+='index.html';const file=path.resolve(root,'.'+pathname);assert.ok(file.startsWith(root+path.sep));try{await route.fulfill({contentType:types[path.extname(file)]||'application/octet-stream',body:await readFile(file)});}catch{await route.fulfill({status:404,body:'not found'});}});
+  if(process.env.DOCE_MONTHLY_ASSETS==='local')await context.route(siteOrigin+'/**',async route=>{let pathname=new URL(route.request().url()).pathname;if(pathname.endsWith('/'))pathname+='index.html';const file=path.resolve(root,'.'+pathname);assert.ok(file.startsWith(root+path.sep));try{await route.fulfill({contentType:types[path.extname(file)]||'application/octet-stream',body:await readFile(file)});}catch{await route.fulfill({status:404,body:'not found'});}});
   const page=await context.newPage();page.setDefaultTimeout(15000);page.on('pageerror',e=>errors.push(e.message));
-  await page.goto('https://lucast.app/cadastro/?mode=login');await page.locator('#login-email').fill(session.email);await page.locator('#login-password').fill(session.password);await page.locator('#login-submit').click();await page.locator('#today-title').waitFor({timeout:30000});
+  await page.goto(siteOrigin+'/cadastro/?mode=login');await page.locator('#login-email').fill(session.email);await page.locator('#login-password').fill(session.password);await page.locator('#login-submit').click();await page.locator('#today-title').waitFor({timeout:30000});
   await page.locator('[data-view=month]').click();await page.locator('.month-stats').waitFor();assert.deepEqual(await page.locator('.month-stats .stat-value').allTextContents(),['3','R$\u00a0150,30','R$\u00a040,30','R$\u00a0110,00']);
   assert.equal(await page.locator('body').evaluate(b=>b.scrollWidth<=innerWidth),true);await page.evaluate(()=>document.fonts.ready);await page.screenshot({path:path.join(out,`authenticated-${width}.png`),fullPage:true});
   await page.getByRole('button',{name:'Mês anterior',exact:true}).click();await page.getByRole('heading',{name:'Seu mês começa com uma encomenda'}).waitFor();assert.equal(await page.locator('.month-stats').count(),0);await context.close();checks.push(`authenticated UI ${width}px with real Supabase responses`);

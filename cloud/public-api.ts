@@ -1,6 +1,6 @@
 import { availabilityDates, createPublicRequest, publicPageView } from './public-orders.js';
 
-const origins = new Set(['https://lucast.app','https://www.lucast.app','https://doce-agenda-piloto.netlify.app','http://localhost:4173','http://127.0.0.1:4173']);
+const origins = new Set(['https://lucast.app','https://www.lucast.app','https://doce-agenda-piloto.netlify.app','https://doce-agenda.doce-agenda-local.workers.dev','http://localhost:4173','http://127.0.0.1:4173']);
 export function createPublicHandler(deps:any={}) {
   const env=deps.env ?? ((name:string)=>Deno.env.get(name));
   return async(request:Request)=>{

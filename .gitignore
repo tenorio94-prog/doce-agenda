@@ -5,6 +5,7 @@ server-error.log
 *.log
 
 .netlify/
+.wrangler/
 node_modules/
 .env
 .env.*

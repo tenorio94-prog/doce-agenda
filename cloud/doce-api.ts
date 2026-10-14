@@ -8,6 +8,7 @@ const ALLOWED_ORIGINS = new Set([
   'https://doce-agenda-piloto.netlify.app',
   'https://lucast.app',
   'https://www.lucast.app',
+  'https://doce-agenda.doce-agenda-local.workers.dev',
   'http://localhost:4173',
   'http://127.0.0.1:4173',
 ]);

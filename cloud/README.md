@@ -1,12 +1,12 @@
 # Cloud — Doce Agenda
 
-Backend Supabase publicado. Frontend somente em prévia; login público pendente. Estado e comandos em [CADASTRO_ABERTO.md](../../CADASTRO_ABERTO.md); ativação em [ATIVAR_LOGIN_PILOTO.md](../../ATIVAR_LOGIN_PILOTO.md).
+Backend Supabase e frontend com login publicados. Versão atual, incluindo Meu mês: https://doce-agenda.doce-agenda-local.workers.dev/ . Publicação e verificações em [CLOUDFLARE_PUBLICACAO.md](../docs/CLOUDFLARE_PUBLICACAO.md). O domínio `lucast.app` ainda aponta para a versão anterior no Netlify.
 
-`edge-entry.ts` serve `doce-api.ts` e `state-engine.js`. Deploy inclui os três arquivos, JWT obrigatório. API recebe POST `{path,method,body,expectedRevision}` com bearer da sessão e apikey pública; body é objeto. `X-Agenda-Revision` informa revisão. Escritas exigem revisão atual; conflito bloqueia novas gravações até leitura completa de `/api/state`. Nenhuma credencial admin no frontend.
+`edge-entry.ts` serve `doce-api.ts`, com dependências `state-engine.js`, `order-link-model.js` e `monthly-summary.js`; incluir todas no deploy. JWT obrigatório. API recebe POST `{path,method,body,expectedRevision}` com bearer da sessão e apikey pública; body é objeto. `X-Agenda-Revision` informa revisão. Escritas exigem revisão atual; conflito bloqueia novas gravações até leitura completa de `/api/state`. Nenhuma credencial admin no frontend.
 
-`auth-controller.js` usa SDK fixo com PKCE. `app-bootstrap.js` verifica sessão antes de carregar o app; conta sem sessão vai para entrada. `public/account/config.js` contém apenas URL/chave pública e flag `emailReady`; só ativar e-mail após SMTP/entrega validados. Google é detectado pelas configurações reais do Auth.
+`auth-controller.js` usa SDK fixo com PKCE. `app-bootstrap.js` verifica sessão antes de carregar o app; conta sem sessão vai para entrada. `public/account/config.js` contém apenas configuração pública. O piloto usa e-mail/senha com cadastro aberto e sem confirmação por e-mail, conforme autorizado. SMTP/recuperação por e-mail não estão ativos (`emailDeliveryReady: false`). Google não é necessário ao fluxo do piloto.
 
-Build: `node scripts/build-cloud-preview.mjs`, na pasta `web`; saída `deploy-cloud/public`. Não publica. Landing mantém demonstração `/demo/`; `/cadastro/`, `/app/` e `/agenda.html` usam cloud. Atualizar CTAs/FAQ quando login estiver ativo. CORS aceita produção Netlify e localhost/127.0.0.1:4173; prévias autenticadas precisam de origem exata adicional, sem wildcard.
+Build Netlify: `node scripts/build-cloud-preview.mjs`; Cloudflare: `node scripts/build-cloudflare.mjs`, na pasta `web`; saída `deploy-cloud/public`. Esses builds não publicam sozinhos. Landing mantém demonstração `/demo/`; `/cadastro/`, `/app/` e `/agenda.html` usam cloud. CORS aceita as origens exatas de `lucast.app`, `www.lucast.app`, produção Netlify, o endereço publicado da Cloudflare e localhost/127.0.0.1:4173; novas prévias autenticadas precisam de origem exata adicional, sem wildcard.
 
 Testes: `node --test cloud/state-engine.test.mjs cloud/app-bootstrap.test.mjs`; `node --experimental-strip-types --test cloud/doce-api.test.mjs`; `node scripts/test-account-ui.mjs`. Teste real requer fixtures temporários via env; ver documento de estado. Não versionar credenciais.
 

@@ -1,6 +1,8 @@
 # Meu mês — etapa 1
 
-**Estado em 13/10/2026: implementado e testado; interface ainda não publicada.**
+**Estado em 14/10/2026: implementado, testado e publicado na Cloudflare.**
+
+Endereço: https://doce-agenda.doce-agenda-local.workers.dev/ . A conexão de `lucast.app` à Cloudflare ainda está pendente; o domínio continua apontando para a versão anterior no Netlify.
 
 ## Entrega
 
@@ -23,7 +25,7 @@
 - Agregação local de 5.000 pedidos e 20.000 recebimentos: aproximadamente 100 ms nesta máquina. Isso mede o cálculo, não a latência de rede nem uma garantia para qualquer volume.
 - Dados originais das contas sintéticas restaurados após o teste. Nenhuma conta de confeiteira real foi alterada. Páginas sintéticas continuam desativadas.
 
-## Publicação e bloqueio
+## Histórico da publicação
 
 Servidor atualizado: `doce-api` versão 6 (JWT obrigatório) e `doce-public` versão 4 (público por definição, mesmos controles de rota). O novo marcador de preço é compatível com a interface antiga.
 
@@ -33,7 +35,13 @@ Interface pronta em `deploy-cloud/public`, mas a tentativa de upload retornou:
 
 O site oficial https://lucast.app continua no deploy `6acecdaa34b7500b6803ecce`, sem a aba Meu mês. O teste integrado usou os arquivos locais preparados interceptando apenas o domínio do site; autenticação e API foram reais. **Não representa validação da interface nova publicada.**
 
-Depois de liberar os deploys no Netlify: publicar essa pasta, executar novamente o teste integrado sem `DOCE_MONTHLY_ASSETS=local`, revisar a tela publicada e então pedir autorização para Produção A. Não iniciar a próxima feature antes disso.
+O bloqueio do Netlify foi contornado publicando os arquivos estáticos na Cloudflare Workers Static Assets, na conta autorizada pelo usuário, sem plano pago e mantendo os dados no Supabase.
+
+Em 14/10/2026, o teste integrado foi executado novamente no endereço público da Cloudflare, **sem interceptação de arquivos locais**: login real em conta fictícia, resumo do servidor, backup/restauração, isolamento de duas contas e telas autenticadas em 360/1440 px passaram. Capturas examinadas. Os dados das contas fictícias foram restaurados ao final. A falha inicial de HTTPS desapareceu após a ativação do novo subdomínio, sem ignorar validação de certificado.
+
+Servidor atual: `doce-api` versão 7 e `doce-public` versão 5, liberando somente a origem exata da Cloudflare além das origens anteriores. Worker publicado: `7034e89d-ecef-4b9d-93f5-439ba3c27dc1`. A correção final de rota preserva `/p/<slug>`, sem alterar os arquivos do app verificados no teste autenticado. Cinco testes HTTP e o smoke no navegador passaram após essa correção. Configuração e comandos em [CLOUDFLARE_PUBLICACAO.md](CLOUDFLARE_PUBLICACAO.md).
+
+Etapa 1 entregue. Pedir autorização antes de iniciar Produção A.
 
 ## Comandos
 

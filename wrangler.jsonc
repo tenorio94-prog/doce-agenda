@@ -1,0 +1,12 @@
+{
+  "name": "doce-agenda",
+  "account_id": "adb0b5b9c8fcfb4c3c88ce8711f19e4a",
+  "compatibility_date": "2026-10-13",
+  "workers_dev": true,
+  "build": { "command": "node scripts/build-cloudflare.mjs" },
+  "assets": {
+    "directory": "./deploy-cloud/public",
+    "html_handling": "auto-trailing-slash",
+    "not_found_handling": "none"
+  }
+}
