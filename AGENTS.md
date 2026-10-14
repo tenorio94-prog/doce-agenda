@@ -13,6 +13,7 @@
 - Poupe tokens: leitura direcionada, mudanças delimitadas e verificações proporcionais. Não reexecute auditorias completas sem necessidade.
 - Prefira decisões rotineiras por conta própria dentro do escopo autorizado. Pergunte por informação indispensável, ação sensível ou escolha que afete o produto.
 - **Entregas por etapas:** implementar, testar, publicar e relatar uma feature por vez, com commit separado. Pare e peça autorização antes de começar a próxima feature.
+- **Mudança aprovada vai até o fim:** depois que Lucas aprova o que foi planejado, faça commit, push para `main` e publique no site sem pedir de novo; confira o endereço publicado. Ainda peça autorização para banco/Supabase, dados reais, política de privacidade, DNS/domínio/e-mail, serviços pagos, apagar dados, ou quando um teste falhar ou não for possível verificar.
 - A preferência vigente é trabalhar **sem subagentes**, após pedidos anteriores de delegação. Siga a preferência mais recente; não reative delegação nem mude modelos/configuração global por iniciativa própria.
 - Ao terminar uma etapa, atualize `context.md` com alterações, verificações, publicação e pendências. Registre resultados reais; diferencie implementado, testado e publicado.
 
@@ -31,12 +32,12 @@
 ## Publicação e Git
 
 - Hospedagem atual: Cloudflare Workers Static Assets; backend/auth: Supabase. Consulte `docs/CLOUDFLARE_PUBLICACAO.md` antes de publicar.
-- **DNS/Name.com estão adiados pelo usuário.** Não mudar nameservers, registros, e-mail ou domínio enquanto ele não retomar esse trabalho. Não contratar serviços nem alterar planos pagos.
+- **DNS/Name.com:** o usuário retomou o assunto e quer ser guiado (ver `context.md`, seção 7). Cada passo externo — nameservers, registros, e-mail, domínio — só com ele acompanhando e aprovando; preservar o e-mail `@lucast.app`. Não contratar serviços nem alterar planos pagos.
 - `npm start` é o servidor local separado; não é uma prévia fiel do serviço publicado com conta.
 - Edite os fontes em `public/` e `cloud/`; não mantenha correções apenas em `deploy-*/public`. Esses diretórios são builds ignorados pelo Git.
 - Cloudflare usa `scripts/build-cloudflare.mjs`/`wrangler.jsonc`. Preserve o proxy `/p/:slug /encomenda/ 200`: usar `/encomenda/index.html` perde o slug por redirecionamento.
 - Nunca publique a raiz do repositório. Publique somente `deploy-cloud/public`. Não versionar sessões, senhas, tokens, `.env`, `.wrangler/` ou dados de clientes.
-- Commit e push não equivalem a deploy. Informe branch/commit e endereço realmente verificado; não faça merge do PR nem altere `main` sem autorização.
+- Commit e push não equivalem a deploy. Informe branch/commit e endereço realmente verificado. `main` é a base de trabalho e recebe push direto das mudanças aprovadas.
 
 ## Verificação
 

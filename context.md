@@ -1,148 +1,106 @@
 # Doce Agenda — contexto para continuar em outra sessão
 
-Atualizado em **14/10/2026**. Este arquivo é uma passagem de bastão, não uma lista de ações já autorizadas. Confirmar o estado real antes de mudanças externas.
+Atualizado em **14/10/2026**, ao fim de uma sessão longa de melhorias. Este arquivo é a passagem de bastão: descreve o estado real, as decisões e o que depende de autorização. Confira `git log` e o site antes de agir; hashes e versões abaixo são um retrato.
 
 ## 1. Onde paramos
 
-- O app está publicado e testado na **Cloudflare**, incluindo a feature **Meu mês**.
-- O domínio `lucast.app` continua apontando para a versão anterior no Netlify. A migração de DNS **não foi feita** e acabou de ser **adiada pelo usuário**.
-- O usuário pediu agora estes dois documentos, `AGENTS.md` e `context.md`, para abrir outra sessão sem recontar o projeto.
-- **Não iniciar Produção, Compras, Pix ou Clientes automaticamente.** Meu mês foi entregue; a próxima feature exige autorização. Não continuar DNS sem o usuário retomar o assunto.
-- **Nova landing (14/10/2026), commit `85012ce`, só local, NÃO publicada nem enviada ao GitHub.** Título "Seu caderno não te avisa que o bolo é amanhã.", ilustração CSS de caderno + celular na primeira tela, seção de dores, 3 benefícios, FAQ reduzido e fechamento "Menos caderno. Mais espaço para criar." Verificada no build local em 360 px e desktop. Depois a ilustração foi trocada por foto gerada no ChatGPT pelo usuário (`public/landing/assets/cozinha-caderno*.jpg`, comprimida de 2,4 MB para 100/270 KB), com a tela "Hoje" do app sobreposta por CSS no celular da foto. A imagem é ilustrativa e não deve ser apresentada como caderno de confeiteira real. Os PNGs originais ficaram na raiz, fora do Git. **Publicada na Cloudflare em 14/10/2026 com autorização do usuário: versão `8c8659b7-8325-45a3-8d29-b45eee5f8c3f`.** Verificado no endereço workers.dev: teste de rotas (5/5, slug preservado), landing/foto/cadastro/demo/privacidade com 200, landing em 360 px sem rolagem horizontal, fontes e foto carregadas, login carregando sem erros no console. Commits **enviados à `main` do GitHub** (`8a86d2d`) com autorização do usuário. Fotos originais em `design/fotos/`; `.gitattributes` fixa LF em dois arquivos gerados pelo build, que antes apareciam como falsamente modificados.
-- **Meu mês de exemplo na demonstração (14/10/2026), commit `09426b3`, enviado ao GitHub e publicado na Cloudflare (versão `8ce86dc7-8b54-4078-ad55-033387fc5c46`), conferido na demo publicada.** Enquanto a visitante da demo não tem pedido próprio, o mês atual mostra 8 pedidos fictícios calculados pelo `monthlySummary` real (`cloud/demo-month.js`, flag `isExample`, aviso "Números de exemplo"). Conta real e servidor não mudam. Testes: 41 de nuvem e 2 do servidor local passaram; fluxo verificado no build local em 360 px (exemplo aparece e some após cadastrar pedido próprio).
-- **Navegação em 4 abas (14/10/2026), autorizada pelo usuário; enviada ao GitHub e publicada na Cloudflare (versão `3d8c4f3b-390c-447b-973a-48d669d05d74`).** Verificado no ar: rotas 5/5, /, /demo/, /app/, /cadastro/ com 200; na demo publicada em 360 px, barra com 4 itens, semana na Agenda, próximo passo avançando para Em produção com Desfazer, etapas com contagem, sem rolagem lateral e sem erros no console. Barra: Agenda · Pedidos · Meu mês · + Novo. Agenda = antiga Hoje com a semana embutida (dia escolhido começa em hoje, "Voltar para hoje", navegação de semanas, "Ajustar esta data"); a aba Semana deixou de existir (`data-view="week"` cai em Agenda). Pedidos troca o menu de situação por faixa de etapas com contagem (Todos, Novos = Solicitação/Orçamento/Aguardando, Confirmados, Fazendo, Prontos, Entregues, Cancelados), **sem mudar as situações gravadas**. Pedidos Confirmado/Em produção/Pronto ganham botão de próximo passo (PUT só com `status`, histórico registrado, "Desfazer" no aviso); etapas anteriores continuam pelo formulário. Testes: 43 automáticos passaram; demo local em 360 px e 1280 px verificada (avançar, desfazer, filtros, foco, sem rolagem lateral). Scripts Playwright antigos foram adaptados aos novos seletores, mas não foram executados. Não verificado com conta real logada.
-- **Demonstração completa + stories de boas-vindas (14/10/2026), pedido do usuário; publicado na Cloudflare (versão `26d1c291-dde2-4336-bdd3-8f3759a67d75`).** Incidente: a primeira publicação (`8e61db1b`) quebrava o carregamento quando o navegador usava uma página em cache sem o botão "Recomeçar"; corrigido no mesmo dia com busca opcional do botão. Verificado no ar em aba limpa: stories abrem na primeira visita, demo com 3 pedidos hoje, sem erros no console. `/demo/` usa chave própria (`doce-agenda.demo.v2`) e nasce com uma confeitaria fictícia (`cloud/demo-seed.js`): 15 pedidos relativos à data da visita, cobrindo todas as etapas, um Pix informado para conferir, uma solicitação pelo link e um dia lotado (limite 3). Esses pedidos contam como reais **só dentro da demo**, então Agenda, Pedidos e Meu mês mostram os mesmos dados. O antigo "mês de exemplo" (`demo-month.js`) foi removido. A faixa da demo ganhou "Como funciona" e "Recomeçar" (só a demo pode ser reiniciada; o piloto do navegador mantém a chave antiga e um exemplo). Stories em `public/app.js` + `style.css` (CSS e JS próprios, sem biblioteca): 7 cenas (caderno → celular, anotar pedido com digitação animada, carimbo do sinal, próximo passo, Meu mês com números subindo, link de encomenda, final com granulado). Abrem sozinhos uma vez por aparelho na demo e em conta nova sem pedidos; respeitam movimento reduzido; toque à direita avança, à esquerda volta, segurar pausa, Esc fecha. Testes: 43 automáticos passaram (3 novos validam a demo como backup real); verificado em build local a 375 px e 1280 px. Não testado em conta real logada nem em Safari/aparelho físico.
-- **Próximos dias, confirmar orçamento e revisão visual dos cartões (14/10/2026), após teste do usuário com conta real; publicado na Cloudflare (versão `5833eef0-4044-4a0f-9477-da916672ae99`).** Verificado no ar: rotas 5/5; demo em 375 px com "Próximos dias" agrupado, sumindo ao escolher outro dia, botões de próximo passo e "Confirmar pedido" no orçamento, sem erros. "Logo mais" virou "Próximos dias": só aparece com hoje selecionado (não repete o dia escolhido), agrupa por "Amanhã"/dia e usa cartões compactos sem botão. Orçamento e Aguardando confirmação ganham "Confirmar pedido →" (abre o formulário já em Confirmado, mantendo checagens de data, lotação e bolo); Solicitação ganha "Revisar solicitação →"; o próximo passo também aparece no topo do pedido aberto e a tela atualiza ao avançar. Cores: "Falta o sinal" (baunilha) vence "Pronto" (pistache); Entregue sem risco (risco só em Cancelado); botão de próximo passo branco com borda ameixa; movimento ao trocar de dia e destaque no pedido que avançou (respeita movimento reduzido). "Próxima ação" saiu do lado da semana (espremia os dias) e virou cartão abaixo da agenda. Testes: 43 automáticos; demo local em 375 px e 1024 px verificada (cor prioritária, confirmar orçamento, avançar pelo detalhe).
-- **Ajustes redesenhados (14/10/2026), pedido do usuário; publicado na Cloudflare (versão `9883c2d5-48ee-4fe3-b1de-f1a39f696f84`).** Verificado no ar: rotas 5/5; demo com 3 cartões e resumos; prévia publicada abre "Doces da Lu" com faixa de prévia, sem requisições ao Supabase nem erros. Entrega 1 (`f22bec1`): link de encomenda em 3 passos (vitrine, produtos em lista com + Adicionar, endereço gerado do nome e corrigido sozinho), botões "Ativar meu link"/"Salvar sem ativar"; ativo vira cartão "No ar" com Copiar, Mandar no WhatsApp (wa.me só com o texto, ela escolhe o contato) e prévia; "Pausar link". Prévia em `/encomenda/?preview=1` lê o rascunho do `localStorage` e nunca busca nem envia nada (verificado: zero requisições ao Supabase). A demo traz um link "Doces da Lu" inativo para explorar. Entrega 2: Ajustes em cartões fechados com resumo (link, "Dias e limites", "Detalhes do bolo"), antecedência em opções (sem mínimo, 1, 2, 3 dias, 1 semana; gravada em horas como antes; valor antigo diferente vira opção própria), "Mudar só uma data" dentro de Dias e limites, e "Ajustar esta data" abre direto ali. Testes: 43 automáticos; demo local em 375 px. O cartão "No ar" só foi visto simulando conta, não em conta real.
-- **Domínio:** o usuário retomou o assunto em 14/10 e pediu orientação depois dos Ajustes. `lucast.app` tem e-mail ativo: MX da Name.com (mx3..mx8.name.com) e SPF `v=spf1 a mx ~all` encaminhando para o Gmail dele, que também responde por esse endereço. Esses registros precisam ser preservados na troca de nameservers. `www` aponta para o Netlify; a raiz para 75.2.60.5 (Netlify).
-- **Publicação (decisão do usuário em 14/10/2026):** depois que ele aprova uma mudança planejada, o agente constrói, testa, faz commit, push e **publica no site direto**, conferindo o endereço publicado, sem pedir de novo. Continua pedindo autorização antes de: começar algo não aprovado; mexer em banco/Supabase, dados reais ou política de privacidade; DNS/domínio/e-mail; serviços pagos; apagar dados; ou publicar com teste falhando ou sem conseguir verificar. Correção de demo antiga ("Doces da Lu" para quem não tinha link) publicada na versão `bd4358cf-44b7-4589-9293-1549b5d83cb6` e verificada no ar.
-- Preferência atual: execução pelo agente principal, **sem delegação**; comunicação curta e simples, economia de tokens e conclusão por etapas.
+- Tudo o que foi feito está **no GitHub (`main`) e publicado na Cloudflare**. Última versão publicada e conferida no ar: `bd4358cf-44b7-4589-9293-1549b5d83cb6`. Pasta e GitHub sincronizados, sem alterações pendentes.
+- **Próximo assunto combinado: domínio `lucast.app`** (seção 7). O usuário retomou o tema e pediu para ser guiado passo a passo quando disser "vamos ao domínio". Ainda não houve nenhuma alteração de DNS.
+- Depois disso, as features planejadas (seção 8) continuam **não iniciadas** e exigem aprovação.
+- Sugestão feita ao usuário e ainda não realizada: mostrar o app à amiga confeiteira e observar o uso real antes de grandes mudanças.
 
-## 2. Produto e público
+## 2. Como trabalhar com o usuário (decisões vigentes)
 
-App web para confeiteiras brasileiras autônomas e pequenas confeitarias que trabalham por encomenda. Organiza pedidos, datas, detalhes combinados e pagamentos conferidos. Público usa principalmente celular, entre tarefas da cozinha. A ideia surgiu da experiência de Lucas em gastronomia e de uma amiga confeiteira que conhece outras profissionais; validação com participantes reais ainda precisa acontecer.
+- Lucas não é técnico, usa muito o celular. Português simples, curto, sem jargão. Execução pelo agente principal, **sem subagentes**.
+- **Fluxo combinado:** ele aprova uma mudança planejada → o agente constrói, testa, faz commit, push para `main` e **publica no site direto**, confere o endereço publicado, atualiza este arquivo e relata. Não perguntar "posso publicar?" de novo.
+- **Ainda pedir autorização antes de:** começar algo não aprovado; mexer em banco/Supabase (schema, funções), dados de contas reais ou política de privacidade; DNS, domínio ou e-mail; qualquer serviço pago; apagar dados; publicar com teste falhando ou sem conseguir verificar.
+- Ao propor mudanças de interface, ele gosta de uma análise "de designer" honesta (o que funciona, o que confunde, o que eu faria) antes de construir.
 
-Mensagem da landing: agenda de encomendas para confeiteiras; pedido, prazo e sinal no mesmo lugar. Link público reduz redigitação: a cliente preenche, a confeiteira revisa. Não inventar integração com WhatsApp, confirmação bancária, depoimentos ou resultados comerciais.
+## 3. Produto e público
 
-Identidade atual **Glacê + carimbo**: rosa `#f7c5d0`, ameixa `#2b1a2c`, creme `#fffaf2`, pistache `#d3e7c1`, carimbo verde `#2e6a46`. Fredoka/Figtree locais, licenças OFL. Logo tipográfico em `public/logo.svg`. A identidade antiga de serifa/terracota/calendário/trevo foi substituída.
+App web para confeiteiras brasileiras autônomas que trabalham por encomenda: pedidos, datas, combinados e pagamentos conferidos. Público no celular, entre tarefas da cozinha, com receio de "app complicado". Validação com confeiteiras reais ainda não aconteceu.
 
-## 3. Código, Git e endereços
+Identidade **Glacê + carimbo**: rosa `#f7c5d0`, ameixa `#2b1a2c`, creme `#fffaf2`, pistache `#d3e7c1`, baunilha `#fbe9a9`, carimbo `#2e6a46`. Fredoka/Figtree locais. Regra de cor nos cartões: **baunilha = falta o sinal** (vence qualquer outra), pistache = pronto, entregue apagado sem risco, risco só em cancelado.
 
-- Pasta de trabalho atual: `C:/Users/Restore/Documents/doce-agenda` (clone limpo só deste projeto, com dependências instaladas). A pasta antiga `ebooks/projeto_B/web` não deve mais ser usada: mistura outros projetos e gasta tokens à toa. Há uma pasta `Documents/doceagenda` com um `.git` incompleto, criado por engano em 14/10; ignorar e não commitar nela.
-- GitHub: https://github.com/tenorio94-prog/doce-agenda
-- **`main` foi atualizada em 14/10/2026, com autorização do usuário, para ficar igual à versão publicada** (avanço simples a partir de `beed27d`, sem apagar nada). Branch `main` é a base de trabalho a partir daqui; `redesign-glace-carimbo` e o PR #1 ficam como histórico.
-- Código no momento desta atualização: `main` e `redesign-glace-carimbo` em `d4989f9`. Consulte `git log`, sem tratar esse hash como HEAD permanente.
-- Repositório estava **público** na última consulta da API. Git autenticado permitiu push; isso não implica sessão autenticada no navegador nem acesso a outros provedores.
+O usuário vê o **link de encomenda** como possível principal canal de clientes novos (aquisição barata). Tratar como ferramenta de maior valor.
 
-| Uso | Endereço/estado |
+## 4. O que o app faz hoje (publicado)
+
+**Landing** (`public/landing/`): título "Seu caderno não te avisa que o bolo é amanhã.", foto ilustrativa gerada pelo usuário no ChatGPT (`landing/assets/cozinha-caderno*.jpg`, originais em `design/fotos/`) com a tela "Hoje" do app sobreposta por CSS no celular da foto. A foto é ilustrativa: não apresentar como caderno de confeiteira real. Seções de dores, 3 benefícios, FAQ curto, fechamento "Menos caderno. Mais espaço para criar."
+
+**Navegação em 4 abas:** Agenda · Pedidos · Meu mês · + Novo. Ajustes fica no topo.
+- **Agenda** (antiga Hoje + Semana): resumo de hoje, semana com contagem e "Lotado/Fechado" por dia, lista do dia escolhido (começa em hoje, "Voltar para hoje"), "Ajustar esta data", cartão de Próxima ação e **Próximos dias** (só com hoje selecionado; agrupado por "Amanhã"/dia; cartões compactos sem botão). A aba Semana não existe mais (`data-view="week"` cai em Agenda).
+- **Pedidos:** busca + faixa de etapas com contagem (Todos, Novos = Solicitação/Orçamento/Aguardando, Confirmados, Fazendo, Prontos, Entregues, Cancelados). As 9 situações gravadas **não mudaram**; as etapas só agrupam.
+- **Próximo passo:** Confirmado → "Começar a fazer" → Em produção → "Ficou pronto" → Pronto → "Marcar entregue" (PUT só com `status`, histórico, "Desfazer" no aviso). Orçamento/Aguardando → "Confirmar pedido" (abre o formulário já em Confirmado, mantendo checagens de data, lotação e bolo). Solicitação → "Revisar solicitação". O botão também aparece no topo do pedido aberto.
+- **Meu mês:** só Confirmado e Entregue no mês; vendido, recebido (só conferido), a receber, dias mais cheios, produtos, prazo médio. Cálculo no servidor (`/api/resumo-mensal`). Ver `docs/MEU_MES_ENTREGA.md`.
+- **Ajustes** em cartões fechados com resumo de uma linha: **Link de encomenda**, **Dias e limites** (dias fechados, antecedência em opções Sem mínimo/1/2/3 dias/1 semana — gravada em horas como antes —, limite por dia, "Mudar só uma data"), **Detalhes do bolo**. Cópia de segurança abaixo.
+- **Link de encomenda:** passo a passo (1 vitrine, 2 produtos em lista com "+ Adicionar", 3 endereço gerado do nome e corrigido sozinho + WhatsApp opcional), "Ativar meu link"/"Salvar sem ativar". Ativo vira cartão verde "No ar" com Copiar, "Mandar no WhatsApp" (`wa.me/?text=` só com o texto; ela escolhe contato e envia) e prévia; "Pausar link". **Prévia** em `/encomenda/?preview=1` lê o rascunho do `localStorage` e nunca busca nem envia nada; avisa se faltam produtos/nome. O link copiado usa `https://lucast.app/p/<slug>` (hoje servido pelo Netlify antigo, mas funciona porque usa o mesmo backend).
+- Regras do link (inalteradas): entra como Solicitação, origem `link`; pendentes não ocupam vaga; confirmar revalida; rate limit, honeypot, consentimento, limpeza de recusadas após 90 dias.
+- Pagamentos Informado/Conferido: só conferido conta. `totalKnown:false` separa valor em branco de zero.
+
+**Demonstração `/demo/`** (só no navegador, chave `doce-agenda.demo.v2`): confeitaria fictícia com 15 pedidos relativos à data da visita (todas as etapas, um Pix informado, uma solicitação pelo link, dia lotado com limite 3) e link "Doces da Lu" inativo para explorar a prévia (`cloud/demo-seed.js`). Demos antigas sem link recebem o exemplo uma vez. Faixa da demo com "Como funciona" e "Recomeçar". O piloto só-navegador (fora de `/demo/`) mantém a chave antiga e um exemplo; não pode ser reiniciado.
+
+**Stories de boas-vindas** (`public/app.js` + `style.css`, CSS/JS próprios, sem biblioteca): 7 cenas animadas (caderno → celular, anotar pedido, carimbo do sinal, próximo passo, Meu mês, link, final com granulado). Abrem uma vez por aparelho na demo e em conta nova sem pedidos; "Como funciona" reabre; respeitam movimento reduzido.
+
+## 5. Código, Git e endereços
+
+- Pasta: `C:/Users/Restore/Documents/doce-agenda`. Ignorar `Documents/doceagenda` (`.git` incompleto criado por engano) e a pasta antiga `ebooks/projeto_B/web`.
+- GitHub: https://github.com/tenorio94-prog/doce-agenda — base de trabalho `main`. `.gitattributes` fixa LF em dois arquivos gerados pelo build (`public/browser-store.js`, `public/account/account-controller.js`).
+- Edite fontes em `public/` e `cloud/`; `deploy-*/` são builds ignorados. `public/browser-store.js` é gerado de `cloud/browser-adapter.js` pelo build.
+
+| Uso | Endereço |
 | --- | --- |
-| Versão atual | https://doce-agenda.doce-agenda-local.workers.dev/ |
-| Login/cadastro atual | https://doce-agenda.doce-agenda-local.workers.dev/cadastro/ |
-| App com conta | https://doce-agenda.doce-agenda-local.workers.dev/app/ |
-| Demo sem cadastro | https://doce-agenda.doce-agenda-local.workers.dev/demo/ |
-| Privacidade atual | https://doce-agenda.doce-agenda-local.workers.dev/privacidade/ |
-| Domínio canônico ainda antigo | https://lucast.app/ — Netlify |
-| Alias Netlify | https://doce-agenda-piloto.netlify.app/ |
-| Contato de produto/privacidade | doceagenda@lucast.app |
+| Site atual | https://doce-agenda.doce-agenda-local.workers.dev/ |
+| Cadastro/login | …/cadastro/ |
+| App com conta | …/app/ |
+| Demonstração | …/demo/ |
+| Prévia do link | …/encomenda/?preview=1 |
+| Domínio ainda antigo | https://lucast.app/ — Netlify (versão antiga) |
+| Contato | doceagenda@lucast.app (encaminha para o Gmail do usuário) |
 
-Commits relevantes, todos enviados ao GitHub: `c1f47d7` identidade; `588d82e` correção de recebimento zero; `616da7a` link público; `7e3cdfc` landing/privacidade; `c18074c` Meu mês; `1e13b60` publicação Cloudflare. `main` não foi atualizada por merge. **Push não publica automaticamente** em nenhum dos fluxos atuais.
+## 6. Arquitetura
 
-## 4. Arquitetura real
+- Frontend HTML/CSS/JS sem framework; esbuild; `@supabase/supabase-js` 2.117.3.
+- `cloud/app-bootstrap.js` publica `window.DoceApi` para a conta autenticada. Não cair em armazenamento local após erro.
+- Backend Supabase (projeto `khvhnbopdluthpcduhqm`, "Projeto aprender"): `doce-api` (JWT) e `doce-public` (anônima, rotas estritas). Estado da conta em `pilot_agendas.state` (JSONB) com revisão otimista (`commit_pilot_agenda`); restauração cria ponto anterior. Tabelas do link: `pilot_order_pages`, `pilot_public_submissions`, `pilot_owner_activity`.
+- `cloud/state-engine.js` (regras/validação), `monthly-summary.js`, `order-link-model.js`, `public-orders.js`, `demo-seed.js`, `browser-adapter.js`.
+- Cadastro e-mail/senha sem confirmação (piloto); recuperação por e-mail não ativa.
+- O README principal ainda descreve o piloto antigo sem login; não confiar nele.
 
-- Frontend: HTML/CSS/JavaScript sem framework React. Node.js/ES modules, esbuild, `@supabase/supabase-js` fixado em `2.117.3`. Scripts no `package.json` ainda se referem ao servidor local.
-- `public/app.js`: telas e fluxos. `public/index.html`: estrutura. `public/style.css`, `tokens.css`, `logo.svg`: visual. `public/landing/`: apresentação. `public/account/` + `cloud/auth-controller.js`: cadastro/login. `public/encomenda/`: formulário público. `public/privacidade/index.html`: política.
-- `cloud/app-bootstrap.js` publica `window.DoceApi` para a conta autenticada e só então carrega o app. Não cair silenciosamente em armazenamento local após erro de rede/autenticação.
-- `cloud/doce-api.ts`/`edge-entry.ts`: backend autenticado Supabase. Envelope HTTP POST `{path,method,body,expectedRevision}` em `/functions/v1/doce-api`. As rotas lógicas usam `/api/...`; isso não significa que existam funções equivalentes no host estático.
-- `cloud/state-engine.js`: transações/validação/regras compartilhadas. `monthly-summary.js`: resumo mensal. `public-api.ts`/`public-entry.ts`, `public-orders.js`, `order-link-model.js`: link público, validação e disponibilidade.
-- Estado completo da conta em `pilot_agendas.state` (JSONB), revisão otimista e RPC `commit_pilot_agenda`. Escrita exige revisão atual; conflito não deve causar sobrescrita. Restauração cria ponto anterior em `pilot_agenda_restore_points`.
-- Outras entidades do recurso público: `pilot_order_pages`, `pilot_public_submissions` e `pilot_owner_activity`; acesso de serviço/RLS conforme migrações. Não criar tabela paralela de pedidos sem necessidade.
-- Supabase: projeto **`khvhnbopdluthpcduhqm`**, nome “Projeto aprender”. Antes de agir, confirme que é o projeto correto. Não foi criado banco novo na Cloudflare.
-- Cadastro aberto com e-mail/senha, **sem confirmação por e-mail**, autorizado para o piloto. SMTP/recuperação por e-mail não estão ativos. Não podemos ver a senha de uma pessoa; eventual redefinição é um fluxo administrativo próprio, não leitura de senha. Google não é necessário.
-- `server.mjs` + `data/state.json` são versão local separada. `/demo/` usa `browser-store.js` gerado de `cloud/browser-adapter.js`, salvo somente no navegador. Essas duas versões não sincronizam com a conta na nuvem.
-- Atenção: o README principal ainda contém descrições históricas de app sem login/banco. Não confundir com a arquitetura atual acima. O README de `cloud/` já foi atualizado.
+## 7. Domínio `lucast.app` — próximo assunto, aguardando o usuário
 
-## 5. O que já funciona
+Retrato de 14/10 (consultar de novo ao começar): registrado na Name.com; NS `ns1hwy/ns2jqz/ns3ckl/ns4cjp.name.com`; raiz A `75.2.60.5` e `www` CNAME `doce-agenda-piloto.netlify.app` (Netlify); **e-mail ativo**: MX `mx3..mx8.name.com` (prioridades 10–60) e TXT `v=spf1 a mx ~all`. O usuário recebe e responde `doceagenda@lucast.app` pelo Gmail; isso precisa continuar funcionando.
 
-- Landing, cadastro/login, Hoje, Pedidos, Semana, Ajustes, formulário/detalhes do pedido, recebimentos, histórico, cópia do resumo, backup/restauração e Meu mês.
-- Disponibilidade: dias da semana fechados, antecedência mínima, limite de pedidos por data, exceções de data e justificativa ao abrir exceção em pedido manual. Modelo de bolo configurável em Ajustes. Semana abre na data atual e ajustes ficam em área própria.
-- Situações existentes: Solicitação, Orçamento, Aguardando confirmação, Confirmado, Em produção, Pronto, Entregue, Cancelado, Recusado. **Cada recurso possui critérios próprios**; não reutilizar indiscriminadamente a lista de situações comprometidas.
-- Pagamentos Informado/Conferido: só conferidos contam. Zero conferido registra a conferência, preserva histórico e não gera carimbo de sinal pago. Saldo/excedente considera os recebimentos reais.
-- `totalKnown: false` diferencia novos valores em branco de zero informado. Legado ainda usa `total`/`amount` em reais, sem conversão global da base. Zeros históricos não foram reclassificados. Campo preservado em backup e compatível com clientes antigos.
-
-### Link de encomenda
-
-- Ajustes → Link de encomenda: ativar, slug único, nome, boas-vindas, produtos simples e WhatsApp opcional. Padrão desativado.
-- `/p/<slug>` sem login, datas disponíveis, personalização de bolo, consentimento e protocolo. Entra como **Solicitação**, origem `link`, na mesma lista de pedidos. A confeiteira aceita como Orçamento/Confirmado, ajusta ou recusa. Pendentes não ocupam capacidade; confirmar revalida a vaga.
-- WhatsApp apenas `wa.me` com resumo: **a cliente toca em enviar**. Sem número configurado, o botão não aparece. Não há mensagens automáticas, Pix nem acompanhamento público.
-- Duplicatas possíveis em 10 minutos são sinalizadas. Rate limit: 5/IP/hora e 50/página/dia, honeypot e validação no servidor. Rotas públicas não retornam outras clientes nem contagens privadas.
-- Consentimento registrado; rotina diária remove dados pessoais/textos livres de solicitações recusadas após 90 dias. Política publicada e ligada na landing/formulário.
-- A cópia do link ainda usa `https://lucast.app/p/<slug>`; a rota equivalente também funciona na Cloudflare. A mudança do domínio não foi feita.
-
-### Meu mês — etapa 1 entregue
-
-- Pedidos: só **Confirmado e Entregue**, pela data de retirada/entrega no mês; Em produção/Pronto ficam fora por definição da spec atual. Exemplos, solicitações, cancelados, recusados e orçamentos não entram.
-- Vendido: soma dos totais conhecidos; pedido sem preço conta em Pedidos, com aviso, mas não em Vendido. Recebido: pagamentos conferidos desses pedidos, mesmo recebidos em outro mês. A receber: `max(0, Vendido - Recebido)`.
-- Três dias da semana mais cheios; cinco produtos mais frequentes agrupados sem maiúsculas/acentos; prazo médio em dias de calendário entre criação e entrega, no fuso de São Paulo.
-- Menos de três pedidos: cartões e explicação; mês vazio: estado vazio sem zeros enganosos. Seletor sem mês futuro e protegido de respostas atrasadas.
-- Cálculo no servidor, rota lógica `/api/resumo-mensal?mes=AAAA-MM`. Sem tabela nova. Ver `docs/MEU_MES_ENTREGA.md`.
-
-## 6. Publicação e autenticação das ferramentas
-
-- Cloudflare: Workers Static Assets, Worker `doce-agenda`. Versão final verificada `7034e89d-ecef-4b9d-93f5-439ba3c27dc1`. Conta configurada em `wrangler.jsonc`.
-- Publicar somente `deploy-cloud/public`. `wrangler.jsonc` executa `node scripts/build-cloudflare.mjs`; esse build prepara os fontes e adapta `_redirects` para **`/p/:slug /encomenda/ 200`**. Destino `/encomenda/index.html` causa redirecionamento e perde o slug na Cloudflare; bug corrigido e testado.
-- API Supabase publicada: `doce-api` v7 (JWT obrigatório), `doce-public` v5 (anônima por definição, rotas estritas). Origem Cloudflare liberada de forma exata, junto de lucast.app/Netlify/localhost permitidos; sem wildcard para qualquer Workers.
-- Em 14/10/2026 o login do Wrangler havia expirado e foi **renovado** pelo usuário via device flow; `wrangler deployments status` confirmou a versão `7034e89d` no ar.
-- O usuário autorizou o Wrangler **pelo celular** via device flow. Credenciais criptografadas fora do repositório, com chave no Windows Credential Manager. Não assumir que estarão disponíveis em outra máquina ou que o painel web estará logado.
-- Escopos atuais: leitura de conta/usuário e escrita de scripts Workers. Não presumir acesso de gestão de DNS/zonas. Avisos do Wrangler sobre escopos adicionais não impediram a publicação; não ampliá-los sem necessidade.
-- Para renovar, quando necessário: `npx --yes --package wrangler@4.119.0 wrangler login --device --browser=false --use-keyring --scopes account:read user:read workers_scripts:write`. O usuário abre o link, aprova o código temporário; não pedir senha ou token no chat. No Windows foi instalado `@napi-rs/keyring@1.3.0` global para o cofre.
-- Netlify: site `doce-agenda-piloto`, ID `9a87a009-0bdc-4651-9e65-9bc68f78ab4b`; versão antiga `6acecdaa34b7500b6803ecce`. Novos deploys foram bloqueados por limite de créditos. Não contratar créditos nem voltar a insistir no upload sem mudança externa.
-- Guia completo: `docs/CLOUDFLARE_PUBLICACAO.md`.
-
-## 7. DNS — pendência explicitamente adiada
-
-`lucast.app` está registrado na Name.com, **somente domínio**, sem hospedagem contratada. NS consultados: `ns1hwy.name.com`, `ns2jqz.name.com`, `ns3ckl.name.com`, `ns4cjp.name.com`. Isso é um retrato de 14/10; consultar novamente ao retomar.
-
-Para conectar o Worker ao domínio principal, cadastrar/ativar uma zona na Cloudflare, revisar/importar todos os registros atuais (inclusive MX, SPF, DKIM e DMARC do e-mail), receber os dois nameservers atribuídos e depois mudar **Manage Nameservers** na Name.com. Não inventar Answer/IP/TTL nem nameservers; não é simplesmente um CNAME para o endereço Workers. Depois vincular o domínio ao Worker e conferir HTTPS/rotas/login. O registro do domínio permanece na Name.com.
-
-**Não sabemos se a zona chegou a ser criada pelo usuário.** A última mensagem foi “não vou fazer isso ainda”. Não houve alteração de DNS nesta sessão.
+Plano explicado e aceito em princípio (cada passo externo com o usuário):
+1. Usuário adiciona `lucast.app` na conta Cloudflare (plano grátis); a Cloudflare importa os registros.
+2. Conferir juntos que MX e SPF vieram completos.
+3. Usuário troca os nameservers na Name.com pelos dois indicados pela Cloudflare (registro do domínio continua na Name.com).
+4. Após propagar: ligar o domínio ao Worker `doce-agenda`, conferir HTTPS, rotas (`/p/:slug`), login, link das clientes e **teste de envio e resposta do e-mail**.
+Não é um simples CNAME. Wrangler atual só tem escopo de Workers (sem DNS/zonas); não ampliar escopos sem necessidade. Liberar a origem `lucast.app` no CORS do Supabase já existe; conferir.
 
 ## 8. Próximas features — nenhuma iniciada
 
-Ordem aprovada de planejamento: **Produção A → Pix → Clientes**. A subetapa Compras B fica para depois de validar Produção A em uso e obter autorização específica. Uma entrega por vez, publicada/testada, commits separados e pausa antes da seguinte.
+Ordem planejada: **Produção A → Pix → Clientes** (Compras B adiada). Detalhes em `docs/PROXIMAS_FEATURES_ETAPAS.md`. Resumo:
+- **Produção A:** semana seg–dom, só Confirmados, por dia/horário, quantidade opcional, `producao_feita`, copiar lista, vínculo opcional com produtos do link.
+- **Pix:** BR Code estático gerado localmente, sinal sugerido 30%, chave privada, atualizar política; validar em **dois apps de banco** antes de liberar.
+- **Clientes:** ficha por WhatsApp normalizado, sem união automática, lembretes de datas, anonimizar ao excluir; política antes de liberar.
+Regras comuns: centavos, fuso São Paulo, cálculo no servidor, isolamento, backups compatíveis, 360 px.
 
-- **Produção A:** semana segunda–domingo, apenas Confirmados, agrupados por dia e horário; cliente, produto, quantidade e detalhes. Quantidade opcional inteira/padrão 1 em Mais detalhes; `producao_feita` persistente; copiar lista. Vínculo opcional com produto do catálogo do link, preservando texto livre. Usar uma única lista de produtos por conta; hoje ela é JSON sem entidade de catálogo completa, então adaptar sem quebrar o legado. Incluir campos novos no backup e testar outro aparelho.
-- **Compras B:** receitas simples por produto (ingrediente/quantidade/unidade por unidade de produto), multiplicar pela quantidade dos Confirmados da semana, somar somente mesmo nome/unidade; g e kg separados. Avisar produtos sem receita, checkbox Comprado por semana. Sem estoque, custos ou conversão de unidades. Ainda adiada.
-- **Pix:** estático BR Code oficial, gerado localmente sem provedor/custódia. Ajustes com tipo/chave validada, recebedor até 25 caracteres e cidade até 15, normalizados. Sinal sugerido 30%, editável/configurável; valor e txid sem dados da cliente, CRC16, copiar código/mensagem e QR. Não criar recebimento por padrão; opção explícita de registrar aguardando usa o fluxo existente sem confirmar dinheiro. Chave privada à dona, nunca pública/logs; backup avisa que contém chave. Atualizar política. Exige fontes oficiais/testes CRC e validação humana em **dois apps de banco** antes de liberar; não alegar isso a partir de teste automatizado.
-- **Clientes:** ficha por conta, vínculo por WhatsApp normalizado; nome igual sem telefone gera sugestão, nunca união automática. Legado só ligado após aprovação; pedidos do link podem identificar pela regra de telefone. Busca/histórico, anotações até 500 caracteres, datas importantes dia/mês e lembretes manuais em Hoje (até 5; próximas datas em 14 dias e recorrência do ano anterior), dispensáveis sem voltar. Meu mês ganha clientes novas/recorrentes. Excluir ficha anonimiza pedidos mantendo valores/datas. Backup completo, isolamento e política antes de liberar; revisão jurídica sugerida pelo usuário ainda depende de decisão/profissional. Sem IA, importação de contatos ou envio automático.
+## 9. Publicação, testes e limites
 
-Regras comuns: centavos, fuso São Paulo, cálculo no servidor com dados completos, isolamento, compatibilidade de backups, campos opcionais e telas de 360 px. Resumo do plano em `docs/PROXIMAS_FEATURES_ETAPAS.md`; confirmar interpretações que não estejam definidas antes de implementar.
-
-## 9. Verificações conhecidas e limites
-
-Na entrega anterior: 38 testes de nuvem, 2 do servidor local, 6 cenários UI de Meu mês e 10 de pagamentos passaram. CORS/autorização: 12 testes dirigidos passaram na migração. Agregação de 5 mil pedidos/20 mil recebimentos ficou em aproximadamente 100 ms **só de cálculo local**, sem promessa de latência total.
-
-Na Cloudflare publicada, sem interceptar arquivos locais: login real das contas fictícias, cálculo/backup/restauração/isolamento de duas contas e telas em 360/1440 px passaram. Depois da correção do proxy, cinco testes HTTP e smoke no navegador (landing, privacidade, demo, detalhes, login e link público desativado) passaram. Capturas foram examinadas. Não foram testes físicos de celular/Safari nem validação com confeiteiras reais.
-
-Comandos, a partir desta pasta (selecionar conforme a mudança; não rodar tudo só por iniciar sessão):
-
-```powershell
-node --test cloud/*.test.mjs
-node --test test.mjs
-node scripts/build-cloudflare.mjs
-node scripts/test-monthly-summary.mjs
-node scripts/test-payment-stamps.mjs
-node scripts/test-cloudflare-routing.mjs
-npx --yes --package wrangler@4.119.0 wrangler deployments status --config wrangler.jsonc
-```
-
-Testes visuais usam Playwright do runtime local e Chrome instalado; conferir disponibilidade antes de executar em outra máquina. `cloud/test-monthly-live.mjs` exige sessões sintéticas privadas apontadas por `DOCE_QA_SESSION`/`DOCE_QA_SECOND`, `DOCE_TEST_ORIGIN` e ausência de `DOCE_MONTHLY_ASSETS=local` para verificar publicação real. Ele escreve só em contas `.invalid` e restaura o estado original; não executar contra pessoas reais.
-
-Pendências operacionais: duas contas sintéticas e seus registros ainda existem, com páginas desativadas. A limpeza definitiva falhou anteriormente por `Invalid or expired requestState`; não foram confundidas com dados reais. Scripts/sessões de QA podem estar na pasta temporária do Windows e **não são versionados**; sua disponibilidade futura não é garantida. Há aviso antigo de RLS em `public.n8n_chat_histories`, fora das tabelas do app, não corrigido nem manipulado nesta tarefa. Não alterar tabelas antigas alheias sem mapear dependências.
+- Cloudflare Workers Static Assets, Worker `doce-agenda`, conta em `wrangler.jsonc`. Publicar só `deploy-cloud/public` via `npx --yes --package wrangler@4.119.0 wrangler deploy --config wrangler.jsonc` (o build roda sozinho e mantém `_redirects` `/p/:slug /encomenda/ 200`). Guia: `docs/CLOUDFLARE_PUBLICACAO.md`.
+- Login do Wrangler foi feito pelo usuário via device flow, credenciais no Windows Credential Manager. Se expirar: `npx --yes --package wrangler@4.119.0 wrangler login --device --browser=false --use-keyring --scopes account:read user:read workers_scripts:write` e o usuário aprova no celular. Nunca pedir senha/token no chat.
+- Netlify (`doce-agenda-piloto`) bloqueado por créditos; não contratar nem insistir.
+- Testes a escolher pela mudança: `node --test cloud/*.test.mjs test.mjs` (43 passando), `node scripts/build-cloudflare.mjs`, `node scripts/test-cloudflare-routing.mjs` (5/5 no ar). Scripts Playwright antigos (`scripts/test-ux-improvements.mjs`, `test-deploy.mjs`, `review-today.mjs`, `cloud/test-order-link-e2e.mjs`) foram adaptados à nova navegação mas **não executados**.
+- Verificação de interface tem sido feita no painel do navegador: build local servido por um servidor estático simples e a demo publicada em 360–1280 px. Logo após publicar, o site pode levar alguns segundos para servir arquivos novos.
+- **Lição:** a publicação dos stories quebrou para quem tinha a página antiga em cache (botão novo ausente). Ao adicionar elementos ao `index.html` que o JS usa, buscar de forma opcional.
+- Não verificado: conta real logada com as mudanças de hoje (o usuário testou parte no computador), Safari/iPhone, aparelho físico, confeiteiras reais. Cartão "No ar" só visto simulando conta.
+- Pendências antigas: duas contas sintéticas `.invalid` com páginas desativadas; aviso de RLS em `public.n8n_chat_histories` (fora do app, não mexer sem mapear).
 
 ## 10. Como abrir a próxima sessão
 
-Abrir como projeto a pasta `C:/Users/Restore/Documents/doce-agenda`, para carregar `AGENTS.md`. Uma sessão nova não recebe automaticamente o histórico inteiro nem as credenciais de outra máquina. Mensagem sugerida:
+Abrir a pasta `C:/Users/Restore/Documents/doce-agenda` (carrega `AGENTS.md`). Mensagem sugerida:
 
-> Leia AGENTS.md e context.md. Confirme em poucas linhas o estado do Doce Agenda e aguarde eu escolher a próxima tarefa. Não altere o DNS nem comece a próxima feature ainda.
+> Leia AGENTS.md e context.md e me diga em poucas linhas onde paramos.
 
-Manter este arquivo atualizado no encerramento das etapas, separando o que foi observado, o que continua pendente e o que depende de autorização.
+Manter este arquivo coerente: ao concluir uma etapa, **reescrever** a parte afetada em vez de só acrescentar linhas.
