@@ -149,6 +149,7 @@ async function loadState({ silent = false } = {}) {
     $("#loading-state").hidden = true;
     setConnection("online", window.DoceApi.mode === "cloud" ? "Salvo na sua conta" : window.DoceApi.mode === "browser" ? "Salvo neste navegador" : "Salvo neste computador");
     render();
+    if (!silent) maybeStartTour();
   } catch (error) {
     $("#loading-state").hidden = true;
     setError("Confira se o serviço está aberto. Seus dados anteriores continuam na tela.");
@@ -312,7 +313,7 @@ function renderToday() {
     : "Nada para entregar hoje";
   const financeNote = unknown ? (balances.length ? 'Saldo parcial conhecido · ' : 'Nenhum saldo conhecido: ') + unknown + (unknown === 1 ? ' pedido ainda sem recebimento conferido.' : ' pedidos ainda sem recebimento conferido.') : '';
   panel.innerHTML = `<div class="page-heading today-heading"><div><span class="date-label">${esc(new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "numeric", month: "long" }).format(new Date()))}</span><h1 id="today-title">Hoje</h1><p class="today-summary">${todaySummary}</p></div></div>
-    ${requestBanner()}${firstUse ? `<section class="welcome-panel"><h2>Cadastre seu primeiro pedido</h2><p>Comece com cliente, produto e valor. Complete os detalhes quando estiverem combinados.</p><div class="welcome-actions"><button class="button button-primary" type="button" data-action="new-order">Nova encomenda</button></div></section>` : ''}
+    ${requestBanner()}${firstUse ? `<section class="welcome-panel"><h2>Cadastre seu primeiro pedido</h2><p>Comece com cliente, produto e valor. Complete os detalhes quando estiverem combinados.</p><div class="welcome-actions"><button class="button button-primary" type="button" data-action="new-order">Nova encomenda</button><button class="text-link" type="button" data-action="open-tour">Ver como funciona</button></div></section>` : ''}
     ${sample && firstUse ? `<section class="sample-card" aria-label="Pedido de exemplo">${rowMarkup(sample)}<p>Toque para ver como fica um pedido completo. O exemplo não entra na sua agenda.</p></section>` : sample ? `<details class="sample-examples"><summary>Exemplo fictício — não entra na sua agenda</summary><div class="sample-example-list">${state.orders.filter(sampleOrder).map((order) => `<button class="text-link" type="button" data-open-order="${esc(order.id)}">Ver exemplo: ${esc(clientName(order) || order.product || "pedido")}</button>`).join("")}</div></details>` : ''}
     <div class="today-columns"><div class="today-main"><div class="content-grid ${nextAction ? '' : 'today-single'}">${agendaWeekMarkup(upcoming.length)}${nextAction ? `<aside class="content-aside">${nextAction}</aside>` : ''}</div>
     ${pendingChanges.length ? `<section class="pending-card surface"><div class="section-head"><h2>Alterações para revisar</h2><span class="pending-count">${pendingChanges.length}</span></div><div class="pending-list">${pendingChanges.slice(0, 3).map((order) => `<button class="pending-row" type="button" data-open-order="${esc(order.id)}"><span><strong>${esc(order.client)}</strong><small>${esc(order.product)}</small></span><span class="pending-chevron" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></span><span class="pending-banner"><strong>Pedido de mudança:</strong> ${esc(order.pendingChange)}</span></button>`).join("")}</div></section>` : ""}
@@ -456,8 +457,7 @@ function renderMonth() {
   else if (!data) content = '<p class="month-feedback" role="status">Carregando seu mês…</p>';
   else if (!data.ordersCount) content = emptyState('Seu mês começa com uma encomenda', 'Aqui vão aparecer seus pedidos confirmados ou entregues, os valores e os recebimentos conferidos deste mês.', false);
   else {
-    content = data.isExample ? '<p class="notice month-example" role="note"><span><strong>Números de exemplo.</strong> É assim que fica o seu mês. Quando você cadastrar seus pedidos, aparecem só os seus.</span></p>' : '';
-    content += `<div class="stats-grid month-stats">${card('Pedidos',data.ordersCount)}${card('Vendido',money(data.soldCents/100))}${card('Recebido',money(data.receivedCents/100))}${card('A receber',money(data.receivableCents/100))}</div>`;
+    content = `<div class="stats-grid month-stats">${card('Pedidos',data.ordersCount)}${card('Vendido',money(data.soldCents/100))}${card('Recebido',money(data.receivedCents/100))}${card('A receber',money(data.receivableCents/100))}</div>`;
     if (data.ordersWithoutValue) content += `<p class="month-note">${data.ordersWithoutValue} ${data.ordersWithoutValue===1?'pedido sem valor informado não entrou':'pedidos sem valor informado não entraram'} em Vendido. ${data.ordersWithoutValue===1?'Ele continua':'Eles continuam'} na contagem de Pedidos.</p>`;
     if (data.ordersCount < 3) content += '<p class="month-note">Com mais pedidos, mostramos aqui os dias e produtos que mais saem.</p>';
     else {
@@ -472,6 +472,7 @@ function renderMonth() {
 
 function render() {
   $("#demo-bar").hidden = window.DoceApi.mode !== "browser";
+  $("#demo-reset").hidden = !window.DoceStore?.resetDemo;
   renderToday(); renderOrders(); renderSettings(); renderMonth();
   $$("[data-view]").forEach((button) => {
     if (!button.matches(".nav-item, .settings-button")) return;
@@ -935,6 +936,10 @@ function handleClick(event) {
       const order = orderById(id); closeDetails(); if (order) openOrderForm(order); break;
     }
     case 'show-requests': state.statusFilter='new';state.search='';setActiveView('orders');break;
+    case 'open-tour': openTour(); break;
+    case 'reset-demo':
+      if (window.DoceStore?.resetDemo && window.confirm('Recomeçar a demonstração? Os pedidos de exemplo voltam ao início e o que você mudou aqui é apagado.')) { window.DoceStore.resetDemo(); location.reload(); }
+      break;
     case 'agenda-today': state.weekOffset=0;state.selectedDay=localDateKey(new Date());renderToday();break;
     case 'advance-order': action.disabled=true;advanceOrder(id,action.dataset.status);break;
     case 'retry-month': state.monthError='';state.monthData=null;renderMonth();break;
@@ -1063,4 +1068,133 @@ async function loadLinkMetrics(){
  try{const metrics=await apiRequest('/order-page/metrics'),orders=state.orders.filter(o=>o.origin==='link'),week=orders.filter(o=>Date.parse(o.createdAt)>=Date.now()-7*86400000),accepted=orders.filter(o=>o.reviewOutcome==='accepted'),reviewed=orders.filter(o=>o.reviewedAt),times=reviewed.map(o=>Math.max(0,Date.parse(o.reviewedAt)-Date.parse(o.createdAt))),minutes=times.length?Math.round(times.reduce((a,b)=>a+b,0)/times.length/60000):null;
  output.textContent=`${metrics.visits} visitas · ${week.length} solicitações nos últimos 7 dias · ${orders.length?Math.round(accepted.length/orders.length*100):0}% aceitas${minutes!==null?` · revisão média em ${minutes} min`:''}. ${state.orders.filter(o=>!['Solicitação','Recusado'].includes(o.status)&&!sampleOrder(o)).length?Math.round(state.orders.filter(o=>o.origin==='link'&&!['Solicitação','Recusado'].includes(o.status)).length/state.orders.filter(o=>!['Solicitação','Recusado'].includes(o.status)&&!sampleOrder(o)).length*100):0}% dos pedidos vieram do link. Visitas contam carregamentos, incluindo repetições.`;
  }catch(e){output.textContent=e.message;}
+}
+
+// ---- Boas-vindas em formato de stories ----
+// Short animated scenes (CSS only) that teach the main flows. Opens once per device and from "Como funciona".
+const TOUR_KEY = "doce-agenda.tour.v1";
+const tourSeen = () => { try { return localStorage.getItem(TOUR_KEY) === "1"; } catch { return true; } };
+const markTourSeen = () => { try { localStorage.setItem(TOUR_KEY, "1"); } catch { /* sem armazenamento: o tour só não lembra */ } };
+const reducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const miniCard = (time, product, client, extra = "", cls = "") => `<div class="mc ${cls}"><b>${time}</b><span><strong>${product}</strong><small>${client}</small></span>${extra}</div>`;
+const miniStamp = (text = "Pago") => `<i class="mp-stamp">${text}</i>`;
+const SPRINKLE_COLORS = ["#f7c5d0", "#d3e7c1", "#fbe9a9", "#2e6a46", "#8f2a4f", "#ffffff"];
+const TOUR_STORIES = [
+  { title: "Do caderno para o celular", text: "Cada encomenda vira um cartão no dia certo. Nada se perde entre páginas e conversas.", ms: 6500,
+    scene: () => `<div class="scene s-notebook"><div class="mini-phone"><div class="mp-head">Hoje <em>3 para entregar</em></div><div class="mp-list">${miniCard("10h", "Bolo de pistache", "Ana Clara", miniStamp(), "d1")}${miniCard("15h", "Brigadeiro (cento)", "Marcos · falta o sinal", "", "d2 is-yellow")}${miniCard("18h", "Docinhos (50 un.)", "Juliana", "", "d3")}</div></div>
+      <div class="paper"><p>Ana Clara · bolo pistache <s>sex</s> sáb?</p><p>Marcos 100 brigad. <span class="pen-red">sinal??</span></p><p>Juliana docinhos · 18h</p><p><s>Paula</s> → ligar amanhã</p><p class="pen-red">pagou???</p></div></div>` },
+  { title: "Anote em segundos", text: "Toque em + Novo e escreva o básico: cliente, produto, data e valor. Os detalhes você completa depois.", ms: 8500,
+    scene: () => `<div class="scene s-create"><div class="mini-phone"><div class="mp-head">Hoje</div><div class="mp-list">${miniCard("10h", "Bolo de pistache", "Ana Clara", miniStamp())}${miniCard("15h", "Brigadeiro (cento)", "Marcos", "", "is-yellow")}${miniCard("18h", "Bolo de cenoura", "Dona Rosa", '<i class="mp-new">novo</i>', "mc-new")}</div>
+      <span class="mp-plus">+</span><span class="tap tap-plus"></span>
+      <div class="mp-sheet"><h4>Nova encomenda</h4><label>Cliente<span class="type"><i class="t1">Dona Rosa</i></span></label><label>Produto<span class="type"><i class="t2">Bolo de cenoura</i></span></label><label>Data<span class="type"><i class="t3">Hoje · 18h</i></span></label><label>Valor<span class="type"><i class="t4">R$ 90</i></span></label><span class="mp-save">Salvar encomenda</span><span class="tap tap-save"></span></div></div></div>` },
+  { title: "Carimbou, tá pago", text: "Conferiu o Pix do sinal? Marque e o pedido ganha o carimbo. Amarelo quer dizer que o sinal ainda não chegou.", ms: 6500,
+    scene: () => `<div class="scene s-stamp"><div class="pix-chip">Pix de R$ 90 · conferido no banco ✓</div><div class="big-card"><b>15h</b><div><strong>Bolo de pistache</strong><small>Ana Clara · retirada</small><em class="flag">Falta o sinal</em></div><span class="big-total">R$ 180</span></div><span class="ink-ring"></span><span class="slam-stamp">Sinal pago</span></div>` },
+  { title: "Um toque, próxima etapa", text: "Começar a fazer, ficou pronto, entregue. Na aba Pedidos você vê quantos estão em cada etapa.", ms: 7000, steps: true,
+    scene: () => `<div class="scene s-steps" data-step="3"><div class="chips"><i class="chip-hl"></i><span>Confirmados</span><span>Fazendo</span><span>Prontos</span><span>Entregues</span></div>
+      <div class="big-card"><b>15h</b><div><strong>Brigadeiro (cento)</strong><small>Marcos · retirada</small></div><span class="status-stack"><em>Confirmado</em><em>Em produção</em><em>Pronto</em><em>Entregue</em></span></div>
+      <span class="advance-btn"><em>Começar a fazer →</em><em>Ficou pronto →</em><em>Marcar entregue →</em><em>Entregue ✓</em></span><div class="undo-toast">Marcos: Entregue. <u>Desfazer</u></div></div>` },
+  { title: "Seu mês, sem fazer conta", text: "Meu mês mostra quanto você vendeu, quanto entrou e quanto falta receber. Só conta o dinheiro que você conferiu.", ms: 6500,
+    scene: () => `<div class="scene s-month"><div class="tiles"><div class="tile"><small>Vendido</small><b data-count="1180">R$ 1.180</b></div><div class="tile"><small>Recebido</small><b data-count="755">R$ 755</b></div><div class="tile is-due"><small>A receber</small><b data-count="425">R$ 425</b></div></div>
+      <div class="bars">${[["Seg", 20], ["Ter", 35], ["Qua", 30], ["Qui", 45], ["Sex", 70], ["Sáb", 100], ["Dom", 40]].map(([day, height], index) => `<span style="--h:${height}%;--i:${index}"><i></i><small>${day}</small></span>`).join("")}</div><p class="bars-label">Sábado é o seu dia mais cheio</p></div>` },
+  { title: "A cliente pede pelo seu link", text: "Ative o link de encomenda e mande no WhatsApp. O pedido chega em Novos e só vale depois que você aceitar.", ms: 7000,
+    scene: () => `<div class="scene s-link"><div class="wa-bubble">Oi! Você faz bolo para sábado?</div><div class="wa-bubble me">Faço sim! Faz o pedido por aqui: <u>meu link de encomenda</u></div>
+      <div class="request-pop"><span class="rp-chip">Novos <b>1</b></span><span><strong>Camila</strong><small>Bolo de aniversário · sábado</small></span></div></div>` },
+  { title: "Mais espaço para criar.", text: "", ms: 0, final: true,
+    scene: () => `<div class="scene s-final">${Array.from({ length: 34 }, (_, index) => `<i class="sprinkle" style="--x:${(index * 37) % 100}%;--d:${((index * 13) % 20) / 10}s;--r:${(index * 47) % 180}deg;--c:${SPRINKLE_COLORS[index % SPRINKLE_COLORS.length]};--t:${2.4 + ((index * 7) % 10) / 10}s"></i>`).join("")}<div class="final-logo"><img src="/logo.svg" alt="" width="182" height="48"></div></div>` },
+];
+const tour = { index: 0, overlay: null, timers: [], pressAt: 0 };
+
+function openTour(start = 0) {
+  if (tour.overlay) return;
+  const overlay = document.createElement("div");
+  overlay.className = "story-overlay";
+  overlay.setAttribute("role", "dialog"); overlay.setAttribute("aria-modal", "true"); overlay.setAttribute("aria-label", "Como funciona o Doce Agenda");
+  overlay.innerHTML = `<div class="story" tabindex="-1"><div class="story-progress">${TOUR_STORIES.map(() => '<span class="sp"><i></i></span>').join("")}</div>
+    <div class="story-top"><span class="story-brand">doce agenda</span><button class="story-close" type="button" data-tour="close">Pular</button></div>
+    <div class="story-stage" aria-hidden="true"></div><div class="story-copy" aria-live="polite"></div><div class="story-actions"></div>
+    <button class="story-zone story-prev" type="button" data-tour="prev" aria-label="Voltar"></button><button class="story-zone story-next" type="button" data-tour="next" aria-label="Avançar"></button></div>`;
+  [...document.body.children].forEach((child) => { child.inert = true; });
+  document.body.append(overlay); document.body.classList.add("story-open");
+  tour.overlay = overlay;
+  overlay.addEventListener("click", tourClick);
+  overlay.addEventListener("pointerdown", () => { tour.pressAt = Date.now(); overlay.classList.add("is-paused"); });
+  ["pointerup", "pointercancel", "pointerleave"].forEach((type) => overlay.addEventListener(type, () => overlay.classList.remove("is-paused")));
+  overlay.addEventListener("animationend", (event) => { if (event.target.matches(".sp.is-active i")) showStory(tour.index + 1); });
+  overlay.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") closeTour(); else if (event.key === "ArrowRight") showStory(tour.index + 1); else if (event.key === "ArrowLeft") showStory(tour.index - 1);
+  });
+  showStory(start);
+}
+
+function tourClick(event) {
+  const button = event.target.closest("[data-tour]");
+  if (!button) return;
+  // A long press only pauses, like stories; it does not change the scene.
+  if (["prev", "next"].includes(button.dataset.tour) && event.detail && Date.now() - tour.pressAt > 350) return;
+  const action = button.dataset.tour;
+  if (action === "next") showStory(tour.index + 1);
+  else if (action === "prev") showStory(tour.index - 1);
+  else if (action === "close") closeTour();
+  else if (action === "new-order") { closeTour(); openOrderForm(); }
+}
+
+function showStory(index) {
+  if (!tour.overlay || index < 0) return;
+  if (index >= TOUR_STORIES.length) { closeTour(); return; }
+  tour.timers.forEach(clearTimeout); tour.timers = [];
+  tour.index = index;
+  const story = TOUR_STORIES[index], overlay = tour.overlay;
+  overlay.querySelectorAll(".sp").forEach((bar, position) => {
+    bar.className = `sp${position < index ? " is-done" : position === index ? " is-active" : ""}`;
+    bar.style.setProperty("--ms", `${story.ms || 1}ms`);
+  });
+  overlay.classList.toggle("is-final", !!story.final);
+  overlay.querySelector(".story-stage").innerHTML = story.scene();
+  const demo = !!window.DoceStore?.isDemo;
+  overlay.querySelector(".story-copy").innerHTML = `<h2>${esc(story.title)}</h2><p>${esc(story.final ? (demo ? "Aqui tudo é de mentira: mexa à vontade. Nada sai deste navegador." : "Comece anotando o seu próximo pedido.") : story.text)}</p>`;
+  overlay.querySelector(".story-actions").innerHTML = story.final
+    ? `<button class="button button-primary" type="button" data-tour="${demo ? "close" : "new-order"}">${demo ? "Explorar a demonstração" : "Anotar um pedido"}</button><button class="story-again" type="button" data-tour="prev">Voltar</button>`
+    : "";
+  if (story.final) markTourSeen();
+  if (story.steps) runStepScene(overlay.querySelector(".s-steps"));
+  overlay.querySelectorAll("[data-count]").forEach(countUp);
+  (overlay.querySelector(".story-actions .button") || overlay.querySelector(".story")).focus({ preventScroll: true });
+}
+
+function runStepScene(scene) {
+  if (!scene || reducedMotion()) return;
+  scene.dataset.step = "0";
+  [1500, 3000, 4500].forEach((delay, position) => {
+    tour.timers.push(setTimeout(() => scene.classList.add("is-pressing"), delay - 220));
+    tour.timers.push(setTimeout(() => { scene.classList.remove("is-pressing"); scene.dataset.step = String(position + 1); }, delay));
+  });
+}
+
+function countUp(element) {
+  const target = Number(element.dataset.count), format = (value) => `R$ ${new Intl.NumberFormat("pt-BR").format(value)}`;
+  if (reducedMotion()) { element.textContent = format(target); return; }
+  const started = performance.now() + 500;
+  const frame = (now) => {
+    if (!element.isConnected) return;
+    const progress = Math.min(1, Math.max(0, (now - started) / 1400));
+    element.textContent = format(Math.round(target * (1 - Math.pow(1 - progress, 3))));
+    if (progress < 1) requestAnimationFrame(frame);
+  };
+  element.textContent = format(0); requestAnimationFrame(frame);
+}
+
+function closeTour() {
+  if (!tour.overlay) return;
+  tour.timers.forEach(clearTimeout); tour.timers = [];
+  markTourSeen();
+  tour.overlay.remove(); tour.overlay = null;
+  document.body.classList.remove("story-open");
+  [...document.body.children].forEach((child) => { child.inert = false; });
+  $("#main-content")?.focus({ preventScroll: true });
+}
+
+// First visit: the demonstration, or a new account without orders, opens the stories once.
+function maybeStartTour() {
+  if (tour.overlay || tourSeen()) return;
+  if (window.DoceStore?.isDemo || !state.orders.some((order) => !sampleOrder(order))) openTour();
 }
