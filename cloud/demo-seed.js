@@ -36,6 +36,17 @@ function localDay(now, offset) {
 export function demoSeedState(now = new Date()) {
   const state = createEmptyState();
   state.availability.dailyOrderLimit = 3;
+  // Link settings filled in but inactive: the demo can open the preview, never receive orders.
+  state.orderPage = {
+    active: false, slug: 'doces-da-lu', displayName: 'Doces da Lu', whatsapp: '',
+    welcome: 'Oi! Que bom te ver por aqui. Escolha o doce e a data, eu confirmo tudo pelo WhatsApp.',
+    products: [
+      { name: 'Bolo de aniversário', description: 'A partir de 1 kg. Massa e recheio à sua escolha.' },
+      { name: 'Brigadeiro (cento)', description: 'Tradicional, ninho ou pistache.' },
+      { name: 'Kit festa', description: 'Bolo + 50 doces.' },
+      { name: 'Bolo de pote', description: 'Mínimo de 10 unidades.' },
+    ],
+  };
   for (const [id, offset, time, client, product, total, status, payments, notice, extra = {}] of ORDERS) {
     const orderId = `DEMO-${id}`;
     const created = `${localDay(now, offset - notice)}T12:00:00.000Z`;

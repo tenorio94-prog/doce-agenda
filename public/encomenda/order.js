@@ -5,7 +5,23 @@ const api=`https://khvhnbopdluthpcduhqm.supabase.co/functions/v1/doce-public/p/$
 let config,dates=[],month,selected='';
 const brDate=d=>new Intl.DateTimeFormat('pt-BR',{day:'numeric',month:'long',year:'numeric',timeZone:'UTC'}).format(new Date(`${d}T12:00:00Z`));
 const today=()=>{const p=Object.fromEntries(new Intl.DateTimeFormat('en-US',{timeZone:'America/Sao_Paulo',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date()).map(x=>[x.type,x.value]));return `${p.year}-${p.month}-${p.day}`;};
-async function json(url,options){const response=await fetch(url,options),data=await response.json();if(!response.ok)throw Object.assign(new Error(data.error||'Não foi possível continuar.'),{code:data.code,status:response.status});return data;}
+// Preview (?preview=1): the baker's current draft, opened from Ajustes. Nothing is sent or fetched.
+const PREVIEW=new URLSearchParams(location.search).has('preview');
+function previewDraft(){
+ let draft=null;try{draft=JSON.parse(localStorage.getItem('doce-agenda.link-preview')||'null');}catch{}
+ return draft||{displayName:'Doces da Lu',welcome:'Oi! Escolha o doce e a data, eu confirmo tudo pelo WhatsApp.',products:[{name:'Bolo de aniversário',description:'A partir de 1 kg.'},{name:'Brigadeiro (cento)',description:''}],orderTemplate:{fields:[]},availability:{closedWeekdays:[],minimumNoticeHours:0}};
+}
+function previewResponse(url){
+ const draft=previewDraft();
+ if(url===api)return{active:true,displayName:draft.displayName,welcome:draft.welcome||'',products:Array.isArray(draft.products)?draft.products:[],orderTemplate:{fields:(draft.orderTemplate?.fields||[]).map(f=>({...f,options:f.options||[]}))}};
+ if(url.includes('/availability')){
+  const closed=draft.availability?.closedWeekdays||[],notice=Math.ceil((Number(draft.availability?.minimumNoticeHours)||0)/24),start=new Date(`${today()}T12:00:00Z`);
+  return Array.from({length:90},(_,i)=>{const d=new Date(start);d.setUTCDate(d.getUTCDate()+i);return{date:d.toISOString().slice(0,10),available:i>=notice&&!closed.includes(d.getUTCDay())};});
+ }
+ return{code:'DA-PREVIA',summary:'Esta é só uma prévia: o pedido não foi enviado.\nQuando seu link estiver no ar, o pedido da cliente chega em Novos, na sua agenda, para você revisar.',whatsapp:''};
+}
+if(PREVIEW)document.addEventListener('DOMContentLoaded',()=>document.body.insertAdjacentHTML('afterbegin','<div class="preview-banner" role="note"><strong>Prévia.</strong> É assim que sua cliente vê o link. Nada é enviado.</div>'));
+async function json(url,options){if(PREVIEW)return previewResponse(url);const response=await fetch(url,options),data=await response.json();if(!response.ok)throw Object.assign(new Error(data.error||'Não foi possível continuar.'),{code:data.code,status:response.status});return data;}
 async function refreshDates(){const start=today(),end=new Date(`${start}T12:00:00Z`);end.setUTCDate(end.getUTCDate()+89);dates=await json(`${api}/availability?from=${start}&to=${end.toISOString().slice(0,10)}`);if(!dates.some(d=>d.date===selected&&d.available)){selected='';$('#date').value='';$('#chosen-date').textContent='Escolha outra data disponível.';}renderCalendar();}
 function renderCalendar(){
  const [year,m]=month.split('-').map(Number),first=new Date(Date.UTC(year,m-1,1)),count=new Date(Date.UTC(year,m,0)).getUTCDate();

@@ -988,7 +988,11 @@ function handleClick(event) {
     case 'confirm-order': { const order = orderById(id); closeDetails(); if (order) openConfirmForm(order); break; }
     case 'review-request': showOrderDetail(id); break;
     case 'retry-month': state.monthError='';state.monthData=null;renderMonth();break;
-    case 'copy-order-link': copyText(`https://lucast.app/p/${state.orderPage.slug}`).then(()=>showToast('Link copiado.')).catch(e=>showToast(e.message));break;
+    case 'copy-order-link': copyOrderLink(); break;
+    case 'share-order-link': shareOrderLink(); break;
+    case 'preview-link': previewOrderLink(); break;
+    case 'add-product': addProductRow(); break;
+    case 'remove-product': removeProductRow(action); break;
     case 'link-metrics': loadLinkMetrics();break;
     case 'accept-request': reviewRequest(id,action.dataset.status);break;
     case 'refuse-request': refuseRequest(id);break;
@@ -1044,10 +1048,11 @@ function attachEvents() {
   $("#view-settings").addEventListener('input',event=>{
     if(event.target.name==='slug')event.target.dataset.edited='true';
     if(event.target.name==='displayName'){
-      const slug=$('#order-page-form [name=slug]');if(slug&&!slug.dataset.edited)slug.value=event.target.value.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,40);
+      const slug=$('#order-page-form [name=slug]');if(slug&&!slug.dataset.edited)slug.value=slugFrom(event.target.value);
     }
-    const preview=$('#slug-preview'),slug=$('#order-page-form [name=slug]');if(preview&&slug)preview.textContent=slug.value||'sua-confeitaria';
   });
+  // Typed addresses become valid ones: lowercase, no accents, hyphens instead of spaces.
+  $("#view-settings").addEventListener("change", (event) => { if (event.target.name === "slug") event.target.value = slugFrom(event.target.value); });
   $("#view-settings").addEventListener("toggle", (event) => {
     if (event.target.matches(".template-field") && event.target.open) state.openTemplateField = event.target.querySelector("[name=enabled]")?.value || "";
   }, true);
@@ -1080,14 +1085,100 @@ function attachEvents() {
 populateStatusOptions();
 attachEvents();
 loadState();
-function orderPageMarkup(){
- const p=state.orderPage,cloud=window.DoceApi.mode==='cloud',link=p.slug?`https://lucast.app/p/${p.slug}`:'';
- return `<section class="surface order-page-settings"><h2>Link de encomenda</h2><p>Receba solicitações sem redigitar. Você revisa antes de aceitar.</p>${!cloud?'<p class="form-hint">Disponível na sua conta. A demonstração não publica links.</p>':''}<form id="order-page-form"><label class="switch-label"><input name="active" type="checkbox" role="switch" ${p.active?'checked':''} ${!cloud?'disabled':''}> Receber solicitações pelo link</label><label class="field"><span>Nome da confeitaria</span><input name="displayName" maxlength="60" value="${esc(p.displayName)}" required></label><label class="field"><span>Endereço próprio</span><input name="slug" minlength="3" maxlength="40" pattern="[a-z0-9][a-z0-9-]{1,38}[a-z0-9]" value="${esc(p.slug)}" ${p.slug?'data-edited="true"':''} required autocapitalize="none" spellcheck="false"><small>lucast.app/p/<span id="slug-preview">${esc(p.slug||'sua-confeitaria')}</span></small></label><label class="field"><span>Mensagem de boas-vindas</span><textarea name="welcome" maxlength="280" rows="2">${esc(p.welcome)}</textarea></label><label class="field"><span>Seu WhatsApp (opcional)</span><input name="whatsapp" type="tel" maxlength="30" value="${esc(p.whatsapp)}" placeholder="+55 11 99999-9999"><small>Sem número, a cliente recebe o código sem botão de WhatsApp.</small></label><label class="field"><span>Produtos (até 30)</span><textarea name="products" rows="4" maxlength="9000" placeholder="Bolo de aniversário | Feito por encomenda">${esc(p.products.map(x=>`${x.name}${x.description?' | '+x.description:''}`).join('\n'))}</textarea><small>Um produto por linha. A descrição após | é opcional. A cliente também pode escolher Outro.</small></label><p class="form-hint">Ao ativar, você recebe os dados para atender a encomenda, conforme a <a href="/privacidade/" target="_blank" rel="noopener">política de privacidade</a>.</p><p id="order-page-error" class="form-error" role="alert" hidden></p><button class="button button-primary" type="submit" ${!cloud?'disabled':''}>Salvar link</button></form><div class="link-actions"><button class="button button-quiet" type="button" data-action="copy-order-link" ${!cloud||!link?'disabled':''}>Copiar link</button>${cloud&&link?`<a class="button button-quiet" target="_blank" rel="noopener" href="${esc(link)}">Ver como a cliente vê</a>`:''}</div><p class="form-hint">Desativar impede novos envios. Solicitações pendentes continuam para revisão.</p>${cloud?'<button class="text-link" type="button" data-action="link-metrics">Ver métricas do link</button><p id="link-metrics-result" class="form-hint" aria-live="polite"></p>':''}</section>`;
+// ---- Link de encomenda: passo a passo, lista de produtos e prévia ----
+const LINK_BASE = "lucast.app/p/";
+const LINK_PREVIEW_KEY = "doce-agenda.link-preview";
+const slugFrom = (text) => String(text || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40).replace(/-+$/g, "");
+const productRowMarkup = (product = { name: "", description: "" }) => `<div class="product-row"><input name="productName" maxlength="80" value="${esc(product.name)}" placeholder="Ex.: Bolo de aniversário" aria-label="Nome do produto"><input name="productDescription" maxlength="160" value="${esc(product.description)}" placeholder="Detalhe opcional, ex.: a partir de 1 kg" aria-label="Detalhe do produto (opcional)"><button class="icon-button product-remove" type="button" data-action="remove-product" aria-label="Remover produto"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>`;
+
+function orderPageMarkup() {
+  const p = state.orderPage, cloud = window.DoceApi.mode === "cloud", live = cloud && p.active && p.slug;
+  const products = p.products.length ? p.products : [{ name: "", description: "" }];
+  const hero = live
+    ? `<div class="link-hero is-live"><span class="live-badge"><i aria-hidden="true"></i>No ar</span><h2>Seu link de encomenda</h2><p class="link-url">${esc(LINK_BASE)}<b>${esc(p.slug)}</b></p>
+      <div class="link-share"><button class="button button-primary" type="button" data-action="copy-order-link">Copiar link</button><button class="button button-quiet" type="button" data-action="share-order-link">Mandar no WhatsApp</button></div>
+      <button class="text-link" type="button" data-action="preview-link">Ver como a cliente vê</button>
+      <p class="link-tip">Coloque na bio do Instagram e no status do WhatsApp. Cada pedido chega em <b>Novos</b> para você revisar antes de aceitar.</p></div>`
+    : `<div class="link-hero"><h2>Link de encomenda</h2><p>Sua cliente escolhe o doce e uma data livre e manda o pedido sozinha. Você revisa antes de aceitar. Leva uns 2 minutos para montar.</p>${cloud ? "" : '<p class="link-demo-note">Na demonstração dá para montar e ver a prévia. Para receber pedidos de verdade, crie sua conta grátis.</p>'}</div>`;
+  const actions = live
+    ? '<button class="button button-primary" type="submit" name="intent" value="save">Salvar alterações</button><button class="button button-quiet" type="button" data-action="preview-link">Ver prévia</button><button class="text-link link-pause" type="submit" name="intent" value="pause">Pausar link</button>'
+    : `${cloud ? '<button class="button button-primary" type="submit" name="intent" value="activate">Ativar meu link</button>' : ""}<button class="button ${cloud ? "button-quiet" : "button-primary"}" type="button" data-action="preview-link">Ver como a cliente vê</button>${cloud ? '<button class="text-link" type="submit" name="intent" value="save">Salvar sem ativar</button>' : ""}`;
+  const form = `<form id="order-page-form" class="link-steps" novalidate>
+    <fieldset class="link-step"><legend><span class="step-n">1</span>Sua vitrine</legend>
+      <label class="field"><span>Nome da confeitaria</span><input name="displayName" maxlength="60" value="${esc(p.displayName)}" placeholder="Ex.: Doces da Lu" autocomplete="organization"></label>
+      <label class="field"><span>Boas-vindas <small>(opcional)</small></span><textarea name="welcome" maxlength="280" rows="2" placeholder="Ex.: Oi! Escolha o doce e a data. Eu confirmo tudo pelo WhatsApp.">${esc(p.welcome)}</textarea></label></fieldset>
+    <fieldset class="link-step"><legend><span class="step-n">2</span>O que você aceita por encomenda</legend>
+      <div class="product-list" id="product-list">${products.map(productRowMarkup).join("")}</div>
+      <button class="text-link add-product" type="button" data-action="add-product">+ Adicionar produto</button>
+      <p class="link-step-note">A cliente também pode escolher "Outro" e descrever o que quer.</p></fieldset>
+    <fieldset class="link-step"><legend><span class="step-n">3</span>Seu link</legend>
+      <label class="field"><span>Endereço</span><span class="slug-field"><span class="slug-prefix">${esc(LINK_BASE)}</span><input name="slug" maxlength="40" value="${esc(p.slug)}" ${p.slug ? 'data-edited="true"' : ""} autocapitalize="none" autocomplete="off" spellcheck="false" placeholder="doces-da-lu"></span><small>Criado a partir do nome. Pode trocar: letras, números e hífen.</small></label>
+      <label class="field"><span>Seu WhatsApp <small>(opcional)</small></span><input name="whatsapp" type="tel" maxlength="30" value="${esc(p.whatsapp)}" placeholder="(11) 99999-9999" autocomplete="tel"><small>Com o número, a cliente pode te avisar no WhatsApp depois de mandar o pedido.</small></label></fieldset>
+    <p class="link-privacy">Ao ativar, você recebe os dados da cliente para atender a encomenda, conforme a <a href="/privacidade/" target="_blank" rel="noopener">política de privacidade</a>.</p>
+    <p id="order-page-error" class="form-error" role="alert" hidden></p>
+    <div class="link-save">${actions}</div>
+  </form>`;
+  const extras = live ? '<div class="link-extras"><p>Pausar impede pedidos novos. Os que já chegaram continuam para revisão.</p><button class="text-link" type="button" data-action="link-metrics">Ver métricas do link</button><p id="link-metrics-result" class="form-hint" aria-live="polite"></p></div>' : "";
+  return `<section class="surface order-page-settings link-studio">${hero}${live ? `<details class="link-edit"><summary>Editar vitrine, produtos e endereço</summary>${form}</details>` : form}${extras}</section>`;
 }
-async function saveOrderPage(event){
- event.preventDefault();const form=event.target,data=new FormData(form),error=$('#order-page-error'),button=form.querySelector('[type=submit]');error.hidden=true;button.disabled=true;
- try{await apiRequest('/order-page',{method:'PUT',body:{active:data.has('active'),displayName:data.get('displayName'),slug:data.get('slug'),welcome:data.get('welcome'),whatsapp:data.get('whatsapp'),products:String(data.get('products')).split('\n').filter(l=>l.trim()).map(line=>{const i=line.indexOf('|');return{name:(i<0?line:line.slice(0,i)).trim(),description:i<0?'':line.slice(i+1).trim()};})}});await loadState({silent:true});showToast('Link salvo.');}
- catch(e){error.textContent=e.message;error.hidden=false;}finally{button.disabled=false;}
+
+function linkFormValues(form) {
+  const data = new FormData(form), descriptions = data.getAll("productDescription");
+  const products = data.getAll("productName").map((name, index) => ({ name: String(name).trim(), description: String(descriptions[index] || "").trim() })).filter((product) => product.name);
+  return { displayName: String(data.get("displayName") || "").trim(), slug: String(data.get("slug") || "").trim(), welcome: String(data.get("welcome") || "").trim(), whatsapp: String(data.get("whatsapp") || "").trim(), products };
+}
+
+async function saveOrderPage(event) {
+  event.preventDefault();
+  const form = event.target, error = $("#order-page-error"), intent = event.submitter?.value || "save";
+  if (window.DoceApi.mode !== "cloud") return;
+  const active = intent === "activate" ? true : intent === "pause" ? false : state.orderPage.active;
+  const values = linkFormValues(form);
+  error.hidden = true;
+  if (active && (!values.displayName || !values.slug)) { error.textContent = "Para ativar, preencha o nome da confeitaria e o endereço do link."; error.hidden = false; return; }
+  const buttons = $$("[type=submit]", form);
+  buttons.forEach((button) => { button.disabled = true; });
+  try {
+    await apiRequest("/order-page", { method: "PUT", body: { active, ...values } });
+    await loadState({ silent: true });
+    if (intent === "activate") showToast("Seu link está no ar!", { label: "Copiar link", run: copyOrderLink });
+    else showToast(intent === "pause" ? "Link pausado. Pedidos novos não chegam até você ativar de novo." : "Link salvo.");
+  } catch (failure) { error.textContent = failure.message; error.hidden = false; }
+  finally { buttons.forEach((button) => { button.disabled = false; }); }
+}
+
+function copyOrderLink() {
+  copyText(`https://${LINK_BASE}${state.orderPage.slug}`).then(() => showToast("Link copiado. Cole na bio ou no WhatsApp.")).catch((failure) => showToast(failure.message));
+}
+
+// WhatsApp opens with the message ready; she picks the contact or status and sends it herself.
+function shareOrderLink() {
+  const text = `Agora você pode fazer sua encomenda por aqui, escolhendo o doce e a data: https://${LINK_BASE}${state.orderPage.slug}`;
+  window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank", "noopener");
+}
+
+// The preview reads the form as it is now (even unsaved) and never sends anything.
+function previewOrderLink() {
+  const form = $("#order-page-form");
+  const values = form ? linkFormValues(form) : state.orderPage;
+  const draft = { ...values, displayName: values.displayName || "Sua confeitaria", orderTemplate: state.orderTemplate, availability: state.availability };
+  try { localStorage.setItem(LINK_PREVIEW_KEY, JSON.stringify(draft)); } catch { /* a prévia usa o exemplo padrão */ }
+  window.open("/encomenda/?preview=1", "_blank", "noopener");
+}
+
+function addProductRow() {
+  const list = $("#product-list");
+  if (!list) return;
+  if (list.children.length >= 30) { showToast("O link aceita até 30 produtos."); return; }
+  list.insertAdjacentHTML("beforeend", productRowMarkup());
+  list.lastElementChild.querySelector("input")?.focus();
+}
+
+function removeProductRow(button) {
+  const list = $("#product-list"), row = button.closest(".product-row");
+  if (!list || !row) return;
+  row.remove();
+  if (!list.children.length) list.insertAdjacentHTML("beforeend", productRowMarkup());
 }
 function requestReviewMarkup(order){
  if(order.status!=='Solicitação')return order.reviewOutcome==='refused'?`<p class="pending-banner">Solicitação recusada${order.refusalReason?`: ${esc(order.refusalReason)}`:'.'}</p>`:'';
