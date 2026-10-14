@@ -28,7 +28,7 @@ Chrome confirmou redirecionamento da prévia `/app/` sem sessão. Não testamos 
 
 ## Para liberar
 
-1. Ativar OAuth Google e URLs de retorno: [ATIVAR_LOGIN_PILOTO.md](ATIVAR_LOGIN_PILOTO.md). Google está desabilitado. SMTP padrão Supabase atende apenas equipe, não cadastro aberto. Interface e-mail/senha desabilitada até SMTP próprio validado; confirmação de e-mail mantida.
+1. Ativar OAuth Google e URLs de retorno: [ATIVAR_LOGIN_PILOTO.md](historico/ATIVAR_LOGIN_PILOTO.md). Google está desabilitado. SMTP padrão Supabase atende apenas equipe, não cadastro aberto. Interface e-mail/senha desabilitada até SMTP próprio validado; confirmação de e-mail mantida.
 2. Confirmar bloqueio do acesso público à tabela antiga vazia `n8n_chat_histories`, sem RLS. Pergunta enviada; nenhuma mudança automática nessa tabela. [Aviso oficial](https://supabase.com/docs/guides/database/database-linter?lint=0013_rls_disabled_in_public).
 3. Testar cadastro Google real, logout/novo login e dados em duas sessões; atualizar landing para cadastro/entrada. Depois publicar em produção.
 
