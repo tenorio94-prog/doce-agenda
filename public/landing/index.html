@@ -45,7 +45,7 @@
   <main id="main" class="inner page-body">
     <section class="intro" aria-label="Apresentação">
       <div class="intro-copy">
-        <p class="intro-lede">Anote a encomenda, marque a data e carimbe o sinal quando receber. Só isso. Direto no celular.</p>
+        <p class="intro-lede">Pedidos, datas e sinal no mesmo lugar. Compartilhe seu link de encomenda para a cliente preencher os detalhes. Você revisa antes de confirmar. Direto no celular.</p>
         <div class="hero-actions">
           <a class="button button-primary" href="/app/">Experimentar sem cadastro</a>
           <a class="text-link" href="/app/">Abrir minha agenda</a>
@@ -70,10 +70,21 @@
       </div>
     </section>
 
+    <section id="link-encomenda" class="steps" aria-labelledby="link-title">
+      <h2 id="link-title">A cliente preenche. Você confere.</h2>
+      <p class="intro-lede">Na sua conta, ative o link em Ajustes → Link de encomenda e compartilhe com suas clientes.</p>
+      <div class="steps-grid">
+        <article class="step"><span class="step-number">1</span><h3>Compartilhe seu link</h3><p>Mostre o nome da sua confeitaria e os produtos que aceita por encomenda.</p></article>
+        <article class="step"><span class="step-number">2</span><h3>Receba os detalhes</h3><p>A cliente escolhe uma data disponível e envia uma solicitação, sem criar conta.</p></article>
+        <article class="step"><span class="step-number">3</span><h3>Revise e confirme</h3><p>A solicitação chega à sua agenda para revisão. Você pode aceitar, ajustar ou recusar. Nada é confirmado automaticamente.</p></article>
+      </div>
+      <p class="link-note">Se você configurar seu WhatsApp, a cliente também pode abrir uma conversa com o resumo preenchido e tocar em enviar. <a href="/privacidade/">Veja como os dados da encomenda são tratados.</a></p>
+    </section>
+
     <section class="promises" aria-labelledby="promises-title">
       <h2 id="promises-title">O que ele não faz, de propósito.</h2>
       <div class="promises-list">
-        <p><strong>Não manda mensagem por você.</strong> A conversa com a cliente continua sua, no WhatsApp de sempre.</p>
+        <p><strong>O envio no WhatsApp continua manual.</strong> O botão abre a conversa com o resumo preenchido. Quem envia a mensagem é a cliente.</p>
         <p><strong>Não conta dinheiro que não chegou.</strong> O sinal só vale depois que você carimba.</p>
         <p><strong>Não pede cadastro para experimentar.</strong> Teste com exemplos e crie a conta quando quiser.</p>
       </div>
@@ -86,7 +97,8 @@
         <details><summary>Meus dados aparecem em outros aparelhos?</summary><p>Não. O piloto atual salva os dados localmente neste navegador, sem conta ou sincronização entre dispositivos. Limpar os dados do navegador pode apagá-los. Use Backup para baixar uma cópia JSON.</p></details>
         <details><summary>E a demonstração, guarda meus pedidos?</summary><p>Só neste navegador. Se você limpar os dados do navegador, eles somem. No próprio demo dá para baixar uma cópia de segurança.</p></details>
         <details><summary>Os pagamentos são confirmados automaticamente?</summary><p>Não. Um valor informado só entra no recebido depois que você o confere.</p></details>
-        <details><summary>A Doce Agenda envia mensagens para minhas clientes?</summary><p>Não. Você pode copiar o resumo do pedido para usar em outra conversa, mas o app não envia mensagens nem se conecta ao WhatsApp.</p></details>
+        <details><summary>Como recebo encomendas pelo link?</summary><p>Entre na sua conta e abra Ajustes → Link de encomenda. Configure o nome da confeitaria, os produtos e o endereço do link, depois ative e compartilhe. Cada envio chega como Solicitação: você revisa antes de aceitar como orçamento ou pedido confirmado.</p></details>
+        <details><summary>Como funciona o WhatsApp?</summary><p>Depois de enviar a solicitação, a cliente pode tocar em “Avisar no WhatsApp”. O botão abre uma conversa com a confeitaria e o resumo preenchido; a cliente precisa tocar em enviar. Ele aparece se você configurou seu número. Você também pode copiar uma mensagem para responder à cliente. Não há envio automático nem integração com a API do WhatsApp.</p></details>
       </div>
     </section>
 
@@ -100,6 +112,7 @@
     <div class="inner footer-inner">
       <span>doce agenda · piloto gratuito</span>
       <span>Os pedidos mostrados são exemplos fictícios</span>
+      <a class="footer-link" href="/privacidade/">Política de privacidade</a>
       <small>Piloto em desenvolvimento. Sem sincronização entre aparelhos.</small>
     </div>
   </footer>

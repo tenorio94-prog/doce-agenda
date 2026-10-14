@@ -67,5 +67,7 @@ h2{margin:0;font-family:var(--font-title);font-size:clamp(34px,4.6vw,52px);font-
 .site-footer{padding:0 clamp(20px,4vw,48px) 64px;color:var(--muted);font-size:13px}
 .footer-inner{display:flex;flex-wrap:wrap;gap:8px 24px;justify-content:space-between}
 .footer-inner small{flex-basis:100%;font-size:13px}
+.link-note{max-width:720px;margin:0;color:var(--ink-soft);font-size:17px;line-height:1.5}
+.footer-link{display:inline-flex;align-items:center;min-height:44px;color:var(--ink);font-weight:600;text-underline-offset:3px}
 @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
 .preview-card.is-paid .preview-text{padding-right:104px}
