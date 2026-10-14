@@ -472,7 +472,9 @@ function renderMonth() {
 
 function render() {
   $("#demo-bar").hidden = window.DoceApi.mode !== "browser";
-  $("#demo-reset").hidden = !window.DoceStore?.resetDemo;
+  // Optional: a page cached before this button existed must still load the agenda.
+  const demoReset = $("#demo-reset");
+  if (demoReset) demoReset.hidden = !window.DoceStore?.resetDemo;
   renderToday(); renderOrders(); renderSettings(); renderMonth();
   $$("[data-view]").forEach((button) => {
     if (!button.matches(".nav-item, .settings-button")) return;
