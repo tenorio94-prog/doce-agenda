@@ -20,10 +20,10 @@ Identidade atual **Glacê + carimbo**: rosa `#f7c5d0`, ameixa `#2b1a2c`, creme `
 
 ## 3. Código, Git e endereços
 
-- Pasta deste repositório: `C:/Users/Restore/Documents/ebooks/projeto_B/web`.
+- Pasta de trabalho atual: `C:/Users/Restore/Documents/doce-agenda` (clone limpo só deste projeto, com dependências instaladas). A pasta antiga `ebooks/projeto_B/web` não deve mais ser usada: mistura outros projetos e gasta tokens à toa. Há uma pasta `Documents/doceagenda` com um `.git` incompleto, criado por engano em 14/10; ignorar e não commitar nela.
 - GitHub: https://github.com/tenorio94-prog/doce-agenda
-- Branch de trabalho: **`redesign-glace-carimbo`**, PR https://github.com/tenorio94-prog/doce-agenda/pull/1 .
-- Código confirmado ao preparar esta passagem: branch em `1e13b60`; `main` em `beed27d`. O commit que adiciona estes documentos é posterior; consulte `git log`, sem tratar esses hashes como HEAD permanente.
+- **`main` foi atualizada em 14/10/2026, com autorização do usuário, para ficar igual à versão publicada** (avanço simples a partir de `beed27d`, sem apagar nada). Branch `main` é a base de trabalho a partir daqui; `redesign-glace-carimbo` e o PR #1 ficam como histórico.
+- Código no momento desta atualização: `main` e `redesign-glace-carimbo` em `d4989f9`. Consulte `git log`, sem tratar esse hash como HEAD permanente.
 - Repositório estava **público** na última consulta da API. Git autenticado permitiu push; isso não implica sessão autenticada no navegador nem acesso a outros provedores.
 
 | Uso | Endereço/estado |
@@ -83,6 +83,7 @@ Commits relevantes, todos enviados ao GitHub: `c1f47d7` identidade; `588d82e` co
 - Cloudflare: Workers Static Assets, Worker `doce-agenda`. Versão final verificada `7034e89d-ecef-4b9d-93f5-439ba3c27dc1`. Conta configurada em `wrangler.jsonc`.
 - Publicar somente `deploy-cloud/public`. `wrangler.jsonc` executa `node scripts/build-cloudflare.mjs`; esse build prepara os fontes e adapta `_redirects` para **`/p/:slug /encomenda/ 200`**. Destino `/encomenda/index.html` causa redirecionamento e perde o slug na Cloudflare; bug corrigido e testado.
 - API Supabase publicada: `doce-api` v7 (JWT obrigatório), `doce-public` v5 (anônima por definição, rotas estritas). Origem Cloudflare liberada de forma exata, junto de lucast.app/Netlify/localhost permitidos; sem wildcard para qualquer Workers.
+- Em 14/10/2026 o login do Wrangler havia expirado e foi **renovado** pelo usuário via device flow; `wrangler deployments status` confirmou a versão `7034e89d` no ar.
 - O usuário autorizou o Wrangler **pelo celular** via device flow. Credenciais criptografadas fora do repositório, com chave no Windows Credential Manager. Não assumir que estarão disponíveis em outra máquina ou que o painel web estará logado.
 - Escopos atuais: leitura de conta/usuário e escrita de scripts Workers. Não presumir acesso de gestão de DNS/zonas. Avisos do Wrangler sobre escopos adicionais não impediram a publicação; não ampliá-los sem necessidade.
 - Para renovar, quando necessário: `npx --yes --package wrangler@4.119.0 wrangler login --device --browser=false --use-keyring --scopes account:read user:read workers_scripts:write`. O usuário abre o link, aprova o código temporário; não pedir senha ou token no chat. No Windows foi instalado `@napi-rs/keyring@1.3.0` global para o cofre.
@@ -132,7 +133,7 @@ Pendências operacionais: duas contas sintéticas e seus registros ainda existem
 
 ## 10. Como abrir a próxima sessão
 
-Abrir como projeto a pasta `C:/Users/Restore/Documents/ebooks/projeto_B/web`, para carregar `AGENTS.md`. Uma sessão nova não recebe automaticamente o histórico inteiro nem as credenciais de outra máquina. Mensagem sugerida:
+Abrir como projeto a pasta `C:/Users/Restore/Documents/doce-agenda`, para carregar `AGENTS.md`. Uma sessão nova não recebe automaticamente o histórico inteiro nem as credenciais de outra máquina. Mensagem sugerida:
 
 > Leia AGENTS.md e context.md. Confirme em poucas linhas o estado do Doce Agenda e aguarde eu escolher a próxima tarefa. Não altere o DNS nem comece a próxima feature ainda.
 
