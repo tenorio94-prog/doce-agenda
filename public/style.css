@@ -1004,3 +1004,6 @@ h1, h2, h3, .section-head h2 { font-family: var(--font-title); }
 .deposit-main { padding-right: 10px; }
 .deposit-main .stamp-large { font-size: 17px; }
 .order-page-settings{padding:24px;margin-bottom:24px}.order-page-settings h2{margin-top:0}.order-page-settings form{display:grid;gap:18px}.switch-label{display:flex;align-items:center;gap:12px;font-weight:700}.switch-label input{width:24px;height:24px;accent-color:var(--ameixa)}.link-actions,.request-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:20px}.request-banner{padding:22px;margin:16px 0 24px;background:var(--glace)}.request-banner h2{margin:0;font-size:24px}.request-origin{font-size:12px;color:var(--link);font-weight:650;margin-top:6px}.request-review{padding:18px;border-radius:18px;background:var(--glace);margin-bottom:20px}.request-review h3{margin-top:0}.request-review .request-actions{display:grid;gap:10px}.status-solicitao-pill{background:var(--glace)}.status-recusado-pill{background:var(--segmented)}
+
+/* Meu mês na demonstração: aviso de números de exemplo */
+.month-example { background: var(--baunilha); color: var(--ink); font-size: 14px; line-height: 1.4; }

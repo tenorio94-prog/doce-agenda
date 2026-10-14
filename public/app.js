@@ -423,7 +423,8 @@ function renderMonth() {
   else if (!data) content = '<p class="month-feedback" role="status">Carregando seu mês…</p>';
   else if (!data.ordersCount) content = emptyState('Seu mês começa com uma encomenda', 'Aqui vão aparecer seus pedidos confirmados ou entregues, os valores e os recebimentos conferidos deste mês.', false);
   else {
-    content = `<div class="stats-grid month-stats">${card('Pedidos',data.ordersCount)}${card('Vendido',money(data.soldCents/100))}${card('Recebido',money(data.receivedCents/100))}${card('A receber',money(data.receivableCents/100))}</div>`;
+    content = data.isExample ? '<p class="notice month-example" role="note"><span><strong>Números de exemplo.</strong> É assim que fica o seu mês. Quando você cadastrar seus pedidos, aparecem só os seus.</span></p>' : '';
+    content += `<div class="stats-grid month-stats">${card('Pedidos',data.ordersCount)}${card('Vendido',money(data.soldCents/100))}${card('Recebido',money(data.receivedCents/100))}${card('A receber',money(data.receivableCents/100))}</div>`;
     if (data.ordersWithoutValue) content += `<p class="month-note">${data.ordersWithoutValue} ${data.ordersWithoutValue===1?'pedido sem valor informado não entrou':'pedidos sem valor informado não entraram'} em Vendido. ${data.ordersWithoutValue===1?'Ele continua':'Eles continuam'} na contagem de Pedidos.</p>`;
     if (data.ordersCount < 3) content += '<p class="month-note">Com mais pedidos, mostramos aqui os dias e produtos que mais saem.</p>';
     else {

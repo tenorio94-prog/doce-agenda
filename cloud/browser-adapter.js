@@ -1,4 +1,5 @@
 import { createEmptyState, transactState } from './state-engine.js';
+import { demoMonthSummary, shouldUseDemoMonth } from './demo-month.js';
 const KEY='doce-agenda.pilot.v1', BACKUP_KEY=KEY+'.pre-import';
 function initialState(){
   const state=createEmptyState(), day=new Date();day.setDate(day.getDate()+1);
@@ -12,6 +13,7 @@ function execute(url,options={}){
     let state;try{state=JSON.parse(raw);}catch{return new Response(JSON.stringify({error:'Os dados deste navegador não puderam ser lidos. Não limpe o armazenamento antes de guardar uma cópia.'}),{status:500});}
     const transaction=transactState(state,url,options);
     if(transaction.mutated){if(new URL(url,location.origin).pathname==='/api/import')localStorage.setItem(BACKUP_KEY,raw);localStorage.setItem(KEY,JSON.stringify(transaction.state));}
+    if(transaction.status===200&&new URL(url,location.origin).pathname==='/api/resumo-mensal'&&shouldUseDemoMonth(state,transaction.body))transaction.body=demoMonthSummary(transaction.body.month);
     return new Response(JSON.stringify(transaction.body),{status:transaction.status,headers:{'Content-Type':'application/json'}});
   }catch{return new Response(JSON.stringify({error:'Não foi possível salvar neste navegador.'}),{status:500});}
 }
