@@ -89,6 +89,10 @@ Lucas aprovou os três grupos do diagnóstico e a aposentadoria do servidor loca
 
 Ainda **não mexido** (decisão de 14/10): `style.css` (cerca de 100 KB, em camadas que se sobrepõem) e `app.js` (112 KB, arquivo único). Mexer neles junto com Produção A, com comparação de telas. Os 30 MB de prints em `design/` não afetam o site.
 
+## 7c. Vídeo de motion UI (14/10)
+
+Pasta `video-motion/` (projeto HyperFrames, fluxo general-video, sem revisão a pedido do Lucas): loop quadrado 1440×1440 de 16 s, 120 BPM, 8 compassos, uma forma só que passa por 11 estados do app (novo pedido → data → sinal conferido com carimbo → produção → limite do dia "Lotado" → Meu mês → link → solicitação → confirmado → volta). Tudo calculado por `render(t)` com molas em forma fechada e periódicas; música e sons gerados por `scripts/make_audio.py` (numpy). Render a 240 fps + `tmix` 4→1 = 60 fps com desfoque de movimento. Verificado: `hyperframes check` passou, emenda do loop imperceptível, áudio -13,9 LUFS. O vídeo final (`renders/doce-agenda-loop.mp4`) não vai para o Git; regenerar com `npx hyperframes@0.8.157 render --fps 240 --crf 12 -o renders/raw-240.mp4 .` e o comando ffmpeg do tmix registrado no BRIEF/histórico.
+
 ## 8. Próximas features — nenhuma iniciada
 
 Ordem planejada: **Produção A → Pix → Clientes** (Compras B adiada). Detalhes em `docs/PROXIMAS_FEATURES_ETAPAS.md`. Resumo:
