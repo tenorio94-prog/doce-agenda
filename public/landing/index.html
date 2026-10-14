@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f7c5d0">
-  <meta name="description" content="Pedidos, prazos, combinados e pagamentos organizados para a rotina da sua confeitaria.">
+  <meta name="description" content="Agenda de encomendas para confeiteiras: pedido, data e sinal no celular. Menos caderno, mais espaço para criar.">
   <title>Doce Agenda — mais espaço para criar</title>
   <link rel="canonical" href="https://doce-agenda-piloto.netlify.app/">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
@@ -13,7 +13,7 @@
   <meta property="og:type" content="website">
   <meta property="og:locale" content="pt_BR">
   <meta property="og:site_name" content="Doce Agenda">
-  <meta property="og:title" content="Doce Agenda: pedidos, prazos e sinal no mesmo lugar">
+  <meta property="og:title" content="Doce Agenda: seu caderno não te avisa que o bolo é amanhã">
   <meta property="og:description" content="Agenda de encomendas para confeiteiras. Experimente sem cadastro.">
   <meta property="og:image" content="https://doce-agenda-piloto.netlify.app/landing/assets/og.jpg">
   <meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
@@ -35,24 +35,47 @@
       </header>
 
       <section class="hero" aria-labelledby="hero-title">
-        <p class="hero-kicker">Agenda de encomendas para confeiteiras</p>
-        <h1 id="hero-title">Pare de procurar o combinado no meio da conversa.</h1>
+        <div class="hero-copy">
+          <p class="hero-kicker">Agenda de encomendas para confeiteiras</p>
+          <h1 id="hero-title">Seu caderno não te avisa que o bolo é amanhã.</h1>
+          <p class="hero-lede">No Doce Agenda, é só abrir o celular: o que entregar hoje, o que vem na semana e quem ainda não pagou o sinal.</p>
+          <div class="hero-actions">
+            <a class="button button-primary" href="/app/">Experimentar sem cadastro</a>
+          </div>
+          <p class="hero-note">Grátis no piloto · Sem cartão · Funciona no celular</p>
+        </div>
+
+        <div class="scene" role="img" aria-label="Ilustração: um caderno de encomendas rabiscado ao lado de um celular com as encomendas do dia organizadas">
+          <div class="notebook" aria-hidden="true">
+            <span>Bolo Ana · <s>sex</s> sáb 15h?</span>
+            <span>Kit festa Bia · 50 brigad.</span>
+            <span>sinal da Bia?? <em class="pen-circle">ver!</em></span>
+            <span><s>Torta limão Paulo</s></span>
+            <span>Carla 3 andares · SÁB???</span>
+            <span>R$ 80 no pix ou 60?</span>
+          </div>
+          <div class="phone" aria-hidden="true">
+            <div class="phone-screen">
+              <span class="ph-top">Hoje</span>
+              <span class="ph-count"><b>3</b>para entregar</span>
+              <span class="ph-row"><b>15h</b>Bolo Ana<i class="ph-stamp">Pago</i></span>
+              <span class="ph-row is-pending"><b>17h</b>Kit Bia · falta o sinal</span>
+              <span class="ph-label">Amanhã</span>
+              <span class="ph-row"><b>10h</b>Bolo Carla</span>
+            </div>
+          </div>
+        </div>
       </section>
     </div>
   </div>
   <svg class="drip" viewBox="0 0 1200 64" preserveAspectRatio="none" width="100%" height="64" aria-hidden="true"><path d="M0 0H1200V12H1110V40a13 13 0 0 1-26 0V12H880V26a9 9 0 0 1-18 0V12H610V48a15 15 0 0 1-30 0V12H370V30a11 11 0 0 1-22 0V12H150V42a13 13 0 0 1-26 0V12H0Z" fill="#f7c5d0"/></svg>
 
   <main id="main" class="inner page-body">
-    <section class="intro" aria-label="Apresentação">
-      <div class="intro-copy">
-        <p class="intro-lede">Pedidos, datas e sinal no mesmo lugar. Compartilhe seu link de encomenda para a cliente preencher os detalhes. Você revisa antes de confirmar. Direto no celular.</p>
-        <div class="hero-actions">
-          <a class="button button-primary" href="/app/">Experimentar sem cadastro</a>
-          <a class="text-link" href="/app/">Abrir minha agenda</a>
-        </div>
-        <p class="hero-note"><span>Grátis no piloto · Sem cartão · Funciona no celular ·</span> <span>Estamos construindo junto com confeiteiras. Seu feedback molda o app.</span></p>
+    <section class="today" aria-labelledby="today-title">
+      <div class="today-copy">
+        <h2 id="today-title">Abriu o celular, já sabe o dia.</h2>
+        <p class="lede">O que entregar, a que horas e quem ainda deve o sinal. Sem folhear caderno, sem caçar a conversa no WhatsApp.</p>
       </div>
-
       <div class="preview-stack" role="img" aria-label="Exemplo fictício da tela Hoje: 3 encomendas para entregar, uma com sinal pago e outra faltando o sinal">
         <div class="preview-day"><span class="preview-day-label">Hoje</span><span class="preview-day-count"><b>3</b><span>encomendas para entregar</span></span></div>
         <div class="preview-card is-paid"><span class="preview-time">15h</span><span class="preview-text"><b>Bolo de aniversário</b><span>Marina · retirada</span></span><span class="stamp">Sinal pago</span></div>
@@ -61,56 +84,51 @@
       </div>
     </section>
 
-    <section id="como-funciona" class="steps" aria-labelledby="steps-title">
-      <h2 id="steps-title">Anotou. Marcou. Carimbou.</h2>
-      <div class="steps-grid">
-        <article class="step"><span class="step-number">1</span><h3>Anote o pedido</h3><p>Comece com cliente e produto. Complete os detalhes quando combinar.</p></article>
-        <article class="step"><span class="step-number">2</span><h3>Marque a data</h3><p>Entrega ou retirada. O dia aparece sozinho na sua agenda.</p></article>
-        <article class="step step-stamped"><span class="step-number">3</span><h3>Carimbe o sinal</h3><p>Recebeu? Um toque e o pedido ganha o carimbo. Só conta quando você confirma.</p><span class="stamp">Pago</span></article>
-      </div>
+    <section class="pains" aria-labelledby="pains-title">
+      <h2 id="pains-title">Quem vende por encomenda conhece esse frio na barriga.</h2>
+      <ul class="pain-list">
+        <li>Lembrar do bolo de aniversário só quando a mãe pergunta a hora da retirada.</li>
+        <li>Perceber que aceitou dois bolos grandes para o mesmo sábado.</li>
+        <li>Não saber se a cliente pagou o sinal ou só disse que ia pagar.</li>
+        <li>Trabalhar até as 2h da manhã e não saber quanto entrou no mês.</li>
+      </ul>
     </section>
 
-    <section id="link-encomenda" class="steps" aria-labelledby="link-title">
-      <h2 id="link-title">A cliente preenche. Você confere.</h2>
-      <p class="intro-lede">Na sua conta, ative o link em Ajustes → Link de encomenda e compartilhe com suas clientes.</p>
-      <div class="steps-grid">
-        <article class="step"><span class="step-number">1</span><h3>Compartilhe seu link</h3><p>Mostre o nome da sua confeitaria e os produtos que aceita por encomenda.</p></article>
-        <article class="step"><span class="step-number">2</span><h3>Receba os detalhes</h3><p>A cliente escolhe uma data disponível e envia uma solicitação, sem criar conta.</p></article>
-        <article class="step"><span class="step-number">3</span><h3>Revise e confirme</h3><p>A solicitação chega à sua agenda para revisão. Você pode aceitar, ajustar ou recusar. Nada é confirmado automaticamente.</p></article>
+    <section id="como-funciona" class="benefits" aria-labelledby="benefits-title">
+      <h2 id="benefits-title">O Doce Agenda segura essas pontas.</h2>
+      <div class="benefits-grid">
+        <article class="benefit"><h3>Cada encomenda no seu dia</h3><p>Anotou cliente, bolo e data? Ela aparece em Hoje e na Semana. Nada se perde numa página do caderno.</p></article>
+        <article class="benefit"><h3>Nada de dois bolos no mesmo sábado</h3><p>Você diz quantas encomendas aceita por dia. Quando a data lota, a agenda avisa antes de você aceitar outra.</p></article>
+        <article class="benefit benefit-stamped"><h3>Sinal pago, carimbado</h3><p>Recebeu? Um toque e o pedido ganha o carimbo. E no fim do mês você vê quanto vendeu e quanto falta receber.</p><span class="stamp">Pago</span></article>
       </div>
-      <p class="link-note">Se você configurar seu WhatsApp, a cliente também pode abrir uma conversa com o resumo preenchido e tocar em enviar. <a href="/privacidade/">Veja como os dados da encomenda são tratados.</a></p>
-    </section>
-
-    <section class="promises" aria-labelledby="promises-title">
-      <h2 id="promises-title">O que ele não faz, de propósito.</h2>
-      <div class="promises-list">
-        <p><strong>O envio no WhatsApp continua manual.</strong> O botão abre a conversa com o resumo preenchido. Quem envia a mensagem é a cliente.</p>
-        <p><strong>Não conta dinheiro que não chegou.</strong> O sinal só vale depois que você carimba.</p>
-        <p><strong>Não pede cadastro para experimentar.</strong> Teste com exemplos e crie a conta quando quiser.</p>
-      </div>
+      <p class="extras"><strong>E mais:</strong> um link para a cliente fazer o pedido sozinha, sem você redigitar nada. Nada é confirmado nem enviado sem você.</p>
     </section>
 
     <section id="perguntas" class="faq" aria-labelledby="faq-title">
-      <h2 id="faq-title">Antes de começar</h2>
+      <h2 id="faq-title">Dúvidas rápidas</h2>
       <div class="faq-list">
+        <details><summary>Quanto custa?</summary><p>Nada durante o piloto. Não pedimos cartão.</p></details>
         <details><summary>O piloto funciona no celular?</summary><p>Sim. O piloto público pode ser aberto em celular. A agenda fica salva no navegador usado naquele aparelho.</p></details>
         <details><summary>Meus dados aparecem em outros aparelhos?</summary><p>Não. O piloto atual salva os dados localmente neste navegador, sem conta ou sincronização entre dispositivos. Limpar os dados do navegador pode apagá-los. Use Backup para baixar uma cópia JSON.</p></details>
         <details><summary>E a demonstração, guarda meus pedidos?</summary><p>Só neste navegador. Se você limpar os dados do navegador, eles somem. No próprio demo dá para baixar uma cópia de segurança.</p></details>
-        <details><summary>Os pagamentos são confirmados automaticamente?</summary><p>Não. Um valor informado só entra no recebido depois que você o confere.</p></details>
-        <details><summary>Como recebo encomendas pelo link?</summary><p>Entre na sua conta e abra Ajustes → Link de encomenda. Configure o nome da confeitaria, os produtos e o endereço do link, depois ative e compartilhe. Cada envio chega como Solicitação: você revisa antes de aceitar como orçamento ou pedido confirmado.</p></details>
-        <details><summary>Como funciona o WhatsApp?</summary><p>Depois de enviar a solicitação, a cliente pode tocar em “Avisar no WhatsApp”. O botão abre uma conversa com a confeitaria e o resumo preenchido; a cliente precisa tocar em enviar. Ele aparece se você configurou seu número. Você também pode copiar uma mensagem para responder à cliente. Não há envio automático nem integração com a API do WhatsApp.</p></details>
       </div>
     </section>
 
     <section class="closing" aria-labelledby="closing-title">
-      <h2 id="closing-title">O combinado de cada encomenda, em um só lugar.</h2>
-      <a class="button button-glace" href="/app/">Experimentar sem cadastro</a>
+      <div class="closing-copy">
+        <h2 id="closing-title">Menos caderno. Mais espaço para criar.</h2>
+        <p>Teste agora com pedidos de exemplo. Crie sua conta quando quiser.</p>
+      </div>
+      <div class="closing-actions">
+        <a class="button button-glace" href="/app/">Experimentar sem cadastro</a>
+        <a class="text-link" href="/app/">Abrir minha agenda</a>
+      </div>
     </section>
   </main>
 
   <footer class="site-footer">
     <div class="inner footer-inner">
-      <span>doce agenda · piloto gratuito</span>
+      <span>doce agenda · piloto gratuito · feito junto com confeiteiras</span>
       <span>Os pedidos mostrados são exemplos fictícios</span>
       <a class="footer-link" href="/privacidade/">Política de privacidade</a>
       <small>Piloto em desenvolvimento. Sem sincronização entre aparelhos.</small>
