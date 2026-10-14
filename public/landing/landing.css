@@ -37,29 +37,22 @@ h1{margin:0;font-family:var(--font-title);font-size:clamp(38px,5.6vw,72px);font-
   .hero-actions .button{width:100%}
 }
 
-/* Ilustração: caderno rabiscado + celular organizado. Tudo escala com a largura da cena. */
-.scene{container-type:inline-size;position:relative;width:100%;max-width:460px;margin-inline:auto;aspect-ratio:5/4}
-.notebook{position:absolute;left:1%;top:8%;width:68%;height:84%;display:flex;flex-direction:column;padding:10cqw 4cqw 0 11cqw;border-radius:2.4cqw;
-  background:
-    linear-gradient(90deg,transparent 8.4cqw,#e9a3a8 8.4cqw,#e9a3a8 8.8cqw,transparent 8.8cqw),
-    repeating-linear-gradient(180deg,transparent 0 calc(7cqw - 1px),#c9d8e8 calc(7cqw - 1px) 7cqw) 0 7.6cqw/100% 100% no-repeat,
-    #fffdf7;
-  box-shadow:0 2cqw 5cqw rgb(43 26 44 / 16%);transform:rotate(-5deg);overflow:hidden;
-  color:#27458a;font-family:var(--font-body);font-style:italic;font-size:3.7cqw;line-height:7cqw;white-space:nowrap}
-.notebook::before{content:"";position:absolute;inset:2.2cqw 3cqw auto;height:2.6cqw;background:radial-gradient(circle,#d9c9cf 0 0.9cqw,transparent 1cqw) 0 0/5.4cqw 100% repeat-x}
-.notebook::after{content:"";position:absolute;right:-3cqw;bottom:-2cqw;width:17cqw;height:17cqw;border-radius:50%;border:1.6cqw solid rgb(140 96 60 / 18%)}
-.notebook s{text-decoration-thickness:.5cqw;text-decoration-color:#27458a}
-.pen-circle{display:inline-block;margin-left:1cqw;padding:0 1.6cqw;border:.5cqw solid #c23b4a;border-radius:50%;color:#c23b4a;font-style:normal;font-weight:700;line-height:5.4cqw;transform:rotate(-6deg)}
-.phone{position:absolute;right:1%;top:1%;width:40%;aspect-ratio:9/17;padding:1.6cqw;border-radius:6cqw;background:var(--ameixa);box-shadow:0 3cqw 7cqw rgb(43 26 44 / 26%);transform:rotate(4deg)}
-.phone-screen{display:flex;flex-direction:column;gap:1.6cqw;height:100%;padding-bottom:2cqw;border-radius:4.6cqw;background:var(--papel);overflow:hidden;font-size:2.8cqw;line-height:1.25;color:var(--ink-soft)}
-.ph-top{padding:4.4cqw 3cqw 2.2cqw;background:var(--glace);color:var(--ink);font-family:var(--font-title);font-size:4cqw;font-weight:600}
-.ph-count{display:flex;align-items:baseline;gap:1.6cqw;margin:0 2.4cqw;padding:2.4cqw;border-radius:3cqw;background:var(--pistache);color:var(--ink);font-family:var(--font-title);font-weight:500}
-.ph-count b{font-size:10cqw;line-height:.9;font-weight:600}
-.ph-row{position:relative;display:flex;gap:1.6cqw;margin:0 2.4cqw;padding:2.2cqw;border:.3cqw solid var(--line);border-radius:2.6cqw;background:var(--branco)}
-.ph-row b{color:var(--ink);font-family:var(--font-title)}
-.ph-row.is-pending{border-color:var(--baunilha);background:var(--baunilha)}
-.ph-label{margin:1cqw 3cqw 0;color:var(--muted);font-weight:700;font-size:2.6cqw}
-.ph-stamp{position:absolute;right:1.6cqw;top:50%;margin-top:-2cqw;padding:.2cqw 1.2cqw;border:.5cqw solid var(--carimbo);border-radius:1cqw;background:rgb(255 255 255 / 85%);color:var(--carimbo);font-family:var(--font-title);font-style:normal;font-weight:600;font-size:2.4cqw;letter-spacing:.06em;text-transform:uppercase;transform:rotate(-8deg)}
+/* Foto da bancada com a tela do app encaixada no celular.
+   Medidas da tela em pixels da foto (1122x1402): topo-esquerdo ~(824,598), largura ~212,
+   altura ~484 e bordas verticais inclinadas ~3,6°. Deixa a faixa do entalhe branca, como barra de status. */
+.hero-photo{container-type:inline-size;position:relative;width:100%;max-width:460px;margin:0 auto;border-radius:28px;overflow:hidden;box-shadow:var(--shadow-2);background:#e9e2dc}
+.hero-photo img{display:block;width:100%;height:auto}
+.photo-screen{position:absolute;left:73.15%;top:42.65%;width:19.8%;height:34.5%;display:flex;flex-direction:column;gap:1.3cqw;padding-bottom:1.4cqw;overflow:hidden;
+  border-radius:0 0 2.4cqw 2.4cqw;background:var(--papel);color:var(--ink-soft);font-size:1.4cqw;line-height:1.2;
+  transform-origin:0 0;transform:skewX(3.9deg)}
+.photo-screen b{color:var(--ink);font-family:var(--font-title);font-weight:600}
+.ps-top{padding:1.4cqw 1.6cqw 1cqw;background:var(--glace);color:var(--ink);font-family:var(--font-title);font-size:2.3cqw;font-weight:600}
+.ps-count{display:flex;align-items:baseline;gap:.9cqw;margin:0 1.2cqw;padding:1.3cqw 1.4cqw;border-radius:1.6cqw;background:var(--pistache);color:var(--ink);font-family:var(--font-title);font-weight:500;font-size:1.7cqw}
+.ps-count b{font-size:5.6cqw;line-height:.9}
+.ps-row{position:relative;display:flex;gap:.8cqw;margin:0 1.2cqw;padding:1.1cqw 1.2cqw;border:.2cqw solid var(--line);border-radius:1.4cqw;background:var(--branco);white-space:nowrap}
+.ps-row.is-pending{border-color:var(--baunilha);background:var(--baunilha)}
+.ps-label{margin:.6cqw 1.6cqw 0;color:var(--muted);font-weight:700;font-size:1.4cqw}
+.ps-stamp{position:absolute;right:.8cqw;top:50%;margin-top:-1.2cqw;padding:.1cqw .6cqw;border:.3cqw solid var(--carimbo);border-radius:.6cqw;background:rgb(255 255 255 / 85%);color:var(--carimbo);font-family:var(--font-title);font-style:normal;font-weight:600;font-size:1.3cqw;letter-spacing:.05em;text-transform:uppercase;transform:rotate(-8deg)}
 
 .drip{display:block;width:100%;height:64px}
 .page-body{padding:0 clamp(16px,4vw,48px) 64px;display:flex;flex-direction:column;gap:88px}

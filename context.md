@@ -8,6 +8,7 @@ Atualizado em **14/10/2026**. Este arquivo é uma passagem de bastão, não uma 
 - O domínio `lucast.app` continua apontando para a versão anterior no Netlify. A migração de DNS **não foi feita** e acabou de ser **adiada pelo usuário**.
 - O usuário pediu agora estes dois documentos, `AGENTS.md` e `context.md`, para abrir outra sessão sem recontar o projeto.
 - **Não iniciar Produção, Compras, Pix ou Clientes automaticamente.** Meu mês foi entregue; a próxima feature exige autorização. Não continuar DNS sem o usuário retomar o assunto.
+- **Nova landing (14/10/2026), commit `85012ce`, só local, NÃO publicada nem enviada ao GitHub.** Título "Seu caderno não te avisa que o bolo é amanhã.", ilustração CSS de caderno + celular na primeira tela, seção de dores, 3 benefícios, FAQ reduzido e fechamento "Menos caderno. Mais espaço para criar." Verificada no build local em 360 px e desktop. Depois a ilustração foi trocada por foto gerada no ChatGPT pelo usuário (`public/landing/assets/cozinha-caderno*.jpg`, comprimida de 2,4 MB para 100/270 KB), com a tela "Hoje" do app sobreposta por CSS no celular da foto. A imagem é ilustrativa e não deve ser apresentada como caderno de confeiteira real. Os PNGs originais ficaram na raiz, fora do Git. Aguarda o usuário aprovar antes de publicar.
 - Preferência atual: execução pelo agente principal, **sem delegação**; comunicação curta e simples, economia de tokens e conclusão por etapas.
 
 ## 2. Produto e público
