@@ -334,11 +334,11 @@ main { min-height: calc(100vh - 190px); }
   .status-pill { font-size: 12px; padding: 4px 6px; }
   .week-range { font-size: 12px; }
   .app-footer { font-size: 12px; flex-wrap: wrap; }
-  #view-week .page-heading { flex-wrap: wrap; gap: 10px; }
-  #view-week .page-heading > div:first-child { flex: 1 1 100%; min-width: 0; }
-  #view-week .week-controls { width: 100%; justify-content: space-between; }
-  #view-week .week-range { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
-  #view-week .week-controls .icon-button { flex: 0 0 44px; }
+
+
+  .agenda-week .week-controls { width: 100%; justify-content: space-between; }
+  .agenda-week .week-range { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
+  .agenda-week .week-controls .icon-button { flex: 0 0 44px; }
 }
 
 /* Disclosures keep the first order entry short while retaining every field. */
@@ -842,7 +842,7 @@ main { min-height: calc(100vh - 190px); }
 .month-note{color:var(--ink-soft);font-size:14px;line-height:1.5}
 .month-lead-value{font-family:var(--font-title);font-size:32px;margin:16px 0 8px;font-variant-numeric:tabular-nums}
 .month-definition{margin-top:24px}
-@media(max-width:700px){.main-nav{grid-template-columns:repeat(5,minmax(0,1fr))}.month-details{grid-template-columns:minmax(0,1fr)}#view-month>.page-heading{flex-direction:column;align-items:stretch;gap:16px}.month-controls{width:100%;justify-content:space-between}.month-range{flex:1;white-space:nowrap}}
+@media(max-width:700px){.main-nav{grid-template-columns:repeat(4,minmax(0,1fr))}.month-details{grid-template-columns:minmax(0,1fr)}#view-month>.page-heading{flex-direction:column;align-items:stretch;gap:16px}.month-controls{width:100%;justify-content:space-between}.month-range{flex:1;white-space:nowrap}}
 .due-inputs label { display: block; min-width: 0; }
 @media (max-width: 359px) { .due-inputs { grid-template-columns: 1fr; } }
 .field .field-error { color: #a32e34; font-size: 13px; font-weight: 650; }
@@ -1007,3 +1007,24 @@ h1, h2, h3, .section-head h2 { font-family: var(--font-title); }
 
 /* Meu mês na demonstração: aviso de números de exemplo */
 .month-example { background: var(--baunilha); color: var(--ink); font-size: 14px; line-height: 1.4; }
+
+/* Agenda: a semana fica dentro de Hoje */
+.agenda-week { display: flex; flex-direction: column; gap: 14px; }
+.agenda-week-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.agenda-week-title { margin: 0; color: var(--muted); font-size: 15px; }
+.agenda-week .week-days { margin-bottom: 0; }
+.agenda-week .section-head { margin: 4px 0 0; }
+.agenda-adjust { align-self: flex-start; }
+
+/* Pedidos: etapas com contagem, roláveis para o lado sem mexer na página */
+.stage-strip { display: flex; gap: 8px; margin: 0 0 12px; padding: 2px 2px 8px; overflow-x: auto; scrollbar-width: none; }
+.stage-strip::-webkit-scrollbar { display: none; }
+.stage-chip { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 14px; border: 1.5px solid var(--border-input); border-radius: 999px; background: var(--branco); color: var(--ink); font: 600 14px var(--font-body); cursor: pointer; }
+.stage-chip.is-current { border-color: var(--ameixa); background: var(--ameixa); color: var(--papel); }
+.stage-chip.is-empty:not(.is-current) { border-color: var(--line); color: var(--muted); }
+.stage-count { min-width: 22px; padding: 1px 6px; border-radius: 999px; background: var(--segmented); color: var(--ink); font-size: 12px; text-align: center; }
+.stage-chip.is-current .stage-count { background: var(--glace); }
+
+/* Próximo passo do pedido: um toque avança a etapa */
+.row-advance { display: inline-flex; align-items: center; align-self: flex-start; width: fit-content; min-height: 44px; margin-top: 8px; padding: 0 16px; border: 1.5px solid var(--carimbo); border-radius: 999px; background: var(--pistache); color: var(--ink); font: 600 14px var(--font-body); cursor: pointer; }
+.row-advance:disabled { opacity: .6; cursor: progress; }

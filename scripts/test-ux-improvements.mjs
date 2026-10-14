@@ -174,7 +174,7 @@ try {
   }, [ids.informed, ids.paid, ids.sample]);
   await marketing.reload(); await marketing.locator("#view-today h1").waitFor(); await marketing.evaluate(() => document.fonts.ready);
   await marketing.screenshot({ path: path.join(screenshotRoot, "agenda.png") });
-  await marketing.locator(".nav-item[data-view='week']").click(); await marketing.locator("#view-week h1").waitFor();
+  await marketing.locator(".nav-item[data-view='today']").click(); await marketing.locator("#view-today .agenda-week-title").waitFor();
   await marketing.locator('[data-select-day="2026-10-01"]').waitFor();
   await marketing.screenshot({ path: path.join(screenshotRoot, "semana.png") });
   await marketing.locator(".nav-item[data-view='orders']").click(); await marketing.locator(`#view-orders [data-open-order="${ids.informed}"]`).click();
@@ -200,12 +200,12 @@ try {
 
   await page.setViewportSize({ width: 390, height: 844 });
   await page.locator(".nav-item[data-view='orders']").click();
-  const filter = page.locator("#status-filter"); await filter.focus(); await filter.selectOption("Confirmado");
-  assert.equal(await filter.evaluate((el) => document.activeElement === el), true, "The status filter should retain focus after re-render.");
+  const filter = page.locator('#view-orders [data-stage="confirmed"]'); await filter.click();
+  assert.equal(await filter.evaluate((el) => document.activeElement === el), true, "The stage chip should retain focus after re-render.");
   assert.equal(await page.locator("#view-orders [data-open-order]").count(), 5);
 
   // Week shows operational counts, supports day selection and previous/next navigation.
-  await page.locator(".nav-item[data-view='week']").click();
+  await page.locator(".nav-item[data-view='today']").click();
   const todayButton = page.locator('[data-select-day="2026-10-01"]');
   assert.match(await todayButton.getAttribute("aria-label"), /4 pedidos/);
   await todayButton.click(); assert.equal(await todayButton.getAttribute("aria-pressed"), "true");

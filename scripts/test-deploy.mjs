@@ -86,7 +86,7 @@ try{
  const invalid=await page.evaluate(async id=>(await window.DoceStore.fetch(`/api/orders/${id}/payments`,{method:'POST',body:JSON.stringify({amount:-1,status:'Conferido'})})).status,o.id);assert.equal(invalid,400);
  await page.locator('.settings-button').click();await page.locator('#view-settings h1').waitFor();const downloadPromise=page.waitForEvent('download');await page.locator('#export-button').click();const download=await downloadPromise;const exported=JSON.parse(await readFile(await download.path(),'utf8'));assert.equal(exported.orders.length,7);assert.ok(exported.orders.some(order=>order.id===o.id));assert.ok(exported.orders.some(order=>order.isSample));
  const isolated=await browser.newContext();const other=await isolated.newPage();await other.goto(origin);await other.locator('#view-today h1').waitFor();const own=await other.evaluate(async()=>await(await window.DoceStore.fetch('/api/state')).json());assert.equal(own.orders.length,1);await isolated.close();
- await page.locator('[data-view="week"].nav-item').click();await page.locator('[data-select-day="2026-10-01"]').click();assert.ok((await page.locator('#view-week').innerText()).includes('Cliente teste'));
+ await page.locator('[data-view="today"].nav-item').click();await page.locator('[data-select-day="2026-10-01"]').click();assert.ok((await page.locator('#view-today').innerText()).includes('Cliente teste'));
  // Exercise the new capacity, cake-template and restore flows in a fresh browser profile.
  await mkdir(path.join(root,'deploy-demo-check'),{recursive:true});
  const regressionContext=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true});

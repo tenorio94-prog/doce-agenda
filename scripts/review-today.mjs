@@ -160,9 +160,8 @@ try {
   await firstUse.waitForFunction(() => document.querySelector("#order-dialog")?.open === true);
   await firstUse.locator("#order-dialog [data-close]").first().click();
   await firstUse.waitForFunction(() => document.querySelector("#order-dialog")?.open === false);
-  await firstUse.locator('#view-today [data-view="week"]').click();
-  await firstUse.waitForFunction(() => !document.querySelector("#view-week")?.hidden);
-  assert.match(await firstUse.locator("#view-week h1").innerText(), /Sua semana/);
+  // A semana agora fica dentro da Agenda (antiga Hoje).
+  assert.match(await firstUse.locator("#view-today .agenda-week-title").innerText(), /Sua semana/);
   await firstUse.locator('[data-view="today"].nav-item').click();
 
   // Demo state: use the bundle's built-in fictitious order, which is scheduled
