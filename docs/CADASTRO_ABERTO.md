@@ -42,7 +42,7 @@ Chave legacy anon é a única pública retornada pelo projeto. Nenhuma service-r
 
 ```powershell
 npm ci
-node scripts/build-cloud-preview.mjs
+node scripts/build-cloudflare.mjs
 node scripts/test-account-ui.mjs
 node --test cloud/state-engine.test.mjs cloud/app-bootstrap.test.mjs
 node --experimental-strip-types --test cloud/doce-api.test.mjs

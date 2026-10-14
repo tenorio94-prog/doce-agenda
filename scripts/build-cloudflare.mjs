@@ -1,14 +1,82 @@
-import { spawnSync } from 'node:child_process';
-import { writeFile } from 'node:fs/promises';
+import { cp, copyFile, lstat, mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { build } from 'esbuild';
 
+// Builds the whole published site into deploy-cloud/public; it does not publish.
+// /          landing, /landing/ its assets
+// /demo/     app saved only in this browser (browser-store.js + app.js)
+// /app/, /agenda.html, /cadastro/  account version (cloud-bootstrap.js + cloud-app.js)
+// /encomenda/, /p/<slug>  public order link; /privacidade/
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const build = spawnSync(process.execPath, [path.join(root, 'scripts/build-cloud-preview.mjs')], { cwd: root, stdio: 'inherit' });
-if (build.error) throw build.error;
-if (build.status !== 0) throw new Error('Não foi possível preparar o site para Cloudflare.');
+const source = path.join(root, 'public');
+const output = path.join(root, 'deploy-cloud', 'public');
+const bundle = (entry, outfile) => build({
+  entryPoints: [path.join(root, entry)], outfile, bundle: true, format: 'iife', platform: 'browser', target: 'es2022', minify: true,
+});
+
+// Every text swap must still find its text: a silent miss would publish the wrong wording.
+function swap(text, from, to, all = false) {
+  const found = typeof from === 'string' ? text.includes(from) : from.test(text);
+  if (!found) throw new Error(`Build: texto não encontrado para trocar: ${String(from).slice(0, 80)}`);
+  return all ? text.replaceAll(from, to) : text.replace(from, to);
+}
+
+// Generated files kept in public/ (versioned, LF via .gitattributes).
+await bundle('cloud/browser-adapter.js', path.join(source, 'browser-store.js'));
+await bundle('cloud/auth-controller.js', path.join(source, 'account', 'account-controller.js'));
+
+await mkdir(output, { recursive: true });
+if ((await lstat(output)).isSymbolicLink()) throw new Error('Destino não pode ser um link.');
+async function clear(directory) {
+  for (const item of await readdir(directory)) {
+    const target = path.resolve(directory, item);
+    if (!target.startsWith(output + path.sep)) throw new Error('Limpeza fora do destino.');
+    const stat = await lstat(target);
+    if (stat.isSymbolicLink()) throw new Error('Link no destino de build.');
+    if (stat.isDirectory()) await clear(target);
+    await rm(target, { recursive: stat.isDirectory() });
+  }
+}
+await clear(output);
+const copy = (from, to = from) => cp(path.join(source, from), path.join(output, to), { recursive: true, errorOnExist: true });
+
+for (const name of ['browser-store.js', 'data-client.js', 'favicon.svg', 'logo.svg', 'tokens.css', 'style.css', 'manifest.webmanifest']) await copy(name);
+for (const name of ['fonts', 'icons', 'encomenda', 'privacidade']) await copy(name);
+await copy('landing/index.html', 'index.html');
+await cp(path.join(source, 'landing'), path.join(output, 'landing'), {
+  recursive: true, filter: (file) => path.resolve(file) !== path.join(source, 'landing', 'index.html'),
+});
+await mkdir(path.join(output, 'account'), { recursive: true });
+for (const name of ['account.css', 'account-ui.js', 'account-controller.js', 'config.js']) await copy(path.join('account', name));
+await copy('account/index.html', 'cadastro/index.html');
+
+const html = await readFile(path.join(source, 'index.html'), 'utf8');
+const app = await readFile(path.join(source, 'app.js'), 'utf8');
+
+// Demonstration: data stays in this browser, so storage wording replaces the server wording.
+let demoHtml = swap(html, '<script src="/data-client.js" defer></script>', '<script src="/browser-store.js" defer></script>\n    <script src="/data-client.js" defer></script>');
+demoHtml = swap(demoHtml, 'Não foi possível atualizar seus pedidos.', 'Não foi possível acessar o armazenamento local.');
+let demoApp = swap(app, 'neste computador', 'neste navegador', true);
+demoApp = swap(demoApp, 'window.addEventListener("offline", () => setError("O navegador está sem conexão. Verifique sua rede e tente novamente."));', 'window.addEventListener("offline", () => showToast("Sem internet. Os pedidos continuam salvos neste navegador."));');
+demoApp = swap(demoApp, 'Confira se o serviço está aberto. Seus dados anteriores continuam na tela.', 'Não foi possível acessar o armazenamento local. Seus dados anteriores continuam na tela.');
+demoApp = swap(demoApp, 'setConnection("error", "Sem conexão")', 'setConnection("error", "Armazenamento indisponível")');
+await mkdir(path.join(output, 'demo'), { recursive: true });
+await writeFile(path.join(output, 'demo', 'index.html'), demoHtml);
+await writeFile(path.join(output, 'app.js'), demoApp);
+
+// Account version: the bootstrap checks the session, then loads cloud-app.js.
+let cloudHtml = swap(html, /\s*<script src="\/data-client\.js" defer><\/script>/, '');
+cloudHtml = swap(cloudHtml, /\s*<script src="\/app\.js" defer><\/script>/, '');
+cloudHtml = swap(cloudHtml, '</head>', '<script src="/account/config.js" defer></script>\n<script src="/cloud-bootstrap.js" defer></script>\n</head>');
+cloudHtml = swap(cloudHtml, 'dados deste dispositivo', 'dados da sua conta');
+await mkdir(path.join(output, 'app'), { recursive: true });
+await writeFile(path.join(output, 'app', 'index.html'), cloudHtml);
+await writeFile(path.join(output, 'agenda.html'), cloudHtml);
+await copyFile(path.join(source, 'app.js'), path.join(output, 'cloud-app.js'));
+await bundle('cloud/app-bootstrap.js', path.join(output, 'cloud-bootstrap.js'));
 
 // Target the directory URL: /index.html triggers HTML canonicalization in Workers
 // and would redirect /p/<slug> to /encomenda/, losing the original bakery slug.
-await writeFile(path.join(root, 'deploy-cloud/public/_redirects'), '/p/:slug /encomenda/ 200\n');
-console.log('Cloudflare: rota pública preserva o endereço /p/<slug>.');
+await writeFile(path.join(output, '_redirects'), '/p/:slug /encomenda/ 200\n');
+console.log('Site pronto em deploy-cloud/public (não publica). Rota /p/<slug> preservada.');

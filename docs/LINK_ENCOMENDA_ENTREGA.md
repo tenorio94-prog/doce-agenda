@@ -54,7 +54,7 @@ where a.last_seen_at >= now()-interval '7 days' and u.email not like '%@doce-age
 ## Comandos
 
 ```powershell
-node scripts/build-cloud-preview.mjs
+node scripts/build-cloudflare.mjs
 node --test cloud/*.test.mjs
 node scripts/test-payment-stamps.mjs
 ```

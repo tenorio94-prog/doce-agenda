@@ -48,7 +48,7 @@ Etapa 1 entregue. Pedir autorização antes de iniciar Produção A.
 ```powershell
 node --test cloud/*.test.mjs
 node --test test.mjs
-node scripts/build-cloud-preview.mjs
+node scripts/build-cloudflare.mjs
 node scripts/test-monthly-summary.mjs
 node scripts/test-payment-stamps.mjs
 ```

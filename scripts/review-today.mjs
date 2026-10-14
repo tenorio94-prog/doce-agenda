@@ -5,14 +5,14 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium } from "file:///C:/Users/Restore/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/index.mjs";
 
-// Local-only Today QA. Run scripts/build-deploy.mjs first, then:
+// Local-only Today QA. Run scripts/build-cloudflare.mjs first, then:
 //   node scripts/review-today.mjs
-// This review serves deploy-demo/public on loopback and uses isolated browser
+// This review serves the demo from deploy-cloud/public on loopback and uses isolated browser
 // contexts with fictitious localStorage data. It never targets a live origin.
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const webRoot = path.resolve(scriptDir, "..");
-const publicRoot = path.join(webRoot, "deploy-demo", "public");
+const publicRoot = path.join(webRoot, "deploy-cloud", "public");
 const reviewDir = path.join(webRoot, "design", "today-refinement");
 const mimeTypes = {
   ".avif": "image/avif", ".css": "text/css; charset=utf-8", ".gif": "image/gif",
@@ -27,7 +27,7 @@ let origin;
 server = createServer(async (request, response) => {
   try {
     const pathname = decodeURIComponent(new URL(request.url, "http://127.0.0.1").pathname);
-    const relative = pathname === "/" ? "index.html" : pathname.replace(/^\/+/, "");
+    const relative = pathname === "/" ? "demo/index.html" : pathname.replace(/^\/+/, "");
     const filePath = path.resolve(publicRoot, relative);
     if (filePath !== publicRoot && !filePath.startsWith(`${publicRoot}${path.sep}`)) {
       response.writeHead(403).end("Forbidden");

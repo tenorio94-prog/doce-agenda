@@ -14,9 +14,7 @@ cloud/.test-users.json
 
 # Builds gerados por scripts/build-*.mjs (reproduzíveis a partir do código-fonte)
 deploy-cloud/
-deploy-demo/
 deploy-demo-check/
-deploy-launch/
 
 # Capturas de tela avulsas e pacotes binários redundantes
 prints/
