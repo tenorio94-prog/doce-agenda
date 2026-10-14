@@ -21,6 +21,7 @@ const state = {
   weekOffset: 0, selectedDay: localDateKey(new Date()), settingsDate: localDateKey(new Date()), detailOrderId: null,
   paymentOrderId: null, toastTimer: null,
   month: null, monthData: null, monthLoading: false, monthError: '', monthRequest: 0,
+  openSettings: new Set(), openDateException: false,
 };
 
 const $ = (selector, root = document) => root.querySelector(selector);
@@ -398,27 +399,56 @@ function mondayFor(date) {
   return monday;
 }
 
-function availabilityPanelMarkup(selectedKey) {
+function orderTemplateSettingsMarkup() {
+  return `<form id="order-template-form">${state.orderTemplate.fields.map((field) => `<details class="template-field" ${state.openTemplateField === field.key ? "open" : ""}><summary><span>${esc(field.label)}<small>${!field.enabled ? "Oculto" : field.required ? "Obrigatório ao confirmar" : "Opcional"} · ${field.options?.length ? `${field.options.length} ${field.options.length === 1 ? "opção" : "opções"}` : "Resposta livre"}</small></span></summary><fieldset><legend class="visually-hidden">${esc(field.label)}</legend><label><input name="enabled" type="checkbox" value="${esc(field.key)}" ${field.enabled ? "checked" : ""}> Mostrar este campo</label><label><input name="required" type="checkbox" value="${esc(field.key)}" ${field.required ? "checked" : ""} ${field.enabled ? "" : "disabled"}> Exigir ao confirmar</label><label class="field"><span>Nome do campo</span><input name="label.${esc(field.key)}" maxlength="80" required value="${esc(field.label)}"></label><label class="field"><span>Opções (uma por linha; vazio = resposta livre)</span><textarea name="options.${esc(field.key)}" rows="2" maxlength="1000">${esc((field.options || []).join("\n"))}</textarea></label></fieldset></details>`).join("")}<button class="button button-primary" type="submit">Salvar modelo do bolo</button></form>`;
+}
+
+// Notice choices in days; stored in hours as before. A value saved earlier keeps its own option.
+const NOTICE_OPTIONS = [[0, "Sem mínimo"], [24, "1 dia"], [48, "2 dias"], [72, "3 dias"], [168, "1 semana"]];
+const WEEKDAY_SHORT = ["dom", "seg", "ter", "qua", "qui", "sex", "sáb"];
+const noticeLabel = (hours) => NOTICE_OPTIONS.find(([value]) => value === hours)?.[1] || (hours % 24 === 0 ? `${hours / 24} dias` : `${hours} horas`);
+const listJoin = (items) => items.length > 1 ? `${items.slice(0, -1).join(", ")} e ${items.at(-1)}` : items.join("");
+
+function availabilitySettingsMarkup(selectedKey) {
   const config = state.availability;
   const day = availabilityFor(selectedKey);
   const closedDays = Array.isArray(config.closedWeekdays) ? config.closedWeekdays : [];
   const override = config.dateOverrides?.[selectedKey] || {};
   const weekdayNames = ["Domingo", "Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado"];
   const affected = state.orders.filter((order) => committedForCapacity(order) && order.dueAt?.slice(0, 10) === selectedKey);
-  return `<section class="availability-settings surface"><details id="availability-panel-details" open>
-    <summary>Regras da semana</summary><p>Defina dias fechados, antecedência e um limite de pedidos por data. O limite conta pedidos confirmados, não horas de produção.</p>
-    <form id="availability-form"><fieldset><legend>Dias em que não recebe pedidos</legend><div class="closed-weekdays">${weekdayNames.map((name, index) => `<label><input type="checkbox" name="closedWeekdays" value="${index}" aria-label="${name}" ${closedDays.includes(index) ? "checked" : ""}><span aria-hidden="true">${name.slice(0, 3)}</span></label>`).join("")}</div></fieldset>
-      <div class="availability-fields"><label class="field"><span>Antecedência mínima (horas)</span><input name="minimumNoticeHours" type="number" min="0" max="8760" step="1" value="${Number(config.minimumNoticeHours) || 0}"></label><label class="field"><span>Limite de pedidos por data</span><input name="dailyOrderLimit" type="number" min="1" max="50" step="1" value="${Number.isInteger(config.dailyOrderLimit) ? config.dailyOrderLimit : ""}"><small>Deixe vazio para não definir limite.</small></label></div>
-      <button class="button button-primary" type="submit">Salvar regras semanais</button></form></details>
-    <details id="date-availability-details" open><summary>Exceções por data</summary><label class="field settings-date-field"><span>Data da exceção</span><input id="settings-date" type="date" value="${esc(selectedKey)}"></label><form id="date-availability-form" data-date="${esc(selectedKey)}"><h3>Exceção para ${esc(calendarDateLabel(selectedKey, { weekday: "long", day: "numeric", month: "long", year: "numeric" }))}</h3><p>${day.count} ${day.count === 1 ? "pedido ocupa" : "pedidos ocupam"} esta data${Number.isInteger(day.limit) ? ` · limite ${day.limit}` : " · limite não definido"}${day.full ? " · limite atingido" : ""}${day.closed ? " · data fechada" : ""}.</p>${day.closed && affected.length ? `<p class="availability-warning"><strong>${affected.length} ${affected.length === 1 ? "pedido já combinado continua" : "pedidos já combinados continuam"} nesta data:</strong> ${esc(affected.map((order) => order.client).join(", "))}. A regra não os move nem cancela.</p>` : ""}
-      <label class="availability-closed"><input name="closed" type="checkbox" ${day.closed ? "checked" : ""}> Não vou aceitar pedidos neste dia</label><p>Desmarque para abrir esta data, mesmo se o dia da semana estiver fechado.</p>
-      <label class="field"><span>Limite específico nesta data (opcional)</span><input name="limit" type="number" min="1" max="50" step="1" value="${Number.isInteger(override.limit) ? override.limit : ""}"><small>Deixe vazio para usar o limite das regras recorrentes.</small></label>
-      <button class="button button-quiet" type="submit">Salvar para este dia</button><button class="text-link" type="button" data-action="clear-day-override" data-date="${selectedKey}">Usar regras semanais</button><p class="availability-note">Orçamentos e solicitações não ocupam vagas. Pedidos de exemplo são ignorados. Limites se aplicam ao confirmar; pedidos já combinados continuam visíveis mesmo se fechar a data.</p></form></details>
-  <details class="order-template-settings"><summary>Modelo de personalização do bolo</summary><p>Defina os campos e opções que você oferece. Campos marcados como obrigatórios só são exigidos ao confirmar um pedido.</p>${orderTemplateSettingsMarkup()}</details></section>`;
+  const notice = Number(config.minimumNoticeHours) || 0;
+  const noticeOptions = NOTICE_OPTIONS.some(([value]) => value === notice) ? NOTICE_OPTIONS : [...NOTICE_OPTIONS, [notice, noticeLabel(notice)]];
+  return `<div class="availability-settings">
+    <form id="availability-form" class="settings-form">
+      <fieldset><legend>Dias em que você não aceita pedidos</legend><div class="closed-weekdays">${weekdayNames.map((name, index) => `<label><input type="checkbox" name="closedWeekdays" value="${index}" aria-label="${name}" ${closedDays.includes(index) ? "checked" : ""}><span aria-hidden="true">${name.slice(0, 3)}</span></label>`).join("")}</div></fieldset>
+      <fieldset><legend>Com quanta antecedência a cliente precisa pedir?</legend><div class="choice-chips">${noticeOptions.map(([value, label]) => `<label><input type="radio" name="minimumNoticeHours" value="${value}" ${value === notice ? "checked" : ""}><span>${esc(label)}</span></label>`).join("")}</div></fieldset>
+      <label class="field"><span>Quantos pedidos você aceita por dia?</span><input name="dailyOrderLimit" type="number" inputmode="numeric" min="1" max="50" step="1" value="${Number.isInteger(config.dailyOrderLimit) ? config.dailyOrderLimit : ""}" placeholder="Sem limite"><small>Conta só pedidos confirmados. Quando o dia lota, a agenda avisa e o link não oferece a data.</small></label>
+      <button class="button button-primary" type="submit">Salvar dias e limites</button></form>
+    <details id="date-availability-details" class="date-exception" ${state.openDateException ? "open" : ""}><summary>Mudar só uma data <span>Fechar um feriado ou aceitar mais pedidos num dia</span></summary>
+      <label class="field settings-date-field"><span>Qual data?</span><input id="settings-date" type="date" value="${esc(selectedKey)}"></label>
+      <form id="date-availability-form" data-date="${esc(selectedKey)}"><h3>${esc(capitalize(calendarDateLabel(selectedKey, { weekday: "long", day: "numeric", month: "long" })))}</h3><p class="date-exception-status">${day.count} ${day.count === 1 ? "pedido confirmado" : "pedidos confirmados"}${Number.isInteger(day.limit) ? ` · limite ${day.limit}` : " · sem limite"}${day.full ? " · lotado" : ""}${day.closed ? " · fechado" : ""}</p>${day.closed && affected.length ? `<p class="availability-warning"><strong>${affected.length} ${affected.length === 1 ? "pedido já combinado continua" : "pedidos já combinados continuam"} nesta data:</strong> ${esc(affected.map((order) => order.client).join(", "))}. Fechar a data não move nem cancela pedidos.</p>` : ""}
+        <label class="availability-closed"><input name="closed" type="checkbox" ${day.closed ? "checked" : ""}> Não vou aceitar pedidos neste dia</label>
+        <label class="field"><span>Limite só para este dia <small>(opcional)</small></span><input name="limit" type="number" inputmode="numeric" min="1" max="50" step="1" value="${Number.isInteger(override.limit) ? override.limit : ""}" placeholder="Igual aos outros dias"></label>
+        <div class="date-exception-actions"><button class="button button-quiet" type="submit">Salvar esta data</button><button class="text-link" type="button" data-action="clear-day-override" data-date="${selectedKey}">Voltar ao normal</button></div>
+        <p class="availability-note">Orçamentos e solicitações não ocupam vagas.</p></form></details>
+  </div>`;
 }
 
-function orderTemplateSettingsMarkup() {
-  return `<form id="order-template-form">${state.orderTemplate.fields.map((field) => `<details class="template-field" ${state.openTemplateField === field.key ? "open" : ""}><summary><span>${esc(field.label)}<small>${!field.enabled ? "Oculto" : field.required ? "Obrigatório ao confirmar" : "Opcional"} · ${field.options?.length ? `${field.options.length} ${field.options.length === 1 ? "opção" : "opções"}` : "Resposta livre"}</small></span></summary><fieldset><legend class="visually-hidden">${esc(field.label)}</legend><label><input name="enabled" type="checkbox" value="${esc(field.key)}" ${field.enabled ? "checked" : ""}> Mostrar este campo</label><label><input name="required" type="checkbox" value="${esc(field.key)}" ${field.required ? "checked" : ""} ${field.enabled ? "" : "disabled"}> Exigir ao confirmar</label><label class="field"><span>Nome do campo</span><input name="label.${esc(field.key)}" maxlength="80" required value="${esc(field.label)}"></label><label class="field"><span>Opções (uma por linha; vazio = resposta livre)</span><textarea name="options.${esc(field.key)}" rows="2" maxlength="1000">${esc((field.options || []).join("\n"))}</textarea></label></fieldset></details>`).join("")}<button class="button button-primary" type="submit">Salvar modelo do bolo</button></form>`;
+function settingsCard(key, title, summary, body) {
+  return `<details class="settings-card" data-settings="${key}" ${state.openSettings.has(key) ? "open" : ""}><summary><span class="settings-card-text"><span class="settings-card-title">${esc(title)}</span><span class="settings-card-summary">${summary}</span></span></summary><div class="settings-card-body">${body}</div></details>`;
+}
+
+function settingsSummaries() {
+  const p = state.orderPage, cloud = window.DoceApi.mode === "cloud", config = state.availability;
+  const link = !cloud ? "Exemplo para explorar e ver a prévia"
+    : p.active && p.slug ? `<b class="summary-live">No ar</b> · ${esc(LINK_BASE)}${esc(p.slug)}`
+    : p.slug ? "Pausado · toque para ativar" : "Ainda não montado · leva 2 minutos";
+  const closed = (config.closedWeekdays || []).slice().sort((a, b) => ((a + 6) % 7) - ((b + 6) % 7)).map((index) => WEEKDAY_SHORT[index]);
+  const notice = Number(config.minimumNoticeHours) || 0;
+  const days = [closed.length ? `fecha ${listJoin(closed)}` : "todos os dias", Number.isInteger(config.dailyOrderLimit) ? `até ${config.dailyOrderLimit} por dia` : "sem limite por dia", notice ? `${noticeLabel(notice)} de antecedência` : ""].filter(Boolean).join(" · ");
+  const fields = state.orderTemplate.fields.filter((field) => field.enabled), required = fields.filter((field) => field.required).length;
+  const cake = `${fields.length} ${fields.length === 1 ? "campo" : "campos"}${required ? ` · ${required} ${required === 1 ? "obrigatório" : "obrigatórios"}` : ""}`;
+  return { link, days: capitalize(days), cake };
 }
 
 function renderSettings() {
@@ -429,10 +459,16 @@ function renderSettings() {
   const focusForm = focused?.form?.id;
   const focusName = ["date-availability-form", "availability-form"].includes(focusForm) ? focused.name : "";
   const focusSelection = focusName && typeof focused.selectionStart === "number" ? focused.selectionStart : null;
-  content.innerHTML = `<div class="page-heading"><div><h1 id="settings-title">Ajustes</h1><p>Configure a disponibilidade e os detalhes que você combina nos pedidos.</p></div></div>${orderPageMarkup()}${availabilityPanelMarkup(state.settingsDate)}`;
+  const summary = settingsSummaries();
+  content.innerHTML = `<div class="page-heading"><div><h1 id="settings-title">Ajustes</h1><p>Toque num item para ver ou mudar.</p></div></div>
+    <div class="settings-list">
+      ${settingsCard("link", "Link de encomenda", summary.link, orderPageMarkup())}
+      ${settingsCard("days", "Dias e limites", summary.days, availabilitySettingsMarkup(state.settingsDate))}
+      ${settingsCard("cake", "Detalhes do bolo", summary.cake, `<p class="settings-intro">Os campos que aparecem quando o pedido é um bolo, aqui e no seu link. Campos obrigatórios só são exigidos ao confirmar.</p>${orderTemplateSettingsMarkup()}`)}
+    </div>`;
   panel.hidden = state.activeView !== "settings";
   if (focusId) $("#settings-date")?.focus({ preventScroll: true });
-  if (focusName) { const target = panel.querySelector(`#${focusForm} [name="${CSS.escape(focusName)}"]`); target?.focus(); if (target && focusSelection !== null) target.setSelectionRange(focusSelection, focusSelection); }
+  if (focusName) { const target = panel.querySelector(`#${focusForm} [name="${CSS.escape(focusName)}"]`); target?.focus(); if (target && focusSelection !== null && target.setSelectionRange) target.setSelectionRange(focusSelection, focusSelection); }
 }
 
 function storageNoteMarkup() {
@@ -785,7 +821,6 @@ async function saveOrderTemplate(event, form = event.target) {
     await loadState({ silent: true });
     state.activeView = "settings";
     render();
-    $(".order-template-settings")?.setAttribute("open", "");
     showToast("Modelo do bolo salvo.");
   } catch (error) { showToast(error.message || "Não foi possível salvar o modelo."); }
 }
@@ -970,7 +1005,12 @@ function handleClick(event) {
   const stage = event.target.closest("[data-stage]");
   if (stage) { state.statusFilter = stage.dataset.stage; renderOrders(); return; }
   const adjustDate = event.target.closest('[data-action="adjust-selected-date"]');
-  if (adjustDate) { state.settingsDate = adjustDate.dataset.date; setActiveView("settings"); return; }
+  if (adjustDate) {
+    state.settingsDate = adjustDate.dataset.date; state.openSettings.add("days"); state.openDateException = true;
+    setActiveView("settings");
+    $("#date-availability-details")?.scrollIntoView({ block: "start" });
+    return;
+  }
   const action = event.target.closest("[data-action]");
   if (!action) return;
   const id = action.dataset.id;
@@ -1055,6 +1095,9 @@ function attachEvents() {
   $("#view-settings").addEventListener("change", (event) => { if (event.target.name === "slug") event.target.value = slugFrom(event.target.value); });
   $("#view-settings").addEventListener("toggle", (event) => {
     if (event.target.matches(".template-field") && event.target.open) state.openTemplateField = event.target.querySelector("[name=enabled]")?.value || "";
+    // Saving re-renders Ajustes; remember which cards were open.
+    if (event.target.matches(".settings-card")) { const key = event.target.dataset.settings; if (event.target.open) state.openSettings.add(key); else state.openSettings.delete(key); }
+    if (event.target.id === "date-availability-details") state.openDateException = event.target.open;
   }, true);
   $("#restore-file").addEventListener("change", (event) => inspectRestoreFile(event.target.files?.[0]));
   $("#restore-confirm").addEventListener("click", restoreBackup);
