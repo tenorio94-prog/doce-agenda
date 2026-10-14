@@ -53,4 +53,7 @@ landing = landing.replace('href="/app/">Abrir minha agenda', 'href="/cadastro/?m
   .replace('A agenda fica salva no navegador usado naquele aparelho.', 'Entre com sua conta para acessar a agenda. Os dados são salvos no banco de dados.')
   .replace('Não. O piloto atual salva os dados localmente neste navegador, sem conta ou sincronização entre dispositivos. Limpar os dados do navegador pode apagá-los. Use Backup para baixar uma cópia JSON.', 'Sim. Entre com a mesma conta em outro aparelho. Recarregue a agenda para ver as alterações mais recentes. Use Backup para guardar também uma cópia JSON.');
 await writeFile(path.join(output, 'index.html'), landing);
+await cp(path.join(root,'public','encomenda'),path.join(output,'encomenda'),{recursive:true});
+await cp(path.join(root,'public','privacidade'),path.join(output,'privacidade'),{recursive:true});
+await writeFile(path.join(output,'_redirects'),'/p/:slug /encomenda/index.html 200\n');
 console.log('Prévia com conta em deploy-cloud/public. Não publica nem ativa provedores de login.');

@@ -5,6 +5,8 @@ const TABLE = 'pilot_agendas';
 const RPC = 'commit_pilot_agenda';
 const ALLOWED_ORIGINS = new Set([
   'https://doce-agenda-piloto.netlify.app',
+  'https://lucast.app',
+  'https://www.lucast.app',
   'http://localhost:4173',
   'http://127.0.0.1:4173',
 ]);
@@ -100,14 +102,14 @@ async function readJsonLimited(request: Request): Promise<unknown> {
 
 function allowedRoute(path: string, method: string): boolean {
   if (method === 'GET') {
-    return ['/api/state', '/api/export', '/api/availability', '/api/order-template'].includes(path);
+    return ['/api/state', '/api/export', '/api/availability', '/api/order-template', '/api/order-page', '/api/order-page/slug-available', '/api/order-page/metrics'].includes(path);
   }
   if (method === 'PUT') {
-    return path === '/api/availability' || path === '/api/order-template'
+    return path === '/api/availability' || path === '/api/order-template' || path === '/api/order-page'
       || /^\/api\/orders\/[^/]+$/.test(path) || /^\/api\/payments\/[^/]+$/.test(path);
   }
   if (method === 'POST') {
-    return path === '/api/import' || path === '/api/orders' || /^\/api\/orders\/[^/]+\/payments$/.test(path);
+    return path === '/api/import' || path === '/api/orders' || /^\/api\/orders\/[^/]+\/(payments|accept|refuse)$/.test(path);
   }
   return false;
 }
@@ -260,6 +262,19 @@ export function createDoceApiHandler(dependencies: HandlerDependencies = {}) {
       return jsonResponse(origin, apiError('O estado mudou em outra sessão. Atualize e tente novamente.', 409, 'REVISION_CONFLICT'), 409, revision);
     }
 
+    if (route.path.split('?')[0] === '/api/order-page/slug-available') {
+      const slug = new URL(route.path, 'http://internal').searchParams.get('slug') || '';
+      if (!/^[a-z0-9][a-z0-9-]{1,38}[a-z0-9]$/.test(slug)) return jsonResponse(origin,{available:false},200,revision);
+      const found = await admin.from('pilot_order_pages').select('owner_user_id').eq('slug',slug).maybeSingle();
+      if(found.error)return jsonResponse(origin,apiError('Não foi possível verificar o endereço.',503),503,revision);
+      return jsonResponse(origin,{available:!found.data || found.data.owner_user_id===user.id},200,revision);
+    }
+    if(route.path==='/api/order-page/metrics'){
+      const metrics=await admin.from('pilot_order_pages').select('visits').eq('owner_user_id',user.id).maybeSingle();
+      if(metrics.error)return jsonResponse(origin,apiError('Não foi possível carregar as métricas.',503),503,revision);
+      return jsonResponse(origin,{visits:Number(metrics.data?.visits||0)},200,revision);
+    }
+
     const transaction = transactState(row.state as ReturnType<typeof createEmptyState>, route.path, {
       method: route.method,
       body: JSON.stringify(envelope.body ?? {}),
@@ -268,6 +283,7 @@ export function createDoceApiHandler(dependencies: HandlerDependencies = {}) {
       return jsonResponse(origin, transaction.body, transaction.status, revision);
     }
     if (!isWrite || !transaction.mutated) {
+      if(route.path==='/api/state')await admin.rpc('record_pilot_owner_visit',{p_owner:user.id});
       return jsonResponse(origin, transaction.body, transaction.status, revision);
     }
 
@@ -280,6 +296,7 @@ export function createDoceApiHandler(dependencies: HandlerDependencies = {}) {
         p_backup: isImport,
       });
       if (committed.error) {
+        if(committed.error.code==='23505') return jsonResponse(origin,apiError('Este endereço já está em uso. Escolha outro.',409,'SLUG_TAKEN'),409,revision);
         if (isConflict(committed.error)) {
           const latest = await admin.from(TABLE).select('revision').eq('owner_user_id', user.id).maybeSingle();
           const currentRevision = latest.error ? revision : (readRevision(latest.data?.revision) ?? revision);

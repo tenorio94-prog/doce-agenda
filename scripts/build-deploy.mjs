@@ -1,6 +1,7 @@
 import { access, copyFile, mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { build } from 'esbuild';
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const webRoot = path.resolve(scriptDir, "..");
@@ -10,6 +11,7 @@ const deployPublic = path.join(webRoot, "deploy-demo", "public");
 const requiredAssets = ["index.html", "app.js", "data-client.js", "tokens.css", "style.css", "logo.svg", "favicon.svg"];
 const requiredFonts = ["Fredoka.ttf", "Figtree.ttf", "Fredoka-OFL.txt", "Figtree-OFL.txt"];
 const adapterName = "browser-store.js";
+await build({entryPoints:[path.join(webRoot,'cloud/browser-adapter.js')],outfile:path.join(sourcePublic,adapterName),bundle:true,format:'iife',platform:'browser',target:'es2022',minify:true});
 const exists = async (filePath) => access(filePath).then(() => true, () => false);
 
 await mkdir(deployPublic, { recursive: true });

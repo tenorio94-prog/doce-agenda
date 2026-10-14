@@ -56,6 +56,7 @@ function makeHarness(options = {}) {
         return builder;
       },
       async rpc(name, args) {
+        if(name==='record_pilot_owner_visit')return {data:null,error:null};
         calls.rpc.push({ name, args: structuredClone(args) });
         if (options.rpcError) {
           if (options.advanceOnConflict && currentRow) currentRow.revision = options.latestRevision;

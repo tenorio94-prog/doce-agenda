@@ -1,6 +1,6 @@
 "use strict";
 
-const ORDER_STATUSES = ["Orçamento", "Aguardando confirmação", "Confirmado", "Em produção", "Pronto", "Entregue", "Cancelado"];
+const ORDER_STATUSES = ["Solicitação", "Orçamento", "Aguardando confirmação", "Confirmado", "Em produção", "Pronto", "Entregue", "Cancelado", "Recusado"];
 const PAYMENT_STATUSES = ["Informado", "Conferido"];
 const DEFAULT_AVAILABILITY = { closedWeekdays: [], minimumNoticeHours: 0, dailyOrderLimit: null, dateOverrides: {} };
 const DEFAULT_ORDER_TEMPLATE = { version: 1, fields: [
@@ -16,6 +16,7 @@ const apiFetch = window.DoceApi.fetch;
 const localDateKey = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 const state = {
   orders: [], payments: [], availability: structuredClone(DEFAULT_AVAILABILITY), orderTemplate: structuredClone(DEFAULT_ORDER_TEMPLATE),
+  orderPage: {active:false,slug:'',displayName:'',welcome:'',whatsapp:'',products:[]},
   restoreData: null, activeView: "today", search: "", statusFilter: "all",
   weekOffset: 0, selectedDay: localDateKey(new Date()), settingsDate: localDateKey(new Date()), detailOrderId: null,
   paymentOrderId: null, toastTimer: null,
@@ -43,8 +44,8 @@ const dateTimeInput = (value) => {
   if (!date) return "";
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}T${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
 };
-const isCancelled = (order) => order.status === "Cancelado";
-const isFinished = (order) => ["Entregue", "Cancelado"].includes(order.status);
+const isCancelled = (order) => ["Cancelado", "Recusado"].includes(order.status);
+const isFinished = (order) => ["Entregue", "Cancelado", "Recusado"].includes(order.status);
 const isCommitted = (order) => ["Confirmado", "Em produção", "Pronto", "Entregue"].includes(order.status);
 const orderPayments = (orderId) => state.payments.filter((payment) => String(payment.orderId) === String(orderId));
 const confirmedPayments = (orderId) => orderPayments(orderId).filter((payment) => payment.status === "Conferido");
@@ -128,6 +129,7 @@ async function loadState({ silent = false } = {}) {
     state.payments = Array.isArray(data.payments) ? data.payments : [];
     state.availability = data.availability || structuredClone(DEFAULT_AVAILABILITY);
     state.orderTemplate = data.orderTemplate || structuredClone(DEFAULT_ORDER_TEMPLATE);
+    state.orderPage = data.orderPage || {active:false,slug:'',displayName:'',welcome:'',whatsapp:'',products:[]};
     $("#error-notice").hidden = true;
     $("#loading-state").hidden = true;
     setConnection("online", window.DoceApi.mode === "cloud" ? "Salvo na sua conta" : window.DoceApi.mode === "browser" ? "Salvo neste navegador" : "Salvo neste computador");
@@ -179,7 +181,7 @@ const clientName = (order) => sampleOrder(order) ? String(order.client || "").re
 
 function todayOrders() {
   const today = localDateKey(new Date());
-  return sortOrders(state.orders.filter((order) => !sampleOrder(order) && !isCancelled(order) && order.dueAt && localDateKey(parseDate(order.dueAt) || new Date(0)) === today));
+  return sortOrders(state.orders.filter((order) => order.status !== 'Solicitação' && !sampleOrder(order) && !isCancelled(order) && order.dueAt && localDateKey(parseDate(order.dueAt) || new Date(0)) === today));
 }
 
 const shortTime = (value) => {
@@ -207,6 +209,7 @@ function rowMarkup(order, options = {}) {
     <div class="row-main">
       <div class="row-product">${esc(order.product || "Produto sem descrição")}</div>
       <div class="row-title-line"><span class="row-client">${esc(clientName(order) || "Cliente sem nome")}</span>${sample}<span class="row-mode">${esc((order.mode || "Retirada").toLowerCase())}</span></div>
+      ${order.origin==='link' ? `<div class="request-origin">Pelo link · ${esc(order.publicCode)}${order.possibleDuplicate?' · Possível duplicata':''}</div>`:''}
       ${deposit ? `<div class="row-flag">Falta o sinal</div>` : ""}
       <div class="row-meta"><span class="row-date">${esc(dayLabel)}</span>${summary}</div>
     </div>
@@ -229,6 +232,10 @@ function nextActionMarkup() {
   return `<section class="next-action-card mini-card surface"><div class="section-head"><h2>Próxima ação</h2></div><div class="next-action-copy"><strong>${esc(order.nextAction)}</strong>${esc(order.client)} · ${esc(when)}</div><button class="text-link mini-link" type="button" data-open-order="${esc(order.id)}" aria-label="Ver pedido de ${esc(order.client)}">Ver pedido</button></section>`;
 }
 
+function requestBanner() {
+  const pending=state.orders.filter(o=>o.status==='Solicitação');
+  return pending.length ? `<section class="request-banner surface"><h2>${pending.length} ${pending.length===1?'solicitação para revisar':'solicitações para revisar'}</h2><p>Chegaram pelo link. Ainda não ocupam vagas na agenda.</p><button class="button button-primary" type="button" data-action="show-requests">Revisar solicitações</button></section>`:'';
+}
 function renderToday() {
   const panel = $("#view-today");
   panel.classList.add('today-redesign');
@@ -238,7 +245,7 @@ function renderToday() {
   const balances = committed.map(balanceFor).filter((balance) => balance !== null);
   const unknown = committed.length - balances.length;
   const totalBalance = balances.reduce((sum, balance) => sum + Math.max(0, balance), 0);
-  const upcoming = sortOrders(state.orders.filter((order) => !sampleOrder(order) && !isFinished(order) && order.dueAt && (parseDate(order.dueAt)?.getTime() ?? 0) >= new Date(new Date().setHours(24, 0, 0, 0)).getTime())).slice(0, 4);
+  const upcoming = sortOrders(state.orders.filter((order) => order.status!=='Solicitação' && !sampleOrder(order) && !isFinished(order) && order.dueAt && (parseDate(order.dueAt)?.getTime() ?? 0) >= new Date(new Date().setHours(24, 0, 0, 0)).getTime())).slice(0, 4);
   const pendingChanges = state.orders.filter((order) => !sampleOrder(order) && !isFinished(order) && order.pendingChange);
   const sample = state.orders.find((order) => order.isSample || order.isDemo || order.sample);
   const firstUse = !state.orders.some((order) => !(order.isSample || order.isDemo || order.sample));
@@ -250,7 +257,7 @@ function renderToday() {
     : "Nada para entregar hoje";
   const financeNote = unknown ? (balances.length ? 'Saldo parcial conhecido · ' : 'Nenhum saldo conhecido: ') + unknown + (unknown === 1 ? ' pedido ainda sem recebimento conferido.' : ' pedidos ainda sem recebimento conferido.') : '';
   panel.innerHTML = `<div class="page-heading today-heading"><div><span class="date-label">${esc(new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "numeric", month: "long" }).format(new Date()))}</span><h1 id="today-title">Hoje</h1><p class="today-summary">${todaySummary}</p></div></div>
-    ${firstUse ? `<section class="welcome-panel"><h2>Cadastre seu primeiro pedido</h2><p>Comece com cliente, produto e valor. Complete os detalhes quando estiverem combinados.</p><div class="welcome-actions"><button class="button button-primary" type="button" data-action="new-order">Nova encomenda</button></div></section>` : ''}
+    ${requestBanner()}${firstUse ? `<section class="welcome-panel"><h2>Cadastre seu primeiro pedido</h2><p>Comece com cliente, produto e valor. Complete os detalhes quando estiverem combinados.</p><div class="welcome-actions"><button class="button button-primary" type="button" data-action="new-order">Nova encomenda</button></div></section>` : ''}
     ${sample && firstUse ? `<section class="sample-card" aria-label="Pedido de exemplo">${rowMarkup(sample)}<p>Toque para ver como fica um pedido completo. O exemplo não entra na sua agenda.</p></section>` : sample ? `<details class="sample-examples"><summary>Exemplo fictício — não entra na sua agenda</summary><div class="sample-example-list">${state.orders.filter(sampleOrder).map((order) => `<button class="text-link" type="button" data-open-order="${esc(order.id)}">Ver exemplo: ${esc(clientName(order) || order.product || "pedido")}</button>`).join("")}</div></details>` : ''}
     <div class="today-columns"><div class="today-main"><div class="content-grid ${nextAction ? '' : 'today-single'}"><section class="today-agenda section-card surface" aria-labelledby="today-list-title"><div class="section-head"><h2 id="today-list-title">Pedidos de hoje${todays.length ? ` <span class="today-count">· ${todays.length}</span>` : ''}</h2><button class="text-link" type="button" data-view="week">Ver semana</button></div>${todays.length ? `<div class="order-list">${todays.map((order) => rowMarkup(order)).join("")}</div>` : `<div class="today-empty"><h3>Nenhum pedido agendado para hoje.</h3><p>${upcoming.length ? 'Os próximos pedidos estão logo abaixo.' : 'Pedidos sem data aparecem em Pedidos.'}</p></div>`}</section>${nextAction ? `<aside class="content-aside">${nextAction}</aside>` : ''}</div>
     ${pendingChanges.length ? `<section class="pending-card surface"><div class="section-head"><h2>Alterações para revisar</h2><span class="pending-count">${pendingChanges.length}</span></div><div class="pending-list">${pendingChanges.slice(0, 3).map((order) => `<button class="pending-row" type="button" data-open-order="${esc(order.id)}"><span><strong>${esc(order.client)}</strong><small>${esc(order.product)}</small></span><span class="pending-chevron" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></span><span class="pending-banner"><strong>Pedido de mudança:</strong> ${esc(order.pendingChange)}</span></button>`).join("")}</div></section>` : ""}
@@ -280,7 +287,7 @@ function renderOrders() {
   const caret = queryWasFocused ? document.activeElement.selectionStart : null;
   const orders = filteredOrders();
   panel.innerHTML = `<div class="page-heading"><div><h1 id="orders-title">Seus pedidos</h1><p>Do primeiro orçamento à entrega, com o combinado sempre à mão.</p></div><button class="button button-primary page-add" data-action="new-order" type="button"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> Nova encomenda</button></div>
-    <div class="toolbar"><label class="search-wrap"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 4.5 4.5"/></svg><input class="search-input" id="order-search" type="search" placeholder="Buscar cliente, produto ou detalhe…" value="${esc(state.search)}" aria-label="Buscar pedidos"></label><select class="filter-select" id="status-filter" aria-label="Filtrar por situação"><option value="all" ${state.statusFilter === "all" ? "selected" : ""}>Todas as situações</option>${ORDER_STATUSES.map((status) => `<option value="${esc(status)}" ${state.statusFilter === status ? "selected" : ""}>${esc(status)}</option>`).join("")}</select></div>
+    ${requestBanner()}<div class="toolbar"><label class="search-wrap"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 4.5 4.5"/></svg><input class="search-input" id="order-search" type="search" placeholder="Buscar cliente, produto ou detalhe…" value="${esc(state.search)}" aria-label="Buscar pedidos"></label><select class="filter-select" id="status-filter" aria-label="Filtrar por situação"><option value="all" ${state.statusFilter === "all" ? "selected" : ""}>Todas as situações</option>${ORDER_STATUSES.map((status) => `<option value="${esc(status)}" ${state.statusFilter === status ? "selected" : ""}>${esc(status)}</option>`).join("")}</select></div>
     <p class="order-results" aria-live="polite"><strong>${orders.length}</strong> ${orders.length === 1 ? "pedido encontrado" : "pedidos encontrados"}</p>
     ${orders.length ? `<div class="orders-full-list">${orders.map((order) => rowMarkup(order)).join("")}</div>` : state.orders.some((order) => !sampleOrder(order)) ? emptyState("Nada por aqui com esse filtro", "Tente outro nome ou situação para encontrar o pedido.", false) : emptyState("Seu próximo pedido começa aqui", "Cadastre o combinado com a cliente e acompanhe pagamentos, mudanças e data de entrega.", true)}`;
   panel.hidden = state.activeView !== "orders";
@@ -328,7 +335,7 @@ function renderSettings() {
   const focusForm = focused?.form?.id;
   const focusName = ["date-availability-form", "availability-form"].includes(focusForm) ? focused.name : "";
   const focusSelection = focusName && typeof focused.selectionStart === "number" ? focused.selectionStart : null;
-  content.innerHTML = `<div class="page-heading"><div><h1 id="settings-title">Ajustes</h1><p>Configure a disponibilidade e os detalhes que você combina nos pedidos.</p></div></div>${availabilityPanelMarkup(state.settingsDate)}`;
+  content.innerHTML = `<div class="page-heading"><div><h1 id="settings-title">Ajustes</h1><p>Configure a disponibilidade e os detalhes que você combina nos pedidos.</p></div></div>${orderPageMarkup()}${availabilityPanelMarkup(state.settingsDate)}`;
   panel.hidden = state.activeView !== "settings";
   if (focusId) $("#settings-date")?.focus({ preventScroll: true });
   if (focusName) { const target = panel.querySelector(`#${focusForm} [name="${CSS.escape(focusName)}"]`); target?.focus(); if (target && focusSelection !== null) target.setSelectionRange(focusSelection, focusSelection); }
@@ -345,13 +352,13 @@ function renderWeek() {
   if (!days.some((day) => localDateKey(day) === state.selectedDay)) state.selectedDay = localDateKey(days[0]);
   const selected = days.find((day) => localDateKey(day) === state.selectedDay) || days[0];
   const selectedKey = localDateKey(selected);
-  const scheduled = sortOrders(state.orders.filter((order) => !sampleOrder(order) && !isCancelled(order) && order.dueAt && localDateKey(parseDate(order.dueAt) || new Date(0)) === selectedKey));
+  const scheduled = sortOrders(state.orders.filter((order) => order.status!=='Solicitação' && !sampleOrder(order) && !isCancelled(order) && order.dueAt && localDateKey(parseDate(order.dueAt) || new Date(0)) === selectedKey));
   const range = `${dateLabel(days[0], { day: "numeric", month: "short" })} – ${dateLabel(days[6], { day: "numeric", month: "short", year: "numeric" })}`;
   const todayKey = localDateKey(new Date());
   panel.innerHTML = `<div class="page-heading"><div><h1 id="week-title">Sua semana</h1><p>Veja os pedidos marcados em cada dia.</p></div><div class="week-controls"><button class="icon-button week-step" data-week-shift="-1" type="button" aria-label="Semana anterior"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg></button><span class="week-range">${esc(range)}</span><button class="icon-button week-step" data-week-shift="1" type="button" aria-label="Próxima semana"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button></div></div>
     <div class="week-days" role="group" aria-label="Escolher dia da semana">${days.map((day) => {
       const key = localDateKey(day);
-      const count = state.orders.filter((order) => !sampleOrder(order) && !isCancelled(order) && order.dueAt && localDateKey(parseDate(order.dueAt) || new Date(0)) === key).length;
+      const count = state.orders.filter((order) => order.status!=='Solicitação' && !sampleOrder(order) && !isCancelled(order) && order.dueAt && localDateKey(parseDate(order.dueAt) || new Date(0)) === key).length;
       const availability = availabilityFor(key);
       const classes = ["day-button", key === todayKey ? "is-today" : "", key === selectedKey ? "is-selected" : "", availability.closed ? "is-closed" : "", availability.full ? "is-full" : ""].filter(Boolean).join(" ");
       const statusText = availability.closed ? "fechado" : availability.full ? "limite atingido" : Number.isInteger(availability.limit) ? `limite ${availability.limit}` : "limite não definido";
@@ -386,10 +393,11 @@ function render() {
 }
 
 function populateStatusOptions() {
-  $("#order-status").innerHTML = ORDER_STATUSES.map((status) => `<option value="${esc(status)}">${esc(status)}</option>`).join("");
+  $("#order-status").innerHTML = ORDER_STATUSES.filter(s=>!['Solicitação','Recusado'].includes(s)).map((status) => `<option value="${esc(status)}">${esc(status)}</option>`).join("");
 }
 
 function openOrderForm(order = null) {
+  populateStatusOptions();
   const form = $("#order-form");
   form.reset();
   $("#order-form-error").hidden = true;
@@ -397,12 +405,14 @@ function openOrderForm(order = null) {
   form.elements.namedItem("overrideReason").value = "";
   $("#cake-order-fields").innerHTML = cakeFormMarkup(order);
   form.dataset.id = order ? String(order.id) : "";
+  form.dataset.review = order?.status==='Solicitação' ? 'true' : '';
+  if(form.dataset.review) $("#order-status").innerHTML='<option>Orçamento</option><option>Confirmado</option>';
   $("#order-dialog-title").textContent = order ? "Editar encomenda" : "Nova encomenda";
   $("#save-order-button").textContent = order ? "Salvar alterações" : "Salvar encomenda";
   const formValues = {
     client: order?.client || "", product: order?.product || "", details: order?.details || "", dueAt: dateTimeInput(order?.dueAt),
     mode: order?.mode || "Retirada", location: order?.location || "", total: order ? moneyInput(order.total) : "",
-    status: order?.status || "Orçamento", nextAction: order?.nextAction || "", nextAt: dateTimeInput(order?.nextAt),
+    status: order?.status==='Solicitação' ? 'Orçamento' : order?.status || "Orçamento", nextAction: order?.nextAction || "", nextAt: dateTimeInput(order?.nextAt),
     pendingChange: order?.pendingChange || "", contact: order?.contact || "",
   };
   Object.entries(formValues).forEach(([key, value]) => {
@@ -418,6 +428,7 @@ function openOrderForm(order = null) {
   $("#cake-order-fields").hidden = !cakeToggle.checked;
   $$(".optional-fields", form).forEach((section) => { section.open = !!order && [...section.querySelectorAll("input, textarea, select")].some((field) => field.value && field.value !== "Retirada"); });
   syncDateRequirement();
+  if(form.dataset.review) {$("#order-dialog-title").textContent='Editar e aceitar solicitação';$("#save-order-button").textContent='Aceitar solicitação';}
   $("#order-dialog").showModal();
   setTimeout(() => form.elements.namedItem("client").focus(), 0);
 }
@@ -458,12 +469,12 @@ function detailMarkup(order) {
     <div class="detail-topline"><div><p class="detail-when">${esc(whenLabel)}</p><h2 class="detail-client" id="detail-title">${esc(order.product || "Produto sem descrição")}</h2><p class="detail-product">para ${esc(clientName(order) || "cliente sem nome")}</p></div><div class="detail-top-actions">${statusPill(order.status)}<button class="icon-button close-dialog" type="button" data-close="detail-dialog" aria-label="Fechar detalhes"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div></div>
     ${sample}<div class="detail-meta-line"><span class="meta-chip">${esc(dueAt)}</span><span class="meta-chip">${esc(order.mode || "Retirada")}</span>${order.contact ? `<span class="meta-chip">${esc(order.contact)}</span>` : ""}</div>
     <div class="detail-summary"><div class="detail-summary-label">COMBINADO ATUAL</div>${details}${cakeDetailsMarkup(order)}</div>
-    ${pending}
+    ${pending}${requestReviewMarkup(order)}
     ${depositCard}<p class="deposit-rule">O sinal só conta quando você confirma que recebeu.</p>
     <div class="detail-split"><div class="detail-tile"><div class="detail-tile-label">Valor total</div><div class="detail-tile-value large">${esc(money(order.total))}</div></div><div class="detail-tile"><div class="detail-tile-label">${isCommitted(order) ? "Saldo a receber" : "Recebido conferido"}</div><div class="detail-tile-value ${balance === null && isCommitted(order) ? "is-unknown" : "large"}">${balance === null ? (isCommitted(order) ? "Ainda não conferido" : esc(money(confirmedPayments(order.id).length ? confirmedPaid(order.id) : 0))) : esc(balanceLabel(balance))}${balance !== null && balance < 0 ? `<small>Confira os recebimentos registrados.</small>` : ""}</div></div>${location}${order.nextAction ? `<div class="detail-tile"><div class="detail-tile-label">Próxima ação${order.nextAt ? ` · ${esc(dateTimeLabel(order.nextAt))}` : ""}</div><div class="detail-tile-value">${esc(order.nextAction)}</div></div>` : ""}</div>
-    <section class="payment-section"><div class="detail-section-title"><h3>Pagamentos</h3><button class="button button-small" data-action="add-payment" data-id="${esc(order.id)}" type="button"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> Registrar</button></div>${payments.length ? `<div class="payment-list">${payments.map((payment) => `<div class="payment-item"><div class="payment-main"><div class="payment-amount">${esc(money(payment.amount))}</div><div class="payment-note">${esc(payment.note || "Sem observação")} · ${esc(formatWhenHistory(payment.createdAt))}</div></div><div class="payment-status"><span>${payment.status === "Conferido" ? "Recebimento conferido" : "Cliente informou"}</span>${payment.status !== "Conferido" ? `<button type="button" data-action="confirm-payment" data-id="${esc(payment.id)}">Marcar conferido</button>` : ""}</div></div>`).join("")}</div>` : `<p class="detail-empty">Nenhum pagamento registrado.</p>`}</section>
+    <section class="payment-section" ${order.status==='Solicitação'?'hidden':''}><div class="detail-section-title"><h3>Pagamentos</h3><button class="button button-small" data-action="add-payment" data-id="${esc(order.id)}" type="button"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> Registrar</button></div>${payments.length ? `<div class="payment-list">${payments.map((payment) => `<div class="payment-item"><div class="payment-main"><div class="payment-amount">${esc(money(payment.amount))}</div><div class="payment-note">${esc(payment.note || "Sem observação")} · ${esc(formatWhenHistory(payment.createdAt))}</div></div><div class="payment-status"><span>${payment.status === "Conferido" ? "Recebimento conferido" : "Cliente informou"}</span>${payment.status !== "Conferido" ? `<button type="button" data-action="confirm-payment" data-id="${esc(payment.id)}">Marcar conferido</button>` : ""}</div></div>`).join("")}</div>` : `<p class="detail-empty">Nenhum pagamento registrado.</p>`}</section>
     <details class="history-section"><summary>Histórico (${history.length})</summary>${history.length ? `<div class="history-list">${history.map((item) => `<div class="history-item"><strong>${esc(formatWhenHistory(item.at))}</strong>${esc(item.text || "Atualização do pedido")}</div>`).join("")}</div>` : `<p class="detail-empty">As alterações do pedido aparecerão aqui.</p>`}</details>
-    <div class="detail-actions"><button class="button button-quiet" data-action="copy-summary" data-id="${esc(order.id)}" type="button">Copiar resumo para WhatsApp</button><button class="button button-primary" data-action="edit-order" data-id="${esc(order.id)}" type="button">Editar encomenda</button></div>
+    <div class="detail-actions"><button class="button button-quiet" data-action="copy-summary" data-id="${esc(order.id)}" type="button">${order.reviewOutcome?'Copiar mensagem para a cliente':'Copiar resumo para WhatsApp'}</button><button class="button button-primary" data-action="edit-order" data-id="${esc(order.id)}" type="button" ${order.status==='Recusado'?'hidden':''}>${order.status==='Solicitação'?'Editar e aceitar':'Editar encomenda'}</button></div>
   </div>`;
 }
 
@@ -515,6 +526,9 @@ function makeWhatsAppSummary(order) {
   if (order.pendingChange) lines.push(`Mudança pendente de confirmação: ${order.pendingChange}`);
   if (order.status === "Cancelado") lines.push("Este pedido está cancelado.");
   lines.push("", "Está tudo correto? Se precisar ajustar algo, me avise.");
+  if(order.publicCode)lines.unshift(`Solicitação ${order.publicCode}`);
+  if(order.status==='Solicitação')lines.push('Ainda não confirmado. Aguarde a revisão da confeitaria.');
+  if(order.status==='Recusado')lines.push(`Solicitação recusada${order.refusalReason?`: ${order.refusalReason}`:'.'}`);
   return lines.join("\n");
 }
 
@@ -730,7 +744,8 @@ async function submitOrder(event) {
   saveButton.disabled = true; saveButton.textContent = "Salvando…";
   try {
     const id = form.dataset.id;
-    const saved = await apiRequest(id ? `/orders/${encodeURIComponent(id)}` : "/orders", { method: id ? "PUT" : "POST", body });
+    const reviewing=form.dataset.review==='true';
+    const saved = await apiRequest(reviewing ? `/orders/${encodeURIComponent(id)}/accept` : id ? `/orders/${encodeURIComponent(id)}` : "/orders", { method: reviewing ? 'POST' : id ? "PUT" : "POST", body: reviewing ? {status:body.status,order:body} : body });
     $("#order-dialog").close();
     closeDetails();
     await loadState({ silent: true });
@@ -738,7 +753,7 @@ async function submitOrder(event) {
     if (savedOrder) $$(".order-row").filter((row) => row.dataset.openOrder === savedOrder.id).forEach((row) => row.classList.add("is-fresh"));
     showToast("Encomenda salva.", savedOrder && { label: "Copiar resumo", run: () => copyText(makeWhatsAppSummary(savedOrder)).then(() => showToast("Resumo copiado para enviar no WhatsApp.")).catch((error) => showToast(error.message)) });
   } catch (error) {
-    if (["DATE_CLOSED", "DAILY_LIMIT", "NOTICE"].includes(error.code)) {
+    if (["DATE_CLOSED", "DAILY_LIMIT", "NOTICE"].includes(error.code) && form.dataset.review!=='true') {
       $("#capacity-override-box").hidden = false;
       const explanation = error.code === "DATE_CLOSED" ? "A data está fechada para novos pedidos." : error.code === "DAILY_LIMIT" ? "O limite de pedidos desta data foi atingido." : "Este pedido não atende à antecedência mínima definida.";
       return setFormError("#order-form-error", `${explanation} Se decidiu abrir uma exceção, registre o motivo abaixo e salve novamente.`);
@@ -808,6 +823,11 @@ function handleClick(event) {
     case "edit-order": {
       const order = orderById(id); closeDetails(); if (order) openOrderForm(order); break;
     }
+    case 'show-requests': state.statusFilter='Solicitação';state.search='';setActiveView('orders');break;
+    case 'copy-order-link': copyText(`https://lucast.app/p/${state.orderPage.slug}`).then(()=>showToast('Link copiado.')).catch(e=>showToast(e.message));break;
+    case 'link-metrics': loadLinkMetrics();break;
+    case 'accept-request': reviewRequest(id,action.dataset.status);break;
+    case 'refuse-request': refuseRequest(id);break;
     case "add-payment": openPaymentForm(id); break;
     case "confirm-payment": confirmPayment(id); break;
     case "copy-summary": {
@@ -846,6 +866,7 @@ function attachEvents() {
     if (event.target.id === "availability-form") saveAvailability(event);
     if (event.target.id === "date-availability-form") saveDateAvailability(event);
     if (event.target.id === "order-template-form") saveOrderTemplate(event);
+    if (event.target.id === "order-page-form") saveOrderPage(event);
   });
   $("#view-settings").addEventListener("change", (event) => {
     if (event.target.id === "settings-date" && /^\d{4}-\d{2}-\d{2}$/.test(event.target.value)) { state.settingsDate = event.target.value; renderSettings(); }
@@ -855,6 +876,13 @@ function attachEvents() {
     }
     const field = event.target.closest(".template-field");
     if (field) state.openTemplateField = field.querySelector("[name=enabled]")?.value || "";
+  });
+  $("#view-settings").addEventListener('input',event=>{
+    if(event.target.name==='slug')event.target.dataset.edited='true';
+    if(event.target.name==='displayName'){
+      const slug=$('#order-page-form [name=slug]');if(slug&&!slug.dataset.edited)slug.value=event.target.value.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,40);
+    }
+    const preview=$('#slug-preview'),slug=$('#order-page-form [name=slug]');if(preview&&slug)preview.textContent=slug.value||'sua-confeitaria';
   });
   $("#view-settings").addEventListener("toggle", (event) => {
     if (event.target.matches(".template-field") && event.target.open) state.openTemplateField = event.target.querySelector("[name=enabled]")?.value || "";
@@ -891,3 +919,37 @@ function attachEvents() {
 populateStatusOptions();
 attachEvents();
 loadState();
+function orderPageMarkup(){
+ const p=state.orderPage,cloud=window.DoceApi.mode==='cloud',link=p.slug?`https://lucast.app/p/${p.slug}`:'';
+ return `<section class="surface order-page-settings"><h2>Link de encomenda</h2><p>Receba solicitações sem redigitar. Você revisa antes de aceitar.</p>${!cloud?'<p class="form-hint">Disponível na sua conta. A demonstração não publica links.</p>':''}<form id="order-page-form"><label class="switch-label"><input name="active" type="checkbox" role="switch" ${p.active?'checked':''} ${!cloud?'disabled':''}> Receber solicitações pelo link</label><label class="field"><span>Nome da confeitaria</span><input name="displayName" maxlength="60" value="${esc(p.displayName)}" required></label><label class="field"><span>Endereço próprio</span><input name="slug" minlength="3" maxlength="40" pattern="[a-z0-9][a-z0-9-]{1,38}[a-z0-9]" value="${esc(p.slug)}" ${p.slug?'data-edited="true"':''} required autocapitalize="none" spellcheck="false"><small>lucast.app/p/<span id="slug-preview">${esc(p.slug||'sua-confeitaria')}</span></small></label><label class="field"><span>Mensagem de boas-vindas</span><textarea name="welcome" maxlength="280" rows="2">${esc(p.welcome)}</textarea></label><label class="field"><span>Seu WhatsApp (opcional)</span><input name="whatsapp" type="tel" maxlength="30" value="${esc(p.whatsapp)}" placeholder="+55 11 99999-9999"><small>Sem número, a cliente recebe o código sem botão de WhatsApp.</small></label><label class="field"><span>Produtos (até 30)</span><textarea name="products" rows="4" maxlength="9000" placeholder="Bolo de aniversário | Feito por encomenda">${esc(p.products.map(x=>`${x.name}${x.description?' | '+x.description:''}`).join('\n'))}</textarea><small>Um produto por linha. A descrição após | é opcional. A cliente também pode escolher Outro.</small></label><p class="form-hint">Ao ativar, você recebe os dados para atender a encomenda, conforme a <a href="/privacidade/" target="_blank" rel="noopener">política de privacidade</a>.</p><p id="order-page-error" class="form-error" role="alert" hidden></p><button class="button button-primary" type="submit" ${!cloud?'disabled':''}>Salvar link</button></form><div class="link-actions"><button class="button button-quiet" type="button" data-action="copy-order-link" ${!cloud||!link?'disabled':''}>Copiar link</button>${cloud&&link?`<a class="button button-quiet" target="_blank" rel="noopener" href="${esc(link)}">Ver como a cliente vê</a>`:''}</div><p class="form-hint">Desativar impede novos envios. Solicitações pendentes continuam para revisão.</p>${cloud?'<button class="text-link" type="button" data-action="link-metrics">Ver métricas do link</button><p id="link-metrics-result" class="form-hint" aria-live="polite"></p>':''}</section>`;
+}
+async function saveOrderPage(event){
+ event.preventDefault();const form=event.target,data=new FormData(form),error=$('#order-page-error'),button=form.querySelector('[type=submit]');error.hidden=true;button.disabled=true;
+ try{await apiRequest('/order-page',{method:'PUT',body:{active:data.has('active'),displayName:data.get('displayName'),slug:data.get('slug'),welcome:data.get('welcome'),whatsapp:data.get('whatsapp'),products:String(data.get('products')).split('\n').filter(l=>l.trim()).map(line=>{const i=line.indexOf('|');return{name:(i<0?line:line.slice(0,i)).trim(),description:i<0?'':line.slice(i+1).trim()};})}});await loadState({silent:true});showToast('Link salvo.');}
+ catch(e){error.textContent=e.message;error.hidden=false;}finally{button.disabled=false;}
+}
+function requestReviewMarkup(order){
+ if(order.status!=='Solicitação')return order.reviewOutcome==='refused'?`<p class="pending-banner">Solicitação recusada${order.refusalReason?`: ${esc(order.refusalReason)}`:'.'}</p>`:'';
+ const day=order.dueAt.slice(0,10),available=availabilityFor(day),pending=state.orders.filter(o=>o.status==='Solicitação'&&o.dueAt.slice(0,10)===day).length;
+ const remaining=Number.isInteger(available.limit)?Math.max(0,available.limit-available.count):null;
+ return `<section class="request-review"><h3>Solicitação ${esc(order.publicCode)}</h3><p>Ainda não confirmada. Confira data, detalhes e valor antes de aceitar.</p>${order.possibleDuplicate?'<p class="form-error">Possível duplicata: compare com as outras solicitações antes de aceitar.</p>':''}${remaining!==null&&pending>remaining?`<p class="form-error">${pending} solicitações para ${remaining} ${remaining===1?'vaga restante':'vagas restantes'} nesta data.</p>`:''}<div class="request-actions"><button class="button button-primary" type="button" data-action="accept-request" data-id="${esc(order.id)}" data-status="Confirmado">Aceitar como Confirmado</button><button class="button button-quiet" type="button" data-action="accept-request" data-id="${esc(order.id)}" data-status="Orçamento">Aceitar como Orçamento</button><button class="text-link" type="button" data-action="refuse-request" data-id="${esc(order.id)}">Recusar</button></div></section>`;
+}
+async function reviewRequest(id,status){
+ try{await apiRequest(`/orders/${encodeURIComponent(id)}/accept`,{method:'POST',body:{status}});closeDetails();await loadState({silent:true});showOrderDetail(id);showToast('Solicitação aceita. Você pode copiar a mensagem para a cliente.');}
+ catch(e){if(e.code==='REVISION_CONFLICT')await loadState({silent:true});showToast(e.message);}
+}
+function refuseRequest(id){
+ const dialog=$('#refuse-dialog');dialog.querySelector('form').dataset.id=id;dialog.querySelector('textarea').value='';dialog.querySelector('[role=alert]').hidden=true;dialog.showModal();
+}
+$('#refuse-form').addEventListener('submit',async event=>{
+ event.preventDefault();const form=event.target,button=form.querySelector('[type=submit]'),id=form.dataset.id;button.disabled=true;
+ try{await apiRequest(`/orders/${encodeURIComponent(id)}/refuse`,{method:'POST',body:{reason:form.elements.reason.value,reasonCode:form.elements.reasonCode.value}});$('#refuse-dialog').close();closeDetails();await loadState({silent:true});showOrderDetail(id);showToast('Recusa registrada. Copie a mensagem para a cliente.');}
+ catch(e){const error=form.querySelector('[role=alert]');error.textContent=e.message;error.hidden=false;}finally{button.disabled=false;}
+});
+
+async function loadLinkMetrics(){
+ const output=$('#link-metrics-result');output.textContent='Carregando…';
+ try{const metrics=await apiRequest('/order-page/metrics'),orders=state.orders.filter(o=>o.origin==='link'),week=orders.filter(o=>Date.parse(o.createdAt)>=Date.now()-7*86400000),accepted=orders.filter(o=>o.reviewOutcome==='accepted'),reviewed=orders.filter(o=>o.reviewedAt),times=reviewed.map(o=>Math.max(0,Date.parse(o.reviewedAt)-Date.parse(o.createdAt))),minutes=times.length?Math.round(times.reduce((a,b)=>a+b,0)/times.length/60000):null;
+ output.textContent=`${metrics.visits} visitas · ${week.length} solicitações nos últimos 7 dias · ${orders.length?Math.round(accepted.length/orders.length*100):0}% aceitas${minutes!==null?` · revisão média em ${minutes} min`:''}. ${state.orders.filter(o=>!['Solicitação','Recusado'].includes(o.status)&&!sampleOrder(o)).length?Math.round(state.orders.filter(o=>o.origin==='link'&&!['Solicitação','Recusado'].includes(o.status)).length/state.orders.filter(o=>!['Solicitação','Recusado'].includes(o.status)&&!sampleOrder(o)).length*100):0}% dos pedidos vieram do link. Visitas contam carregamentos, incluindo repetições.`;
+ }catch(e){output.textContent=e.message;}
+}

@@ -41,7 +41,10 @@ async function start() {
         },
         body: JSON.stringify({ path, method, body, ...(write ? { expectedRevision: revision } : {}) }),
       });
-      if (response.status === 409) conflict = true;
+      if (response.status === 409) {
+        const errorBody=await response.clone().json().catch(()=>({}));
+        if(!['DATE_CLOSED','DAILY_LIMIT','NOTICE','SLUG_TAKEN'].includes(errorBody.code))conflict=true;
+      }
       // Never adopt a new revision without its full state, or a successful own write.
       if (response.ok && (path === '/api/state' || write)) {
         const header = response.headers.get('X-Agenda-Revision');

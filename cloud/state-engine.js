@@ -1,5 +1,6 @@
-const STATUSES = ['Orçamento', 'Aguardando confirmação', 'Confirmado', 'Em produção', 'Pronto', 'Entregue', 'Cancelado'];
-const DRAFT_STATUSES = ['Orçamento', 'Aguardando confirmação', 'Cancelado'];
+import { defaultOrderPage, orderPageInput } from './order-link-model.js';
+const STATUSES = ['Solicitação', 'Orçamento', 'Aguardando confirmação', 'Confirmado', 'Em produção', 'Pronto', 'Entregue', 'Cancelado', 'Recusado'];
+const DRAFT_STATUSES = ['Solicitação', 'Orçamento', 'Aguardando confirmação', 'Cancelado', 'Recusado'];
 const COMMITTED_STATUSES = ['Confirmado', 'Em produção', 'Pronto', 'Entregue'];
 const CAKE_KEYS = ['size', 'flavor', 'filling', 'decoration', 'inscription', 'foodNotes'];
 const ORDER_LABELS = {
@@ -37,6 +38,7 @@ export function createEmptyState() {
     payments: [],
     availability: defaultAvailability(),
     orderTemplate: defaultOrderTemplate(),
+    orderPage: defaultOrderPage(),
   };
 }
 
@@ -142,7 +144,7 @@ function templateInput(value) {
   return { version: value.version, fields: CAKE_KEYS.map(key => fields.find(field => field.key === key)) };
 }
 
-function wallTimeEpoch(value) {
+export function wallTimeEpoch(value) {
   const [dayPart, timePart] = value.split('T');
   const [year, month, day] = dayPart.split('-').map(Number);
   const [hour, minute] = timePart.split(':').map(Number);
@@ -157,7 +159,7 @@ function wallTimeEpoch(value) {
   return guess + (guess - represented);
 }
 
-function checkCapacity(input, state, currentId, override) {
+export function checkCapacity(input, state, currentId, override) {
   if (!COMMITTED_STATUSES.includes(input.status)) return;
   const day = input.dueAt.slice(0, 10);
   const config = state.availability;
@@ -199,6 +201,7 @@ function validBackup(value) {
     ...clone(value),
     availability: availabilityInput(value.availability ?? defaultAvailability()),
     orderTemplate: templateInput(value.orderTemplate ?? defaultOrderTemplate()),
+    orderPage: orderPageInput(value.orderPage ?? defaultOrderPage()),
   };
   const orderIds = new Set();
   for (const order of state.orders) {
@@ -207,6 +210,10 @@ function validBackup(value) {
     }
     orderIds.add(order.id);
     orderInput(order);
+    if(order.origin!==undefined && !['manual','link'].includes(order.origin))fail('Origem do pedido inválida.');
+    if(order.publicCode!==undefined && (typeof order.publicCode!=='string'||!/^DA-[A-Z0-9]{6}$/.test(order.publicCode)))fail('Código da solicitação inválido.');
+    for(const key of ['consentAt','reviewedAt'])if(order[key]!==undefined && !Number.isFinite(Date.parse(order[key])))fail('Data da solicitação inválida.');
+    if(order.refusalReason!==undefined && (typeof order.refusalReason!=='string'||order.refusalReason.length>500))fail('Motivo inválido.');
     if (!Array.isArray(order.history)) fail('Histórico de pedido inválido.');
   }
   const paymentIds = new Set();
@@ -229,6 +236,8 @@ function normalizeState(value) {
   const state = clone(value);
   state.availability = availabilityInput(state.availability ?? defaultAvailability());
   state.orderTemplate = templateInput(state.orderTemplate ?? defaultOrderTemplate());
+  state.orderPage = orderPageInput(state.orderPage ?? defaultOrderPage());
+  state.orders=state.orders.map(order=>({...order,origin:order.origin??'manual'}));
   return state;
 }
 
@@ -245,6 +254,7 @@ export function transactState(state, url, options = {}) {
     if (method === 'GET' && ['/api/state', '/api/export'].includes(path)) return response(nextState, 200, nextState);
     if (method === 'GET' && path === '/api/availability') return response(nextState.availability, 200, nextState);
     if (method === 'GET' && path === '/api/order-template') return response(nextState.orderTemplate, 200, nextState);
+    if (method === 'GET' && path === '/api/order-page') return response(nextState.orderPage, 200, nextState);
 
     let body;
     try { body = JSON.parse(options.body || '{}'); } catch { fail('JSON inválido.'); }
@@ -253,7 +263,27 @@ export function transactState(state, url, options = {}) {
     const now = new Date().toISOString();
     let result;
     let status = 200;
-    if (path === '/api/availability' && method === 'PUT') {
+    const reviewMatch = path.match(/^\/api\/orders\/([^/]+)\/(accept|refuse)$/);
+    if (reviewMatch && method === 'POST') {
+      const order = nextState.orders.find(o => o.id === decodeURIComponent(reviewMatch[1]));
+      if (!order || order.status !== 'Solicitação') fail('Esta solicitação já foi revisada ou não existe.', 409);
+      if (reviewMatch[2] === 'accept') {
+        if (!['Orçamento', 'Confirmado'].includes(body.status)) fail('Escolha Orçamento ou Confirmado.');
+        const input = orderInput({ ...order, ...(body.order || {}), status: body.status });
+        checkCapacity(input, nextState, order.id);
+        if (body.status === 'Confirmado' && input.cake) checkRequiredCake(input, nextState.orderTemplate);
+        Object.assign(order, input, { reviewedAt: now, updatedAt: now, reviewOutcome: 'accepted' });
+        order.history.push({ at: now, text: `Solicitação aceita como ${body.status}.` });
+      } else {
+        if (typeof body.reason !== 'string' || body.reason.length > 500) fail('Use até 500 caracteres para o motivo.');
+        if(body.reasonCode!==undefined && !['indisponibilidade','fora-da-oferta','outro'].includes(body.reasonCode))fail('Motivo geral inválido.');
+        Object.assign(order, { status: 'Recusado', refusalReason: body.reason.trim(), refusalReasonCode: body.reasonCode||'outro', reviewedAt: now, updatedAt: now, reviewOutcome: 'refused' });
+        order.history.push({ at: now, text: `Solicitação recusada${order.refusalReason ? `: ${order.refusalReason}` : '.'}` });
+      }
+      result = order;
+    } else if (path === '/api/order-page' && method === 'PUT') {
+      nextState.orderPage = orderPageInput(body); result = nextState.orderPage;
+    } else if (path === '/api/availability' && method === 'PUT') {
       nextState.availability = availabilityInput(body);
       result = nextState.availability;
     } else if (path === '/api/order-template' && method === 'PUT') {
@@ -268,7 +298,7 @@ export function transactState(state, url, options = {}) {
       const input = orderInput(body);
       const allowed = checkCapacity(input, nextState, null, body.capacityOverride);
       if (COMMITTED_STATUSES.includes(input.status) && input.cake) checkRequiredCake(input, nextState.orderTemplate);
-      result = { ...input, id: crypto.randomUUID(), createdAt: now, updatedAt: now, history: [{ at: now, text: 'Pedido cadastrado.' }] };
+      result = { ...input, origin: 'manual', id: crypto.randomUUID(), createdAt: now, updatedAt: now, history: [{ at: now, text: 'Pedido cadastrado.' }] };
       if (allowed) result.history.push({ at: now, text: `Exceção de disponibilidade (${allowed.conflict[0]}): ${allowed.reason}` });
       nextState.orders.push(result);
       status = 201;
@@ -287,6 +317,7 @@ export function transactState(state, url, options = {}) {
           order.updatedAt = now;
           order.history.push({ at: now, text: `Pagamento registrado: R$ ${amount.toFixed(2)} • ${paymentStatus}.` });
         } else if (!match[2] && method === 'PUT') {
+          if (order.status === 'Solicitação' && body.status && body.status !== 'Solicitação') fail('Use Aceitar ou Recusar para revisar a solicitação.');
           const input = orderInput({ ...order, ...body });
           const changes = Object.keys(input).filter(key => JSON.stringify(input[key]) !== JSON.stringify(order[key]));
           const needsCheck = COMMITTED_STATUSES.includes(input.status)
