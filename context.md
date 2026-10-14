@@ -4,9 +4,9 @@ Atualizado em **14/10/2026**, ao fim de uma sessão longa de melhorias. Este arq
 
 ## 1. Onde paramos
 
-- Tudo o que foi feito está **no GitHub (`main`) e publicado na Cloudflare**. Última versão publicada e conferida no ar: `bd4358cf-44b7-4589-9293-1549b5d83cb6`. Pasta e GitHub sincronizados, sem alterações pendentes.
+- Tudo o que foi feito está **no GitHub (`main`) e publicado na Cloudflare**. Última versão publicada e conferida no ar: `da0cd8d3-d960-4a89-a003-36aab0945da9`. Pasta e GitHub sincronizados, sem alterações pendentes.
 - **Próximo assunto combinado: domínio `lucast.app`** (seção 7). O usuário retomou o tema e pediu para ser guiado passo a passo quando disser "vamos ao domínio". Ainda não houve nenhuma alteração de DNS.
-- Lucas deixou o domínio para depois e pediu um diagnóstico de código: feito em 14/10 (seção 7b), aguardando a escolha dele do que arrumar.
+- Lucas deixou o domínio para depois e pediu para enxugar o código. Os grupos 1 a 3 do diagnóstico foram feitos e publicados em 14/10 (seção 7b), sem mudança visível no site.
 - Depois disso, as features planejadas (seção 8) continuam **não iniciadas** e exigem aprovação.
 - Sugestão feita ao usuário e ainda não realizada: mostrar o app à amiga confeiteira e observar o uso real antes de grandes mudanças.
 
@@ -66,7 +66,8 @@ O usuário vê o **link de encomenda** como possível principal canal de cliente
 - Backend Supabase (projeto `khvhnbopdluthpcduhqm`, "Projeto aprender"): `doce-api` (JWT) e `doce-public` (anônima, rotas estritas). Estado da conta em `pilot_agendas.state` (JSONB) com revisão otimista (`commit_pilot_agenda`); restauração cria ponto anterior. Tabelas do link: `pilot_order_pages`, `pilot_public_submissions`, `pilot_owner_activity`.
 - `cloud/state-engine.js` (regras/validação), `monthly-summary.js`, `order-link-model.js`, `public-orders.js`, `demo-seed.js`, `browser-adapter.js`.
 - Cadastro e-mail/senha sem confirmação (piloto); recuperação por e-mail não ativa.
-- O README principal ainda descreve o piloto antigo sem login; não confiar nele.
+- README reescrito em 14/10 para o estado atual. Documentos antigos ficam em `docs/historico/` (só como registro).
+- Não há mais servidor local (`server.mjs` aposentado em 14/10). O modo "server" de `data-client.js`/`app.js` ficou sem uso; os textos do modo navegador ainda são trocados no build.
 
 ## 7. Domínio `lucast.app` — próximo assunto, aguardando o usuário
 
@@ -79,13 +80,14 @@ Plano explicado e aceito em princípio (cada passo externo com o usuário):
 4. Após propagar: ligar o domínio ao Worker `doce-agenda`, conferir HTTPS, rotas (`/p/:slug`), login, link das clientes e **teste de envio e resposta do e-mail**.
 Não é um simples CNAME. Wrangler atual só tem escopo de Workers (sem DNS/zonas); não ampliar escopos sem necessidade. Liberar a origem `lucast.app` no CORS do Supabase já existe; conferir.
 
-## 7b. Diagnóstico de código (14/10, só leitura, nada alterado)
+## 7b. Enxugar o código — feito em 14/10
 
-Lucas deixou o domínio para depois e pediu um diagnóstico para enxugar o código sem perder nada. Estado inicial: 43 testes passando. Achados, do mais seguro ao mais arriscado, **aguardando a escolha dele**:
-1. **Faxina segura:** cerca de 40 regras em `style.css` para classes que não aparecem mais em nenhuma tela (por exemplo `week-agenda`, `tip-card`, `info-banner`, `filter-select`); scripts antigos de revisão/captura (`scripts/review-*.mjs`, `capturar_prints.mjs`); documentos antigos em `docs/` e o `README` desatualizado.
-2. **Montagem do site:** são quatro scripts encadeados (`build-cloudflare` → `build-cloud-preview` → `build-launch-site` → `build-deploy`). A landing com conta é ajustada por troca de frases. Três dessas trocas já não encontram o texto e falham sem avisar; uma quarta só funciona porque a frase aparece duas vezes. O `_redirects` é escrito duas vezes. Proposta: um único build, conferido comparando os arquivos gerados antes e depois.
-3. **Regras duplicadas:** `server.mjs` (servidor local) tem cópia própria das validações de `cloud/state-engine.js`, e as duas cópias podem divergir. Proposta: o servidor local passa a usar o motor único (ou é aposentado, se Lucas preferir).
-4. **Não mexer agora:** `style.css` (104 KB, em camadas que se sobrepõem) e `app.js` (112 KB, arquivo único). Arrumar exige comparar telas a cada passo; fazer antes de Produção A, se for o caso. Os 30 MB de prints em `design/` não afetam o site.
+Lucas aprovou os três grupos do diagnóstico e a aposentadoria do servidor local. Tudo foi feito sem mudança visível: as capturas antes/depois saíram idênticas e os arquivos publicados conferem com o build.
+1. **Faxina** (commit `74f754d`, publicado): 11 classes sem uso removidas de `style.css`; 4 scripts de revisão antigos removidos; 15 documentos antigos movidos para `docs/historico/`; README reescrito.
+2. **Montagem única** (commit `cbc0417`, publicado): `build-cloudflare.mjs` substituiu a cadeia de quatro scripts. A saída ficou idêntica byte a byte. A landing tem na fonte o texto publicado; as trocas que restam (demo e app com conta) falham com erro se o texto sumir. As pastas `deploy-demo` e `deploy-launch` deixaram de existir.
+3. **Servidor local aposentado** (commit seguinte): removidos `server.mjs`, `test.mjs` (as regras seguem cobertas pelos testes de `cloud/`), `iniciar.ps1`, `capturar_prints.mjs` e `video-launch/scripts/capture.mjs`; `npm start` saiu e `npm test` roda os testes de `cloud/`. O site não mudou, então não houve nova publicação.
+
+Ainda **não mexido** (decisão de 14/10): `style.css` (cerca de 100 KB, em camadas que se sobrepõem) e `app.js` (112 KB, arquivo único). Mexer neles junto com Produção A, com comparação de telas. Os 30 MB de prints em `design/` não afetam o site.
 
 ## 8. Próximas features — nenhuma iniciada
 
@@ -97,10 +99,11 @@ Regras comuns: centavos, fuso São Paulo, cálculo no servidor, isolamento, back
 
 ## 9. Publicação, testes e limites
 
-- Cloudflare Workers Static Assets, Worker `doce-agenda`, conta em `wrangler.jsonc`. Publicar só `deploy-cloud/public` via `npx --yes --package wrangler@4.119.0 wrangler deploy --config wrangler.jsonc` (o build roda sozinho e mantém `_redirects` `/p/:slug /encomenda/ 200`). Guia: `docs/CLOUDFLARE_PUBLICACAO.md`.
+- Cloudflare Workers Static Assets, Worker `doce-agenda`, conta em `wrangler.jsonc`. Publicar só `deploy-cloud/public` via `npx --yes --package wrangler@4.119.0 wrangler deploy --config wrangler.jsonc` (o build `scripts/build-cloudflare.mjs` roda sozinho, monta o site inteiro num único script, para com erro se alguma troca de texto não achar o texto, e mantém `_redirects` `/p/:slug /encomenda/ 200`). Guia: `docs/CLOUDFLARE_PUBLICACAO.md`.
 - Login do Wrangler foi feito pelo usuário via device flow, credenciais no Windows Credential Manager. Se expirar: `npx --yes --package wrangler@4.119.0 wrangler login --device --browser=false --use-keyring --scopes account:read user:read workers_scripts:write` e o usuário aprova no celular. Nunca pedir senha/token no chat.
 - Netlify (`doce-agenda-piloto`) bloqueado por créditos; não contratar nem insistir.
-- Testes a escolher pela mudança: `node --test cloud/*.test.mjs test.mjs` (43 passando), `node scripts/build-cloudflare.mjs`, `node scripts/test-cloudflare-routing.mjs` (5/5 no ar). Scripts Playwright antigos (`scripts/test-ux-improvements.mjs`, `test-deploy.mjs`, `review-today.mjs`, `cloud/test-order-link-e2e.mjs`) foram adaptados à nova navegação mas **não executados**.
+- Testes a escolher pela mudança: `npm test` (= `node --test cloud/*.test.mjs`, 41 passando), `node scripts/build-cloudflare.mjs`, `node scripts/test-cloudflare-routing.mjs` (5/5 no ar). **Testes de tela Playwright estão desatualizados:** `test-monthly-summary.mjs` e `test-payment-stamps.mjs` falham também na versão anterior às mudanças de 14/10 (a apresentação de boas-vindas cobre a tela e os dados de exemplo mudaram). `test-ux-improvements.mjs`, `test-deploy.mjs`, `review-today.mjs` e `cloud/test-order-link-e2e.mjs` nunca foram executados. Atualizá-los é uma tarefa à parte, ainda não aprovada.
+- Comparação usada em 14/10 para provar que nada mudou: guardar o `deploy-cloud/public` anterior, comparar arquivo por arquivo (md5) e tirar capturas de 11 telas em 360 e 1280 px (landing, cadastro, privacidade, prévia do link, demo: agenda, pedidos, mês, ajustes, pedido, novo), comparando pixel por pixel.
 - Verificação de interface tem sido feita no painel do navegador: build local servido por um servidor estático simples e a demo publicada em 360–1280 px. Logo após publicar, o site pode levar alguns segundos para servir arquivos novos.
 - **Lição:** a publicação dos stories quebrou para quem tinha a página antiga em cache (botão novo ausente). Ao adicionar elementos ao `index.html` que o JS usa, buscar de forma opcional.
 - Não verificado: conta real logada com as mudanças de hoje (o usuário testou parte no computador), Safari/iPhone, aparelho físico, confeiteiras reais. Cartão "No ar" só visto simulando conta.

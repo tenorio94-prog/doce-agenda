@@ -33,7 +33,7 @@
 
 - Hospedagem atual: Cloudflare Workers Static Assets; backend/auth: Supabase. Consulte `docs/CLOUDFLARE_PUBLICACAO.md` antes de publicar.
 - **DNS/Name.com:** o usuário retomou o assunto e quer ser guiado (ver `context.md`, seção 7). Cada passo externo — nameservers, registros, e-mail, domínio — só com ele acompanhando e aprovando; preservar o e-mail `@lucast.app`. Não contratar serviços nem alterar planos pagos.
-- `npm start` é o servidor local separado; não é uma prévia fiel do serviço publicado com conta.
+- Não há mais servidor local (aposentado em 14/10/2026). Para ver o site, monte com `node scripts/build-cloudflare.mjs` e sirva `deploy-cloud/public` com um servidor estático simples.
 - Edite os fontes em `public/` e `cloud/`; não mantenha correções apenas em `deploy-*/public`. Esses diretórios são builds ignorados pelo Git.
 - Cloudflare usa `scripts/build-cloudflare.mjs`/`wrangler.jsonc`. Preserve o proxy `/p/:slug /encomenda/ 200`: usar `/encomenda/index.html` perde o slug por redirecionamento.
 - Nunca publique a raiz do repositório. Publique somente `deploy-cloud/public`. Não versionar sessões, senhas, tokens, `.env`, `.wrangler/` ou dados de clientes.
@@ -41,7 +41,7 @@
 
 ## Verificação
 
-- Escolha testes pelo código alterado: regras em `cloud/*.test.mjs`, servidor local em `test.mjs`, resumo em `scripts/test-monthly-summary.mjs`, pagamentos em `scripts/test-payment-stamps.mjs`, rotas publicadas em `scripts/test-cloudflare-routing.mjs`.
+- Escolha testes pelo código alterado: regras em `cloud/*.test.mjs` (`npm test`), resumo em `scripts/test-monthly-summary.mjs`, pagamentos em `scripts/test-payment-stamps.mjs`, rotas publicadas em `scripts/test-cloudflare-routing.mjs`.
 - Em interface, verifique o fluxo real e a renderização mobile; em publicação, teste o endereço publicado, não apenas o build local.
 - Integrações que escrevem dados usam exclusivamente contas sintéticas identificadas por `.invalid`; confirme a conta e preserve/restaure seu estado. Não executar scripts de setup contra contas reais.
 - Não declarar resolvido por uma tentativa de comando. Conferir saída, status e resultado; diante de falha repetida, diagnosticar antes de repetir.

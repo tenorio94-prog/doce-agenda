@@ -1,1 +1,1 @@
-{"name":"doce-agenda-local","version":"0.1.0","private":true,"type":"module","scripts":{"start":"node server.mjs","test":"node --test test.mjs"},"devDependencies":{"esbuild":"0.28.2","supabase":"2.120.0"},"dependencies":{"@supabase/supabase-js":"2.117.3"}}
+{"name":"doce-agenda-local","version":"0.1.0","private":true,"type":"module","scripts":{"test":"node --test cloud/*.test.mjs"},"devDependencies":{"esbuild":"0.28.2","supabase":"2.120.0"},"dependencies":{"@supabase/supabase-js":"2.117.3"}}
