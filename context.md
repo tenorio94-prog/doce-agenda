@@ -5,7 +5,7 @@ Atualizado em **15/10/2026**, após ligar o domínio `lucast.app`. Este arquivo 
 ## 1. Onde paramos
 
 - Tudo o que foi feito está **no GitHub (`main`) e publicado na Cloudflare**. Última versão publicada e conferida no ar: `6c2afe14-cbc0-445f-9565-75e039ba7e82` (Lista da semana). Pasta e GitHub sincronizados, sem alterações pendentes.
-- **Domínio `lucast.app` ligado ao app em 15/10/2026** (seção 7): DNS na Cloudflare, site novo no ar em `lucast.app` e `www.lucast.app`, e-mail testado pelo usuário.
+- **Domínio `lucast.app` ligado ao app em 15/10/2026** (seção 7): DNS na Cloudflare, site novo no ar em `lucast.app` e `www.lucast.app`, e-mail testado pelo usuário. Landing etapa 1 publicada no mesmo dia (seção 4); etapa 2 aguarda aprovação.
 - Lucas deixou o domínio para depois e pediu para enxugar o código. Os grupos 1 a 3 do diagnóstico foram feitos e publicados em 14/10 (seção 7b), sem mudança visível no site.
 - Depois disso, as features planejadas (seção 8) continuam **não iniciadas** e exigem aprovação.
 - Sugestão feita ao usuário e ainda não realizada: mostrar o app à amiga confeiteira e observar o uso real antes de grandes mudanças.
@@ -27,7 +27,7 @@ O usuário vê o **link de encomenda** como possível principal canal de cliente
 
 ## 4. O que o app faz hoje (publicado)
 
-**Landing** (`public/landing/`): título "Seu caderno não te avisa que o bolo é amanhã.", foto ilustrativa gerada pelo usuário no ChatGPT (`landing/assets/cozinha-caderno*.jpg`, originais em `design/fotos/`) com a tela "Hoje" do app sobreposta por CSS no celular da foto. A foto é ilustrativa: não apresentar como caderno de confeiteira real. Seções de dores, 3 benefícios, FAQ curto, fechamento "Menos caderno. Mais espaço para criar."
+**Landing** (`public/landing/`), refeita em 15/10 (etapa 1 de 2, inspirada na enxovaly.com): topo com "App de encomendas para confeiteiras" / "Pedidos, datas e sinais da sua confeitaria, num app só.", botão "Experimentar sem cadastro" e um celular em CSS com a **tela real da Agenda** (`landing/assets/app-agenda.jpg`, captura da demo em 375 px ×2 sem a faixa da demo e sem o aviso de solicitação; mostra a semana 12–18 out. 2026 e vai envelhecer) e três cartões animados (Dia lotado, carimbo Sinal pago, Nova encomenda pelo link; respeitam movimento reduzido). Logo abaixo, a seção das dores ganhou o título antigo "Seu caderno não te avisa que o bolo é amanhã." com a foto ilustrativa do caderno (`landing/assets/cozinha-caderno*.jpg`, gerada pelo usuário no ChatGPT, originais em `design/fotos/`, tela "Hoje" sobreposta por CSS; não apresentar como caderno real). Saiu o bloco "Abriu o celular, já sabe o dia". Seguem 3 benefícios, FAQ curto e fechamento. Canonical/og apontam para `lucast.app`. **Etapa 2 (não iniciada, pedir aprovação):** "Como funciona" em 4 passos com telas reais animadas ao rolar (anotar pedido, dia/semana, carimbo do sinal + Meu mês, link de encomenda) e FAQ sem jargão ("JSON", "banco de dados").
 
 **Navegação em 4 abas:** Agenda · Pedidos · Meu mês · + Novo. Ajustes fica no topo.
 - **Agenda** (antiga Hoje + Semana): resumo de hoje, semana com contagem e "Lotado/Fechado" por dia, lista do dia escolhido (começa em hoje, "Voltar para hoje"), "Ajustar esta data", cartão de Próxima ação e **Próximos dias** (só com hoje selecionado; agrupado por "Amanhã"/dia; cartões compactos sem botão). A aba Semana não existe mais (`data-view="week"` cai em Agenda).
