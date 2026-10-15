@@ -52,7 +52,8 @@ try {
     return route.continue();
   });
   await context.addInitScript(seed => {
-    if (!localStorage.getItem('doce-agenda.pilot.v1')) localStorage.setItem('doce-agenda.pilot.v1', JSON.stringify(seed));
+    if (!localStorage.getItem('doce-agenda.demo.v2')) localStorage.setItem('doce-agenda.demo.v2', JSON.stringify(seed));
+    localStorage.setItem('doce-agenda.tour.v1', '1'); // a apresentação de boas-vindas cobriria a tela
   }, fixtures);
   if (process.env.DOCE_TEST_ORIGIN) {
     assert.equal(await (await context.request.get(origin + '/cloud-app.js')).text(), await readFile(path.join(webRoot, 'public/app.js'), 'utf8'), 'Published cloud app must match the corrected source');
@@ -94,7 +95,7 @@ try {
   await page.locator('.nav-item[data-view="orders"]').click();
   assert.equal(await page.locator('#view-orders [data-open-order="zero"] .stamp').innerText(), 'PAGO');
   await page.goto(origin + '/', {waitUntil: 'networkidle'});
-  assert.match(await page.locator('.step').first().innerText(), /Comece com cliente e produto\. Complete os detalhes quando combinar\./);
+  assert.match(await page.locator('h1').first().innerText(), /Seu caderno não te avisa que o bolo é amanhã/);
   assert.equal((await page.locator('body').innerText()).includes('Três campos'), false);
   await page.setViewportSize({width: 1440, height: 1000});await page.screenshot({path: path.join(output, 'landing.png'), fullPage: true});
   assert.deepEqual(errors, []);assert.deepEqual(blocked, []);

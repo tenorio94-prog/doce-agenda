@@ -41,7 +41,7 @@
 
 ## Verificação
 
-- Escolha testes pelo código alterado: regras em `cloud/*.test.mjs` (`npm test`), resumo em `scripts/test-monthly-summary.mjs`, pagamentos em `scripts/test-payment-stamps.mjs`, rotas publicadas em `scripts/test-cloudflare-routing.mjs`.
+- Escolha testes pelo código alterado: regras em `cloud/*.test.mjs` (`npm test`), resumo em `scripts/test-monthly-summary.mjs`, pagamentos em `scripts/test-payment-stamps.mjs`, lista de produção em `scripts/test-production-list.mjs`, rotas publicadas em `scripts/test-cloudflare-routing.mjs`.
 - Em interface, verifique o fluxo real e a renderização mobile; em publicação, teste o endereço publicado, não apenas o build local.
 - Integrações que escrevem dados usam exclusivamente contas sintéticas identificadas por `.invalid`; confirme a conta e preserve/restaure seu estado. Não executar scripts de setup contra contas reais.
 - Não declarar resolvido por uma tentativa de comando. Conferir saída, status e resultado; diante de falha repetida, diagnosticar antes de repetir.

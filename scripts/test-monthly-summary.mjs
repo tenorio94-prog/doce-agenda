@@ -19,7 +19,7 @@ const browser=await chromium.launch({executablePath:'C:/Program Files/Google/Chr
 const errors=[],results=[];
 async function open(data,width=360,inject='') {
  const context=await browser.newContext({viewport:{width,height:900},timezoneId:'Pacific/Auckland',locale:'pt-BR'});
- await context.addInitScript(s=>localStorage.setItem('doce-agenda.pilot.v1',JSON.stringify(s)),data);
+ await context.addInitScript(s=>{localStorage.setItem('doce-agenda.demo.v2',JSON.stringify(s));localStorage.setItem('doce-agenda.tour.v1','1');},data);
  if(inject)await context.route('**/browser-store.js',async route=>route.fulfill({contentType:'text/javascript',body:(await readFile(path.join(root,'browser-store.js'),'utf8'))+inject}));
  const page=await context.newPage();page.setDefaultTimeout(12000);page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
  await page.clock.install({time:new Date('2026-10-13T12:00:00Z')});await page.goto(origin+'/demo/');await page.locator('#today-title').waitFor();
@@ -37,7 +37,7 @@ try {
   assert.equal(await page.locator('.month-range').innerText(),'setembro de 2026');await page.getByRole('button',{name:'Próximo mês',exact:true}).click();await page.locator('.month-stats').waitFor();
   await page.locator('[data-action="new-order"]:visible').first().click();await page.locator('#order-form [name=client]').fill('QA sem preço');await page.locator('#order-form [name=product]').fill('Bolo sem valor');await page.locator('#order-form [name=dueDate]').fill('2026-10-14');await page.locator('#order-form [name=dueTime]').fill('16:00');await page.locator('#order-form [name=status]').selectOption('Confirmado');await page.locator('#save-order-button').click();await page.waitForFunction(()=>!document.querySelector('#order-dialog').open);
   await page.getByText(/2 pedidos sem valor informado não entraram/).waitFor();assert.equal(await page.locator('.month-stats .stat-value').first().innerText(),'4');
-  const stored=await page.evaluate(()=>JSON.parse(localStorage.getItem('doce-agenda.pilot.v1')));assert.equal(stored.orders.at(-1).totalKnown,false);assert.equal(stored.orders.at(-1).total,0);
+  const stored=await page.evaluate(()=>JSON.parse(localStorage.getItem('doce-agenda.demo.v2')));assert.equal(stored.orders.at(-1).totalKnown,false);assert.equal(stored.orders.at(-1).total,0);
   results.push({case:'populated, month navigation, blank price',width,passed:true});await context.close();
  }
  const small={...seed,orders:seed.orders.slice(0,2)};let {page,context}=await open(small);await page.getByText('Com mais pedidos, mostramos aqui os dias e produtos que mais saem.').waitFor();assert.equal(await page.locator('.month-details').count(),0);await context.close();results.push({case:'under 3 orders',passed:true});

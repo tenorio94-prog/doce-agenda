@@ -1,0 +1,69 @@
+// Lista da semana (Agenda): node scripts/build-cloudflare.mjs && node scripts/test-production-list.mjs [pasta-de-capturas]
+// Roda na demonstração (dados só no navegador do teste): marcar pronto, desfazer, copiar e 360 px sem rolagem lateral.
+import assert from 'node:assert/strict';
+import { createServer } from 'node:http';
+import { mkdir, readFile, stat } from 'node:fs/promises';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { chromium } from 'file:///C:/Users/Restore/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/index.mjs';
+
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', 'deploy-cloud', 'public');
+const shots = process.argv[2] ? path.resolve(process.argv[2]) : null;
+if (shots) await mkdir(shots, { recursive: true });
+const types = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml', '.ttf': 'font/ttf', '.json': 'application/json', '.png': 'image/png', '.webmanifest': 'application/manifest+json' };
+const server = createServer(async (req, res) => {
+  let file = path.join(root, decodeURIComponent(new URL(req.url, 'http://x').pathname));
+  try {
+    if ((await stat(file)).isDirectory()) file = path.join(file, 'index.html');
+    res.writeHead(200, { 'content-type': types[path.extname(file)] || 'application/octet-stream' });
+    res.end(await readFile(file));
+  } catch { res.writeHead(404); res.end(); }
+}).listen(0);
+const origin = `http://127.0.0.1:${server.address().port}`;
+const browser = await chromium.launch();
+const results = [];
+try {
+  for (const [width, height] of [[360, 800], [1280, 900]]) {
+    const context = await browser.newContext({ viewport: { width, height }, locale: 'pt-BR', timezoneId: 'America/Sao_Paulo' });
+    await context.grantPermissions(['clipboard-read', 'clipboard-write'], { origin });
+    await context.addInitScript(() => localStorage.setItem('doce-agenda.tour.v1', '1'));
+    const page = await context.newPage();
+    const errors = [];
+    page.on('pageerror', (error) => errors.push(String(error)));
+    await page.goto(`${origin}/demo/`);
+    await page.locator('[data-agenda-mode="week"]').click();
+    await page.locator('#production-title').waitFor();
+    const items = page.locator('.prod-item');
+    assert.ok(await items.count() > 0, 'a semana da demonstração deve ter pedidos confirmados');
+    assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), `sem rolagem lateral em ${width}px`);
+    if (shots) await page.screenshot({ path: path.join(shots, `lista-${width}.png`), fullPage: true });
+
+    // Marcar pronto: o pedido vira Pronto; Desfazer volta à etapa anterior.
+    const check = page.locator('.prod-check[aria-pressed="false"]:not([disabled])').first();
+    const id = await check.getAttribute('data-id');
+    const selector = `.prod-check[data-id="${id}"]`;
+    await check.click();
+    await page.locator('#toast').filter({ hasText: 'Pronto' }).waitFor();
+    assert.equal(await page.locator(selector).getAttribute('aria-pressed'), 'true', 'marcado como pronto');
+    await page.locator('#toast button').click();
+    await page.waitForFunction((sel) => document.querySelector(sel)?.getAttribute('aria-pressed') === 'false', selector);
+
+    // Copiar lista: texto pronto para o WhatsApp.
+    await page.locator('[data-action="copy-production"]').click();
+    await page.locator('#toast').filter({ hasText: 'Lista da semana copiada' }).waitFor();
+    const text = await page.evaluate(() => navigator.clipboard.readText());
+    assert.match(text, /^Produção da semana \(/);
+    assert.match(text, /☐|✅/);
+
+    // Voltar ao Dia a dia mantém a agenda de antes.
+    await page.locator('[data-agenda-mode="day"]').click();
+    await page.locator('#today-list-title').waitFor();
+    assert.deepEqual(errors, []);
+    results.push(width);
+    await context.close();
+  }
+  console.log(JSON.stringify({ passed: results.length }));
+} finally {
+  await browser.close();
+  server.close();
+}

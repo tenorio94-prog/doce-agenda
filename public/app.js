@@ -18,7 +18,7 @@ const state = {
   orders: [], payments: [], availability: structuredClone(DEFAULT_AVAILABILITY), orderTemplate: structuredClone(DEFAULT_ORDER_TEMPLATE),
   orderPage: {active:false,slug:'',displayName:'',welcome:'',whatsapp:'',products:[]},
   restoreData: null, activeView: "today", search: "", statusFilter: "all",
-  weekOffset: 0, selectedDay: localDateKey(new Date()), settingsDate: localDateKey(new Date()), detailOrderId: null,
+  weekOffset: 0, agendaMode: "day", selectedDay: localDateKey(new Date()), settingsDate: localDateKey(new Date()), detailOrderId: null,
   paymentOrderId: null, toastTimer: null,
   month: null, monthData: null, monthLoading: false, monthError: '', monthRequest: 0,
   openSettings: new Set(), openDateException: false,
@@ -285,6 +285,13 @@ function upcomingMarkup(orders) {
 
 const scheduledOn = (key) => sortOrders(state.orders.filter((order) => order.status !== 'Solicitação' && !sampleOrder(order) && !isCancelled(order) && order.dueAt && localDateKey(parseDate(order.dueAt) || new Date(0)) === key));
 
+const weekRangeLabel = (days) => `${dateLabel(days[0], { day: "numeric", month: "short" })} – ${dateLabel(days[6], { day: "numeric", month: "short", year: "numeric" })}`;
+const weekControlsMarkup = (range) => `<div class="week-controls"><button class="icon-button week-step" data-week-shift="-1" type="button" aria-label="Semana anterior"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg></button><span class="week-range">${esc(range)}</span><button class="icon-button week-step" data-week-shift="1" type="button" aria-label="Próxima semana"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button></div>`;
+const weekDates = () => {
+  const monday = mondayFor(new Date());
+  return Array.from({ length: 7 }, (_, index) => { const date = new Date(monday); date.setDate(monday.getDate() + index); return date; });
+};
+
 // Agenda = today plus the week picker: the selected day starts on today and the list shows that day.
 function agendaWeekMarkup(upcomingCount) {
   const monday = mondayFor(new Date());
@@ -297,14 +304,14 @@ function agendaWeekMarkup(upcomingCount) {
   const selectedKey = localDateKey(selected);
   const isToday = selectedKey === todayKey;
   const scheduled = scheduledOn(selectedKey);
-  const range = `${dateLabel(days[0], { day: "numeric", month: "short" })} – ${dateLabel(days[6], { day: "numeric", month: "short", year: "numeric" })}`;
+  const range = weekRangeLabel(days);
   const weekdayTitle = new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "numeric", month: "long" }).format(selected);
   const dayTitle = isToday ? "Pedidos de hoje" : capitalize(weekdayTitle);
   const empty = isToday
     ? `<div class="today-empty"><h3>Nenhum pedido agendado para hoje.</h3><p>${upcomingCount ? 'Os próximos pedidos estão logo abaixo.' : 'Pedidos sem data aparecem em Pedidos.'}</p></div>`
     : `<div class="agenda-empty"><strong>Dia livre de pedidos marcados</strong>Pedidos sem data continuam em Pedidos.</div>`;
   return `<section class="today-agenda agenda-week section-card surface" aria-labelledby="today-list-title">
-    <div class="agenda-week-head"><h2 class="agenda-week-title">Sua semana</h2><div class="week-controls"><button class="icon-button week-step" data-week-shift="-1" type="button" aria-label="Semana anterior"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg></button><span class="week-range">${esc(range)}</span><button class="icon-button week-step" data-week-shift="1" type="button" aria-label="Próxima semana"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button></div></div>
+    <div class="agenda-week-head"><h2 class="agenda-week-title">Sua semana</h2>${weekControlsMarkup(range)}</div>
     <div class="week-days" role="group" aria-label="Escolher dia da semana">${days.map((day) => {
       const key = localDateKey(day);
       const count = scheduledOn(key).length;
@@ -319,10 +326,60 @@ function agendaWeekMarkup(upcomingCount) {
   </section>`;
 }
 
+// Lista da semana: o que precisa sair da cozinha, pelo dia da entrega. Marcar = o pedido fica Pronto.
+const PRODUCTION_STATUSES = ["Confirmado", "Em produção", "Pronto", "Entregue"];
+const productionDone = (order) => ["Pronto", "Entregue"].includes(order.status);
+function productionWeek() {
+  return weekDates().map((date) => {
+    const key = localDateKey(date);
+    const items = scheduledOn(key).filter((order) => PRODUCTION_STATUSES.includes(order.status));
+    items.sort((a, b) => Number(productionDone(a)) - Number(productionDone(b)));
+    return { date, key, items };
+  });
+}
+const productionDayTitle = (key) => capitalize(calendarDateLabel(key, { weekday: "long", day: "numeric" }));
+function productionText() {
+  const week = productionWeek();
+  const lines = [`Produção da semana (${weekRangeLabel(week.map((day) => day.date))})`, "Organizada pelo dia da entrega."];
+  week.filter((day) => day.items.length).forEach((day) => {
+    lines.push("", productionDayTitle(day.key));
+    day.items.forEach((order) => lines.push(`${productionDone(order) ? "✅" : "☐"} ${shortTime(order.dueAt)} · ${order.product} · ${clientName(order)} (${(order.mode || "Retirada").toLowerCase()})`));
+  });
+  return lines.join("\n");
+}
+function productionItemMarkup(order) {
+  const done = productionDone(order), id = esc(order.id), delivered = order.status === "Entregue";
+  const tag = order.status === "Em produção" ? '<span class="prod-tag">fazendo</span>' : delivered ? '<span class="prod-tag">entregue</span>' : "";
+  return `<li class="prod-item${done ? " is-done" : ""}">
+    <button class="prod-check" type="button" data-action="toggle-produced" data-id="${id}" aria-pressed="${done}" aria-label="${delivered ? "Já entregue" : done ? "Desmarcar pronto" : "Marcar como pronto"}: ${esc(order.product)}"${delivered ? " disabled" : ""}><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>
+    <button class="prod-body" type="button" data-open-order="${id}"><span class="prod-time">${esc(shortTime(order.dueAt))}</span><span class="prod-text"><strong>${esc(order.product || "Produto sem descrição")}</strong><small>${esc(clientName(order) || "Cliente sem nome")} · ${esc((order.mode || "Retirada").toLowerCase())}</small></span>${tag}</button>
+  </li>`;
+}
+function productionMarkup() {
+  const week = productionWeek();
+  const todayKey = localDateKey(new Date());
+  const all = week.flatMap((day) => day.items);
+  const done = all.filter(productionDone).length;
+  const summary = all.length ? `${all.length} ${all.length === 1 ? "pedido" : "pedidos"} · ${done} ${done === 1 ? "pronto" : "prontos"}` : "Nenhum pedido confirmado nesta semana";
+  return `<section class="production-week section-card surface" aria-labelledby="production-title">
+    <div class="agenda-week-head"><h2 class="agenda-week-title" id="production-title">Sua produção</h2>${weekControlsMarkup(weekRangeLabel(week.map((day) => day.date)))}</div>
+    <div class="production-intro"><p><strong>${esc(summary)}</strong><br>Pedidos confirmados, pelo dia da entrega. Marque quando ficar pronto.</p>${all.length ? '<button class="button button-quiet button-small" type="button" data-action="copy-production">Copiar lista</button>' : ""}</div>
+    <div class="production-days">${week.map((day) => {
+      const availability = availabilityFor(day.key);
+      const note = day.key === todayKey ? '<span class="prod-today">hoje</span>' : "";
+      const left = day.items.filter((order) => !productionDone(order)).length;
+      if (!day.items.length) return `<div class="prod-day is-empty"><h3>${esc(productionDayTitle(day.key))}${note}</h3><span>${availability.closed ? "Fechado" : "Nada para entregar"}</span></div>`;
+      return `<div class="prod-day"><h3>${esc(productionDayTitle(day.key))}${note}<span class="prod-left">${left ? `${left} ${left === 1 ? "falta" : "faltam"}` : "tudo pronto"}</span></h3><ul class="prod-list">${day.items.map(productionItemMarkup).join("")}</ul></div>`;
+    }).join("")}</div>
+  </section>`;
+}
+
 function renderToday() {
   const panel = $("#view-today");
   const focused = document.activeElement;
-  const focusSelector = focused?.dataset?.weekShift !== undefined ? `[data-week-shift="${CSS.escape(focused.dataset.weekShift)}"]` : focused?.dataset?.selectDay ? `[data-select-day="${CSS.escape(focused.dataset.selectDay)}"]` : "";
+  const focusSelector = focused?.dataset?.weekShift !== undefined ? `[data-week-shift="${CSS.escape(focused.dataset.weekShift)}"]` : focused?.dataset?.selectDay ? `[data-select-day="${CSS.escape(focused.dataset.selectDay)}"]` : focused?.dataset?.agendaMode ? `[data-agenda-mode="${CSS.escape(focused.dataset.agendaMode)}"]` : "";
+  const weekMode = state.agendaMode === "week";
+  const modeSwitch = `<div class="agenda-mode" role="group" aria-label="Como ver a agenda"><button type="button" data-agenda-mode="day" aria-pressed="${!weekMode}">Dia a dia</button><button type="button" data-agenda-mode="week" aria-pressed="${weekMode}">Lista da semana</button></div>`;
   panel.classList.add('today-redesign');
   const todays = todayOrders();
   const committed = state.orders.filter((order) => !sampleOrder(order) && isCommitted(order));
@@ -344,9 +401,9 @@ function renderToday() {
   panel.innerHTML = `<div class="page-heading today-heading"><div><span class="date-label">${esc(new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "numeric", month: "long" }).format(new Date()))}</span><h1 id="today-title">Hoje</h1><p class="today-summary">${todaySummary}</p></div></div>
     ${requestBanner()}${firstUse ? `<section class="welcome-panel"><h2>Cadastre seu primeiro pedido</h2><p>Comece com cliente, produto e valor. Complete os detalhes quando estiverem combinados.</p><div class="welcome-actions"><button class="button button-primary" type="button" data-action="new-order">Nova encomenda</button><button class="text-link" type="button" data-action="open-tour">Ver como funciona</button></div></section>` : ''}
     ${sample && firstUse ? `<section class="sample-card" aria-label="Pedido de exemplo">${rowMarkup(sample)}<p>Toque para ver como fica um pedido completo. O exemplo não entra na sua agenda.</p></section>` : sample ? `<details class="sample-examples"><summary>Exemplo fictício — não entra na sua agenda</summary><div class="sample-example-list">${state.orders.filter(sampleOrder).map((order) => `<button class="text-link" type="button" data-open-order="${esc(order.id)}">Ver exemplo: ${esc(clientName(order) || order.product || "pedido")}</button>`).join("")}</div></details>` : ''}
-    <div class="today-columns"><div class="today-main"><div class="content-grid today-single">${agendaWeekMarkup(upcoming.length)}</div>${nextAction}
+    <div class="today-columns"><div class="today-main">${modeSwitch}<div class="content-grid today-single">${weekMode ? productionMarkup() : agendaWeekMarkup(upcoming.length)}</div>${nextAction}
     ${pendingChanges.length ? `<section class="pending-card surface"><div class="section-head"><h2>Alterações para revisar</h2><span class="pending-count">${pendingChanges.length}</span></div><div class="pending-list">${pendingChanges.slice(0, 3).map((order) => `<button class="pending-row" type="button" data-open-order="${esc(order.id)}"><span><strong>${esc(order.client)}</strong><small>${esc(order.product)}</small></span><span class="pending-chevron" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></span><span class="pending-banner"><strong>Pedido de mudança:</strong> ${esc(order.pendingChange)}</span></button>`).join("")}</div></section>` : ""}
-    ${upcomingMarkup(upcoming)}
+    ${weekMode ? "" : upcomingMarkup(upcoming)}
     </div><div class="today-side">${state.orders.some((order) => !sampleOrder(order)) ? `<section class="finance-summary" aria-labelledby="finance-title"><div class="section-head"><h2 id="finance-title">Resumo financeiro</h2></div><div class="stats-grid">
       <article class="stat-card"><div class="stat-top">Em andamento</div><div class="stat-value">${state.orders.filter((order) => !sampleOrder(order) && !isFinished(order)).length}</div><div class="stat-note">pedidos ainda não encerrados</div></article>
       <article class="stat-card"><div class="stat-top">Valor dos pedidos confirmados</div><div class="stat-value">${esc(money(totalConfirmed))}</div><div class="stat-note">Soma dos pedidos confirmados. Ainda não é dinheiro recebido.</div></article>
@@ -1000,6 +1057,8 @@ function handleClick(event) {
   if (open && !event.target.closest("[data-action]")) { showOrderDetail(open.dataset.openOrder); return; }
   const weekShift = event.target.closest("[data-week-shift]");
   if (weekShift) { state.weekOffset += Number(weekShift.dataset.weekShift); state.selectedDay = ""; state.agendaEnter = true; renderToday(); return; }
+  const agendaMode = event.target.closest("[data-agenda-mode]");
+  if (agendaMode) { state.agendaMode = agendaMode.dataset.agendaMode === "week" ? "week" : "day"; renderToday(); return; }
   const selectDay = event.target.closest("[data-select-day]");
   if (selectDay) { state.selectedDay = selectDay.dataset.selectDay; state.agendaEnter = true; renderToday(); return; }
   const stage = event.target.closest("[data-stage]");
@@ -1025,6 +1084,8 @@ function handleClick(event) {
       break;
     case 'agenda-today': state.weekOffset=0;state.selectedDay=localDateKey(new Date());state.agendaEnter=true;renderToday();break;
     case 'advance-order': action.disabled=true;advanceOrder(id,action.dataset.status);break;
+    case 'toggle-produced': { const order = orderById(id); if (!order || order.status === 'Entregue') break; action.disabled = true; advanceOrder(id, order.status === 'Pronto' ? 'Em produção' : 'Pronto'); break; }
+    case 'copy-production': copyText(productionText()).then(() => showToast("Lista da semana copiada.")).catch((error) => showToast(error.message)); break;
     case 'confirm-order': { const order = orderById(id); closeDetails(); if (order) openConfirmForm(order); break; }
     case 'review-request': showOrderDetail(id); break;
     case 'retry-month': state.monthError='';state.monthData=null;renderMonth();break;
