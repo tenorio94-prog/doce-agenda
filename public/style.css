@@ -1337,13 +1337,11 @@ wa-input[aria-invalid="true"]::part(input-wrapper), wa-textarea[aria-invalid="tr
   .order-actions wa-button::part(button) { min-height: 50px; padding-inline: 16px; font-size: var(--fs-base); }
 }
 
-/* Convite de quem chega da landing na demonstração. */
-.landing-invite-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; }
 @media (min-width: 761px) {
   .request-banner { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; column-gap: 24px; }
   .request-banner h2, .request-banner p { grid-column: 1; }
   .request-banner p { margin-bottom: 0; }
-  .request-banner > .button, .request-banner > .landing-invite-actions { grid-column: 2; grid-row: 1 / span 2; }
+  .request-banner > .button { grid-column: 2; grid-row: 1 / span 2; }
 }
 /* Pedidos no celular: o "+ Novo" da barra de baixo já cria a encomenda; o título cabe numa linha. */
 @media (max-width: 760px) { #view-orders .page-heading > .page-add { display: none; } }
