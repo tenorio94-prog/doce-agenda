@@ -825,7 +825,7 @@ h1, h2, h3, .section-head h2 { font-family: var(--font-title); }
 .surface, .section-card, .stat-card, .availability-settings, .settings-data-tools { border-color: var(--line); border-radius: var(--r-l); background: var(--branco); }
 
 /* Cartões de encomenda: horário à esquerda, carimbo quando o sinal foi conferido */
-.order-row { position: relative; display: grid; grid-template-columns: 62px minmax(0, 1fr); gap: 2px 14px; align-items: start; padding: 16px 18px; border: 1.5px solid var(--line); border-radius: var(--r-l); background: var(--branco); min-height: 0; }
+.order-row { position: relative; display: grid; grid-template-columns: 62px minmax(0, 1fr); gap: 2px 14px; align-items: start; padding: 14px 16px; border: var(--hairline); border-radius: var(--r-m); background: var(--branco); box-shadow: var(--shadow-s); min-height: 0; }
 .order-row .row-accent { display: none; }
 .row-time { grid-row: 1 / span 2; font-family: var(--font-title); font-weight: 600; font-size: var(--fs-2xl); line-height: 1.1; font-variant-numeric: tabular-nums; color: var(--ink); }
 .order-row .row-main { display: block; min-width: 0; grid-column: 2; }
@@ -860,7 +860,7 @@ h1, h2, h3, .section-head h2 { font-family: var(--font-title); }
 @media (prefers-reduced-motion: reduce) { .stamp-large { animation: none; } }
 
 /* Situação em pílula, uma cor por significado */
-.status-pill { padding: 3px 10px; border: 1.5px solid var(--line); background: var(--branco); color: var(--ink-soft); font-size: var(--fs-sm); font-weight: 700; }
+.status-pill { padding: 3px 10px; border: var(--hairline); background: var(--branco); color: var(--ink-soft); font-size: var(--fs-sm); font-weight: 700; }
 .status-pill::before { display: none; }
 .status-quote-pill, .status-confirmed-pill, .status-cancelled-pill { background: var(--branco); color: var(--ink-soft); }
 .status-waiting-pill { border-color: var(--baunilha); background: var(--baunilha); color: var(--ink); }
@@ -906,7 +906,7 @@ h1, h2, h3, .section-head h2 { font-family: var(--font-title); }
 .sample-card .order-row { border-style: dashed; border-color: var(--border-input); }
 .sample-tag, .demo-label { background: var(--segmented); color: var(--ink-soft); }
 .toast { background: var(--ameixa); border-radius: var(--r-m); }
-.day-button { border-radius: var(--r-m); }
+.day-button { border-radius: var(--r-s); }
 .day-button.is-selected { background: var(--ameixa); border-color: var(--ameixa); box-shadow: none; }
 .day-button.is-today:not(.is-selected) { border-color: var(--glace); background: var(--glace); }
 .day-button.is-closed:not(.is-selected) { background: var(--segmented); }
@@ -927,7 +927,7 @@ h1, h2, h3, .section-head h2 { font-family: var(--font-title); }
 
 .deposit-main { padding-right: 10px; }
 .deposit-main .stamp-large { font-size: var(--fs-lg); }
-.order-page-settings{padding:24px;margin-bottom:24px}.order-page-settings h2{margin-top:0}.order-page-settings form{display:grid;gap:18px}.switch-label{display:flex;align-items:center;gap:12px;font-weight:700}.switch-label input{width:24px;height:24px;accent-color:var(--ameixa)}.link-actions,.request-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:20px}.request-banner{padding:22px;margin:16px 0 24px;background:var(--glace)}.request-banner h2{margin:0;font-size:var(--fs-2xl)}.request-origin{font-size:var(--fs-xs);color:var(--link);font-weight:650;margin-top:6px}.request-review{padding:18px;border-radius:var(--r-m);background:var(--glace);margin-bottom:20px}.request-review h3{margin-top:0}.request-review .request-actions{display:grid;gap:10px}.status-solicitao-pill{background:var(--glace)}.status-recusado-pill{background:var(--segmented)}
+.order-page-settings{padding:24px;margin-bottom:24px}.order-page-settings h2{margin-top:0}.order-page-settings form{display:grid;gap:18px}.switch-label{display:flex;align-items:center;gap:12px;font-weight:700}.switch-label input{width:24px;height:24px;accent-color:var(--ameixa)}.link-actions,.request-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:20px}.request-banner{padding:16px 18px;margin:12px 0 16px;border:0;border-radius:var(--r-m);background:var(--glace)}.request-banner h2{margin:0;font-size:var(--fs-xl)}.request-banner p{margin:4px 0 12px;color:var(--ink-soft);font-size:var(--fs-sm);line-height:1.45}.request-banner .button{min-height:44px}.request-origin{font-size:var(--fs-xs);color:var(--link);font-weight:650;margin-top:6px}.request-review{padding:18px;border-radius:var(--r-m);background:var(--glace);margin-bottom:20px}.request-review h3{margin-top:0}.request-review .request-actions{display:grid;gap:10px}.status-solicitao-pill{background:var(--glace)}.status-recusado-pill{background:var(--segmented)}
 
 
 /* Agenda: a semana fica dentro de Hoje */
@@ -1175,7 +1175,8 @@ body.story-open { overflow: hidden; }
   .order-list.is-entering > .order-row, .order-row.is-advanced, .order-row.is-advanced .status-pill { animation: none; }
 }
 .order-row.is-compact.is-paid .row-product { padding-right: 0; }
-#view-today.today-redesign .today-main > .next-action-card { margin-top: 18px; padding: 16px 18px; border: 1.5px solid var(--line); border-radius: var(--r-l); background: var(--branco); }
+#view-today.today-redesign .today-main > .next-action-card { margin-top: 18px; padding: 14px 16px; border: var(--hairline); border-radius: var(--r-m); background: var(--branco); box-shadow: var(--shadow-s); }
+#view-today.today-redesign .today-main > .next-action-card .section-head { min-height: 0; margin: 0 0 6px; padding: 0; border-bottom: 0; }
 @media (max-width: 420px) { .day-availability { font-size: var(--fs-xs); letter-spacing: -.01em; } }
 
 /* ---- Link de encomenda: cartão "no ar", passo a passo e produtos ---- */
@@ -1337,4 +1338,10 @@ wa-input[aria-invalid="true"]::part(input-wrapper), wa-textarea[aria-invalid="tr
 }
 
 /* Convite de quem chega da landing na demonstração. */
-.landing-invite-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; margin-top: 12px; }
+.landing-invite-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; }
+@media (min-width: 761px) {
+  .request-banner { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; column-gap: 24px; }
+  .request-banner h2, .request-banner p { grid-column: 1; }
+  .request-banner p { margin-bottom: 0; }
+  .request-banner > .button, .request-banner > .landing-invite-actions { grid-column: 2; grid-row: 1 / span 2; }
+}
