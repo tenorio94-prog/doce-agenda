@@ -107,7 +107,7 @@ function allowedRoute(path: string, method: string): boolean {
     return ['/api/state', '/api/export', '/api/availability', '/api/order-template', '/api/order-page', '/api/order-page/slug-available', '/api/order-page/metrics', '/api/resumo-mensal'].includes(path);
   }
   if (method === 'PUT') {
-    return path === '/api/availability' || path === '/api/order-template' || path === '/api/order-page'
+    return path === '/api/availability' || path === '/api/order-template' || path === '/api/order-page' || path === '/api/pix'
       || /^\/api\/orders\/[^/]+$/.test(path) || /^\/api\/payments\/[^/]+$/.test(path);
   }
   if (method === 'POST') {

@@ -1216,3 +1216,17 @@ wa-input[aria-invalid="true"]::part(input-wrapper), wa-textarea[aria-invalid="tr
 .tab-tip p { flex: 1; margin: 0; padding-top: 2px; color: var(--ink); font-size: var(--fs-sm); line-height: 1.45; }
 .tab-tip-close { flex: none; display: grid; place-items: center; width: 44px; height: 44px; margin: -10px 0; border: 0; border-radius: var(--r-s); background: none; color: var(--ink-soft); cursor: pointer; }
 .tab-tip-close svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+
+/* ---- Pix: cobrar com o código copia e cola ---- */
+.payment-buttons { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+.pix-dialog { width: min(440px, calc(100vw - 24px)); padding: 24px; }
+.pix-for { margin: 0 0 12px; color: var(--ink-soft); font-size: var(--fs-sm); }
+.pix-amounts { margin: 0 0 12px; padding: 0; border: 0; }
+.pix-amounts legend { margin-bottom: 8px; font-family: var(--font-title); font-size: var(--fs-lg); font-weight: 600; }
+.pix-other { margin-bottom: 12px; }
+.pix-qr { width: min(240px, 100%); margin: 8px auto 0; padding: 6px; border: var(--hairline); border-radius: var(--r-s); background: #fff; }
+.pix-qr svg { display: block; width: 100%; height: auto; }
+.pix-amount { margin: 8px 0 12px; font-family: var(--font-title); font-size: var(--fs-3xl); font-weight: 600; text-align: center; font-variant-numeric: tabular-nums; }
+.pix-code textarea { font: 13px/1.4 ui-monospace, SFMono-Regular, Consolas, monospace; word-break: break-all; resize: none; }
+.pix-actions { display: grid; gap: 8px; margin-top: 12px; }
+@media (max-width: 760px) { .pix-dialog { padding: 18px; } }

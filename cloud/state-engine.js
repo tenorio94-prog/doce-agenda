@@ -1,5 +1,6 @@
 import { defaultOrderPage, orderPageInput } from './order-link-model.js';
 import { monthlySummary } from './monthly-summary.js';
+import { defaultPixSettings, pixSettingsInput } from './pix-code.js';
 const STATUSES = ['Solicitação', 'Orçamento', 'Aguardando confirmação', 'Confirmado', 'Em produção', 'Pronto', 'Entregue', 'Cancelado', 'Recusado'];
 const DRAFT_STATUSES = ['Solicitação', 'Orçamento', 'Aguardando confirmação', 'Cancelado', 'Recusado'];
 const COMMITTED_STATUSES = ['Confirmado', 'Em produção', 'Pronto', 'Entregue'];
@@ -40,6 +41,7 @@ export function createEmptyState() {
     availability: defaultAvailability(),
     orderTemplate: defaultOrderTemplate(),
     orderPage: defaultOrderPage(),
+    pix: defaultPixSettings(),
   };
 }
 
@@ -207,6 +209,7 @@ function validBackup(value) {
     availability: availabilityInput(value.availability ?? defaultAvailability()),
     orderTemplate: templateInput(value.orderTemplate ?? defaultOrderTemplate()),
     orderPage: orderPageInput(value.orderPage ?? defaultOrderPage()),
+    pix: pixSettingsInput(value.pix ?? defaultPixSettings()),
   };
   const orderIds = new Set();
   for (const order of state.orders) {
@@ -242,6 +245,7 @@ function normalizeState(value) {
   state.availability = availabilityInput(state.availability ?? defaultAvailability());
   state.orderTemplate = templateInput(state.orderTemplate ?? defaultOrderTemplate());
   state.orderPage = orderPageInput(state.orderPage ?? defaultOrderPage());
+  state.pix = pixSettingsInput(state.pix ?? defaultPixSettings());
   state.orders=state.orders.map(order=>({...order,origin:order.origin??'manual'}));
   return state;
 }
@@ -292,6 +296,8 @@ export function transactState(state, url, options = {}) {
       result = order;
     } else if (path === '/api/order-page' && method === 'PUT') {
       nextState.orderPage = orderPageInput(body); result = nextState.orderPage;
+    } else if (path === '/api/pix' && method === 'PUT') {
+      nextState.pix = pixSettingsInput(body); result = nextState.pix;
     } else if (path === '/api/availability' && method === 'PUT') {
       nextState.availability = availabilityInput(body);
       result = nextState.availability;

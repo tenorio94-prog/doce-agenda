@@ -1,5 +1,8 @@
 "use strict";
 
+import { renderSVG } from "uqr";
+import { pixPayload } from "../cloud/pix-code.js";
+
 const ORDER_STATUSES = ["Solicitação", "Orçamento", "Aguardando confirmação", "Confirmado", "Em produção", "Pronto", "Entregue", "Cancelado", "Recusado"];
 const PAYMENT_STATUSES = ["Informado", "Conferido"];
 const DEFAULT_AVAILABILITY = { closedWeekdays: [], minimumNoticeHours: 0, dailyOrderLimit: null, dateOverrides: {} };
@@ -19,6 +22,7 @@ const localDateKey = (date) => `${date.getFullYear()}-${String(date.getMonth() +
 const state = {
   orders: [], payments: [], availability: structuredClone(DEFAULT_AVAILABILITY), orderTemplate: structuredClone(DEFAULT_ORDER_TEMPLATE),
   orderPage: {active:false,slug:'',displayName:'',welcome:'',whatsapp:'',products:[]},
+  pix: { keyType: "", key: "", name: "", city: "", depositPercent: 30 },
   restoreData: null, activeView: "today", search: "", statusFilter: "all",
   weekOffset: 0, agendaMode: "day", selectedDay: localDateKey(new Date()), settingsDate: localDateKey(new Date()), detailOrderId: null,
   paymentOrderId: null, toastTimer: null,
@@ -26,11 +30,14 @@ const state = {
   openSettings: new Set(), openDateException: false,
 };
 
-// The landing links to /demo/?de=landing. Nothing depends on it any more; the flag only leaves the
-// address so a shared link looks clean.
+// The landing links to /demo/?de=landing (nothing depends on it any more) and ?pix=teste|off turns the Pix beta on or off
+// in this browser. Both flags leave the address so a shared link looks clean.
 try {
   const url = new URL(location.href);
-  if (url.searchParams.has("de")) { url.searchParams.delete("de"); history.replaceState(history.state, "", url.pathname + url.search + url.hash); }
+  const pixFlag = url.searchParams.get("pix");
+  if (pixFlag === "teste") localStorage.setItem("doce-agenda.pix-beta", "1");
+  if (pixFlag === "off") localStorage.removeItem("doce-agenda.pix-beta");
+  if (url.searchParams.has("de") || pixFlag) { url.searchParams.delete("de"); url.searchParams.delete("pix"); history.replaceState(history.state, "", url.pathname + url.search + url.hash); }
 } catch { /* endereço fica como está */ }
 
 const $ = (selector, root = document) => root.querySelector(selector);
@@ -165,6 +172,7 @@ async function loadState({ silent = false } = {}) {
     state.availability = data.availability || structuredClone(DEFAULT_AVAILABILITY);
     state.orderTemplate = data.orderTemplate || structuredClone(DEFAULT_ORDER_TEMPLATE);
     state.orderPage = data.orderPage || {active:false,slug:'',displayName:'',welcome:'',whatsapp:'',products:[]};
+    state.pix = data.pix || { keyType: "", key: "", name: "", city: "", depositPercent: 30 };
     state.monthData = null; state.monthError = ''; state.monthLoading = false; state.monthRequest++;
     $("#error-notice").hidden = true;
     $("#loading-state").hidden = true;
@@ -539,6 +547,7 @@ function renderSettings() {
     <div class="settings-list">
       ${settingsCard("link", "Link de encomenda", summary.link, orderPageMarkup())}
       ${settingsCard("days", "Dias e limites", summary.days, availabilitySettingsMarkup(state.settingsDate))}
+      ${pixEnabled() ? settingsCard("pix", "Pix", pixSummary(), pixSettingsMarkup()) : ""}
       ${settingsCard("cake", "Detalhes do bolo", summary.cake, `<p class="settings-intro">Os campos que aparecem quando o pedido é um bolo, aqui e no seu link. Campos obrigatórios só são exigidos ao confirmar.</p>${orderTemplateSettingsMarkup()}`)}
     </div>`;
   panel.hidden = state.activeView !== "settings";
@@ -709,7 +718,7 @@ function detailMarkup(order) {
     ${pending}${requestReviewMarkup(order)}
     ${depositCard}<p class="deposit-rule">O sinal só conta quando você confirma que recebeu.</p>
     <div class="detail-split"><div class="detail-tile"><div class="detail-tile-label">Valor total</div><div class="detail-tile-value large">${esc(orderTotalLabel(order))}</div></div><div class="detail-tile"><div class="detail-tile-label">${isCommitted(order) ? "Saldo a receber" : "Recebido conferido"}</div><div class="detail-tile-value ${balance === null && isCommitted(order) ? "is-unknown" : "large"}">${balance === null ? (isCommitted(order) ? "Ainda não conferido" : esc(money(confirmedPayments(order.id).length ? confirmedPaid(order.id) : 0))) : esc(balanceLabel(balance))}${balance !== null && balance < 0 ? `<small>Confira os recebimentos registrados.</small>` : ""}</div></div>${location}${order.nextAction ? `<div class="detail-tile"><div class="detail-tile-label">Próxima ação${order.nextAt ? ` · ${esc(dateTimeLabel(order.nextAt))}` : ""}</div><div class="detail-tile-value">${esc(order.nextAction)}</div></div>` : ""}</div>
-    <section class="payment-section" ${order.status==='Solicitação'?'hidden':''}><div class="detail-section-title"><h3>Pagamentos</h3><button class="button button-small" data-action="add-payment" data-id="${esc(order.id)}" type="button"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> Registrar</button></div>${payments.length ? `<div class="payment-list">${payments.map((payment) => `<div class="payment-item"><div class="payment-main"><div class="payment-amount">${esc(money(payment.amount))}</div><div class="payment-note">${esc(payment.note || "Sem observação")} · ${esc(formatWhenHistory(payment.createdAt))}</div></div><div class="payment-status"><span>${payment.status === "Conferido" ? "Recebimento conferido" : "Cliente informou"}</span>${payment.status !== "Conferido" ? `<button type="button" data-action="confirm-payment" data-id="${esc(payment.id)}">Marcar conferido</button>` : ""}</div></div>`).join("")}</div>` : `<p class="detail-empty">Nenhum pagamento registrado.</p>`}</section>
+    <section class="payment-section" ${order.status==='Solicitação'?'hidden':''}><div class="detail-section-title"><h3>Pagamentos</h3><div class="payment-buttons">${pixChargeButton(order)}<button class="button button-small" data-action="add-payment" data-id="${esc(order.id)}" type="button"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> Registrar</button></div></div>${payments.length ? `<div class="payment-list">${payments.map((payment) => `<div class="payment-item"><div class="payment-main"><div class="payment-amount">${esc(money(payment.amount))}</div><div class="payment-note">${esc(payment.note || "Sem observação")} · ${esc(formatWhenHistory(payment.createdAt))}</div></div><div class="payment-status"><span>${payment.status === "Conferido" ? "Recebimento conferido" : "Cliente informou"}</span>${payment.status !== "Conferido" ? `<button type="button" data-action="confirm-payment" data-id="${esc(payment.id)}">Marcar conferido</button>` : ""}</div></div>`).join("")}</div>` : `<p class="detail-empty">Nenhum pagamento registrado.</p>`}</section>
     <details class="history-section"><summary>Histórico (${history.length})</summary>${history.length ? `<div class="history-list">${history.map((item) => `<div class="history-item"><strong>${esc(formatWhenHistory(item.at))}</strong>${esc(item.text || "Atualização do pedido")}</div>`).join("")}</div>` : `<p class="detail-empty">As alterações do pedido aparecerão aqui.</p>`}</details>
     <div class="detail-actions"><button class="button button-quiet" data-action="copy-summary" data-id="${esc(order.id)}" type="button">${order.reviewOutcome?'Copiar mensagem para a cliente':'Copiar resumo para WhatsApp'}</button><button class="button button-primary" data-action="edit-order" data-id="${esc(order.id)}" type="button" ${order.status==='Recusado'?'hidden':''}>${order.status==='Solicitação'?'Editar e aceitar':'Editar encomenda'}</button></div>
   </div>`;
@@ -1106,6 +1115,8 @@ function handleClick(event) {
     case 'onboarding-skip': { const progress = readOnboarding(); progress.dismissed = true; saveOnboarding(progress); renderToday(); if (isDemoMode()) showToast('Para ver de novo, toque em Como funciona.'); break; }
     case 'onboarding-go': runOnboardingTask(action.dataset.task); break;
     case 'close-tip': closeTip(action.dataset.tip); break;
+    case 'pix-charge': openPixCharge(id); break;
+    case 'clear-pix': clearPix(); break;
     case 'reset-demo':
       if (window.DoceStore?.resetDemo && window.confirm('Recomeçar a demonstração? Os pedidos de exemplo voltam ao início e o que você mudou aqui é apagado.')) { window.DoceStore.resetDemo(); try { localStorage.removeItem(onboardingKey()); } catch { /* sem armazenamento */ } location.reload(); }
       break;
@@ -1163,6 +1174,7 @@ function attachEvents() {
     if (event.target.id === "date-availability-form") saveDateAvailability(event);
     if (event.target.id === "order-template-form") saveOrderTemplate(event);
     if (event.target.id === "order-page-form") saveOrderPage(event);
+    if (event.target.id === "pix-form") savePix(event);
   });
   $("#view-settings").addEventListener("change", (event) => {
     if (event.target.id === "settings-date" && /^\d{4}-\d{2}-\d{2}$/.test(event.target.value)) { state.settingsDate = event.target.value; renderSettings(); }
@@ -1335,6 +1347,137 @@ async function loadLinkMetrics(){
  try{const metrics=await apiRequest('/order-page/metrics'),orders=state.orders.filter(o=>o.origin==='link'),week=orders.filter(o=>Date.parse(o.createdAt)>=Date.now()-7*86400000),accepted=orders.filter(o=>o.reviewOutcome==='accepted'),reviewed=orders.filter(o=>o.reviewedAt),times=reviewed.map(o=>Math.max(0,Date.parse(o.reviewedAt)-Date.parse(o.createdAt))),minutes=times.length?Math.round(times.reduce((a,b)=>a+b,0)/times.length/60000):null;
  output.textContent=`${metrics.visits} visitas · ${week.length} solicitações nos últimos 7 dias · ${orders.length?Math.round(accepted.length/orders.length*100):0}% aceitas${minutes!==null?` · revisão média em ${minutes} min`:''}. ${state.orders.filter(o=>!['Solicitação','Recusado'].includes(o.status)&&!sampleOrder(o)).length?Math.round(state.orders.filter(o=>o.origin==='link'&&!['Solicitação','Recusado'].includes(o.status)).length/state.orders.filter(o=>!['Solicitação','Recusado'].includes(o.status)&&!sampleOrder(o)).length*100):0}% dos pedidos vieram do link. Visitas contam carregamentos, incluindo repetições.`;
  }catch(e){output.textContent=e.message;}
+}
+
+// ---- Pix: cobrar com o código copia e cola ----
+// Hidden while the code is checked in two bank apps: ?pix=teste turns it on in this browser, ?pix=off turns it off.
+// Nothing is registered by itself: the payment only counts after she registers it and marks it Conferido.
+const PIX_BETA_KEY = "doce-agenda.pix-beta";
+const pixEnabled = () => { try { return localStorage.getItem(PIX_BETA_KEY) === "1"; } catch { return false; } };
+const PIX_TYPE_LABELS = { celular: "Celular", cpf: "CPF", cnpj: "CNPJ", email: "E-mail", aleatoria: "Chave aleatória" };
+const pixReady = () => !!state.pix?.key;
+const toCents = (reais) => Math.round(Number(reais || 0) * 100);
+const moneyCents = (value) => money(value / 100);
+let pixCharge = null;
+
+function pixSummary() {
+  return pixReady() ? `${esc(PIX_TYPE_LABELS[state.pix.keyType] || "Chave")} · sinal sugerido ${state.pix.depositPercent}%` : "Ainda não cadastrado · para cobrar o sinal";
+}
+
+function pixSettingsMarkup() {
+  const pix = state.pix || {};
+  const percent = Number.isInteger(pix.depositPercent) ? pix.depositPercent : 30;
+  return `<form id="pix-form" class="settings-form pix-form">
+    <p class="settings-intro">Com a chave cadastrada, cada pedido ganha o botão "Cobrar por Pix". A cliente paga pelo app do banco dela; você confere na sua conta e marca como conferido.</p>
+    <label class="field"><span>Tipo da chave</span><select name="keyType" required>${[["", "Escolha"], ...Object.entries(PIX_TYPE_LABELS)].map(([value, label]) => `<option value="${value}" ${(pix.keyType || "") === value ? "selected" : ""}>${label}</option>`).join("")}</select></label>
+    <label class="field"><span>Chave Pix</span><input name="key" autocomplete="off" maxlength="80" required value="${esc(pix.key || "")}" placeholder="Igual está no app do seu banco"></label>
+    <label class="field"><span>Nome que aparece no Pix</span><input name="name" maxlength="40" required value="${esc(pix.name || state.orderPage?.displayName || "")}"><small>Até 25 letras. Acentos saem no código.</small></label>
+    <label class="field"><span>Cidade</span><input name="city" maxlength="40" required value="${esc(pix.city || "")}" placeholder="Ex.: Recife"></label>
+    <label class="field"><span>Sinal sugerido (%)</span><input name="depositPercent" type="number" inputmode="numeric" min="0" max="100" step="1" value="${percent}"><small>Em cada pedido dá para cobrar outro valor.</small></label>
+    <p class="availability-note">A chave fica só na sua conta. A cliente vê seu nome e a chave quando recebe o código.</p>
+    <div class="link-actions"><button class="button button-primary" type="submit">Salvar Pix</button>${pixReady() ? '<button class="text-link" type="button" data-action="clear-pix">Remover chave</button>' : ""}</div>
+  </form>`;
+}
+
+async function savePix(event, form = event.target) {
+  event.preventDefault();
+  const data = new FormData(form);
+  const percent = Number(data.get("depositPercent"));
+  const body = { keyType: String(data.get("keyType") || ""), key: String(data.get("key") || "").trim(), name: String(data.get("name") || ""), city: String(data.get("city") || ""), depositPercent: Number.isInteger(percent) ? percent : 30 };
+  if (!body.key) return showToast("Informe a chave Pix.");
+  try {
+    await apiRequest("/pix", { method: "PUT", body });
+    await loadState({ silent: true });
+    showToast("Pix salvo. Já dá para cobrar nos pedidos.");
+  } catch (error) { showToast(error.message || "Não foi possível salvar o Pix."); }
+}
+
+async function clearPix() {
+  if (!window.confirm("Remover a chave Pix? O botão de cobrança some dos pedidos até você cadastrar de novo.")) return;
+  try {
+    await apiRequest("/pix", { method: "PUT", body: { key: "", depositPercent: state.pix?.depositPercent ?? 30 } });
+    await loadState({ silent: true });
+    showToast("Chave Pix removida.");
+  } catch (error) { showToast(error.message || "Não foi possível remover a chave."); }
+}
+
+// What can be charged now, in cents: the suggested deposit while nothing was received, then what is left.
+function pixChargeOptions(order) {
+  const total = toCents(order.total), received = confirmedPayments(order.id).reduce((sum, payment) => sum + toCents(payment.amount), 0);
+  const deposit = Math.round(total * (state.pix?.depositPercent ?? 30) / 100), remaining = Math.max(0, total - received);
+  const options = [];
+  if (!received && deposit > 0 && deposit < total) options.push(["sinal", `Sinal (${state.pix.depositPercent}%)`, deposit]);
+  if (remaining > 0) options.push([received ? "restante" : "total", received ? "Restante" : "Valor total", remaining]);
+  return options;
+}
+
+const pixChargeButton = (order) => pixEnabled() && order.status !== "Solicitação" && !isCancelled(order) && order.totalKnown !== false && Number(order.total) > 0 && (!pixReady() || pixChargeOptions(order).length)
+  ? `<button class="button button-small pix-charge" data-action="pix-charge" data-id="${esc(order.id)}" type="button">Cobrar por Pix</button>` : "";
+
+function openPixCharge(id) {
+  const order = orderById(id);
+  if (!order) return;
+  if (!pixReady()) {
+    closeDetails(); state.openSettings.add("pix"); setActiveView("settings");
+    coach('.settings-card[data-settings="pix"]'); showToast("Cadastre sua chave Pix para cobrar.");
+    return;
+  }
+  const options = pixChargeOptions(order);
+  pixCharge = { orderId: order.id, options, kind: options[0]?.[0] || "outro", amount: options[0]?.[2] || 0 };
+  let dialog = $("#pix-dialog");
+  if (!dialog) {
+    dialog = document.createElement("dialog");
+    dialog.id = "pix-dialog"; dialog.className = "dialog pix-dialog"; dialog.setAttribute("aria-labelledby", "pix-title");
+    document.body.append(dialog);
+    dialog.addEventListener("click", pixDialogClick);
+    dialog.addEventListener("change", pixDialogChange);
+    dialog.addEventListener("input", (event) => { if (event.target.name === "pix-other") { pixCharge.amount = toCents(parseMoney(event.target.value)); renderPixResult(); } });
+  }
+  dialog.innerHTML = `<div class="dialog-heading"><h2 id="pix-title">Cobrar por Pix</h2><button class="icon-button close-dialog" type="button" data-pix="close" aria-label="Fechar"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+    <p class="pix-for">${esc(order.product || "Encomenda")} · ${esc(clientName(order) || "cliente")}</p>
+    <fieldset class="pix-amounts"><legend>Quanto cobrar?</legend><div class="choice-chips">${options.map(([kind, label, value]) => `<label><input type="radio" name="pix-kind" value="${kind}" ${pixCharge.kind === kind ? "checked" : ""}><span>${esc(label)} · ${esc(moneyCents(value))}</span></label>`).join("")}<label><input type="radio" name="pix-kind" value="outro" ${pixCharge.kind === "outro" ? "checked" : ""}><span>Outro valor</span></label></div></fieldset>
+    <label class="field pix-other" ${pixCharge.kind === "outro" ? "" : "hidden"}><span>Valor</span><input name="pix-other" inputmode="decimal" placeholder="0,00"></label>
+    <div id="pix-result"></div>
+    <p class="deposit-rule">Quando o dinheiro cair na sua conta, registre o pagamento e marque como conferido. O app não confere sozinho.</p>`;
+  renderPixResult();
+  if (!dialog.open) dialog.showModal();
+}
+
+function renderPixResult() {
+  const result = $("#pix-result");
+  if (!result || !pixCharge) return;
+  let code = "", error = "";
+  try { if (pixCharge.amount > 0) code = pixPayload({ key: state.pix.key, name: state.pix.name, city: state.pix.city, amountCents: pixCharge.amount }); } catch (failure) { error = failure.message; }
+  pixCharge.code = code;
+  result.innerHTML = code
+    ? `<div class="pix-qr" role="img" aria-label="QR Code do Pix de ${esc(moneyCents(pixCharge.amount))}">${renderSVG(code, { border: 4, ecc: "M" })}</div>
+      <p class="pix-amount">${esc(moneyCents(pixCharge.amount))}</p>
+      <label class="field pix-code"><span>Pix copia e cola</span><textarea readonly rows="3">${esc(code)}</textarea></label>
+      <div class="pix-actions"><button class="button button-primary" type="button" data-pix="message">Copiar mensagem para WhatsApp</button><button class="button button-quiet" type="button" data-pix="code">Copiar só o código</button></div>`
+    : `<p class="detail-empty">${esc(error || "Escolha quanto cobrar.")}</p>`;
+}
+
+function pixDialogChange(event) {
+  if (event.target.name !== "pix-kind") return;
+  const option = pixCharge.options.find(([kind]) => kind === event.target.value);
+  pixCharge.kind = event.target.value;
+  const other = $("#pix-dialog .pix-other");
+  other.hidden = pixCharge.kind !== "outro";
+  pixCharge.amount = option ? option[2] : toCents(parseMoney(other.querySelector("input").value));
+  if (pixCharge.kind === "outro") other.querySelector("input").focus();
+  renderPixResult();
+}
+
+function pixDialogClick(event) {
+  const button = event.target.closest("[data-pix]");
+  if (!button) return;
+  const dialog = $("#pix-dialog"), order = orderById(pixCharge?.orderId);
+  if (button.dataset.pix === "close") { dialog.close(); return; }
+  if (!pixCharge?.code || !order) return;
+  if (button.dataset.pix === "code") { copyText(pixCharge.code).then(() => showToast("Código Pix copiado.")).catch((error) => showToast(error.message)); return; }
+  const what = { sinal: "do sinal", restante: "do restante", total: "" }[pixCharge.kind] || "";
+  const message = `Oi, ${clientName(order) || "tudo bem"}! Segue o Pix${what ? ` ${what}` : ""} de ${order.product || "sua encomenda"}: ${moneyCents(pixCharge.amount)}.\n\nPix copia e cola:\n${pixCharge.code}\n\nDepois de pagar, me mande o comprovante, por favor.`;
+  copyText(message).then(() => showToast("Mensagem copiada. Cole na conversa com a cliente.")).catch((error) => showToast(error.message));
 }
 
 // ---- Boas-vindas: tarefas na tela de verdade ----
