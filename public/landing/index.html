@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f7c5d0">
-  <meta name="description" content="Agenda de encomendas para confeiteiras: pedido, data e sinal no celular. Menos caderno, mais espaço para criar.">
-  <title>Doce Agenda — mais espaço para criar</title>
+  <meta name="description" content="App de encomendas para confeiteiras: saiba o que fazer, entregar e cobrar em cada dia da semana, e receba pedidos das clientes por um link. Experimente sem cadastro.">
+  <title>Doce Agenda — encomendas da sua confeitaria em ordem</title>
   <link rel="canonical" href="https://lucast.app/">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
@@ -13,7 +13,7 @@
   <meta property="og:type" content="website">
   <meta property="og:locale" content="pt_BR">
   <meta property="og:site_name" content="Doce Agenda">
-  <meta property="og:title" content="Doce Agenda: pedidos, datas e sinais da sua confeitaria num app só">
+  <meta property="og:title" content="Doce Agenda: saiba o que fazer, entregar e cobrar em cada dia da semana">
   <meta property="og:description" content="App de encomendas para confeiteiras. Experimente sem cadastro.">
   <meta property="og:image" content="https://lucast.app/landing/assets/og.jpg">
   <meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
@@ -39,16 +39,17 @@
 
       <section class="hero" aria-labelledby="hero-title">
         <div class="hero-copy">
-          <p class="hero-kicker">App de encomendas para confeiteiras</p>
-          <h1 id="hero-title">Pedidos, datas e sinais da sua confeitaria, <em>num app só.</em></h1>
-          <p class="hero-lede">Anote a encomenda, veja o que entregar hoje e na semana, carimbe o sinal pago e receba pedidos por um link. Tudo no celular.</p>
+          <p class="hero-kicker">Para quem vende doces por encomenda</p>
+          <h1 id="hero-title">Saiba o que fazer, entregar e cobrar <em>em cada dia da semana.</em></h1>
+          <p class="hero-lede">Anote cada encomenda, veja quando um dia lota, marque o sinal que você conferiu e receba pedidos das clientes por um link. Tudo no celular.</p>
           <div class="hero-actions">
             <wa-button class="btn-cta" href="/demo/" variant="brand" pill size="l">Experimentar sem cadastro</wa-button>
+            <a class="text-link" href="#link-cliente">Ver como a cliente pede <span aria-hidden="true">↓</span></a>
           </div>
           <ul class="hero-checks">
             <li>Grátis no piloto</li>
             <li>Sem cartão</li>
-            <li>Funciona no celular</li>
+            <li>Nada para instalar</li>
           </ul>
         </div>
 
@@ -58,7 +59,7 @@
           </figure>
           <div class="float-card float-lotado" aria-hidden="true"><span class="fc-day"><b>Sáb</b>17</span><span><b>Dia lotado</b>A agenda avisa antes</span></div>
           <div class="float-card float-sinal" aria-hidden="true"><span class="stamp-mini">Sinal pago</span><span><b>R$ 90,00</b>conferido</span></div>
-          <div class="float-card float-link" aria-hidden="true"><span class="fc-dot"></span><span><b>Nova encomenda</b>chegou pelo seu link</span></div>
+          <div class="float-card float-link" aria-hidden="true"><span class="fc-dot"></span><span><b>Nova solicitação</b>chegou pelo seu link</span></div>
         </div>
       </section>
     </div>
@@ -69,7 +70,7 @@
     <section class="pains" aria-labelledby="pains-title">
       <div class="pains-head">
         <h2 id="pains-title">Seu caderno não te avisa que o bolo é amanhã.</h2>
-        <p class="lede">Quem vende por encomenda conhece esse frio na barriga.</p>
+        <p class="lede">Quem vende por encomenda conhece esse frio na barriga. Veja o que muda quando tudo fica num lugar só.</p>
       </div>
       <div class="pains-body">
         <figure class="hero-photo">
@@ -84,24 +85,42 @@
           </div>
         </figure>
         <ul class="pain-list">
-          <li>Lembrar do bolo de aniversário só quando a mãe pergunta a hora da retirada.</li>
-          <li>Perceber que aceitou dois bolos grandes para o mesmo sábado.</li>
-          <li>Não saber se a cliente pagou o sinal ou só disse que ia pagar.</li>
-          <li>Trabalhar até as 2h da manhã e não saber quanto entrou no mês.</li>
+          <li><span class="pl-before"><small>Antes</small>Lembrar do bolo de aniversário só quando a mãe pergunta a hora da retirada.</span><span class="pl-after"><small>Com o Doce Agenda</small>Cada encomenda fica no dia da entrega, com o combinado guardado junto.</span></li>
+          <li><span class="pl-before"><small>Antes</small>Perceber que aceitou dois bolos grandes para o mesmo sábado.</span><span class="pl-after"><small>Com o Doce Agenda</small>Você define quantas encomendas cabem por dia, e a agenda mostra quando a data lota.</span></li>
+          <li><span class="pl-before"><small>Antes</small>Não saber se a cliente pagou o sinal ou só disse que ia pagar.</span><span class="pl-after"><small>Com o Doce Agenda</small>Só conta como recebido o sinal que você conferiu.</span></li>
+          <li><span class="pl-before"><small>Antes</small>Trabalhar até as 2h da manhã e não saber quanto entrou no mês.</span><span class="pl-after"><small>Com o Doce Agenda</small>O Meu mês mostra quanto você vendeu, recebeu e ainda tem para receber.</span></li>
         </ul>
+      </div>
+    </section>
+
+    <section id="link-cliente" class="link-section" aria-labelledby="link-title">
+      <div class="link-copy">
+        <p class="eyebrow">Link de encomenda</p>
+        <h2 id="link-title">Sua cliente pede pelo link. Você decide o que entra na agenda.</h2>
+        <p class="lede">Mande o link no WhatsApp ou deixe na bio do Instagram. A cliente faz o pedido sozinha, sem baixar nada, e você não precisa copiar a conversa.</p>
+        <ol class="link-flow">
+          <li><b>Ela escolhe o doce e uma data livre</b>O calendário só deixa escolher os dias em que você atende.</li>
+          <li><b>Chega para você como solicitação</b>Aparece em Novos e ainda não ocupa vaga na agenda.</li>
+          <li><b>Você confere e decide</b>Aceite como confirmado ou como orçamento, ou recuse.</li>
+        </ol>
+        <p class="link-note">Nenhum pagamento é pedido pelo link. Nada é confirmado sem você.</p>
+      </div>
+      <div class="step-visual link-visual">
+        <figure class="phone phone-step"><div class="phone-screen"><img src="/landing/assets/passo-4-link.jpg" width="750" height="1624" loading="lazy" alt="Página de encomenda Doces da Lu, como a cliente vê: escolha do produto e calendário de outubro com as datas disponíveis."></div></figure>
+        <div class="float-card fc-d" aria-hidden="true"><span class="fc-dot"></span><span><b>Nova solicitação</b>bolo de aniversário · sáb</span></div>
       </div>
     </section>
 
     <section id="como-funciona" class="steps" aria-labelledby="steps-title">
       <div class="steps-head">
         <p class="eyebrow">Como funciona</p>
-        <h2 id="steps-title">Do recado no WhatsApp ao bolo entregue, em quatro passos.</h2>
+        <h2 id="steps-title">Do recado no WhatsApp ao bolo entregue.</h2>
       </div>
-      <article class="step step-glace">
+      <article class="step step-soft">
         <div class="step-copy">
           <p class="step-eyebrow"><span class="step-num">1</span>Anote o pedido</p>
           <h3>Tudo o que foi combinado, num lugar só.</h3>
-          <p>Cliente, doce, data, horário e os detalhes da conversa. Leva menos de um minuto e não se perde numa página do caderno.</p>
+          <p>Cliente, doce, data, horário e os detalhes da conversa. Comece pelo básico e complete o resto depois, sem procurar página no caderno.</p>
           <ul class="checks"><li>Botões de Hoje e Amanhã para ganhar tempo</li><li>Detalhes do combinado guardados no pedido</li><li>Valor e sinal no mesmo lugar</li></ul>
         </div>
         <div class="step-visual">
@@ -109,12 +128,12 @@
           <div class="float-card fc-a" aria-hidden="true"><span class="fc-check"></span><span><b>Encomenda salva</b>amanhã, 15h</span></div>
         </div>
       </article>
-      <article class="step step-soft">
+      <article class="step step-baunilha">
         <div class="step-copy">
-          <p class="step-eyebrow"><span class="step-num">2</span>Veja sua semana</p>
-          <h3>Saiba o que fazer hoje e o que vem pela frente.</h3>
-          <p>A Agenda mostra os pedidos de cada dia e avisa quando a data lota. Na Lista da semana, você marca o que já ficou pronto.</p>
-          <ul class="checks"><li>Limite de encomendas por dia</li><li>Dias fechados para a sua folga</li><li>Lista para copiar e mandar no WhatsApp</li></ul>
+          <p class="step-eyebrow"><span class="step-num">2</span>Organize a semana</p>
+          <h3>Antes de aceitar, veja se o dia ainda cabe.</h3>
+          <p>Você escolhe quantas encomendas aceita por dia e quais dias não atende. A Agenda mostra o que entregar hoje, avisa quando uma data lota e, com um toque, leva o pedido para a próxima etapa: fazendo, pronto, entregue.</p>
+          <ul class="checks"><li>Limite de encomendas por dia</li><li>Dias fechados para a sua folga</li><li>Lista da semana para marcar o que ficou pronto</li></ul>
         </div>
         <div class="step-visual">
           <figure class="phone phone-step"><div class="phone-screen"><img src="/landing/assets/passo-2-semana.jpg" width="750" height="1624" loading="lazy" alt="Tela Lista da semana: 9 pedidos, 3 prontos, agrupados pelo dia da entrega, com botão Copiar lista."></div></figure>
@@ -123,26 +142,14 @@
       </article>
       <article class="step step-pistache">
         <div class="step-copy">
-          <p class="step-eyebrow"><span class="step-num">3</span>Carimbe o sinal</p>
-          <h3>Dinheiro conferido ganha carimbo.</h3>
-          <p>Quando a cliente paga, você confere e o pedido ganha o carimbo. No Meu mês, você vê quanto vendeu, quanto recebeu e quanto falta receber.</p>
-          <ul class="checks"><li>Só entra na conta o que você conferiu</li><li>Pedido sem sinal fica em destaque</li><li>Resumo do mês pronto, sem planilha</li></ul>
+          <p class="step-eyebrow"><span class="step-num">3</span>Confira o dinheiro</p>
+          <h3>Só conta como recebido o que você conferiu.</h3>
+          <p>A cliente disse que fez o Pix? Fica como informado até você conferir no banco. Conferiu, o pedido ganha o carimbo. No Meu mês, você vê quanto vendeu, quanto recebeu e quanto falta receber.</p>
+          <ul class="checks"><li>Pedido sem sinal fica em amarelo</li><li>Pix informado separado do conferido</li><li>Resumo do mês pronto, sem planilha</li></ul>
         </div>
         <div class="step-visual">
           <figure class="phone phone-step"><div class="phone-screen"><img src="/landing/assets/passo-3-mes.jpg" width="750" height="1624" loading="lazy" alt="Tela Meu mês de outubro: 10 pedidos, R$ 1.800 vendidos, R$ 1.070 recebidos e R$ 730 a receber."></div></figure>
           <div class="float-card fc-c" aria-hidden="true"><span class="stamp-mini">Sinal pago</span><span><b>R$ 90,00</b>conferido</span></div>
-        </div>
-      </article>
-      <article class="step step-glace">
-        <div class="step-copy">
-          <p class="step-eyebrow"><span class="step-num">4</span>Receba pelo link</p>
-          <h3>Sua cliente pede sozinha. Você só revisa.</h3>
-          <p>Mande seu link no WhatsApp ou na bio do Instagram. A cliente escolhe o doce e uma data disponível, e o pedido chega para você aprovar antes de entrar na agenda.</p>
-          <ul class="checks"><li>Mostra só as datas em que você atende</li><li>Nada é confirmado sem você</li><li>Sem redigitar pedido de ninguém</li></ul>
-        </div>
-        <div class="step-visual">
-          <figure class="phone phone-step"><div class="phone-screen"><img src="/landing/assets/passo-4-link.jpg" width="750" height="1624" loading="lazy" alt="Página de encomenda Doces da Lu, como a cliente vê: escolha do produto e calendário de outubro com as datas disponíveis."></div></figure>
-          <div class="float-card fc-d" aria-hidden="true"><span class="fc-dot"></span><span><b>Nova solicitação</b>bolo de cenoura · sáb</span></div>
         </div>
       </article>
     </section>
@@ -154,14 +161,15 @@
         <wa-details name="faq" summary="Preciso instalar alguma coisa?"><p>Não. Abra pelo navegador do celular, entre com sua conta e pronto.</p></wa-details>
         <wa-details name="faq" summary="Consigo usar no celular e no computador?"><p>Sim. Entre com a mesma conta nos dois e seus pedidos aparecem. Em Ajustes dá para baixar uma cópia de segurança.</p></wa-details>
         <wa-details name="faq" summary="Minha cliente precisa baixar algo para usar o link?"><p>Não. Ela abre o link, escolhe o doce e a data, e você revisa antes de confirmar.</p></wa-details>
+        <wa-details name="faq" summary="Sou avisada quando chega um pedido pelo link?"><p>O pedido aparece em Novos e no topo da Agenda quando você abre o app. Por enquanto não mandamos notificação.</p></wa-details>
         <wa-details name="faq" summary="A demonstração guarda meus pedidos?"><p>Só neste aparelho, enquanto você não limpar o navegador. Para guardar de verdade, crie sua conta grátis.</p></wa-details>
       </div>
     </section>
 
     <section class="closing" aria-labelledby="closing-title">
       <div class="closing-copy">
-        <h2 id="closing-title">Menos caderno. Mais espaço para criar.</h2>
-        <p>Teste agora com pedidos de exemplo. Crie sua conta quando quiser.</p>
+        <h2 id="closing-title">Teste com uma confeitaria de exemplo.</h2>
+        <p>A demonstração abre com os pedidos da semana, um dia lotado e uma solicitação esperando você revisar. Crie sua conta quando quiser.</p>
       </div>
       <div class="closing-actions">
         <wa-button class="btn-cta btn-on-ameixa" href="/demo/" pill size="l">Experimentar sem cadastro</wa-button>
@@ -172,7 +180,7 @@
 
   <footer class="site-footer">
     <div class="inner footer-inner">
-      <span>doce agenda · piloto gratuito · feito junto com confeiteiras</span>
+      <span>doce agenda · menos caderno, mais espaço para criar · piloto gratuito</span>
       <span>Os pedidos mostrados são exemplos fictícios</span>
       <a class="footer-link" href="/privacidade/">Política de privacidade</a>
       <small>Piloto em desenvolvimento. Seus dados ficam na sua conta.</small>

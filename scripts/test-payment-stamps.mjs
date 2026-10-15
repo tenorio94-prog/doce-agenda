@@ -81,7 +81,7 @@ try {
   await page.locator('.nav-item[data-view="orders"]').click();
   assert.equal(await page.locator('#view-orders [data-open-order="zero"] .stamp').innerText(), 'PAGO');
   await page.goto(origin + '/', {waitUntil: 'networkidle'});
-  assert.match(await page.locator('h1').first().innerText(), /Pedidos, datas e sinais da sua confeitaria/);
+  assert.match(await page.locator('h1').first().innerText(), /Saiba o que fazer, entregar e cobrar/);
   assert.equal((await page.locator('body').innerText()).includes('Três campos'), false);
   await page.setViewportSize({width: 1440, height: 1000});await page.screenshot({path: path.join(output, 'landing.png'), fullPage: true});
   assert.deepEqual(errors, []);assert.deepEqual(blocked, []);

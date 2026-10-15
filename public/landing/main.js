@@ -42,9 +42,9 @@ function revealHero() {
   if (dot) animate(dot, { scale: [1, 1.35, 1] }, { duration: 1.6, repeat: Infinity, ease: 'easeInOut', delay: 1.8 });
 }
 
-// Como funciona: cada passo entra quando aparece na tela.
+// Link e Como funciona: cada bloco entra quando aparece na tela.
 function revealStep(step) {
-  animate(step.querySelectorAll('.step-copy > *'), { opacity: [0, 1], y: [24, 0] }, { duration: 0.6, delay: stagger(0.08), ease: [0.2, 0.8, 0.2, 1] });
+  animate(step.querySelectorAll('.step-copy > *, .link-copy > *'), { opacity: [0, 1], y: [24, 0] }, { duration: 0.6, delay: stagger(0.08), ease: [0.2, 0.8, 0.2, 1] });
   const phone = step.querySelector('.phone');
   animate(phone, { opacity: [0, 1] }, { duration: 0.4, delay: 0.1 });
   animate(phone, { y: [80, 0] }, { type: 'spring', bounce: 0.2, duration: 0.9, delay: 0.1 });
@@ -59,7 +59,7 @@ function revealStep(step) {
 
 if (moving) {
   revealHero();
-  for (const step of document.querySelectorAll('.step')) {
+  for (const step of document.querySelectorAll('.step, .link-section')) {
     inView(step, () => revealStep(step), { amount: 0.3 });
   }
 }
