@@ -45,8 +45,9 @@ for (const name of ['browser-store.js', 'data-client.js', 'favicon.svg', 'logo.s
 for (const name of ['fonts', 'icons', 'encomenda', 'privacidade']) await copy(name);
 await copy('landing/index.html', 'index.html');
 await cp(path.join(source, 'landing'), path.join(output, 'landing'), {
-  recursive: true, filter: (file) => path.resolve(file) !== path.join(source, 'landing', 'index.html'),
+  recursive: true, filter: (file) => !['index.html', 'motion.js'].some((name) => path.resolve(file) === path.join(source, 'landing', name)),
 });
+await bundle('public/landing/motion.js', path.join(output, 'landing', 'landing.js'));
 await mkdir(path.join(output, 'account'), { recursive: true });
 for (const name of ['account.css', 'account-ui.js', 'account-controller.js', 'config.js']) await copy(path.join('account', name));
 await copy('account/index.html', 'cadastro/index.html');

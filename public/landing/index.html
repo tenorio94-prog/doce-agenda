@@ -20,6 +20,8 @@
   <meta name="twitter:card" content="summary_large_image">
   <link rel="stylesheet" href="/tokens.css">
   <link rel="stylesheet" href="/landing/landing.css">
+  <script>if(matchMedia("(prefers-reduced-motion: no-preference)").matches){document.documentElement.classList.add("motion");setTimeout(function(){if(!window.landingMotion)document.documentElement.classList.remove("motion")},3000)}</script>
+  <script src="/landing/landing.js" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#main">Pular para o conteúdo</a>
@@ -89,23 +91,69 @@
       </div>
     </section>
 
-    <section id="como-funciona" class="benefits" aria-labelledby="benefits-title">
-      <h2 id="benefits-title">O Doce Agenda segura essas pontas.</h2>
-      <div class="benefits-grid">
-        <article class="benefit"><h3>Cada encomenda no seu dia</h3><p>Anotou cliente, bolo e data? Ela aparece em Hoje e na Semana. Nada se perde numa página do caderno.</p></article>
-        <article class="benefit"><h3>Nada de dois bolos no mesmo sábado</h3><p>Você diz quantas encomendas aceita por dia. Quando a data lota, a agenda avisa antes de você aceitar outra.</p></article>
-        <article class="benefit benefit-stamped"><h3>Sinal pago, carimbado</h3><p>Recebeu? Um toque e o pedido ganha o carimbo. E no fim do mês você vê quanto vendeu e quanto falta receber.</p><span class="stamp">Pago</span></article>
+    <section id="como-funciona" class="steps" aria-labelledby="steps-title">
+      <div class="steps-head">
+        <p class="eyebrow">Como funciona</p>
+        <h2 id="steps-title">Do recado no WhatsApp ao bolo entregue, em quatro passos.</h2>
       </div>
-      <p class="extras"><strong>E mais:</strong> um link para a cliente fazer o pedido sozinha, sem você redigitar nada. Nada é confirmado nem enviado sem você.</p>
+      <article class="step step-glace">
+        <div class="step-copy">
+          <p class="step-eyebrow"><span class="step-num">1</span>Anote o pedido</p>
+          <h3>Tudo o que foi combinado, num lugar só.</h3>
+          <p>Cliente, doce, data, horário e os detalhes da conversa. Leva menos de um minuto e não se perde numa página do caderno.</p>
+          <ul class="checks"><li>Botões de Hoje e Amanhã para ganhar tempo</li><li>Detalhes do combinado guardados no pedido</li><li>Valor e sinal no mesmo lugar</li></ul>
+        </div>
+        <div class="step-visual">
+          <figure class="phone phone-step"><div class="phone-screen"><img src="/landing/assets/passo-1-novo.jpg" width="750" height="1624" loading="lazy" alt="Tela Nova encomenda preenchida: Juliana, bolo de morango de 2 kg, detalhes do recheio e do topo, amanhã às 15h."></div></figure>
+          <div class="float-card fc-a" aria-hidden="true"><span class="fc-check"></span><span><b>Encomenda salva</b>amanhã, 15h</span></div>
+        </div>
+      </article>
+      <article class="step step-soft">
+        <div class="step-copy">
+          <p class="step-eyebrow"><span class="step-num">2</span>Veja sua semana</p>
+          <h3>Saiba o que fazer hoje e o que vem pela frente.</h3>
+          <p>A Agenda mostra os pedidos de cada dia e avisa quando a data lota. Na Lista da semana, você marca o que já ficou pronto.</p>
+          <ul class="checks"><li>Limite de encomendas por dia</li><li>Dias fechados para a sua folga</li><li>Lista para copiar e mandar no WhatsApp</li></ul>
+        </div>
+        <div class="step-visual">
+          <figure class="phone phone-step"><div class="phone-screen"><img src="/landing/assets/passo-2-semana.jpg" width="750" height="1624" loading="lazy" alt="Tela Lista da semana: 9 pedidos, 3 prontos, agrupados pelo dia da entrega, com botão Copiar lista."></div></figure>
+          <div class="float-card fc-b" aria-hidden="true"><span class="fc-day"><b>Sáb</b>17</span><span><b>Dia lotado</b>3 de 3 encomendas</span></div>
+        </div>
+      </article>
+      <article class="step step-pistache">
+        <div class="step-copy">
+          <p class="step-eyebrow"><span class="step-num">3</span>Carimbe o sinal</p>
+          <h3>Dinheiro conferido ganha carimbo.</h3>
+          <p>Quando a cliente paga, você confere e o pedido ganha o carimbo. No Meu mês, você vê quanto vendeu, quanto recebeu e quanto falta receber.</p>
+          <ul class="checks"><li>Só entra na conta o que você conferiu</li><li>Pedido sem sinal fica em destaque</li><li>Resumo do mês pronto, sem planilha</li></ul>
+        </div>
+        <div class="step-visual">
+          <figure class="phone phone-step"><div class="phone-screen"><img src="/landing/assets/passo-3-mes.jpg" width="750" height="1624" loading="lazy" alt="Tela Meu mês de outubro: 10 pedidos, R$ 1.800 vendidos, R$ 1.070 recebidos e R$ 730 a receber."></div></figure>
+          <div class="float-card fc-c" aria-hidden="true"><span class="stamp-mini">Sinal pago</span><span><b>R$ 90,00</b>conferido</span></div>
+        </div>
+      </article>
+      <article class="step step-glace">
+        <div class="step-copy">
+          <p class="step-eyebrow"><span class="step-num">4</span>Receba pelo link</p>
+          <h3>Sua cliente pede sozinha. Você só revisa.</h3>
+          <p>Mande seu link no WhatsApp ou na bio do Instagram. A cliente escolhe o doce e uma data disponível, e o pedido chega para você aprovar antes de entrar na agenda.</p>
+          <ul class="checks"><li>Mostra só as datas em que você atende</li><li>Nada é confirmado sem você</li><li>Sem redigitar pedido de ninguém</li></ul>
+        </div>
+        <div class="step-visual">
+          <figure class="phone phone-step"><div class="phone-screen"><img src="/landing/assets/passo-4-link.jpg" width="750" height="1624" loading="lazy" alt="Página de encomenda Doces da Lu, como a cliente vê: escolha do produto e calendário de outubro com as datas disponíveis."></div></figure>
+          <div class="float-card fc-d" aria-hidden="true"><span class="fc-dot"></span><span><b>Nova solicitação</b>bolo de cenoura · sáb</span></div>
+        </div>
+      </article>
     </section>
 
     <section id="perguntas" class="faq" aria-labelledby="faq-title">
       <h2 id="faq-title">Dúvidas rápidas</h2>
       <div class="faq-list">
         <details><summary>Quanto custa?</summary><p>Nada durante o piloto. Não pedimos cartão.</p></details>
-        <details><summary>O piloto funciona no celular?</summary><p>Sim. O piloto público pode ser aberto em celular. Entre com sua conta para acessar a agenda. Os dados são salvos no banco de dados.</p></details>
-        <details><summary>Meus dados aparecem em outros aparelhos?</summary><p>Sim. Entre com a mesma conta em outro aparelho. Recarregue a agenda para ver as alterações mais recentes. Use Backup para guardar também uma cópia JSON.</p></details>
-        <details><summary>E a demonstração, guarda meus pedidos?</summary><p>Só neste navegador. Se você limpar os dados do navegador, eles somem. No próprio demo dá para baixar uma cópia de segurança.</p></details>
+        <details><summary>Preciso instalar alguma coisa?</summary><p>Não. Abra pelo navegador do celular, entre com sua conta e pronto.</p></details>
+        <details><summary>Consigo usar no celular e no computador?</summary><p>Sim. Entre com a mesma conta nos dois e seus pedidos aparecem. Em Ajustes dá para baixar uma cópia de segurança.</p></details>
+        <details><summary>Minha cliente precisa baixar algo para usar o link?</summary><p>Não. Ela abre o link, escolhe o doce e a data, e você revisa antes de confirmar.</p></details>
+        <details><summary>A demonstração guarda meus pedidos?</summary><p>Só neste aparelho, enquanto você não limpar o navegador. Para guardar de verdade, crie sua conta grátis.</p></details>
       </div>
     </section>
 
