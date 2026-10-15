@@ -19,6 +19,7 @@
   <meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="stylesheet" href="/tokens.css">
+  <link rel="stylesheet" href="/ui/doce-wa.css">
   <link rel="stylesheet" href="/landing/landing.css">
   <script>if(matchMedia("(prefers-reduced-motion: no-preference)").matches){document.documentElement.classList.add("motion");setTimeout(function(){if(!window.landingMotion)document.documentElement.classList.remove("motion")},3000)}</script>
   <script src="/landing/landing.js" defer></script>
@@ -32,7 +33,7 @@
         <a class="brand" href="/" aria-label="Doce Agenda, início"><img src="/logo.svg" alt="Doce Agenda" width="182" height="48"></a>
         <nav class="header-nav" aria-label="Navegação principal">
           <a class="nav-link" href="#como-funciona">Como funciona</a>
-          <a class="button button-small" href="/cadastro/?mode=login">Entrar</a>
+          <wa-button class="btn-entrar" href="/cadastro/?mode=login" appearance="outlined" pill>Entrar</wa-button>
         </nav>
       </header>
 
@@ -42,7 +43,7 @@
           <h1 id="hero-title">Pedidos, datas e sinais da sua confeitaria, <em>num app só.</em></h1>
           <p class="hero-lede">Anote a encomenda, veja o que entregar hoje e na semana, carimbe o sinal pago e receba pedidos por um link. Tudo no celular.</p>
           <div class="hero-actions">
-            <a class="button button-primary" href="/demo/">Experimentar sem cadastro</a>
+            <wa-button class="btn-cta" href="/demo/" variant="brand" pill size="l">Experimentar sem cadastro</wa-button>
           </div>
           <ul class="hero-checks">
             <li>Grátis no piloto</li>
@@ -149,11 +150,11 @@
     <section id="perguntas" class="faq" aria-labelledby="faq-title">
       <h2 id="faq-title">Dúvidas rápidas</h2>
       <div class="faq-list">
-        <details><summary>Quanto custa?</summary><p>Nada durante o piloto. Não pedimos cartão.</p></details>
-        <details><summary>Preciso instalar alguma coisa?</summary><p>Não. Abra pelo navegador do celular, entre com sua conta e pronto.</p></details>
-        <details><summary>Consigo usar no celular e no computador?</summary><p>Sim. Entre com a mesma conta nos dois e seus pedidos aparecem. Em Ajustes dá para baixar uma cópia de segurança.</p></details>
-        <details><summary>Minha cliente precisa baixar algo para usar o link?</summary><p>Não. Ela abre o link, escolhe o doce e a data, e você revisa antes de confirmar.</p></details>
-        <details><summary>A demonstração guarda meus pedidos?</summary><p>Só neste aparelho, enquanto você não limpar o navegador. Para guardar de verdade, crie sua conta grátis.</p></details>
+        <wa-details name="faq" summary="Quanto custa?"><p>Nada durante o piloto. Não pedimos cartão.</p></wa-details>
+        <wa-details name="faq" summary="Preciso instalar alguma coisa?"><p>Não. Abra pelo navegador do celular, entre com sua conta e pronto.</p></wa-details>
+        <wa-details name="faq" summary="Consigo usar no celular e no computador?"><p>Sim. Entre com a mesma conta nos dois e seus pedidos aparecem. Em Ajustes dá para baixar uma cópia de segurança.</p></wa-details>
+        <wa-details name="faq" summary="Minha cliente precisa baixar algo para usar o link?"><p>Não. Ela abre o link, escolhe o doce e a data, e você revisa antes de confirmar.</p></wa-details>
+        <wa-details name="faq" summary="A demonstração guarda meus pedidos?"><p>Só neste aparelho, enquanto você não limpar o navegador. Para guardar de verdade, crie sua conta grátis.</p></wa-details>
       </div>
     </section>
 
@@ -163,7 +164,7 @@
         <p>Teste agora com pedidos de exemplo. Crie sua conta quando quiser.</p>
       </div>
       <div class="closing-actions">
-        <a class="button button-glace" href="/demo/">Experimentar sem cadastro</a>
+        <wa-button class="btn-cta btn-on-ameixa" href="/demo/" pill size="l">Experimentar sem cadastro</wa-button>
         <a class="text-link" href="/cadastro/">Criar minha conta</a>
       </div>
     </section>

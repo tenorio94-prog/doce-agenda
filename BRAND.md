@@ -43,11 +43,14 @@ Ambas em `public/fonts/` (SIL OFL 1.1), servidas localmente. Nenhum texto abaixo
 
 ## Forma
 
-Cartões com cantos de 24 a 28 px e botões em pílula. O fio de glacê com gotas separa o topo da página do conteúdo.
+Botões em pílula. O fio de glacê com gotas separa o topo da página do conteúdo.
+
+**Polimento (desde 15/10/2026, estilo shadcn):** só três raios (`--r-s` 12, `--r-m` 16, `--r-l` 24 px), borda fina de 1 px (`--hairline`) e sombras discretas (`--shadow-s/m/l`), todos em `public/tokens.css`. A landing já segue; o app migra tela por tela. Os raios antigos (24 a 28 px) continuam só no que ainda não foi revisado.
 
 ## Regras
 
-- Nenhuma dependência externa: sem fontes de CDN, analytics, widgets ou bibliotecas de ícones.
+- Bibliotecas são bem-vindas quando deixam o produto melhor, desde que instaladas pelo npm com versão fixa e servidas pelo nosso próprio domínio (montadas pelo build). Em uso: **Web Awesome** (componentes; tema em `public/ui/doce-wa.css`, ajustes em `public/ui/wa-setup.js`) e **Motion** (animações).
+- Nada carregado de outros sites: sem CDN, fontes externas, analytics, rastreadores ou widgets. O ícone padrão da Web Awesome buscaria desenhos no Font Awesome; por isso ele fica desligado e só se usa `library="system"`.
 - Alvos de toque de pelo menos 44 px.
 - Foco de teclado sempre visível (anel de 3 px em `--carimbo`).
 - Respeitar `prefers-reduced-motion`.

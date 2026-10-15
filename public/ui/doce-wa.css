@@ -1,0 +1,67 @@
+/* Tema Doce Agenda para a Web Awesome (webawesome.com).
+   Montado pelo build em /ui/doce-wa.css. As cores e fontes vêm de /tokens.css,
+   que precisa ser carregado antes; aqui só ligamos os nomes da Web Awesome aos nossos. */
+@import '@awesome.me/webawesome/dist/styles/themes/default.css';
+
+:root {
+  color-scheme: light;
+
+  /* Marca: ameixa no botão principal, glacê no destaque suave */
+  --wa-color-brand-fill-loud: var(--ameixa);
+  --wa-color-brand-on-loud: var(--papel);
+  --wa-color-brand-fill-normal: var(--segmented);
+  --wa-color-brand-on-normal: var(--ameixa);
+  --wa-color-brand-fill-quiet: var(--glace);
+  --wa-color-brand-on-quiet: var(--ameixa);
+  --wa-color-brand-border-loud: var(--ameixa);
+  --wa-color-brand-border-normal: var(--border-input);
+  --wa-color-brand-border-quiet: var(--line);
+
+  /* Neutro: botões secundários e contornos */
+  --wa-color-neutral-fill-loud: var(--ameixa);
+  --wa-color-neutral-on-loud: var(--papel);
+  --wa-color-neutral-fill-normal: var(--segmented);
+  --wa-color-neutral-on-normal: var(--ameixa);
+  --wa-color-neutral-fill-quiet: var(--branco);
+  --wa-color-neutral-on-quiet: var(--ameixa);
+  --wa-color-neutral-border-loud: var(--ameixa);
+  --wa-color-neutral-border-normal: var(--border-input);
+  --wa-color-neutral-border-quiet: var(--line);
+
+  /* Sucesso = carimbo; atenção = baunilha */
+  --wa-color-success-fill-loud: var(--carimbo);
+  --wa-color-success-on-loud: var(--branco);
+  --wa-color-success-fill-quiet: var(--pistache);
+  --wa-color-success-on-quiet: var(--ameixa);
+  --wa-color-warning-fill-quiet: var(--baunilha);
+  --wa-color-warning-on-quiet: var(--ameixa);
+
+  /* Superfícies e texto */
+  --wa-color-surface-default: var(--papel);
+  --wa-color-surface-raised: var(--branco);
+  --wa-color-surface-lowered: var(--segmented);
+  --wa-color-surface-border: var(--line);
+  --wa-color-text-normal: var(--ink);
+  --wa-color-text-quiet: var(--muted);
+  --wa-color-text-link: var(--link);
+
+  /* Letras: Fredoka nos títulos, Figtree no resto */
+  --wa-font-family-body: var(--font-body);
+  --wa-font-family-heading: var(--font-title);
+  --wa-font-family-longform: var(--font-body);
+
+  /* Forma: três raios, borda fina, foco em carimbo */
+  --wa-border-radius-s: var(--r-s);
+  --wa-border-radius-m: var(--r-m);
+  --wa-border-radius-l: var(--r-l);
+  --wa-shadow-s: var(--shadow-s);
+  --wa-shadow-m: var(--shadow-m);
+  --wa-shadow-l: var(--shadow-l);
+  --wa-color-focus: var(--carimbo);
+  --wa-focus-ring-width: 3px;
+  --wa-focus-ring-offset: 2px;
+
+  /* Campos: borda com contraste suficiente e altura de toque */
+  --wa-form-control-border-color: var(--border-input);
+  --wa-form-control-placeholder-color: var(--placeholder);
+}
