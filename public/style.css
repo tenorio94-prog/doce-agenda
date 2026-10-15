@@ -1335,3 +1335,6 @@ wa-input[aria-invalid="true"]::part(input-wrapper), wa-textarea[aria-invalid="tr
 @media (max-width: 420px) {
   .order-actions wa-button::part(button) { min-height: 50px; padding-inline: 16px; font-size: var(--fs-base); }
 }
+
+/* Convite de quem chega da landing na demonstração. */
+.landing-invite-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; margin-top: 12px; }

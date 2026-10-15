@@ -24,7 +24,20 @@ const state = {
   paymentOrderId: null, toastTimer: null,
   month: null, monthData: null, monthLoading: false, monthError: '', monthRequest: 0,
   openSettings: new Set(), openDateException: false,
+  landingInvite: readLandingVisit(),
 };
+
+// The landing links to /demo/?de=landing: that visit skips the stories and invites a review of the example request.
+// The flag is removed from the address so a reload or a shared link behaves like a normal visit.
+function readLandingVisit() {
+  try {
+    const url = new URL(location.href);
+    if (url.searchParams.get("de") !== "landing") return false;
+    url.searchParams.delete("de");
+    history.replaceState(history.state, "", url.pathname + url.search + url.hash);
+    return true;
+  } catch { return false; }
+}
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
@@ -264,6 +277,18 @@ function nextActionMarkup() {
   return `<section class="next-action-card mini-card surface"><div class="section-head"><h2>Próxima ação</h2></div><div class="next-action-copy"><strong>${esc(order.nextAction)}</strong>${esc(order.client)} · ${esc(when)}</div><button class="text-link mini-link" type="button" data-open-order="${esc(order.id)}" aria-label="Ver pedido de ${esc(order.client)}">Ver pedido</button></section>`;
 }
 
+// Only in the demonstration, and only while an example request is still waiting for review.
+function landingInviteOrder() {
+  if (!state.landingInvite || !window.DoceStore?.isDemo) return null;
+  const requests = state.orders.filter((order) => order.status === "Solicitação");
+  return requests.find((order) => order.origin === "link") || requests[0] || null;
+}
+
+function landingInviteMarkup() {
+  const invite = landingInviteOrder();
+  return invite ? `<section class="request-banner landing-invite surface"><h2>Comece por aqui</h2><p>${esc(clientName(invite) || "Uma cliente")} pediu ${esc(invite.product || "uma encomenda")} pelo seu link. Veja como você aceita ou recusa: nada fica confirmado sem você.</p><div class="landing-invite-actions"><button class="button button-primary" type="button" data-action="review-request" data-id="${esc(invite.id)}">Revisar a solicitação</button><button class="text-link" type="button" data-action="open-tour">Ver como funciona</button></div></section>` : "";
+}
+
 function requestBanner() {
   const pending=state.orders.filter(o=>o.status==='Solicitação');
   return pending.length ? `<section class="request-banner surface"><h2>${pending.length} ${pending.length===1?'solicitação para revisar':'solicitações para revisar'}</h2><p>Chegaram pelo link. Ainda não ocupam vagas na agenda.</p><button class="button button-primary" type="button" data-action="show-requests">Revisar solicitações</button></section>`:'';
@@ -401,7 +426,7 @@ function renderToday() {
     : "Nada para entregar hoje";
   const financeNote = unknown ? (balances.length ? 'Saldo parcial conhecido · ' : 'Nenhum saldo conhecido: ') + unknown + (unknown === 1 ? ' pedido ainda sem recebimento conferido.' : ' pedidos ainda sem recebimento conferido.') : '';
   panel.innerHTML = `<div class="page-heading today-heading"><div><span class="date-label">${esc(new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "numeric", month: "long" }).format(new Date()))}</span><h1 id="today-title">Hoje</h1><p class="today-summary">${todaySummary}</p></div></div>
-    ${requestBanner()}${firstUse ? `<section class="welcome-panel"><h2>Cadastre seu primeiro pedido</h2><p>Comece com cliente, produto e valor. Complete os detalhes quando estiverem combinados.</p><div class="welcome-actions"><button class="button button-primary" type="button" data-action="new-order">Nova encomenda</button><button class="text-link" type="button" data-action="open-tour">Ver como funciona</button></div></section>` : ''}
+    ${landingInviteMarkup() || requestBanner()}${firstUse ? `<section class="welcome-panel"><h2>Cadastre seu primeiro pedido</h2><p>Comece com cliente, produto e valor. Complete os detalhes quando estiverem combinados.</p><div class="welcome-actions"><button class="button button-primary" type="button" data-action="new-order">Nova encomenda</button><button class="text-link" type="button" data-action="open-tour">Ver como funciona</button></div></section>` : ''}
     ${sample && firstUse ? `<section class="sample-card" aria-label="Pedido de exemplo">${rowMarkup(sample)}<p>Toque para ver como fica um pedido completo. O exemplo não entra na sua agenda.</p></section>` : sample ? `<details class="sample-examples"><summary>Exemplo fictício — não entra na sua agenda</summary><div class="sample-example-list">${state.orders.filter(sampleOrder).map((order) => `<button class="text-link" type="button" data-open-order="${esc(order.id)}">Ver exemplo: ${esc(clientName(order) || order.product || "pedido")}</button>`).join("")}</div></details>` : ''}
     <div class="today-columns"><div class="today-main">${modeSwitch}<div class="content-grid today-single">${weekMode ? productionMarkup() : agendaWeekMarkup(upcoming.length)}</div>${nextAction}
     ${pendingChanges.length ? `<section class="pending-card surface"><div class="section-head"><h2>Alterações para revisar</h2><span class="pending-count">${pendingChanges.length}</span></div><div class="pending-list">${pendingChanges.slice(0, 3).map((order) => `<button class="pending-row" type="button" data-open-order="${esc(order.id)}"><span><strong>${esc(order.client)}</strong><small>${esc(order.product)}</small></span><span class="pending-chevron" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></span><span class="pending-banner"><strong>Pedido de mudança:</strong> ${esc(order.pendingChange)}</span></button>`).join("")}</div></section>` : ""}
@@ -1078,6 +1103,8 @@ function handleClick(event) {
   const action = event.target.closest("[data-action]");
   if (!action) return;
   const id = action.dataset.id;
+  // Answering the landing invitation either way retires it; the usual request banner takes its place.
+  if (action.closest(".landing-invite")) { state.landingInvite = false; render(); }
   switch (action.dataset.action) {
     case "edit-order": {
       const order = orderById(id); closeDetails(); if (order) openOrderForm(order); break;
@@ -1440,6 +1467,6 @@ function closeTour() {
 
 // First visit: the demonstration, or a new account without orders, opens the stories once.
 function maybeStartTour() {
-  if (tour.overlay || tourSeen()) return;
+  if (tour.overlay || tourSeen() || landingInviteOrder()) return;
   if (window.DoceStore?.isDemo || !state.orders.some((order) => !sampleOrder(order))) openTour();
 }
