@@ -1,11 +1,11 @@
 # Doce Agenda — contexto para continuar em outra sessão
 
-Atualizado em **14/10/2026**, ao fim de uma sessão longa de melhorias. Este arquivo é a passagem de bastão: descreve o estado real, as decisões e o que depende de autorização. Confira `git log` e o site antes de agir; hashes e versões abaixo são um retrato.
+Atualizado em **15/10/2026**, após ligar o domínio `lucast.app`. Este arquivo é a passagem de bastão: descreve o estado real, as decisões e o que depende de autorização. Confira `git log` e o site antes de agir; hashes e versões abaixo são um retrato.
 
 ## 1. Onde paramos
 
 - Tudo o que foi feito está **no GitHub (`main`) e publicado na Cloudflare**. Última versão publicada e conferida no ar: `6c2afe14-cbc0-445f-9565-75e039ba7e82` (Lista da semana). Pasta e GitHub sincronizados, sem alterações pendentes.
-- **Próximo assunto combinado: domínio `lucast.app`** (seção 7). O usuário retomou o tema e pediu para ser guiado passo a passo quando disser "vamos ao domínio". Ainda não houve nenhuma alteração de DNS.
+- **Domínio `lucast.app` ligado ao app em 15/10/2026** (seção 7): DNS na Cloudflare, site novo no ar em `lucast.app` e `www.lucast.app`, e-mail testado pelo usuário.
 - Lucas deixou o domínio para depois e pediu para enxugar o código. Os grupos 1 a 3 do diagnóstico foram feitos e publicados em 14/10 (seção 7b), sem mudança visível no site.
 - Depois disso, as features planejadas (seção 8) continuam **não iniciadas** e exigem aprovação.
 - Sugestão feita ao usuário e ainda não realizada: mostrar o app à amiga confeiteira e observar o uso real antes de grandes mudanças.
@@ -36,7 +36,7 @@ O usuário vê o **link de encomenda** como possível principal canal de cliente
 - **Próximo passo:** Confirmado → "Começar a fazer" → Em produção → "Ficou pronto" → Pronto → "Marcar entregue" (PUT só com `status`, histórico, "Desfazer" no aviso). Orçamento/Aguardando → "Confirmar pedido" (abre o formulário já em Confirmado, mantendo checagens de data, lotação e bolo). Solicitação → "Revisar solicitação". O botão também aparece no topo do pedido aberto.
 - **Meu mês:** só Confirmado e Entregue no mês; vendido, recebido (só conferido), a receber, dias mais cheios, produtos, prazo médio. Cálculo no servidor (`/api/resumo-mensal`). Ver `docs/MEU_MES_ENTREGA.md`.
 - **Ajustes** em cartões fechados com resumo de uma linha: **Link de encomenda**, **Dias e limites** (dias fechados, antecedência em opções Sem mínimo/1/2/3 dias/1 semana — gravada em horas como antes —, limite por dia, "Mudar só uma data"), **Detalhes do bolo**. Cópia de segurança abaixo.
-- **Link de encomenda:** passo a passo (1 vitrine, 2 produtos em lista com "+ Adicionar", 3 endereço gerado do nome e corrigido sozinho + WhatsApp opcional), "Ativar meu link"/"Salvar sem ativar". Ativo vira cartão verde "No ar" com Copiar, "Mandar no WhatsApp" (`wa.me/?text=` só com o texto; ela escolhe contato e envia) e prévia; "Pausar link". **Prévia** em `/encomenda/?preview=1` lê o rascunho do `localStorage` e nunca busca nem envia nada; avisa se faltam produtos/nome. O link copiado usa `https://lucast.app/p/<slug>` (hoje servido pelo Netlify antigo, mas funciona porque usa o mesmo backend).
+- **Link de encomenda:** passo a passo (1 vitrine, 2 produtos em lista com "+ Adicionar", 3 endereço gerado do nome e corrigido sozinho + WhatsApp opcional), "Ativar meu link"/"Salvar sem ativar". Ativo vira cartão verde "No ar" com Copiar, "Mandar no WhatsApp" (`wa.me/?text=` só com o texto; ela escolhe contato e envia) e prévia; "Pausar link". **Prévia** em `/encomenda/?preview=1` lê o rascunho do `localStorage` e nunca busca nem envia nada; avisa se faltam produtos/nome. O link copiado usa `https://lucast.app/p/<slug>` (servido pelo app novo desde 15/10).
 - Regras do link (inalteradas): entra como Solicitação, origem `link`; pendentes não ocupam vaga; confirmar revalida; rate limit, honeypot, consentimento, limpeza de recusadas após 90 dias.
 - Pagamentos Informado/Conferido: só conferido conta. `totalKnown:false` separa valor em branco de zero.
 
@@ -52,12 +52,11 @@ O usuário vê o **link de encomenda** como possível principal canal de cliente
 
 | Uso | Endereço |
 | --- | --- |
-| Site atual | https://doce-agenda.doce-agenda-local.workers.dev/ |
+| Site atual | https://lucast.app/ (também `www.lucast.app` e https://doce-agenda.doce-agenda-local.workers.dev/) |
 | Cadastro/login | …/cadastro/ |
 | App com conta | …/app/ |
 | Demonstração | …/demo/ |
 | Prévia do link | …/encomenda/?preview=1 |
-| Domínio ainda antigo | https://lucast.app/ — Netlify (versão antiga) |
 | Contato | doceagenda@lucast.app (encaminha para o Gmail do usuário) |
 
 ## 6. Arquitetura
@@ -70,16 +69,13 @@ O usuário vê o **link de encomenda** como possível principal canal de cliente
 - README reescrito em 14/10 para o estado atual. Documentos antigos ficam em `docs/historico/` (só como registro).
 - Não há mais servidor local (`server.mjs` aposentado em 14/10). O modo "server" de `data-client.js`/`app.js` ficou sem uso; os textos do modo navegador ainda são trocados no build.
 
-## 7. Domínio `lucast.app` — próximo assunto, aguardando o usuário
+## 7. Domínio `lucast.app` — feito em 15/10/2026
 
-Retrato de 14/10 (consultar de novo ao começar): registrado na Name.com; NS `ns1hwy/ns2jqz/ns3ckl/ns4cjp.name.com`; raiz A `75.2.60.5` e `www` CNAME `doce-agenda-piloto.netlify.app` (Netlify); **e-mail ativo**: MX `mx3..mx8.name.com` (prioridades 10–60) e TXT `v=spf1 a mx ~all`. O usuário recebe e responde `doceagenda@lucast.app` pelo Gmail; isso precisa continuar funcionando.
-
-Plano explicado e aceito em princípio (cada passo externo com o usuário):
-1. Usuário adiciona `lucast.app` na conta Cloudflare (plano grátis); a Cloudflare importa os registros.
-2. Conferir juntos que MX e SPF vieram completos.
-3. Usuário troca os nameservers na Name.com pelos dois indicados pela Cloudflare (registro do domínio continua na Name.com).
-4. Após propagar: ligar o domínio ao Worker `doce-agenda`, conferir HTTPS, rotas (`/p/:slug`), login, link das clientes e **teste de envio e resposta do e-mail**.
-Não é um simples CNAME. Wrangler atual só tem escopo de Workers (sem DNS/zonas); não ampliar escopos sem necessidade. Liberar a origem `lucast.app` no CORS do Supabase já existe; conferir.
+- Registro continua na **Name.com**; DNS passou para a **Cloudflare** (plano grátis), nameservers `ada.ns.cloudflare.com` e `langston.ns.cloudflare.com`. DNSSEC estava e segue desligado.
+- Registros na Cloudflare, todos "DNS only": coringa `*` A `167.71.22.102` (Name.com, usado por `mail.`/`webmail.`), MX `mx3..mx8.name.com` (10–60) e TXT `v=spf1 a mx ~all`. **Não apagar**: são do e-mail `doceagenda@lucast.app`, que encaminha para o Gmail. O usuário testou o recebimento depois da troca; resposta pelo Gmail não foi testada.
+- A antiga raiz A `75.2.60.5` e o `www` CNAME do Netlify foram apagados pelo usuário. `wrangler.jsonc` agora tem `routes` com `lucast.app` e `www.lucast.app` como custom domains do Worker `doce-agenda` (o Wrangler criou os registros; o escopo atual bastou).
+- Verificado no ar: `scripts/test-cloudflare-routing.mjs` 5/5 em `lucast.app` e `www.lucast.app` (slug do `/p/` preservado); CORS do Supabase (`doce-api` e `doce-public`) responde 204 para as duas origens; landing, cadastro, demo, prévia do link e privacidade abrem em 360 px sem rolagem lateral.
+- Pendências: `www` não redireciona para a raiz (serve o mesmo site); a política de privacidade ainda cita Netlify entre os provedores (atualizar só com aprovação); Netlify antigo pode ser desativado quando o usuário quiser.
 
 ## 7b. Enxugar o código — feito em 14/10
 
