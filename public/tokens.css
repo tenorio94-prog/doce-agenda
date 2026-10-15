@@ -47,7 +47,9 @@
 
   /* Polimento (15/10/2026): escala enxuta, estilo shadcn. Use estes nas telas novas ou revisadas;
      os valores acima continuam para o que ainda não foi revisado. */
-  --r-s: 12px; --r-m: 16px; --r-l: 24px;
+  --r-xs: 8px; --r-s: 12px; --r-m: 16px; --r-l: 24px;
+  --fs-xs: 12px; --fs-sm: 14px; --fs-base: 16px; --fs-lg: 18px; --fs-xl: 20px;
+  --fs-2xl: 24px; --fs-3xl: 28px; --fs-4xl: 32px; --fs-5xl: 40px;
   --hairline: 1px solid var(--line);
   --shadow-s: 0 1px 2px rgb(43 26 44 / 6%), 0 1px 3px rgb(43 26 44 / 4%);
   --shadow-m: 0 10px 28px -8px rgb(43 26 44 / 16%), 0 2px 6px rgb(43 26 44 / 5%);

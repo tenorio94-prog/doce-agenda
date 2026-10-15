@@ -5,7 +5,7 @@ Atualizado em **15/10/2026**, após ligar o domínio `lucast.app`. Este arquivo 
 ## 1. Onde paramos
 
 - Tudo o que foi feito está **no GitHub (`main`) e publicado na Cloudflare**. Última versão publicada e conferida no ar: `6c2afe14-cbc0-445f-9565-75e039ba7e82` (Lista da semana). Pasta e GitHub sincronizados, sem alterações pendentes.
-- **Domínio `lucast.app` ligado ao app em 15/10/2026** (seção 7): DNS na Cloudflare, site novo no ar em `lucast.app` e `www.lucast.app`, e-mail testado pelo usuário. Landing refeita em duas etapas no mesmo dia (seção 4). Conversa em aberto: polimento visual "estilo shadcn" (regras de raio/espaço/sombra) para landing e app, e bibliotecas. **Decidido em 15/10:** HTML/JS puro continua, agora com bibliotecas locais (Web Awesome + Motion; Bootstrap/UIkit descartados). BRAND.md atualizado (regra de dependências e escala de polimento). Landing já usa `<wa-button>`, `<wa-details>` e animações Motion no topo e nos passos. **Próximo combinado:** polimento do app estilo shadcn com Web Awesome, tela por tela (pedir aprovação do plano; ex.: "Salvar encomenda" quebra em duas linhas no formulário).
+- **Domínio `lucast.app` ligado ao app em 15/10/2026** (seção 7): DNS na Cloudflare, site novo no ar em `lucast.app` e `www.lucast.app`, e-mail testado pelo usuário. Landing refeita em duas etapas no mesmo dia (seção 4). Conversa em aberto: polimento visual "estilo shadcn" (regras de raio/espaço/sombra) para landing e app, e bibliotecas. **Decidido em 15/10:** HTML/JS puro continua, agora com bibliotecas locais (Web Awesome + Motion; Bootstrap/UIkit descartados). BRAND.md atualizado (regra de dependências e escala de polimento). Landing já usa `<wa-button>`, `<wa-details>` e animações Motion no topo e nos passos. Polimento do app em andamento (seção 7d): etapa A publicada; **etapa B aguarda aprovação**.
 - Lucas deixou o domínio para depois e pediu para enxugar o código. Os grupos 1 a 3 do diagnóstico foram feitos e publicados em 14/10 (seção 7b), sem mudança visível no site.
 - Depois disso, as features planejadas (seção 8) continuam **não iniciadas** e exigem aprovação.
 - Sugestão feita ao usuário e ainda não realizada: mostrar o app à amiga confeiteira e observar o uso real antes de grandes mudanças.
@@ -86,6 +86,17 @@ Lucas aprovou os três grupos do diagnóstico e a aposentadoria do servidor loca
 3. **Servidor local aposentado** (commit seguinte): removidos `server.mjs`, `test.mjs` (as regras seguem cobertas pelos testes de `cloud/`), `iniciar.ps1`, `capturar_prints.mjs` e `video-launch/scripts/capture.mjs`; `npm start` saiu e `npm test` roda os testes de `cloud/`. O site não mudou, então não houve nova publicação.
 
 Ainda **não mexido** (decisão de 14/10): `style.css` (cerca de 100 KB, em camadas que se sobrepõem) e `app.js` (112 KB, arquivo único). Mexer neles junto com Produção A, com comparação de telas. Os 30 MB de prints em `design/` não afetam o site.
+
+## 7d. Polimento do app estilo shadcn + Web Awesome (iniciado 15/10)
+
+Plano aprovado em 5 etapas, cada uma com aprovação própria: **A base** (feita) → B formulário de encomenda → C Agenda e cartões de pedido → D Pedidos, Meu mês e Ajustes → E cadastro/login e página do link da cliente. Nada de regra, dado, conta ou Supabase muda; só aparência.
+
+**Etapa A (publicada 15/10):** sem mudar telas de lugar.
+1. `style.css`: 199 declarações sobrescritas por regras idênticas mais abaixo e 46 blocos vazios removidos (PostCSS, `postcss@8.5.28` como devDependency); 22 capturas idênticas pixel a pixel.
+2. Escala nova em `tokens.css`: `--fs-xs..5xl` (12,14,16,18,20,24,28,32,40), `--r-xs/s/m/l` (8,12,16,24), `--shadow-s/m/l`, `--hairline`. Aplicada a 207 tamanhos de letra, 77 raios e 7 sombras do `style.css` (antes 42 tamanhos e 25 raios). Textos de 7–11 px subiram para 12 px (regra do BRAND.md). A seção das boas-vindas (celular em miniatura) e os @keyframes ficaram de fora de propósito.
+3. `index.html` do app carrega `/ui/doce-wa.css` (tema Web Awesome; sem componentes ainda, sem mudança visível).
+Verificação: capturas antes/depois de 11 telas em 360 e 1280 px (demo), sem rolagem lateral; `npm test` 41/41, `test-production-list` 2/2, `test-monthly-summary` 6/6, `test-payment-stamps` 10/10 (o teste ainda procurava o título antigo da landing; atualizado). Conferido no ar em `lucast.app`. Não testado: conta real logada, Safari/iPhone.
+Observações para as próximas etapas: "Salvar encomenda" quebra em duas linhas; faixa "1 solicitação para revisar" ocupa meia tela; título "Seus pedidos" grande demais; vários estilos de cartão na Agenda; campos com borda grossa.
 
 ## 7c. Vídeo de motion UI (14/10)
 
