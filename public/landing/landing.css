@@ -246,8 +246,8 @@ h2{margin:0;font-family:var(--font-title);font-size:clamp(30px,4vw,46px);font-we
 .m-body{display:flex;flex-direction:column;gap:6px;padding:12px}
 .m-eyebrow{font-size:12px;font-weight:800;letter-spacing:.04em;text-transform:uppercase}
 .m-title{color:var(--ink);font-family:var(--font-title);font-size:20px;font-weight:600;line-height:1.1}
-.m-label{margin-top:4px;color:var(--ink);font-weight:650}
-.m-field{display:flex;align-items:center;min-height:32px;padding:0 10px;border:1.5px solid var(--border-input);border-radius:10px;background:var(--branco);color:var(--ink)}
+.m-label{margin-top:4px;color:var(--ink);font-family:var(--font-title);font-weight:600}
+.m-field{display:flex;align-items:center;min-height:32px;padding:0 10px;border:1px solid var(--border-input);border-radius:10px;background:var(--branco);color:var(--ink)}
 .m-ph{color:var(--placeholder)}
 .m-field .m-val,.s1 .m-product .m-ph,.s3 .m-name .m-ph{display:none}
 .s1 .m-product .m-val,.s3 .m-name .m-val{display:inline}
