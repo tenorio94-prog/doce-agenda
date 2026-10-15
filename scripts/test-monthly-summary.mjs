@@ -1,21 +1,16 @@
 import assert from 'node:assert/strict';
-import { createServer } from 'node:http';
 import { readFile, mkdtemp } from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
-import { fileURLToPath } from 'node:url';
-import { chromium } from 'file:///C:/Users/Restore/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/index.mjs';
+import { chromium, serveSite, siteRoot as root } from './lib/browser-test.mjs';
 import { createEmptyState } from '../cloud/state-engine.js';
 
-const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..','deploy-cloud','public');
 const output=await mkdtemp(path.join(os.tmpdir(),'doce-month-qa-'));
 const seed=createEmptyState();
 seed.orders=[['a',100.1,'Confirmado','Bolo de Cenoura'],['b',50.2,'Entregue','BOLO DE CENÓURA'],['c',0,'Confirmado','bolo de cenoura']].map(([id,total,status,product])=>({id,total,status,product,client:'QA fictícia',dueAt:'2026-10-14T15:00',createdAt:'2026-10-12T12:00:00Z',history:[],mode:'Retirada',...(id==='c'?{totalKnown:false}:{})}));
 seed.payments=[{id:'p1',orderId:'a',amount:30.1,status:'Conferido',createdAt:'2026-10-13T12:00:00Z'},{id:'p2',orderId:'b',amount:10.2,status:'Conferido',createdAt:'2026-10-13T12:00:00Z'},{id:'p3',orderId:'a',amount:99,status:'Informado',createdAt:'2026-10-13T12:00:00Z'}];
-const types={'.html':'text/html','.js':'text/javascript','.css':'text/css','.svg':'image/svg+xml','.ttf':'font/ttf'};
-const server=createServer(async(req,res)=>{try{let relative=new URL(req.url,'http://localhost').pathname.replace(/^\/+/, '');if(!relative||relative.endsWith('/'))relative+='index.html';const file=path.resolve(root,relative);if(!file.startsWith(root+path.sep))throw Error();res.setHeader('Content-Type',types[path.extname(file)]||'application/octet-stream');res.end(await readFile(file));}catch{res.statusCode=404;res.end();}});
-const origin=await new Promise(r=>server.listen(0,'127.0.0.1',()=>r(`http://127.0.0.1:${server.address().port}`)));
-const browser=await chromium.launch({executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true});
+const server=await serveSite(root),{origin}=server;
+const browser=await chromium.launch();
 const errors=[],results=[];
 async function open(data,width=360,inject='') {
  const context=await browser.newContext({viewport:{width,height:900},timezoneId:'Pacific/Auckland',locale:'pt-BR'});

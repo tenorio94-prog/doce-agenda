@@ -3,8 +3,8 @@
 ## Ao começar
 
 1. Leia `context.md` antes de propor ou executar trabalho. Ele registra o estado conhecido, decisões e pendências; **não autoriza automaticamente a próxima etapa**.
-2. Confira `git status`, branch e arquivos relevantes. Preserve alterações existentes. Não substitua o código atual pela `main`: ela está atrasada em relação à branch de trabalho.
-3. Consulte somente os documentos do assunto em andamento. O `README.md` principal e parte dos documentos antigos ainda descrevem o piloto local, anterior ao login e ao Supabase; confira a data, `context.md` e o código antes de confiar neles.
+2. Confira `git status`, branch e arquivos relevantes. Preserve alterações existentes. `main` é a base de trabalho.
+3. Consulte somente os documentos do assunto em andamento. Mapa do código, riscos e plano de refatoração: `docs/ARQUITETURA.md`. Documentos em `docs/historico/` são só registro; diante de divergência, vale o código, depois `context.md`.
 4. Respeite instruções mais recentes do usuário. Não retome tarefas explicitamente adiadas apenas porque aparecem no contexto.
 
 ## Como trabalhar com Lucas
@@ -32,19 +32,30 @@
 ## Publicação e Git
 
 - Hospedagem atual: Cloudflare Workers Static Assets; backend/auth: Supabase. Consulte `docs/CLOUDFLARE_PUBLICACAO.md` antes de publicar.
-- **DNS/Name.com:** o usuário retomou o assunto e quer ser guiado (ver `context.md`, seção 7). Cada passo externo — nameservers, registros, e-mail, domínio — só com ele acompanhando e aprovando; preservar o e-mail `@lucast.app`. Não contratar serviços nem alterar planos pagos.
-- Não há mais servidor local (aposentado em 14/10/2026). Para ver o site, monte com `node scripts/build-cloudflare.mjs` e sirva `deploy-cloud/public` com um servidor estático simples.
+- **DNS/domínio:** `lucast.app` já aponta para a Cloudflare (ver `context.md`, seção 7). Qualquer passo externo — registros, e-mail, domínio, painel da Cloudflare — só com Lucas acompanhando e aprovando; preservar o e-mail `@lucast.app`. Não contratar serviços nem alterar planos pagos.
+- Não há servidor local. Para ver o site, monte com `npm run build` e sirva `deploy-cloud/public` com um servidor estático simples.
 - Edite os fontes em `public/` e `cloud/`; não mantenha correções apenas em `deploy-*/public`. Esses diretórios são builds ignorados pelo Git.
 - Cloudflare usa `scripts/build-cloudflare.mjs`/`wrangler.jsonc`. Preserve o proxy `/p/:slug /encomenda/ 200`: usar `/encomenda/index.html` perde o slug por redirecionamento.
 - Nunca publique a raiz do repositório. Publique somente `deploy-cloud/public`. Não versionar sessões, senhas, tokens, `.env`, `.wrangler/` ou dados de clientes.
 - Commit e push não equivalem a deploy. Informe branch/commit e endereço realmente verificado. `main` é a base de trabalho e recebe push direto das mudanças aprovadas.
 
+## Fluxo de trabalho
+
+Proporcional ao tamanho: um ajuste de texto não precisa de plano; mudança de regra, dados ou várias telas precisa.
+
+1. **Entender:** reler o pedido, achar o código envolvido e dizer o que vai mudar e o que não muda. Pergunte se faltar informação de produto.
+2. **Critério de aceite:** antes de programar, escreva como saber que deu certo (comportamento visível, teste que passa, tela igual).
+3. **Pesquisar e escolher:** reaproveite o que existe (`cloud/`, `public/ui/`, tokens). Para nova biblioteca, consulte a documentação oficial e compare com fazer sem ela; só adicione com ganho claro, versão fixa e servida pelo nosso domínio (BRAND.md).
+4. **Mudar pouco e por partes:** um assunto por commit; preserve contratos (rotas `/api`, formato do estado e dos backups, `name` dos campos, chaves do `localStorage`). Refatoração não muda comportamento nem regras financeiras.
+5. **Verificar** (abaixo), corrigir regressões e só então entregar.
+6. **Registrar:** `context.md` (estado) e, se for decisão de arquitetura, `docs/ARQUITETURA.md` em uma ou duas linhas.
+
 ## Verificação
 
-- Escolha testes pelo código alterado: regras em `cloud/*.test.mjs` (`npm test`), resumo em `scripts/test-monthly-summary.mjs`, pagamentos em `scripts/test-payment-stamps.mjs`, lista de produção em `scripts/test-production-list.mjs`, rotas publicadas em `scripts/test-cloudflare-routing.mjs`.
+- Comandos: `npm test` (regras), `npm run build`, `npm run test:ui` (telas na demo: lista da semana, formulário, Meu mês, pagamentos), `npm run check` (os três). Testes de tela usam o Playwright do projeto (`scripts/lib/browser-test.mjs`).
+- Escolha pelo risco: regra → `npm test`; tela → `npm run check` e olhar no navegador em 360 e 1280 px; refatoração → também `npm run screens -- <pasta>` antes e depois e `node scripts/capture-screens.mjs --compare <antes> <depois>` (deve dar zero diferenças); publicação → `scripts/test-cloudflare-routing.mjs` e o endereço publicado.
 - Em interface, verifique o fluxo real e a renderização mobile; em publicação, teste o endereço publicado, não apenas o build local.
 - Integrações que escrevem dados usam exclusivamente contas sintéticas identificadas por `.invalid`; confirme a conta e preserve/restaure seu estado. Não executar scripts de setup contra contas reais.
 - Não declarar resolvido por uma tentativa de comando. Conferir saída, status e resultado; diante de falha repetida, diagnosticar antes de repetir.
 - Não considerar um teste com arquivos interceptados como evidência de publicação real. Não declarar validação em banco físico, Safari, aparelho real ou com confeiteiras se isso não aconteceu.
 
-Referência do formato: [documentação oficial da OpenAI sobre instruções AGENTS.md](https://developers.openai.com/cookbook/examples/gpt-5/codex_prompting_guide).

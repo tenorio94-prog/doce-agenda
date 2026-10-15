@@ -2,8 +2,8 @@
 
 App web para confeiteiras autônomas que trabalham por encomenda: pedidos, datas, combinados e pagamentos conferidos, pensado para o celular.
 
-- Site publicado: https://doce-agenda.doce-agenda-local.workers.dev/ (landing, `/cadastro/`, `/app/`, `/demo/`, link de encomenda em `/p/<endereço>`).
-- Estado atual, decisões e pendências: `context.md`. Regras para quem trabalha no código: `AGENTS.md`.
+- Site publicado: https://lucast.app/ (landing, `/cadastro/`, `/app/`, `/demo/`, link de encomenda em `/p/<endereço>`).
+- Estado atual, decisões e pendências: `context.md`. Regras para quem trabalha no código: `AGENTS.md` (o `CLAUDE.md` o inclui). Mapa do código e plano de refatoração: `docs/ARQUITETURA.md`.
 
 ## Onde fica cada coisa
 
@@ -17,8 +17,8 @@ App web para confeiteiras autônomas que trabalham por encomenda: pedidos, datas
 ## Testar e publicar
 
 ```
-node --test cloud/*.test.mjs
-node scripts/build-cloudflare.mjs
+npm install
+npm run check        # regras, build e testes de tela
 npx --yes --package wrangler@4.119.0 wrangler deploy --config wrangler.jsonc
 node scripts/test-cloudflare-routing.mjs
 ```

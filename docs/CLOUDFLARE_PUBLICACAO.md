@@ -2,6 +2,8 @@
 
 ## Estado
 
+> Atualização de 15/10/2026: `lucast.app` e `www.lucast.app` já são servidos por este Worker, o código vive na `main` e as versões publicadas ficam registradas em `context.md`. Os itens abaixo são o registro da primeira publicação; os comandos de reprodução continuam valendo (rodar na raiz do repositório).
+
 - App: https://doce-agenda.doce-agenda-local.workers.dev/
 - Worker: `doce-agenda`, versão `7034e89d-ecef-4b9d-93f5-439ba3c27dc1`, tráfego 100% nessa versão. A primeira publicação foi `b72bc580-32fe-4a17-8448-1cce8916768d`; a segunda corrigiu somente o destino do proxy público, mantendo os arquivos do app idênticos.
 - Serviço: Workers Static Assets, plano gratuito, sem banco ou funções de negócio novos na Cloudflare. Login e API permanecem no Supabase.

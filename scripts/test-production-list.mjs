@@ -1,25 +1,14 @@
 // Lista da semana (Agenda): node scripts/build-cloudflare.mjs && node scripts/test-production-list.mjs [pasta-de-capturas]
 // Roda na demonstração (dados só no navegador do teste): marcar pronto, desfazer, copiar e 360 px sem rolagem lateral.
 import assert from 'node:assert/strict';
-import { createServer } from 'node:http';
-import { mkdir, readFile, stat } from 'node:fs/promises';
+import { mkdir } from 'node:fs/promises';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { chromium } from 'file:///C:/Users/Restore/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/index.mjs';
+import { chromium, serveSite, siteRoot as root } from './lib/browser-test.mjs';
 
-const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', 'deploy-cloud', 'public');
 const shots = process.argv[2] ? path.resolve(process.argv[2]) : null;
 if (shots) await mkdir(shots, { recursive: true });
-const types = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml', '.ttf': 'font/ttf', '.json': 'application/json', '.png': 'image/png', '.webmanifest': 'application/manifest+json' };
-const server = createServer(async (req, res) => {
-  let file = path.join(root, decodeURIComponent(new URL(req.url, 'http://x').pathname));
-  try {
-    if ((await stat(file)).isDirectory()) file = path.join(file, 'index.html');
-    res.writeHead(200, { 'content-type': types[path.extname(file)] || 'application/octet-stream' });
-    res.end(await readFile(file));
-  } catch { res.writeHead(404); res.end(); }
-}).listen(0);
-const origin = `http://127.0.0.1:${server.address().port}`;
+const server = await serveSite(root);
+const { origin } = server;
 const browser = await chromium.launch();
 const results = [];
 try {

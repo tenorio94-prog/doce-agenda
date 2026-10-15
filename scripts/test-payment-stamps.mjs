@@ -1,13 +1,11 @@
 import assert from 'node:assert/strict';
-import { createServer } from 'node:http';
 import { readFile, writeFile, mkdtemp } from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
 import { fileURLToPath } from 'node:url';
-import { chromium } from 'file:///C:/Users/Restore/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/index.mjs';
+import { chromium, serveSite, siteRoot as bundle } from './lib/browser-test.mjs';
 
 const webRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const bundle = path.join(webRoot, 'deploy-cloud', 'public');
 const output = await mkdtemp(path.join(os.tmpdir(), 'doce-payment-stamps-'));
 const fixtures = {
   version: 1,
@@ -24,26 +22,16 @@ const fixtures = {
     createdAt: orderId === 'partial-zero' && amount === 0 ? '2026-10-13T12:00:00.000Z' : '2026-10-12T12:00:00.000Z', note: 'Dado fictício de teste' })),
 };
 const expected = {none: null, informed: null, zero: null, partial: 'Sinal pago', full: 'Pago', excess: 'Pago', 'partial-zero': 'Sinal pago', cancelled: null};
-const mime = {'.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.ttf': 'font/ttf', '.svg': 'image/svg+xml'};
 let server, browser;
 const results = [], errors = [], blocked = [];
 try {
   let origin = process.env.DOCE_TEST_ORIGIN;
   if (!origin) {
     assert.equal(await readFile(path.join(bundle, 'cloud-app.js'), 'utf8'), await readFile(path.join(webRoot, 'public/app.js'), 'utf8'), 'Cloud app must use the same corrected source');
-    server = createServer(async (req, res) => {
-      try {
-        let relative = new URL(req.url, 'http://localhost').pathname.replace(/^\/+/, '');
-        if (!relative || relative.endsWith('/')) relative += 'index.html';
-        const target = path.resolve(bundle, relative);
-        if (!target.startsWith(bundle + path.sep)) {res.writeHead(403).end(); return;}
-        const body = await readFile(target);
-        res.writeHead(200, {'Content-Type': mime[path.extname(target)] || 'application/octet-stream'}).end(body);
-      } catch {res.writeHead(404).end();}
-    });
-    origin = await new Promise(resolve => server.listen(0, '127.0.0.1', () => resolve(`http://127.0.0.1:${server.address().port}`)));
+    server = await serveSite(bundle);
+    origin = server.origin;
   }
-  browser = await chromium.launch({headless: true, executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe'});
+  browser = await chromium.launch();
   const context = await browser.newContext({viewport: {width: 390, height: 844}, serviceWorkers: 'block', locale: 'pt-BR', timezoneId: 'America/Sao_Paulo'});
   await context.route('**/*', route => {
     if (new URL(route.request().url()).origin !== new URL(origin).origin || !['GET', 'HEAD', 'OPTIONS'].includes(route.request().method())) {
@@ -102,5 +90,5 @@ try {
   await writeFile(path.join(output, 'result.json'), JSON.stringify({origin, results, errors, blocked, sourceSharedByCloud: true}, null, 2));
   console.log(JSON.stringify({origin, passed: results.length, output, errors, blocked}));
 } finally {
-  await browser?.close();if(server) await new Promise(resolve => server.close(resolve));
+  await browser?.close();server?.close();
 }
