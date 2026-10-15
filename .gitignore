@@ -23,3 +23,4 @@ prints/
 # Sistema
 .DS_Store
 Thumbs.db
+deploy-supabase/
