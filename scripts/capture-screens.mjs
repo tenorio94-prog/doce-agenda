@@ -26,7 +26,8 @@ const demoView = (view, ready) => async (page) => {
   await page.locator(`[data-view="${view}"]:visible`).first().click();
   await page.locator(ready).waitFor();
 };
-// [nome, endereço, ação opcional depois de abrir]
+// [nome, endereço, ação opcional depois de abrir, só a tela visível]
+// Com uma janela aberta, a captura da página inteira muda de posição entre rodadas; a tela visível não.
 const screens = [
   ['landing', '/'], ['cadastro', '/cadastro/'], ['privacidade', '/privacidade/'], ['previa-link', '/encomenda/?preview=1'],
   ['demo-agenda', '/demo/', (page) => page.locator('#today-title').waitFor()],
@@ -36,19 +37,20 @@ const screens = [
   ['demo-pedido', '/demo/', async (page) => {
     await page.locator('[data-open-order]').first().click();
     await page.locator('dialog[open]').waitFor();
-  }],
+  }, true],
   ['demo-novo', '/demo/', async (page) => {
     await page.locator('[data-action="new-order"]:visible').first().click();
     await page.locator('#order-dialog[open]').waitFor();
-  }],
+  }, true],
 ];
 
-const server = await serveSite();
+// DOCE_SITE=<pasta> captura um build guardado (por exemplo, o de antes da mudança).
+const server = await serveSite(process.env.DOCE_SITE ? path.resolve(process.env.DOCE_SITE) : undefined);
 const browser = await chromium.launch();
 const errors = [];
 try {
   for (const width of [360, 1280]) {
-    for (const [name, url, action] of screens) {
+    for (const [name, url, action, viewportOnly] of screens) {
       const context = await browser.newContext({ viewport: { width, height: 800 }, locale: 'pt-BR', timezoneId: 'America/Sao_Paulo', reducedMotion: 'reduce', serviceWorkers: 'block' });
       await context.addInitScript(() => localStorage.setItem('doce-agenda.tour.v1', '1'));
       const page = await context.newPage();
@@ -56,11 +58,13 @@ try {
       page.on('console', (message) => { if (message.type() === 'error') errors.push(`${name}@${width}: ${message.text()}`); });
       await page.clock.setFixedTime(new Date('2026-10-15T12:00:00-03:00'));
       await page.goto(server.origin + url, { waitUntil: 'networkidle' });
+      // Fonts change the layout, and clicks scroll by it: wait for them before acting.
+      await page.evaluate(() => document.fonts.ready);
       if (action) await action(page);
       await page.evaluate(() => document.fonts.ready);
       await page.waitForTimeout(300);
       if (await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)) errors.push(`${name}@${width}: rolagem lateral`);
-      await page.screenshot({ path: path.join(out, `${name}-${width}.png`), fullPage: true, animations: 'disabled' });
+      await page.screenshot({ path: path.join(out, `${name}-${width}.png`), fullPage: !viewportOnly, animations: 'disabled' });
       await context.close();
     }
   }

@@ -13,6 +13,8 @@ const DEFAULT_ORDER_TEMPLATE = { version: 1, fields: [
 ] };
 const API = "/api";
 const apiFetch = window.DoceApi.fetch;
+// One file serves both versions: the demonstration keeps data only in this browser; the account saves to the server.
+const LOCAL_ONLY = window.DoceApi.mode !== "cloud";
 const localDateKey = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 const state = {
   orders: [], payments: [], availability: structuredClone(DEFAULT_AVAILABILITY), orderTemplate: structuredClone(DEFAULT_ORDER_TEMPLATE),
@@ -138,7 +140,7 @@ function setConnection(mode, message) {
 function setError(message = "Verifique sua conexão e tente novamente.") {
   $("#error-message").textContent = message;
   $("#error-notice").hidden = false;
-  setConnection("error", "Sem conexão");
+  setConnection("error", LOCAL_ONLY ? "Armazenamento indisponível" : "Sem conexão");
 }
 
 async function loadState({ silent = false } = {}) {
@@ -159,12 +161,12 @@ async function loadState({ silent = false } = {}) {
     state.monthData = null; state.monthError = ''; state.monthLoading = false; state.monthRequest++;
     $("#error-notice").hidden = true;
     $("#loading-state").hidden = true;
-    setConnection("online", window.DoceApi.mode === "cloud" ? "Salvo na sua conta" : window.DoceApi.mode === "browser" ? "Salvo neste navegador" : "Salvo neste computador");
+    setConnection("online", window.DoceApi.mode === "cloud" ? "Salvo na sua conta" : window.DoceApi.mode === "browser" ? "Salvo neste navegador" : "Salvo neste navegador");
     render();
     if (!silent) maybeStartTour();
   } catch (error) {
     $("#loading-state").hidden = true;
-    setError("Confira se o serviço está aberto. Seus dados anteriores continuam na tela.");
+    setError(LOCAL_ONLY ? "Não foi possível acessar o armazenamento local. Seus dados anteriores continuam na tela." : "Confira se o serviço está aberto. Seus dados anteriores continuam na tela.");
     if (!state.orders.length) render();
     console.error("Falha ao carregar a agenda:", error);
   }
@@ -532,7 +534,7 @@ function storageNoteMarkup() {
   const mode = window.DoceApi.mode;
   const text = mode === "cloud" ? "Salvo na sua conta. Para ver mudanças feitas em outro aparelho, recarregue a agenda."
     : mode === "browser" ? "Seus pedidos ficam só neste navegador. Se limpar os dados do navegador, eles somem."
-    : "Seus pedidos ficam salvos neste computador, sem sincronização entre aparelhos.";
+    : "Seus pedidos ficam salvos neste navegador, sem sincronização entre aparelhos.";
   const cloud = `<path d="M7 18a4 4 0 0 1-.5-7.97A6 6 0 0 1 18 9.5a4.25 4.25 0 0 1-.5 8.5H7Z"/>`;
   const icon = `<svg viewBox="0 0 24 24">${cloud}${mode === "cloud" ? "" : `<path d="m4 4 16 16"/>`}</svg>`;
   return `<div class="storage-note"><span class="storage-note-icon" aria-hidden="true">${icon}</span><p>${text}</p><button class="text-link" type="button" data-action="export">Baixar cópia de segurança</button></div>`;
@@ -1186,7 +1188,7 @@ function attachEvents() {
     dialog.addEventListener("click", (event) => { if (event.target === dialog) dialog.close(); });
   });
   window.addEventListener("online", () => { if (!$("#error-notice").hidden) loadState({ silent: true }); });
-  window.addEventListener("offline", () => setError("O navegador está sem conexão. Verifique sua rede e tente novamente."));
+  window.addEventListener("offline", () => LOCAL_ONLY ? showToast("Sem internet. Os pedidos continuam salvos neste navegador.") : setError("O navegador está sem conexão. Verifique sua rede e tente novamente."));
 }
 
 populateStatusOptions();

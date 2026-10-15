@@ -7,6 +7,7 @@ import { build } from 'esbuild';
 // /          landing, /landing/ its assets
 // /demo/     app saved only in this browser (browser-store.js + app.js)
 // /app/, /agenda.html, /cadastro/  account version (cloud-bootstrap.js + cloud-app.js)
+// app.js and cloud-app.js are the same bundle of public/app.js; it reads DoceApi.mode at run time.
 // /encomenda/, /p/<slug>  public order link; /privacidade/
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const source = path.join(root, 'public');
@@ -56,18 +57,13 @@ for (const name of ['account.css', 'account-ui.js', 'account-controller.js', 'co
 await copy('account/index.html', 'cadastro/index.html');
 
 const html = await readFile(path.join(source, 'index.html'), 'utf8');
-const app = await readFile(path.join(source, 'app.js'), 'utf8');
 
-// Demonstration: data stays in this browser, so storage wording replaces the server wording.
+// Demonstration: data stays in this browser, so the page loads the local store before the app.
 let demoHtml = swap(html, '<script src="/data-client.js" defer></script>', '<script src="/browser-store.js" defer></script>\n    <script src="/data-client.js" defer></script>');
 demoHtml = swap(demoHtml, 'Não foi possível atualizar seus pedidos.', 'Não foi possível acessar o armazenamento local.');
-let demoApp = swap(app, 'neste computador', 'neste navegador', true);
-demoApp = swap(demoApp, 'window.addEventListener("offline", () => setError("O navegador está sem conexão. Verifique sua rede e tente novamente."));', 'window.addEventListener("offline", () => showToast("Sem internet. Os pedidos continuam salvos neste navegador."));');
-demoApp = swap(demoApp, 'Confira se o serviço está aberto. Seus dados anteriores continuam na tela.', 'Não foi possível acessar o armazenamento local. Seus dados anteriores continuam na tela.');
-demoApp = swap(demoApp, 'setConnection("error", "Sem conexão")', 'setConnection("error", "Armazenamento indisponível")');
 await mkdir(path.join(output, 'demo'), { recursive: true });
 await writeFile(path.join(output, 'demo', 'index.html'), demoHtml);
-await writeFile(path.join(output, 'app.js'), demoApp);
+await bundle('public/app.js', path.join(output, 'app.js'));
 
 // Account version: the bootstrap checks the session, then loads cloud-app.js.
 let cloudHtml = swap(html, /\s*<script src="\/data-client\.js" defer><\/script>/, '');
@@ -77,7 +73,7 @@ cloudHtml = swap(cloudHtml, 'dados deste dispositivo', 'dados da sua conta');
 await mkdir(path.join(output, 'app'), { recursive: true });
 await writeFile(path.join(output, 'app', 'index.html'), cloudHtml);
 await writeFile(path.join(output, 'agenda.html'), cloudHtml);
-await copyFile(path.join(source, 'app.js'), path.join(output, 'cloud-app.js'));
+await copyFile(path.join(output, 'app.js'), path.join(output, 'cloud-app.js'));
 await bundle('cloud/app-bootstrap.js', path.join(output, 'cloud-bootstrap.js'));
 
 // Target the directory URL: /index.html triggers HTML canonicalization in Workers

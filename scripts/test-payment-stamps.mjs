@@ -2,10 +2,8 @@ import assert from 'node:assert/strict';
 import { readFile, writeFile, mkdtemp } from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
-import { fileURLToPath } from 'node:url';
 import { chromium, serveSite, siteRoot as bundle } from './lib/browser-test.mjs';
 
-const webRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const output = await mkdtemp(path.join(os.tmpdir(), 'doce-payment-stamps-'));
 const fixtures = {
   version: 1,
@@ -27,7 +25,7 @@ const results = [], errors = [], blocked = [];
 try {
   let origin = process.env.DOCE_TEST_ORIGIN;
   if (!origin) {
-    assert.equal(await readFile(path.join(bundle, 'cloud-app.js'), 'utf8'), await readFile(path.join(webRoot, 'public/app.js'), 'utf8'), 'Cloud app must use the same corrected source');
+    assert.equal(await readFile(path.join(bundle, 'cloud-app.js'), 'utf8'), await readFile(path.join(bundle, 'app.js'), 'utf8'), 'Demo and account must use the same app bundle');
     server = await serveSite(bundle);
     origin = server.origin;
   }
@@ -44,7 +42,7 @@ try {
     localStorage.setItem('doce-agenda.tour.v1', '1'); // a apresentação de boas-vindas cobriria a tela
   }, fixtures);
   if (process.env.DOCE_TEST_ORIGIN) {
-    assert.equal(await (await context.request.get(origin + '/cloud-app.js')).text(), await readFile(path.join(webRoot, 'public/app.js'), 'utf8'), 'Published cloud app must match the corrected source');
+    assert.equal(await (await context.request.get(origin + '/cloud-app.js')).text(), await readFile(path.join(bundle, 'cloud-app.js'), 'utf8'), 'Published cloud app must match the local build');
   }
   const page = await context.newPage();page.setDefaultTimeout(12000);
   page.on('pageerror', e => errors.push(e.message));
