@@ -1306,3 +1306,32 @@ body.story-open { overflow: hidden; }
 .prod-tag { padding: 3px 9px; border-radius: var(--r-l); background: var(--glace); font: 700 12px var(--font-body); white-space: nowrap; }
 .prod-item.is-done .prod-tag { background: var(--segmented); color: var(--muted); }
 @media (max-width: 380px) { .prod-body { grid-template-columns: minmax(0, 1fr) auto; } .prod-time { grid-column: 1 / -1; font-size: var(--fs-base); } }
+
+/* ---- Formulário de encomenda com Web Awesome (polimento, etapa B) ---- */
+.field:has(> wa-input, > wa-textarea, > wa-select) { gap: 0; font-weight: 400; }
+:is(wa-input, wa-textarea, wa-select)::part(form-control-label) { margin-bottom: 6px; font-family: var(--font-title); font-size: var(--fs-lg); }
+:is(wa-input, wa-textarea, wa-select)::part(hint) { margin-top: 6px; font-size: var(--fs-sm); line-height: 1.4; }
+wa-textarea::part(textarea) { font-family: var(--font-body); line-height: 1.45; }
+.field-label { font-family: var(--font-title); font-size: var(--fs-lg); font-weight: 600; color: var(--ink); }
+.field-hint { color: var(--muted); font-size: var(--fs-sm); line-height: 1.4; }
+.money-prefix { color: var(--muted); font-weight: 600; }
+.order-dialog .dialog-heading { margin-bottom: 32px; padding-bottom: 12px; }
+.order-dialog .dialog-heading h2 { font-size: var(--fs-3xl); }
+.due-field { gap: 10px; }
+.date-shortcuts wa-button::part(button) { min-height: 40px; padding-inline: 16px; font-family: var(--font-title); font-size: var(--fs-base); }
+.due-inputs { grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 10px; }
+.due-inputs .field { min-width: 0; margin: 0; }
+.due-inputs wa-input { min-width: 0; }
+.due-inputs wa-input::part(form-control-label) { font-family: var(--font-body); font-size: var(--fs-sm); color: var(--muted); }
+.cake-model-toggle::part(label) { font-size: var(--fs-sm); font-weight: 600; }
+.order-actions { gap: 10px; }
+.order-actions wa-button::part(button) { min-height: 52px; font-family: var(--font-title); font-size: var(--fs-lg); font-weight: 500; }
+.order-actions wa-button[variant="brand"] { flex: 1; }
+.field :is(wa-input, wa-textarea, wa-select)[aria-invalid="true"] { border: 0; }
+wa-input[aria-invalid="true"]::part(input-wrapper), wa-textarea[aria-invalid="true"]::part(textarea-wrapper), wa-select[aria-invalid="true"]::part(combobox) { border-color: var(--error); box-shadow: 0 0 0 1px var(--error); }
+.order-actions { justify-content: stretch; }
+.optional-fields > summary { flex-wrap: wrap; row-gap: 2px; }
+.optional-fields > summary span { flex-basis: 100%; padding-left: 30px; }
+@media (max-width: 420px) {
+  .order-actions wa-button::part(button) { min-height: 50px; padding-inline: 16px; font-size: var(--fs-base); }
+}

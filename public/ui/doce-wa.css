@@ -61,7 +61,19 @@
   --wa-focus-ring-width: 3px;
   --wa-focus-ring-offset: 2px;
 
-  /* Campos: borda com contraste suficiente e altura de toque */
+  /* Campos: fundo branco, borda fina com contraste suficiente, texto normal */
+  --wa-form-control-background-color: var(--branco);
   --wa-form-control-border-color: var(--border-input);
+  --wa-form-control-border-width: 1px;
+  --wa-form-control-border-radius: var(--r-s);
+  --wa-form-control-padding-block: 12px;
   --wa-form-control-placeholder-color: var(--placeholder);
+  --wa-form-control-value-color: var(--ink);
+  --wa-form-control-value-font-weight: 400;
+  --wa-form-control-label-color: var(--ink);
+  --wa-form-control-label-font-weight: 600;
+  --wa-form-control-hint-color: var(--muted);
+  --wa-form-control-hint-font-weight: 400;
+  --wa-form-control-required-content-color: var(--link);
+  --wa-form-control-activated-color: var(--ameixa);
 }

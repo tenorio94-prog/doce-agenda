@@ -609,7 +609,7 @@ function render() {
 }
 
 function populateStatusOptions() {
-  $("#order-status").innerHTML = ORDER_STATUSES.filter(s=>!['Solicitação','Recusado'].includes(s)).map((status) => `<option value="${esc(status)}">${esc(status)}</option>`).join("");
+  $("#order-status").innerHTML = ORDER_STATUSES.filter(s=>!['Solicitação','Recusado'].includes(s)).map((status) => `<wa-option value="${esc(status)}">${esc(status)}</wa-option>`).join("");
 }
 
 function openOrderForm(order = null) {
@@ -622,7 +622,7 @@ function openOrderForm(order = null) {
   $("#cake-order-fields").innerHTML = cakeFormMarkup(order);
   form.dataset.id = order ? String(order.id) : "";
   form.dataset.review = order?.status==='Solicitação' ? 'true' : '';
-  if(form.dataset.review) $("#order-status").innerHTML='<option>Orçamento</option><option>Confirmado</option>';
+  if(form.dataset.review) $("#order-status").innerHTML='<wa-option value="Orçamento">Orçamento</wa-option><wa-option value="Confirmado">Confirmado</wa-option>';
   $("#order-dialog-title").textContent = order ? "Editar encomenda" : "Nova encomenda";
   $("#save-order-button").textContent = order ? "Salvar alterações" : "Salvar encomenda";
   const formValues = {
@@ -642,7 +642,7 @@ function openOrderForm(order = null) {
   cakeToggle.checked = !!order?.cake || /\bbolos?\b/i.test(formValues.product);
   cakeToggle.dataset.touched = "";
   $("#cake-order-fields").hidden = !cakeToggle.checked;
-  $$(".optional-fields", form).forEach((section) => { section.open = !!order && [...section.querySelectorAll("input, textarea, select")].some((field) => field.value && field.value !== "Retirada"); });
+  $$(".optional-fields", form).forEach((section) => { section.open = !!order && [...section.querySelectorAll("input, textarea, select, wa-input, wa-textarea, wa-select")].some((field) => field.value && field.value !== "Retirada"); });
   syncDateRequirement();
   if(form.dataset.review) {$("#order-dialog-title").textContent='Editar e aceitar solicitação';$("#save-order-button").textContent='Aceitar solicitação';}
   $("#order-dialog").showModal();
@@ -655,6 +655,9 @@ function syncDateRequirement() {
     const field = $("#order-form").elements.namedItem(name);
     field.required = confirmed;
     field.setAttribute("aria-required", String(confirmed));
+    // Web Awesome fields validate against their inner input, which updates on the next render.
+    field.updateComplete?.then(() => field.updateValidity?.());
+
   });
 }
 
