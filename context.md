@@ -4,7 +4,7 @@ Atualizado em **14/10/2026**, ao fim de uma sessão longa de melhorias. Este arq
 
 ## 1. Onde paramos
 
-- Tudo o que foi feito está **no GitHub (`main`) e publicado na Cloudflare**. Última versão publicada e conferida no ar: `da0cd8d3-d960-4a89-a003-36aab0945da9`. Pasta e GitHub sincronizados, sem alterações pendentes.
+- Tudo o que foi feito está **no GitHub (`main`) e publicado na Cloudflare**. Última versão publicada e conferida no ar: `6c2afe14-cbc0-445f-9565-75e039ba7e82` (Lista da semana). Pasta e GitHub sincronizados, sem alterações pendentes.
 - **Próximo assunto combinado: domínio `lucast.app`** (seção 7). O usuário retomou o tema e pediu para ser guiado passo a passo quando disser "vamos ao domínio". Ainda não houve nenhuma alteração de DNS.
 - Lucas deixou o domínio para depois e pediu para enxugar o código. Os grupos 1 a 3 do diagnóstico foram feitos e publicados em 14/10 (seção 7b), sem mudança visível no site.
 - Depois disso, as features planejadas (seção 8) continuam **não iniciadas** e exigem aprovação.
