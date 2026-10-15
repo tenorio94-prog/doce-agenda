@@ -52,7 +52,6 @@ try {
   for (const width of [360, 1280]) {
     for (const [name, url, action, viewportOnly] of screens) {
       const context = await browser.newContext({ viewport: { width, height: 800 }, locale: 'pt-BR', timezoneId: 'America/Sao_Paulo', reducedMotion: 'reduce', serviceWorkers: 'block' });
-      await context.addInitScript(() => localStorage.setItem('doce-agenda.tour.v1', '1'));
       const page = await context.newPage();
       page.on('pageerror', (error) => errors.push(`${name}@${width}: ${error.message}`));
       page.on('console', (message) => { if (message.type() === 'error') errors.push(`${name}@${width}: ${message.text()}`); });

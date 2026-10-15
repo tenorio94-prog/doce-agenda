@@ -24,20 +24,14 @@ const state = {
   paymentOrderId: null, toastTimer: null,
   month: null, monthData: null, monthLoading: false, monthError: '', monthRequest: 0,
   openSettings: new Set(), openDateException: false,
-  landingInvite: readLandingVisit(),
 };
 
-// The landing links to /demo/?de=landing: that visit skips the stories and starts from the example request.
-// The flag is removed from the address so a reload or a shared link behaves like a normal visit.
-function readLandingVisit() {
-  try {
-    const url = new URL(location.href);
-    if (url.searchParams.get("de") !== "landing") return false;
-    url.searchParams.delete("de");
-    history.replaceState(history.state, "", url.pathname + url.search + url.hash);
-    return true;
-  } catch { return false; }
-}
+// The landing links to /demo/?de=landing. Nothing depends on it any more; the flag only leaves the
+// address so a shared link looks clean.
+try {
+  const url = new URL(location.href);
+  if (url.searchParams.has("de")) { url.searchParams.delete("de"); history.replaceState(history.state, "", url.pathname + url.search + url.hash); }
+} catch { /* endereço fica como está */ }
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
@@ -176,7 +170,6 @@ async function loadState({ silent = false } = {}) {
     $("#loading-state").hidden = true;
     setConnection("online", window.DoceApi.mode === "cloud" ? "Salvo na sua conta" : window.DoceApi.mode === "browser" ? "Salvo neste navegador" : "Salvo neste navegador");
     render();
-    if (!silent) maybeStartTour();
   } catch (error) {
     $("#loading-state").hidden = true;
     setError(LOCAL_ONLY ? "Não foi possível acessar o armazenamento local. Seus dados anteriores continuam na tela." : "Confira se o serviço está aberto. Seus dados anteriores continuam na tela.");
@@ -276,9 +269,6 @@ function nextActionMarkup() {
   const when = order.nextAt ? dateTimeLabel(order.nextAt) : "Sem prazo definido";
   return `<section class="next-action-card mini-card surface"><div class="section-head"><h2>Próxima ação</h2></div><div class="next-action-copy"><strong>${esc(order.nextAction)}</strong>${esc(order.client)} · ${esc(when)}</div><button class="text-link mini-link" type="button" data-open-order="${esc(order.id)}" aria-label="Ver pedido de ${esc(order.client)}">Ver pedido</button></section>`;
 }
-
-// Visitors from the landing skip the stories: the request card below already shows what to do first.
-const landingVisit = () => state.landingInvite && !!window.DoceStore?.isDemo && state.orders.some((order) => order.status === "Solicitação");
 
 // New orders from the link: one opens straight into the review; several go to the Novos list.
 function requestBanner() {
@@ -427,7 +417,7 @@ function renderToday() {
     : "Nada para entregar hoje";
   const financeNote = unknown ? (balances.length ? 'Saldo parcial conhecido · ' : 'Nenhum saldo conhecido: ') + unknown + (unknown === 1 ? ' pedido ainda sem recebimento conferido.' : ' pedidos ainda sem recebimento conferido.') : '';
   panel.innerHTML = `<div class="page-heading today-heading"><div><span class="date-label">${esc(new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "numeric", month: "long" }).format(new Date()))}</span><h1 id="today-title">Hoje</h1><p class="today-summary">${todaySummary}</p></div></div>
-    ${requestBanner()}${firstUse ? `<section class="welcome-panel"><h2>Cadastre seu primeiro pedido</h2><p>Comece com cliente, produto e valor. Complete os detalhes quando estiverem combinados.</p><div class="welcome-actions"><button class="button button-primary" type="button" data-action="new-order">Nova encomenda</button><button class="text-link" type="button" data-action="open-tour">Ver como funciona</button></div></section>` : ''}
+    ${onboardingMarkup()}${requestBanner()}${firstUse && !onboardingVisible() ? `<section class="welcome-panel"><h2>Cadastre seu primeiro pedido</h2><p>Comece com cliente, produto e valor. Complete os detalhes quando estiverem combinados.</p><div class="welcome-actions"><button class="button button-primary" type="button" data-action="new-order">Nova encomenda</button></div></section>` : ''}
     ${sample && firstUse ? `<section class="sample-card" aria-label="Pedido de exemplo">${rowMarkup(sample)}<p>Toque para ver como fica um pedido completo. O exemplo não entra na sua agenda.</p></section>` : sample ? `<details class="sample-examples"><summary>Exemplo fictício — não entra na sua agenda</summary><div class="sample-example-list">${state.orders.filter(sampleOrder).map((order) => `<button class="text-link" type="button" data-open-order="${esc(order.id)}">Ver exemplo: ${esc(clientName(order) || order.product || "pedido")}</button>`).join("")}</div></details>` : ''}
     <div class="today-columns"><div class="today-main">${modeSwitch}<div class="content-grid today-single">${weekMode ? productionMarkup() : agendaWeekMarkup(upcoming.length)}</div>${nextAction}
     ${pendingChanges.length ? `<section class="pending-card surface"><div class="section-head"><h2>Alterações para revisar</h2><span class="pending-count">${pendingChanges.length}</span></div><div class="pending-list">${pendingChanges.slice(0, 3).map((order) => `<button class="pending-row" type="button" data-open-order="${esc(order.id)}"><span><strong>${esc(order.client)}</strong><small>${esc(order.product)}</small></span><span class="pending-chevron" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></span><span class="pending-banner"><strong>Pedido de mudança:</strong> ${esc(order.pendingChange)}</span></button>`).join("")}</div></section>` : ""}
@@ -465,7 +455,7 @@ function renderOrders() {
     const current = stage.key === state.statusFilter;
     return `<button class="stage-chip${current ? " is-current" : ""}${count ? "" : " is-empty"}" type="button" data-stage="${stage.key}" aria-pressed="${current}">${esc(stage.label)}<span class="stage-count">${count}</span></button>`;
   }).join("");
-  panel.innerHTML = `<div class="page-heading"><div><h1 id="orders-title">Seus pedidos</h1><p>Do primeiro orçamento à entrega, com o combinado sempre à mão.</p></div><button class="button button-primary page-add" data-action="new-order" type="button"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> Nova encomenda</button></div>
+  panel.innerHTML = `<div class="page-heading"><div><h1 id="orders-title">Seus pedidos</h1><p>Do primeiro orçamento à entrega, com o combinado sempre à mão.</p></div><button class="button button-primary page-add" data-action="new-order" type="button"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> Nova encomenda</button></div>${tipMarkup("orders")}
     ${requestBanner()}<div class="toolbar"><label class="search-wrap"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 4.5 4.5"/></svg><input class="search-input" id="order-search" type="search" placeholder="Buscar cliente, produto ou detalhe…" value="${esc(state.search)}" aria-label="Buscar pedidos"></label></div>
     <div class="stage-strip" role="group" aria-label="Ver pedidos por etapa">${stageChips}</div>
     <p class="order-results" aria-live="polite"><strong>${orders.length}</strong> ${orders.length === 1 ? "pedido encontrado" : "pedidos encontrados"}</p>
@@ -545,7 +535,7 @@ function renderSettings() {
   const focusName = ["date-availability-form", "availability-form"].includes(focusForm) ? focused.name : "";
   const focusSelection = focusName && typeof focused.selectionStart === "number" ? focused.selectionStart : null;
   const summary = settingsSummaries();
-  content.innerHTML = `<div class="page-heading"><div><h1 id="settings-title">Ajustes</h1><p>Toque num item para ver ou mudar.</p></div></div>
+  content.innerHTML = `<div class="page-heading"><div><h1 id="settings-title">Ajustes</h1><p>Toque num item para ver ou mudar.</p></div></div>${tipMarkup("settings")}
     <div class="settings-list">
       ${settingsCard("link", "Link de encomenda", summary.link, orderPageMarkup())}
       ${settingsCard("days", "Dias e limites", summary.days, availabilitySettingsMarkup(state.settingsDate))}
@@ -615,7 +605,7 @@ function renderMonth() {
       content += `<div class="month-details"><section class="surface"><h2>Dias mais cheios</h2><ol class="month-ranking">${data.busiestDays.map(item).join('')}</ol></section><section class="surface"><h2>O que mais sai</h2><ol class="month-ranking">${data.topProducts.map(item).join('')}</ol></section><section class="surface"><h2>Prazo médio de aviso</h2><p class="month-lead-value">${data.averageNoticeDays===null?'Sem datas de criação':`${esc(new Intl.NumberFormat('pt-BR',{maximumFractionDigits:1}).format(data.averageNoticeDays))} ${data.averageNoticeDays===1?'dia':'dias'}`}</p><p class="month-note">Entre o registro e a retirada ou entrega.${data.noticeOrdersCount<data.ordersCount?` Calculado com ${data.noticeOrdersCount} pedidos que têm data de criação.`:''}</p></section></div>`;
     }
   }
-  panel.innerHTML = `<div class="page-heading"><div><h1 id="month-title">Meu mês</h1><p>Como foram as encomendas do mês.</p></div><div class="week-controls month-controls"><button class="icon-button" type="button" data-month-shift="-1" aria-label="Mês anterior" ${state.month==='1900-01'?'disabled':''}>←</button><span class="month-range" aria-live="polite">${esc(label)}</span><button class="icon-button" type="button" data-month-shift="1" aria-label="Próximo mês" ${state.month>=(data?.currentMonth||currentBusinessMonth())?'disabled':''}>→</button></div></div><div class="month-content" aria-busy="${state.monthLoading}" aria-live="polite">${content}</div><p class="month-note month-definition">Conta pedidos Confirmados e Entregues pela data de retirada ou entrega. Recebido inclui apenas pagamentos conferidos desses pedidos, mesmo que tenham sido recebidos em outro mês. Não inclui orçamentos, solicitações nem exemplos.</p>`;
+  panel.innerHTML = `<div class="page-heading"><div><h1 id="month-title">Meu mês</h1><p>Como foram as encomendas do mês.</p></div><div class="week-controls month-controls"><button class="icon-button" type="button" data-month-shift="-1" aria-label="Mês anterior" ${state.month==='1900-01'?'disabled':''}>←</button><span class="month-range" aria-live="polite">${esc(label)}</span><button class="icon-button" type="button" data-month-shift="1" aria-label="Próximo mês" ${state.month>=(data?.currentMonth||currentBusinessMonth())?'disabled':''}>→</button></div></div>${tipMarkup("month")}<div class="month-content" aria-busy="${state.monthLoading}" aria-live="polite">${content}</div><p class="month-note month-definition">Conta pedidos Confirmados e Entregues pela data de retirada ou entrega. Recebido inclui apenas pagamentos conferidos desses pedidos, mesmo que tenham sido recebidos em outro mês. Não inclui orçamentos, solicitações nem exemplos.</p>`;
   if (focused !== undefined) panel.querySelector(`[data-month-shift="${CSS.escape(focused)}"]`)?.focus({preventScroll:true});
   if (!state.monthData && !state.monthError && !state.monthLoading) loadMonth();
 }
@@ -863,6 +853,7 @@ async function saveAvailability(event, form = event.target) {
   if (body.dailyOrderLimit !== null && (!Number.isInteger(body.dailyOrderLimit) || body.dailyOrderLimit < 1 || body.dailyOrderLimit > 50)) return showToast("O limite diário deve estar entre 1 e 50 pedidos, ou ficar vazio.");
   try {
     await apiRequest("/availability", { method: "PUT", body });
+    markOnboarding("days");
     await loadState({ silent: true });
     showToast("Regras semanais salvas.");
   } catch (error) { showToast(error.message || "Não foi possível salvar a disponibilidade."); }
@@ -929,6 +920,7 @@ async function advanceOrder(id, status, undo = true) {
   const previous = order.status;
   try {
     await apiRequest(`/orders/${encodeURIComponent(id)}`, { method: "PUT", body: { status } });
+    markOnboarding("advance");
     state.justAdvanced = id;
     await loadState({ silent: true });
     state.justAdvanced = null;
@@ -943,6 +935,7 @@ async function advanceOrder(id, status, undo = true) {
 function setActiveView(view) {
   if (view === "week") view = "today";
   if (!["today", "orders", "settings", "month"].includes(view)) return;
+  if (view === "month") markOnboarding("month");
   state.activeView = view;
   render();
   $("#main-content").focus({ preventScroll: true });
@@ -1109,9 +1102,12 @@ function handleClick(event) {
       const order = orderById(id); closeDetails(); if (order) openOrderForm(order); break;
     }
     case 'show-requests': state.statusFilter='new';state.search='';setActiveView('orders');break;
-    case 'open-tour': openTour(); break;
+    case 'open-onboarding': { const progress = readOnboarding(); progress.dismissed = false; saveOnboarding(progress); setActiveView('today'); coach('#view-today .onboarding'); break; }
+    case 'onboarding-skip': { const progress = readOnboarding(); progress.dismissed = true; saveOnboarding(progress); renderToday(); if (isDemoMode()) showToast('Para ver de novo, toque em Como funciona.'); break; }
+    case 'onboarding-go': runOnboardingTask(action.dataset.task); break;
+    case 'close-tip': closeTip(action.dataset.tip); break;
     case 'reset-demo':
-      if (window.DoceStore?.resetDemo && window.confirm('Recomeçar a demonstração? Os pedidos de exemplo voltam ao início e o que você mudou aqui é apagado.')) { window.DoceStore.resetDemo(); location.reload(); }
+      if (window.DoceStore?.resetDemo && window.confirm('Recomeçar a demonstração? Os pedidos de exemplo voltam ao início e o que você mudou aqui é apagado.')) { window.DoceStore.resetDemo(); try { localStorage.removeItem(onboardingKey()); } catch { /* sem armazenamento */ } location.reload(); }
       break;
     case 'agenda-today': state.weekOffset=0;state.selectedDay=localDateKey(new Date());state.agendaEnter=true;renderToday();break;
     case 'advance-order': action.disabled=true;advanceOrder(id,action.dataset.status);break;
@@ -1341,131 +1337,94 @@ async function loadLinkMetrics(){
  }catch(e){output.textContent=e.message;}
 }
 
-// ---- Boas-vindas em formato de stories ----
-// Short animated scenes (CSS only) that teach the main flows. Opens once per device and from "Como funciona".
-const TOUR_KEY = "doce-agenda.tour.v1";
-const tourSeen = () => { try { return localStorage.getItem(TOUR_KEY) === "1"; } catch { return true; } };
-const markTourSeen = () => { try { localStorage.setItem(TOUR_KEY, "1"); } catch { /* sem armazenamento: o tour só não lembra */ } };
+// ---- Boas-vindas: tarefas na tela de verdade ----
+// The demonstration asks for four short tasks in any order; a new account gets three first steps.
+// Progress is read from the agenda itself where possible; the rest is remembered on this device.
+const isDemoMode = () => !!window.DoceStore?.isDemo;
+const onboardingKey = () => `doce-agenda.onboarding.${isDemoMode() ? "demo" : "conta"}.v1`;
+function readOnboarding() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(onboardingKey()) || "{}");
+    return { dismissed: saved.dismissed === true, done: Array.isArray(saved.done) ? saved.done : [] };
+  } catch { return { dismissed: false, done: [] }; }
+}
+function saveOnboarding(progress) {
+  try { localStorage.setItem(onboardingKey(), JSON.stringify(progress)); } catch { /* sem armazenamento: só não lembra */ }
+}
+function markOnboarding(key) {
+  const progress = readOnboarding();
+  if (!progress.done.includes(key)) { progress.done.push(key); saveOnboarding(progress); }
+}
 const reducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-const miniCard = (time, product, client, extra = "", cls = "") => `<div class="mc ${cls}"><b>${time}</b><span><strong>${product}</strong><small>${client}</small></span>${extra}</div>`;
-const miniStamp = (text = "Pago") => `<i class="mp-stamp">${text}</i>`;
-const SPRINKLE_COLORS = ["#f7c5d0", "#d3e7c1", "#fbe9a9", "#2e6a46", "#8f2a4f", "#ffffff"];
-const TOUR_STORIES = [
-  { title: "Do caderno para o celular", text: "Cada encomenda vira um cartão no dia certo. Nada se perde entre páginas e conversas.", ms: 6500,
-    scene: () => `<div class="scene s-notebook"><div class="mini-phone"><div class="mp-head">Hoje <em>3 para entregar</em></div><div class="mp-list">${miniCard("10h", "Bolo de pistache", "Ana Clara", miniStamp(), "d1")}${miniCard("15h", "Brigadeiro (cento)", "Marcos · falta o sinal", "", "d2 is-yellow")}${miniCard("18h", "Docinhos (50 un.)", "Juliana", "", "d3")}</div></div>
-      <div class="paper"><p>Ana Clara · bolo pistache <s>sex</s> sáb?</p><p>Marcos 100 brigad. <span class="pen-red">sinal??</span></p><p>Juliana docinhos · 18h</p><p><s>Paula</s> → ligar amanhã</p><p class="pen-red">pagou???</p></div></div>` },
-  { title: "Anote em segundos", text: "Toque em + Novo e escreva o básico: cliente, produto, data e valor. Os detalhes você completa depois.", ms: 8500,
-    scene: () => `<div class="scene s-create"><div class="mini-phone"><div class="mp-head">Hoje</div><div class="mp-list">${miniCard("10h", "Bolo de pistache", "Ana Clara", miniStamp())}${miniCard("15h", "Brigadeiro (cento)", "Marcos", "", "is-yellow")}${miniCard("18h", "Bolo de cenoura", "Dona Rosa", '<i class="mp-new">novo</i>', "mc-new")}</div>
-      <span class="mp-plus">+</span><span class="tap tap-plus"></span>
-      <div class="mp-sheet"><h4>Nova encomenda</h4><label>Cliente<span class="type"><i class="t1">Dona Rosa</i></span></label><label>Produto<span class="type"><i class="t2">Bolo de cenoura</i></span></label><label>Data<span class="type"><i class="t3">Hoje · 18h</i></span></label><label>Valor<span class="type"><i class="t4">R$ 90</i></span></label><span class="mp-save">Salvar encomenda</span><span class="tap tap-save"></span></div></div></div>` },
-  { title: "Carimbou, tá pago", text: "Conferiu o Pix do sinal? Marque e o pedido ganha o carimbo. Amarelo quer dizer que o sinal ainda não chegou.", ms: 6500,
-    scene: () => `<div class="scene s-stamp"><div class="pix-chip">Pix de R$ 90 · conferido no banco ✓</div><div class="big-card"><b>15h</b><div><strong>Bolo de pistache</strong><small>Ana Clara · retirada</small><em class="flag">Falta o sinal</em></div><span class="big-total">R$ 180</span></div><span class="ink-ring"></span><span class="slam-stamp">Sinal pago</span></div>` },
-  { title: "Um toque, próxima etapa", text: "Começar a fazer, ficou pronto, entregue. Na aba Pedidos você vê quantos estão em cada etapa.", ms: 7000, steps: true,
-    scene: () => `<div class="scene s-steps" data-step="3"><div class="chips"><i class="chip-hl"></i><span>Confirmados</span><span>Fazendo</span><span>Prontos</span><span>Entregues</span></div>
-      <div class="big-card"><b>15h</b><div><strong>Brigadeiro (cento)</strong><small>Marcos · retirada</small></div><span class="status-stack"><em>Confirmado</em><em>Em produção</em><em>Pronto</em><em>Entregue</em></span></div>
-      <span class="advance-btn"><em>Começar a fazer →</em><em>Ficou pronto →</em><em>Marcar entregue →</em><em>Entregue ✓</em></span><div class="undo-toast">Marcos: Entregue. <u>Desfazer</u></div></div>` },
-  { title: "Seu mês, sem fazer conta", text: "Meu mês mostra quanto você vendeu, quanto entrou e quanto falta receber. Só conta o dinheiro que você conferiu.", ms: 6500,
-    scene: () => `<div class="scene s-month"><div class="tiles"><div class="tile"><small>Vendido</small><b data-count="1180">R$ 1.180</b></div><div class="tile"><small>Recebido</small><b data-count="755">R$ 755</b></div><div class="tile is-due"><small>A receber</small><b data-count="425">R$ 425</b></div></div>
-      <div class="bars">${[["Seg", 20], ["Ter", 35], ["Qua", 30], ["Qui", 45], ["Sex", 70], ["Sáb", 100], ["Dom", 40]].map(([day, height], index) => `<span style="--h:${height}%;--i:${index}"><i></i><small>${day}</small></span>`).join("")}</div><p class="bars-label">Sábado é o seu dia mais cheio</p></div>` },
-  { title: "A cliente pede pelo seu link", text: "Ative o link de encomenda e mande no WhatsApp. O pedido chega em Novos e só vale depois que você aceitar.", ms: 7000,
-    scene: () => `<div class="scene s-link"><div class="wa-bubble">Oi! Você faz bolo para sábado?</div><div class="wa-bubble me">Faço sim! Faz o pedido por aqui: <u>meu link de encomenda</u></div>
-      <div class="request-pop"><span class="rp-chip">Novos <b>1</b></span><span><strong>Camila</strong><small>Bolo de aniversário · sábado</small></span></div></div>` },
-  { title: "Mais espaço para criar.", text: "", ms: 0, final: true,
-    scene: () => `<div class="scene s-final">${Array.from({ length: 34 }, (_, index) => `<i class="sprinkle" style="--x:${(index * 37) % 100}%;--d:${((index * 13) % 20) / 10}s;--r:${(index * 47) % 180}deg;--c:${SPRINKLE_COLORS[index % SPRINKLE_COLORS.length]};--t:${2.4 + ((index * 7) % 10) / 10}s"></i>`).join("")}<div class="final-logo"><img src="/logo.svg" alt="" width="182" height="48"></div></div>` },
-];
-const tour = { index: 0, overlay: null, timers: [], pressAt: 0 };
+const pendingRequest = () => sortOrders(state.orders.filter((order) => order.status === "Solicitação"))[0];
+const informedPayment = () => state.payments.find((payment) => payment.status === "Informado" && orderById(payment.orderId) && !sampleOrder(orderById(payment.orderId)));
 
-function openTour(start = 0) {
-  if (tour.overlay) return;
-  const overlay = document.createElement("div");
-  overlay.className = "story-overlay";
-  overlay.setAttribute("role", "dialog"); overlay.setAttribute("aria-modal", "true"); overlay.setAttribute("aria-label", "Como funciona o Doce Agenda");
-  overlay.innerHTML = `<div class="story" tabindex="-1"><div class="story-progress">${TOUR_STORIES.map(() => '<span class="sp"><i></i></span>').join("")}</div>
-    <div class="story-top"><span class="story-brand">doce agenda</span><button class="story-close" type="button" data-tour="close">Pular</button></div>
-    <div class="story-stage" aria-hidden="true"></div><div class="story-copy" aria-live="polite"></div><div class="story-actions"></div>
-    <button class="story-zone story-prev" type="button" data-tour="prev" aria-label="Voltar"></button><button class="story-zone story-next" type="button" data-tour="next" aria-label="Avançar"></button></div>`;
-  [...document.body.children].forEach((child) => { child.inert = true; });
-  document.body.append(overlay); document.body.classList.add("story-open");
-  tour.overlay = overlay;
-  overlay.addEventListener("click", tourClick);
-  overlay.addEventListener("pointerdown", () => { tour.pressAt = Date.now(); overlay.classList.add("is-paused"); });
-  ["pointerup", "pointercancel", "pointerleave"].forEach((type) => overlay.addEventListener(type, () => overlay.classList.remove("is-paused")));
-  overlay.addEventListener("animationend", (event) => { if (event.target.matches(".sp.is-active i")) showStory(tour.index + 1); });
-  overlay.addEventListener("keydown", (event) => {
-    if (event.key === "Escape") closeTour(); else if (event.key === "ArrowRight") showStory(tour.index + 1); else if (event.key === "ArrowLeft") showStory(tour.index - 1);
-  });
-  showStory(start);
+function onboardingTasks() {
+  const { done } = readOnboarding();
+  if (isDemoMode()) {
+    const request = pendingRequest(), payment = informedPayment(), payer = payment && orderById(payment.orderId);
+    return [
+      { key: "request", title: "Decida o pedido que chegou pelo link", text: request ? `${clientName(request) || "A cliente"} quer ${request.product || "uma encomenda"}. Aceite ou recuse.` : "Aceite ou recuse o pedido da cliente.", done: !request },
+      { key: "pix", title: "Confira um Pix informado", text: payer ? `${clientName(payer) || "A cliente"} disse que pagou o sinal. Marque como conferido e veja o carimbo.` : "Marque o sinal como conferido e veja o carimbo.", done: !payment },
+      { key: "advance", title: "Avance um pedido de etapa", text: "Começar a fazer, ficou pronto, entregue: um toque em cada.", done: done.includes("advance") },
+      { key: "month", title: "Veja quanto entrou no mês", text: "Só conta o dinheiro que você conferiu.", done: done.includes("month") },
+    ];
+  }
+  const availability = state.availability || {};
+  return [
+    { key: "order", title: "Anote seu primeiro pedido", text: "Cliente, produto, data e valor. O resto pode vir depois.", done: state.orders.some((order) => !sampleOrder(order) && order.status !== "Solicitação") },
+    { key: "days", title: "Diga seus dias e limites", text: "Os dias em que você não trabalha e quantos pedidos cabem por dia.", done: done.includes("days") || (availability.closedWeekdays || []).length > 0 || availability.dailyOrderLimit != null || Number(availability.minimumNoticeHours) > 0 },
+    { key: "link", title: "Ative seu link de encomenda", text: "As clientes pedem sozinhas, e nada ocupa vaga até você aceitar.", done: !!state.orderPage?.active },
+  ];
 }
 
-function tourClick(event) {
-  const button = event.target.closest("[data-tour]");
-  if (!button) return;
-  // A long press only pauses, like stories; it does not change the scene.
-  if (["prev", "next"].includes(button.dataset.tour) && event.detail && Date.now() - tour.pressAt > 350) return;
-  const action = button.dataset.tour;
-  if (action === "next") showStory(tour.index + 1);
-  else if (action === "prev") showStory(tour.index - 1);
-  else if (action === "close") closeTour();
-  else if (action === "new-order") { closeTour(); openOrderForm(); }
+const onboardingVisible = () => !readOnboarding().dismissed && (isDemoMode() || onboardingTasks().some((task) => !task.done));
+
+function onboardingMarkup() {
+  if (!onboardingVisible()) return "";
+  const demo = isDemoMode(), tasks = onboardingTasks(), count = tasks.filter((task) => task.done).length;
+  if (count === tasks.length) {
+    return `<section class="onboarding is-complete surface" aria-labelledby="onboarding-title"><h2 id="onboarding-title">Pronto, você já sabe usar.</h2><p>Agora é com a sua confeitaria: crie a conta e anote seus pedidos de verdade.</p><div class="onboarding-end"><a class="button button-primary" href="/cadastro/">Criar conta grátis</a><button class="text-link" type="button" data-action="onboarding-skip">Fechar</button></div></section>`;
+  }
+  return `<section class="onboarding surface" aria-labelledby="onboarding-title">
+    <div class="onboarding-head"><div><h2 id="onboarding-title">${demo ? "Experimente em 1 minuto" : "Primeiros passos"}</h2><p>${demo ? "Faça na tela de verdade, na ordem que quiser." : "Três coisas para deixar sua agenda pronta."}</p></div><button class="text-link onboarding-skip" type="button" data-action="onboarding-skip">Pular</button></div>
+    <div class="onboarding-progress" role="progressbar" aria-label="Tarefas feitas" aria-valuemin="0" aria-valuemax="${tasks.length}" aria-valuenow="${count}"><i style="width:${Math.round(count / tasks.length * 100)}%"></i></div>
+    <p class="onboarding-count">${count} de ${tasks.length} feitas</p>
+    <ol class="onboarding-list">${tasks.map((task) => `<li class="onboarding-task${task.done ? " is-done" : ""}"><span class="onboarding-check" aria-hidden="true">${task.done ? "✓" : ""}</span><span class="onboarding-text"><strong>${esc(task.title)}</strong><small>${esc(task.text)}</small></span>${task.done ? '<span class="visually-hidden">Feito.</span>' : `<button class="button button-quiet onboarding-go" type="button" data-action="onboarding-go" data-task="${task.key}" aria-label="Fazer: ${esc(task.title)}">Fazer</button>`}</li>`).join("")}</ol>
+    ${demo ? "" : '<a class="text-link onboarding-demo" href="/demo/">Ver a demonstração antes</a>'}
+  </section>`;
 }
 
-function showStory(index) {
-  if (!tour.overlay || index < 0) return;
-  if (index >= TOUR_STORIES.length) { closeTour(); return; }
-  tour.timers.forEach(clearTimeout); tour.timers = [];
-  tour.index = index;
-  const story = TOUR_STORIES[index], overlay = tour.overlay;
-  overlay.querySelectorAll(".sp").forEach((bar, position) => {
-    bar.className = `sp${position < index ? " is-done" : position === index ? " is-active" : ""}`;
-    bar.style.setProperty("--ms", `${story.ms || 1}ms`);
-  });
-  overlay.classList.toggle("is-final", !!story.final);
-  overlay.querySelector(".story-stage").innerHTML = story.scene();
-  const demo = !!window.DoceStore?.isDemo;
-  overlay.querySelector(".story-copy").innerHTML = `<h2>${esc(story.title)}</h2><p>${esc(story.final ? (demo ? "Aqui tudo é de mentira: mexa à vontade. Nada sai deste navegador." : "Comece anotando o seu próximo pedido.") : story.text)}</p>`;
-  overlay.querySelector(".story-actions").innerHTML = story.final
-    ? `<button class="button button-primary" type="button" data-tour="${demo ? "close" : "new-order"}">${demo ? "Explorar a demonstração" : "Anotar um pedido"}</button><button class="story-again" type="button" data-tour="prev">Voltar</button>`
-    : "";
-  if (story.final) markTourSeen();
-  if (story.steps) runStepScene(overlay.querySelector(".s-steps"));
-  overlay.querySelectorAll("[data-count]").forEach(countUp);
-  (overlay.querySelector(".story-actions .button") || overlay.querySelector(".story")).focus({ preventScroll: true });
+// Takes her to the place of the task and briefly rings what to tap.
+function coach(selector) {
+  setTimeout(() => {
+    const target = $(selector);
+    if (!target) return;
+    target.scrollIntoView({ block: "center", behavior: reducedMotion() ? "auto" : "smooth" });
+    target.classList.remove("coach-target"); void target.offsetWidth; target.classList.add("coach-target");
+    setTimeout(() => target.classList.remove("coach-target"), 3600);
+  }, 150);
 }
 
-function runStepScene(scene) {
-  if (!scene || reducedMotion()) return;
-  scene.dataset.step = "0";
-  [1500, 3000, 4500].forEach((delay, position) => {
-    tour.timers.push(setTimeout(() => scene.classList.add("is-pressing"), delay - 220));
-    tour.timers.push(setTimeout(() => { scene.classList.remove("is-pressing"); scene.dataset.step = String(position + 1); }, delay));
-  });
+function runOnboardingTask(key) {
+  if (key === "request") { setActiveView("today"); coach("#view-today .request-banner .button"); }
+  else if (key === "pix") { const payment = informedPayment(); if (payment) { showOrderDetail(payment.orderId); coach('#detail-dialog [data-action="confirm-payment"]'); } }
+  else if (key === "advance") { state.agendaMode = "day"; state.selectedDay = localDateKey(new Date()); setActiveView("today"); coach('#view-today [data-action="advance-order"]'); }
+  else if (key === "month") setActiveView("month");
+  else if (key === "order") openOrderForm();
+  else if (key === "days" || key === "link") { state.openSettings.add(key); setActiveView("settings"); coach(`.settings-card[data-settings="${key}"]`); }
 }
 
-function countUp(element) {
-  const target = Number(element.dataset.count), format = (value) => `R$ ${new Intl.NumberFormat("pt-BR").format(value)}`;
-  if (reducedMotion()) { element.textContent = format(target); return; }
-  const started = performance.now() + 500;
-  const frame = (now) => {
-    if (!element.isConnected) return;
-    const progress = Math.min(1, Math.max(0, (now - started) / 1400));
-    element.textContent = format(Math.round(target * (1 - Math.pow(1 - progress, 3))));
-    if (progress < 1) requestAnimationFrame(frame);
-  };
-  element.textContent = format(0); requestAnimationFrame(frame);
-}
-
-function closeTour() {
-  if (!tour.overlay) return;
-  tour.timers.forEach(clearTimeout); tour.timers = [];
-  markTourSeen();
-  tour.overlay.remove(); tour.overlay = null;
-  document.body.classList.remove("story-open");
-  [...document.body.children].forEach((child) => { child.inert = false; });
-  $("#main-content")?.focus({ preventScroll: true });
-}
-
-// First visit: the demonstration, or a new account without orders, opens the stories once.
-function maybeStartTour() {
-  if (tour.overlay || tourSeen() || landingVisit()) return;
-  if (window.DoceStore?.isDemo || !state.orders.some((order) => !sampleOrder(order))) openTour();
+// One-sentence tips at the top of a tab, until she closes them.
+const TIP_KEY = "doce-agenda.tips.v1";
+const TIPS = {
+  orders: "Em Novos ficam os pedidos que esperam sua decisão: orçamentos e os que chegaram pelo link.",
+  month: "Só conta como recebido o dinheiro que você marcou como conferido.",
+  settings: "Aqui você ativa o link para as clientes e diz quais dias e quantos pedidos aceita.",
+};
+const closedTips = () => { try { const list = JSON.parse(localStorage.getItem(TIP_KEY) || "[]"); return Array.isArray(list) ? list : []; } catch { return []; } };
+const tipMarkup = (key) => closedTips().includes(key) ? "" : `<div class="tab-tip" role="note"><p><strong>Dica:</strong> ${esc(TIPS[key])}</p><button class="tab-tip-close" type="button" data-action="close-tip" data-tip="${key}" aria-label="Fechar dica"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>`;
+function closeTip(key) {
+  try { localStorage.setItem(TIP_KEY, JSON.stringify([...new Set([...closedTips(), key])])); } catch { /* sem armazenamento */ }
+  render();
 }

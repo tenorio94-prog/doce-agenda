@@ -1,6 +1,6 @@
 // Cartão de pedido novo e entrada pela landing: node scripts/build-cloudflare.mjs && node scripts/test-landing-entry.mjs [pasta-de-capturas]
 // Um pedido pelo link: o cartão diz quem pediu, o quê e quando, e abre direto a revisão.
-// Vários: o cartão resume os nomes e leva para Novos. Quem vem de /demo/?de=landing não vê os stories.
+// Vários: o cartão resume os nomes e leva para Novos. O ?de=landing sai do endereço.
 import assert from 'node:assert/strict';
 import { mkdir } from 'node:fs/promises';
 import path from 'node:path';
@@ -29,12 +29,11 @@ try {
     const errors = [];
     page.on('pageerror', (error) => errors.push(String(error)));
 
-    // Vindo da landing: sem stories, cartão do pedido da Camila, endereço limpo.
+    // Vindo da landing: cartão do pedido da Camila, endereço limpo.
     await page.goto(`${origin}/demo/?de=landing`);
     await page.locator('#today-title').waitFor();
     const card = page.locator('#view-today .request-banner');
     await card.waitFor();
-    assert.equal(await page.locator('.story-overlay').count(), 0, 'stories não abrem vindo da landing');
     const text = await card.innerText();
     assert.match(text, /Pedido novo pelo link/);
     assert.match(text, /Camila quer Bolo de aniversário para \S+ \d+ \S+\. Ainda não ocupa vaga/);
@@ -50,7 +49,6 @@ try {
 
     // Vários pedidos (demo com um segundo pedido do link): nomes resumidos e ida para Novos.
     const many = await browser.newContext({ viewport: { width, height }, locale: 'pt-BR', timezoneId: 'America/Sao_Paulo' });
-    await many.addInitScript(() => localStorage.setItem('doce-agenda.tour.v1', '1'));
     const manyPage = await many.newPage();
     manyPage.on('pageerror', (error) => errors.push(String(error)));
     await manyPage.goto(`${origin}/demo/`);
@@ -71,16 +69,9 @@ try {
     await manyPage.locator('#orders-title').waitFor();
     await many.close();
 
-    // Entrada direta (aparelho novo): os stories continuam abrindo.
-    const direct = await browser.newContext({ viewport: { width, height }, locale: 'pt-BR', timezoneId: 'America/Sao_Paulo' });
-    const directPage = await direct.newPage();
-    directPage.on('pageerror', (error) => errors.push(String(error)));
-    await directPage.goto(`${origin}/demo/`);
-    await directPage.locator('.story-overlay').waitFor();
-    await direct.close();
 
     assert.deepEqual(errors, []);
-    results.push(`${width}px: cartão de um pedido abre a revisão, vários levam a Novos, landing sem stories`);
+    results.push(`${width}px: cartão de um pedido abre a revisão, vários levam a Novos`);
   }
   results.forEach((line) => console.log(`ok - ${line}`));
 } finally {

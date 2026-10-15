@@ -15,7 +15,6 @@ try {
   for (const [width, height] of [[360, 800], [1280, 900]]) {
     const context = await browser.newContext({ viewport: { width, height }, locale: 'pt-BR', timezoneId: 'America/Sao_Paulo' });
     await context.grantPermissions(['clipboard-read', 'clipboard-write'], { origin });
-    await context.addInitScript(() => localStorage.setItem('doce-agenda.tour.v1', '1'));
     const page = await context.newPage();
     const errors = [];
     page.on('pageerror', (error) => errors.push(String(error)));

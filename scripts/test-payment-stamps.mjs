@@ -39,7 +39,6 @@ try {
   });
   await context.addInitScript(seed => {
     if (!localStorage.getItem('doce-agenda.demo.v2')) localStorage.setItem('doce-agenda.demo.v2', JSON.stringify(seed));
-    localStorage.setItem('doce-agenda.tour.v1', '1'); // a apresentação de boas-vindas cobriria a tela
   }, fixtures);
   if (process.env.DOCE_TEST_ORIGIN) {
     assert.equal(await (await context.request.get(origin + '/cloud-app.js')).text(), await readFile(path.join(bundle, 'cloud-app.js'), 'utf8'), 'Published cloud app must match the local build');
