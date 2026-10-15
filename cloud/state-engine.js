@@ -1,6 +1,7 @@
 import { defaultOrderPage, orderPageInput } from './order-link-model.js';
 import { monthlySummary } from './monthly-summary.js';
 import { defaultPixSettings, pixSettingsInput } from './pix-code.js';
+import { anonymizeClient, clientsSummary } from './clients.js';
 const STATUSES = ['Solicitação', 'Orçamento', 'Aguardando confirmação', 'Confirmado', 'Em produção', 'Pronto', 'Entregue', 'Cancelado', 'Recusado'];
 const DRAFT_STATUSES = ['Solicitação', 'Orçamento', 'Aguardando confirmação', 'Cancelado', 'Recusado'];
 const COMMITTED_STATUSES = ['Confirmado', 'Em produção', 'Pronto', 'Entregue'];
@@ -268,6 +269,7 @@ export function transactState(state, url, options = {}) {
     if (method === 'GET' && path === '/api/availability') return response(nextState.availability, 200, nextState);
     if (method === 'GET' && path === '/api/order-template') return response(nextState.orderTemplate, 200, nextState);
     if (method === 'GET' && path === '/api/order-page') return response(nextState.orderPage, 200, nextState);
+    if (method === 'GET' && path === '/api/clientes') return response(clientsSummary(nextState), 200, nextState);
 
     let body;
     try { body = JSON.parse(options.body || '{}'); } catch { fail('JSON inválido.'); }
@@ -296,6 +298,11 @@ export function transactState(state, url, options = {}) {
       result = order;
     } else if (path === '/api/order-page' && method === 'PUT') {
       nextState.orderPage = orderPageInput(body); result = nextState.orderPage;
+    } else if (path.match(/^\/api\/clientes\/[^/]+\/anonimizar$/) && method === 'POST') {
+      const key = decodeURIComponent(path.split('/')[3]);
+      const orders = anonymizeClient(nextState, key, now);
+      if (!orders) fail('Cliente não encontrada.', 404);
+      result = { ok: true, orders };
     } else if (path === '/api/pix' && method === 'PUT') {
       nextState.pix = pixSettingsInput(body); result = nextState.pix;
     } else if (path === '/api/availability' && method === 'PUT') {

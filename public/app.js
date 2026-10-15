@@ -28,6 +28,7 @@ const state = {
   paymentOrderId: null, toastTimer: null,
   month: null, monthData: null, monthLoading: false, monthError: '', monthRequest: 0,
   openSettings: new Set(), openDateException: false,
+  clientsData: null, clientsError: "", clientsLoading: false, clientsRequest: 0, clientsSearch: "", clientsFilter: "all",
 };
 
 // The landing links to /demo/?de=landing (nothing depends on it any more) and ?pix=teste|off turns the Pix beta on or off
@@ -174,6 +175,7 @@ async function loadState({ silent = false } = {}) {
     state.orderPage = data.orderPage || {active:false,slug:'',displayName:'',welcome:'',whatsapp:'',products:[]};
     state.pix = data.pix || { keyType: "", key: "", name: "", city: "", depositPercent: 30 };
     state.monthData = null; state.monthError = ''; state.monthLoading = false; state.monthRequest++;
+    state.clientsData = null; state.clientsError = ""; state.clientsLoading = false; state.clientsRequest++;
     $("#error-notice").hidden = true;
     $("#loading-state").hidden = true;
     setConnection("online", window.DoceApi.mode === "cloud" ? "Salvo na sua conta" : window.DoceApi.mode === "browser" ? "Salvo neste navegador" : "Salvo neste navegador");
@@ -624,7 +626,7 @@ function render() {
   // Optional: a page cached before this button existed must still load the agenda.
   const demoReset = $("#demo-reset");
   if (demoReset) demoReset.hidden = !window.DoceStore?.resetDemo;
-  renderToday(); renderOrders(); renderSettings(); renderMonth();
+  renderToday(); renderOrders(); renderSettings(); renderMonth(); renderClients();
   $$("[data-view]").forEach((button) => {
     if (!button.matches(".nav-item, .settings-button")) return;
     const current = button.dataset.view === state.activeView;
@@ -943,7 +945,7 @@ async function advanceOrder(id, status, undo = true) {
 
 function setActiveView(view) {
   if (view === "week") view = "today";
-  if (!["today", "orders", "settings", "month"].includes(view)) return;
+  if (!["today", "orders", "clients", "settings", "month"].includes(view)) return;
   if (view === "month") markOnboarding("month");
   state.activeView = view;
   render();
@@ -1082,6 +1084,10 @@ function handleClick(event) {
   if (close) { $(`#${CSS.escape(close.dataset.close)}`).close(); return; }
   const view = event.target.closest("[data-view]");
   if (view) { event.preventDefault(); setActiveView(view.dataset.view); return; }
+  const clientButton = event.target.closest("[data-client]");
+  if (clientButton) { openClient(clientButton.dataset.client); return; }
+  const clientsFilter = event.target.closest("[data-clients-filter]");
+  if (clientsFilter) { state.clientsFilter = clientsFilter.dataset.clientsFilter; renderClients(); return; }
   const monthShift = event.target.closest('[data-month-shift]');
   if (monthShift) { shiftMonth(Number(monthShift.dataset.monthShift)); return; }
   const newOrder = event.target.closest('[data-action="new-order"]');
@@ -1116,6 +1122,8 @@ function handleClick(event) {
     case 'onboarding-go': runOnboardingTask(action.dataset.task); break;
     case 'close-tip': closeTip(action.dataset.tip); break;
     case 'pix-charge': openPixCharge(id); break;
+    case 'retry-clients': state.clientsError = ""; state.clientsData = null; renderClients(); break;
+    case 'erase-client': eraseClient(action.dataset.clientKey); break;
     case 'clear-pix': clearPix(); break;
     case 'reset-demo':
       if (window.DoceStore?.resetDemo && window.confirm('Recomeçar a demonstração? Os pedidos de exemplo voltam ao início e o que você mudou aqui é apagado.')) { window.DoceStore.resetDemo(); try { localStorage.removeItem(onboardingKey()); } catch { /* sem armazenamento */ } location.reload(); }
@@ -1216,6 +1224,9 @@ function attachEvents() {
   $("#restore-button").addEventListener("click", openRestoreDialog);
   $("#view-orders").addEventListener("input", (event) => {
     if (event.target.id === "order-search") { state.search = event.target.value; renderOrders(); }
+  });
+  $("#view-clients")?.addEventListener("input", (event) => {
+    if (event.target.id === "clients-search") { state.clientsSearch = event.target.value; renderClients(); }
   });
   ["order-dialog", "detail-dialog", "payment-dialog"].forEach((id) => {
     const dialog = $(`#${id}`);
@@ -1347,6 +1358,103 @@ async function loadLinkMetrics(){
  try{const metrics=await apiRequest('/order-page/metrics'),orders=state.orders.filter(o=>o.origin==='link'),week=orders.filter(o=>Date.parse(o.createdAt)>=Date.now()-7*86400000),accepted=orders.filter(o=>o.reviewOutcome==='accepted'),reviewed=orders.filter(o=>o.reviewedAt),times=reviewed.map(o=>Math.max(0,Date.parse(o.reviewedAt)-Date.parse(o.createdAt))),minutes=times.length?Math.round(times.reduce((a,b)=>a+b,0)/times.length/60000):null;
  output.textContent=`${metrics.visits} visitas · ${week.length} solicitações nos últimos 7 dias · ${orders.length?Math.round(accepted.length/orders.length*100):0}% aceitas${minutes!==null?` · revisão média em ${minutes} min`:''}. ${state.orders.filter(o=>!['Solicitação','Recusado'].includes(o.status)&&!sampleOrder(o)).length?Math.round(state.orders.filter(o=>o.origin==='link'&&!['Solicitação','Recusado'].includes(o.status)).length/state.orders.filter(o=>!['Solicitação','Recusado'].includes(o.status)&&!sampleOrder(o)).length*100):0}% dos pedidos vieram do link. Visitas contam carregamentos, incluindo repetições.`;
  }catch(e){output.textContent=e.message;}
+}
+
+// ---- Clientes: fichas montadas pelo servidor a partir dos pedidos ----
+const formatPhone = (digits) => digits.length === 11 ? `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}` : digits.length === 10 ? `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}` : digits;
+const dayLabel = (key, withYear = false) => key ? calendarDateLabel(key, { weekday: withYear ? undefined : "short", day: "numeric", month: "short", ...(withYear ? { year: "numeric" } : {}) }).replace(/\./g, "").replace(/ de /g, " ") : "";
+const clientByKey = (key) => state.clientsData?.clients.find((client) => client.key === key);
+
+async function loadClients() {
+  const request = ++state.clientsRequest;
+  state.clientsLoading = true;
+  try {
+    const data = await apiRequest("/clientes");
+    if (request !== state.clientsRequest) return;
+    state.clientsData = data; state.clientsError = "";
+  } catch (error) {
+    if (request !== state.clientsRequest) return;
+    state.clientsError = error.message || "Não foi possível carregar as clientes.";
+  } finally {
+    if (request === state.clientsRequest) { state.clientsLoading = false; renderClients(); }
+  }
+}
+
+function clientStatusLine(client) {
+  if (client.nextOrderDay) return `Próximo pedido: ${dayLabel(client.nextOrderDay)}`;
+  if (client.away) return `Faz ${client.daysSinceLast} dias que não pede`;
+  if (client.lastPurchaseDay) return `Último pedido: ${dayLabel(client.lastPurchaseDay)}`;
+  return "Ainda sem pedido confirmado";
+}
+
+function clientRowMarkup(client) {
+  return `<button class="client-row${client.away ? " is-away" : ""}" type="button" data-client="${esc(client.key)}">
+    <span class="client-main"><strong>${esc(client.name)}</strong><small>${client.phone ? esc(formatPhone(client.phone)) : "Sem WhatsApp"} · ${client.purchases} ${client.purchases === 1 ? "pedido" : "pedidos"}${client.totalCents ? ` · ${esc(moneyCents(client.totalCents))}` : ""}</small></span>
+    <span class="client-status">${esc(clientStatusLine(client))}</span>
+    ${client.sameNameAs.length && !client.phone ? '<span class="client-tag">Mesmo nome de outra ficha</span>' : ""}
+  </button>`;
+}
+
+function renderClients() {
+  const panel = $("#view-clients");
+  if (!panel) return; // página antiga em cache, sem a aba
+  panel.hidden = state.activeView !== "clients";
+  if (panel.hidden) return;
+  const data = state.clientsData;
+  const search = state.clientsSearch.trim().toLocaleLowerCase("pt-BR");
+  let body;
+  if (state.clientsError) body = `<div class="empty-state"><h3>Não foi possível carregar as clientes</h3><p>${esc(state.clientsError)}</p><button class="button button-quiet" type="button" data-action="retry-clients">Tentar de novo</button></div>`;
+  else if (!data) body = '<p class="month-loading" role="status">Carregando clientes…</p>';
+  else if (!data.clients.length) body = '<div class="empty-state"><h3>Suas clientes aparecem aqui</h3><p>Cada pedido anotado entra na ficha da cliente. Com o WhatsApp no pedido, os pedidos da mesma pessoa se juntam sozinhos.</p></div>';
+  else {
+    const digits = search.replace(/\D/g, "");
+    const list = data.clients.filter((client) => (state.clientsFilter !== "away" || client.away) && (!search || client.name.toLocaleLowerCase("pt-BR").includes(search) || (digits.length >= 3 && client.phone.includes(digits))));
+    const reminders = data.reminders.length ? `<section class="client-reminders" aria-labelledby="reminders-title"><h2 id="reminders-title">Datas que se repetem</h2>${data.reminders.map((item) => `<div class="client-reminder"><p><strong>${esc(item.name)}</strong> pediu ${esc(item.product || "uma encomenda")} em ${esc(dayLabel(item.originalDay, true))}. Pode ter festa de novo: faltam ${item.daysUntil} ${item.daysUntil === 1 ? "dia" : "dias"}.</p><button class="button button-small" type="button" data-client="${esc(item.key)}">Ver ficha</button></div>`).join("")}</section>` : "";
+    body = `${reminders}
+      <div class="toolbar"><label class="search-wrap"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 4.5 4.5"/></svg><input class="search-input" id="clients-search" type="search" placeholder="Buscar por nome ou WhatsApp…" value="${esc(state.clientsSearch)}" aria-label="Buscar clientes"></label></div>
+      <div class="stage-strip client-filter" role="group" aria-label="Filtrar clientes">${[["all", "Todas", data.clients.length], ["away", "Faz tempo que não pedem", data.away]].map(([key, label, count]) => { const current = (state.clientsFilter === "away" ? "away" : "all") === key; return `<button class="stage-chip${current ? " is-current" : ""}${count ? "" : " is-empty"}" type="button" data-clients-filter="${key}" aria-pressed="${current}">${label} <span class="stage-count">${count}</span></button>`; }).join("")}</div>
+      ${list.length ? `<div class="client-list">${list.map(clientRowMarkup).join("")}</div>` : '<p class="detail-empty">Nenhuma cliente encontrada.</p>'}`;
+  }
+  const focused = document.activeElement?.id === "clients-search" ? document.activeElement.selectionStart : null;
+  panel.innerHTML = `<div class="page-heading"><div><h1 id="clients-title">Clientes</h1><p>Montado a partir dos seus pedidos.</p></div></div>${tipMarkup("clients")}${body}`;
+  if (focused !== null) { const input = $("#clients-search"); input?.focus(); input?.setSelectionRange(focused, focused); }
+  if (!data && !state.clientsError && !state.clientsLoading) loadClients();
+}
+
+function openClient(key) {
+  const client = clientByKey(key);
+  if (!client) return;
+  let dialog = $("#client-dialog");
+  if (!dialog) {
+    dialog = document.createElement("dialog");
+    dialog.id = "client-dialog"; dialog.className = "dialog client-dialog"; dialog.setAttribute("aria-labelledby", "client-title");
+    document.body.append(dialog);
+  }
+  const reminder = state.clientsData.reminders.find((item) => item.key === key);
+  const orders = client.orderIds.map(orderById).filter(Boolean);
+  dialog.innerHTML = `<div class="dialog-heading"><div><h2 id="client-title">${esc(client.name)}</h2><p class="client-phone">${client.phone ? esc(formatPhone(client.phone)) : "Sem WhatsApp nos pedidos"}</p></div><button class="icon-button close-dialog" type="button" data-close="client-dialog" aria-label="Fechar ficha"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+    <div class="client-tiles"><div><small>Pedidos</small><b>${client.purchases}</b></div><div><small>Total</small><b>${esc(moneyCents(client.totalCents))}</b></div><div><small>Último</small><b>${client.lastPurchaseDay ? esc(dayLabel(client.lastPurchaseDay)) : "—"}</b></div></div>
+    ${client.nextOrderDay ? `<p class="client-note">Próximo pedido: <strong>${esc(dayLabel(client.nextOrderDay))}</strong>.</p>` : ""}
+    ${client.away ? `<p class="client-note is-away">Faz ${client.daysSinceLast} dias que ela não pede. Que tal mandar um oi?</p>` : ""}
+    ${reminder ? `<p class="client-note">Em ${esc(dayLabel(reminder.originalDay, true))} ela pediu ${esc(reminder.product || "uma encomenda")}. Pode ter festa de novo daqui a ${reminder.daysUntil} ${reminder.daysUntil === 1 ? "dia" : "dias"}.</p>` : ""}
+    ${client.topProducts.length ? `<p class="client-products">Mais pede: ${client.topProducts.map(({ product, count }) => `<span>${esc(product)}${count > 1 ? ` (${count})` : ""}</span>`).join("")}</p>` : ""}
+    ${client.sameNameAs.length ? `<p class="client-note">Pode ser a mesma pessoa que ${client.sameNameAs.map((other) => `<button class="text-link" type="button" data-client="${esc(other.key)}">${esc(other.name)}${other.phone ? ` · ${esc(formatPhone(other.phone))}` : " (sem WhatsApp)"}</button>`).join(", ")}. As fichas não se juntam sozinhas: para juntar, coloque o mesmo WhatsApp nos pedidos.</p>` : ""}
+    <h3 class="client-orders-title">Pedidos</h3>
+    <div class="order-list client-orders">${orders.map((order) => rowMarkup(order)).join("")}</div>
+    <div class="client-actions">${client.phone ? `<a class="button button-primary" href="https://wa.me/55${esc(client.phone)}" target="_blank" rel="noopener">Abrir conversa no WhatsApp</a>` : ""}<button class="text-link client-erase" type="button" data-action="erase-client" data-client-key="${esc(client.key)}">Apagar dados desta cliente</button></div>`;
+  if (!dialog.open) dialog.showModal();
+}
+
+async function eraseClient(key) {
+  const client = clientByKey(key);
+  if (!client) return;
+  if (!window.confirm(`Apagar os dados de ${client.name}? Nome, WhatsApp, endereço e detalhes saem de ${client.orders} ${client.orders === 1 ? "pedido" : "pedidos"}. Datas e valores ficam para as suas contas. Não dá para desfazer.`)) return;
+  try {
+    const result = await apiRequest(`/clientes/${encodeURIComponent(key)}/anonimizar`, { method: "POST", body: {} });
+    $("#client-dialog")?.close();
+    await loadState({ silent: true });
+    showToast(`Dados apagados de ${result.orders} ${result.orders === 1 ? "pedido" : "pedidos"}.`);
+  } catch (error) { showToast(error.message || "Não foi possível apagar os dados."); }
 }
 
 // ---- Pix: cobrar com o código copia e cola ----
@@ -1564,6 +1672,7 @@ const TIPS = {
   orders: "Em Novos ficam os pedidos que esperam sua decisão: orçamentos e os que chegaram pelo link.",
   month: "Só conta como recebido o dinheiro que você marcou como conferido.",
   settings: "Aqui você ativa o link para as clientes e diz quais dias e quantos pedidos aceita.",
+  clients: "Os pedidos com o mesmo WhatsApp formam a ficha de cada cliente. Sem WhatsApp, juntamos pelo nome.",
 };
 const closedTips = () => { try { const list = JSON.parse(localStorage.getItem(TIP_KEY) || "[]"); return Array.isArray(list) ? list : []; } catch { return []; } };
 const tipMarkup = (key) => closedTips().includes(key) ? "" : `<div class="tab-tip" role="note"><p><strong>Dica:</strong> ${esc(TIPS[key])}</p><button class="tab-tip-close" type="button" data-action="close-tip" data-tip="${key}" aria-label="Fechar dica"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>`;

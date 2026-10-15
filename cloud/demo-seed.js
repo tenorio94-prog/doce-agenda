@@ -4,6 +4,11 @@ import { createEmptyState } from './state-engine.js';
 // Pedidos and Meu mês always have something to show. Nothing here reaches a real account.
 const CAKE_LABELS = { size: 'Tamanho', flavor: 'Sabor', filling: 'Recheio', decoration: 'Decoração', inscription: 'Inscrição', foodNotes: 'Observações alimentares' };
 
+// Fictitious WhatsApp numbers: Clientes groups the orders by them.
+const CONTACTS = { Fernanda: '(11) 90000-0101', Paula: '(11) 90000-0102', 'Lúcia': '(11) 90000-0103', Gabriela: '(11) 90000-0104', Beatriz: '(11) 90000-0105',
+  Roberta: '(11) 90000-0106', 'Ana Clara': '(11) 90000-0107', Marcos: '(11) 90000-0108', Juliana: '(11) 90000-0109', Carla: '(11) 90000-0110', Bia: '(11) 90000-0111',
+  'Sônia': '(11) 90000-0112', 'Patrícia': '(11) 90000-0113', Renata: '(11) 90000-0114', Helena: '(11) 90000-0115' };
+
 // [id, offset in days, time, client, product, total, status, payments [[amount, status]], notice days, extra]
 const ORDERS = [
   ['01', -9, '10:00', 'Fernanda', 'Bolo de chocolate (1,5 kg)', 160, 'Entregue', [[80, 'Conferido'], [80, 'Conferido']], 8],
@@ -26,6 +31,14 @@ const ORDERS = [
   ['12', 2, '14:00', 'Sônia', 'Bolo de chocolate (1 kg)', 150, 'Confirmado', [[75, 'Conferido']], 7],
   ['13', 2, '16:00', 'Patrícia', 'Brigadeiro (cento)', 95, 'Confirmado', [], 4],
   ['14', 4, '15:00', 'Renata', 'Bolo de vinho com frutas vermelhas', 150, 'Orçamento', [], 2, { nextAction: 'Mandar o orçamento com foto de referência', details: 'Quer saber se dá para fazer sem lactose.' }],
+  // Older orders, so Clientes has a regular customer, one who has not ordered in a while,
+  // a birthday that comes back in 20 days and a name without phone that is only suggested.
+  ['H1', -345, '15:00', 'Ana Clara', 'Bolo de aniversário (2 kg)', 220, 'Entregue', [[110, 'Conferido'], [110, 'Conferido']], 10],
+  ['H2', -40, '10:00', 'Paula', 'Brigadeiro (cento)', 95, 'Entregue', [[95, 'Conferido']], 6],
+  ['H3', -75, '16:00', 'Paula', 'Bolo de pote (10 un.)', 60, 'Entregue', [[60, 'Conferido']], 4],
+  ['H4', -130, '11:00', 'Paula', 'Brigadeiro (cento)', 90, 'Entregue', [[90, 'Conferido']], 5, { contact: '' }],
+  ['H5', -120, '15:00', 'Helena', 'Bolo de cenoura', 90, 'Entregue', [[90, 'Conferido']], 6],
+  ['H6', -190, '14:00', 'Helena', 'Torta de limão', 110, 'Entregue', [[110, 'Conferido']], 8],
 ];
 
 function localDay(now, offset) {
@@ -53,7 +66,7 @@ export function demoSeedState(now = new Date()) {
     const { cake, ...rest } = extra;
     state.orders.push({
       id: orderId, client, product, details: '', dueAt: `${localDay(now, offset)}T${time}`, mode: 'Retirada', location: '',
-      total, totalKnown: true, status, nextAction: '', nextAt: '', pendingChange: '', contact: '', origin: 'manual',
+      total, totalKnown: true, status, nextAction: '', nextAt: '', pendingChange: '', contact: CONTACTS[client] || '', origin: 'manual',
       ...rest,
       ...(cake ? { cake: { templateVersion: 1, values: cake, labels: CAKE_LABELS } } : {}),
       createdAt: created, updatedAt: created, history: [{ at: created, text: 'Pedido de demonstração.' }],

@@ -104,14 +104,15 @@ async function readJsonLimited(request: Request): Promise<unknown> {
 
 function allowedRoute(path: string, method: string): boolean {
   if (method === 'GET') {
-    return ['/api/state', '/api/export', '/api/availability', '/api/order-template', '/api/order-page', '/api/order-page/slug-available', '/api/order-page/metrics', '/api/resumo-mensal'].includes(path);
+    return ['/api/state', '/api/export', '/api/availability', '/api/order-template', '/api/order-page', '/api/order-page/slug-available', '/api/order-page/metrics', '/api/resumo-mensal', '/api/clientes'].includes(path);
   }
   if (method === 'PUT') {
     return path === '/api/availability' || path === '/api/order-template' || path === '/api/order-page' || path === '/api/pix'
       || /^\/api\/orders\/[^/]+$/.test(path) || /^\/api\/payments\/[^/]+$/.test(path);
   }
   if (method === 'POST') {
-    return path === '/api/import' || path === '/api/orders' || /^\/api\/orders\/[^/]+\/(payments|accept|refuse)$/.test(path);
+    return path === '/api/import' || path === '/api/orders' || /^\/api\/orders\/[^/]+\/(payments|accept|refuse)$/.test(path)
+      || /^\/api\/clientes\/[^/]+\/anonimizar$/.test(path);
   }
   return false;
 }
