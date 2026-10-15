@@ -106,8 +106,48 @@
         <p class="link-note">Nenhum pagamento é pedido pelo link. Nada é confirmado sem você.</p>
       </div>
       <div class="step-visual link-visual">
-        <figure class="phone phone-step"><div class="phone-screen"><img src="/landing/assets/passo-4-link.jpg" width="750" height="1624" loading="lazy" alt="Página de encomenda Doces da Lu, como a cliente vê: escolha do produto e calendário de outubro com as datas disponíveis."></div></figure>
-        <div class="float-card fc-d" aria-hidden="true"><span class="fc-dot"></span><span><b>Nova solicitação</b>bolo de aniversário · sáb</span></div>
+        <div class="ld-switch" role="group" aria-label="Ver o lado da cliente ou o seu">
+          <button type="button" data-side="client" aria-pressed="true">Cliente</button>
+          <button type="button" data-side="baker" aria-pressed="false">Você</button>
+        </div>
+        <div class="ld-stage s1 s2 s3 s5 s6" data-side="client" role="img" aria-label="Demonstração: a cliente escolhe Bolo de aniversário e um sábado livre na página de encomenda e envia a solicitação. Ela chega para a confeiteira como 1 solicitação para revisar, com os botões Aceitar como Confirmado, Aceitar como Orçamento e Recusar.">
+          <div class="ld-col ld-client">
+            <p class="ld-label">Como a cliente vê</p>
+            <div class="mock-phone">
+              <div class="m-head"><img src="/logo.svg" alt="" width="80" height="21"><span>Pedido por encomenda</span></div>
+              <div class="m-body m-form">
+                <small class="m-eyebrow">Feito para você, por encomenda</small>
+                <b class="m-title">Doces da Lu</b>
+                <span class="m-label">O que você gostaria de encomendar?</span>
+                <span class="m-field m-product"><span class="m-ph">Escolha um produto</span><span class="m-val">Bolo de aniversário</span></span>
+                <span class="m-label">Qual data você gostaria?</span>
+                <span class="m-cal"><i>D</i><i>S</i><i>T</i><i>Q</i><i>Q</i><i>S</i><i>S</i><b class="off">18</b><b class="off">19</b><b>20</b><b>21</b><b class="off">22</b><b>23</b><b class="m-pick">24</b></span>
+                <span class="m-label">Seu nome</span>
+                <span class="m-field m-name"><span class="m-ph">&nbsp;</span><span class="m-val">Camila</span></span>
+                <span class="m-btn">Enviar solicitação</span>
+              </div>
+              <div class="m-body m-sent">
+                <small class="m-eyebrow">Solicitação enviada</small>
+                <b class="m-title">Agora é com a confeitaria.</b>
+                <span class="m-note">Seu pedido ainda não está confirmado. A confeitaria vai responder pelo WhatsApp.</span>
+              </div>
+            </div>
+          </div>
+          <div class="ld-col ld-baker">
+            <p class="ld-label">Como chega para você</p>
+            <div class="mock-phone">
+              <div class="m-head"><img src="/logo.svg" alt="" width="80" height="21"><span>Ajustes</span></div>
+              <div class="m-body">
+                <b class="m-title">Hoje</b>
+                <span class="m-banner"><b>1 solicitação para revisar</b>Chegaram pelo link. Ainda não ocupam vagas na agenda.<span class="m-btn m-btn-s">Revisar solicitações</span></span>
+                <span class="m-review"><b>Solicitação DA-7K2M4Q</b><span class="m-who">Camila · Bolo de aniversário · sábado</span>Ainda não confirmada. Confira data, detalhes e valor antes de aceitar.<span class="m-btn m-btn-s">Aceitar como Confirmado</span><span class="m-btn m-btn-s m-quiet">Aceitar como Orçamento</span><span class="m-refuse">Recusar</span></span>
+                <span class="m-order"><b>10h</b><span><strong>Bolo de pistache</strong>Ana Clara · retirada</span></span>
+              </div>
+            </div>
+          </div>
+          <span class="ld-flyer" aria-hidden="true"><span class="fc-dot"></span>Camila · Bolo de aniversário</span>
+        </div>
+        <button class="ld-replay" type="button" hidden>Ver de novo</button>
       </div>
     </section>
 
@@ -135,9 +175,18 @@
           <p>Você escolhe quantas encomendas aceita por dia e quais dias não atende. A Agenda mostra o que entregar hoje, avisa quando uma data lota e, com um toque, leva o pedido para a próxima etapa: fazendo, pronto, entregue.</p>
           <ul class="checks"><li>Limite de encomendas por dia</li><li>Dias fechados para a sua folga</li><li>Lista da semana para marcar o que ficou pronto</li></ul>
         </div>
-        <div class="step-visual">
-          <figure class="phone phone-step"><div class="phone-screen"><img src="/landing/assets/passo-2-semana.jpg" width="750" height="1624" loading="lazy" alt="Tela Lista da semana: 9 pedidos, 3 prontos, agrupados pelo dia da entrega, com botão Copiar lista."></div></figure>
-          <div class="float-card fc-b" aria-hidden="true"><span class="fc-day"><b>Sáb</b>17</span><span><b>Dia lotado</b>3 de 3 encomendas</span></div>
+        <div class="step-visual mock-visual" role="img" aria-label="Demonstração: a semana com limite de 3 encomendas por dia, quinta e sábado lotados e domingo fechado. Abaixo, um pedido de brigadeiro passa de Confirmado para Em produção, Pronto e Entregue, um toque de cada vez.">
+          <div class="mock-card week-mock">
+            <b class="mk-title">Sua semana</b>
+            <span class="wm-days"><span><small>Seg</small><b>13</b><i>1</i></span><span><small>Ter</small><b>14</b><i>2</i></span><span><small>Qua</small><b>15</b><i>1</i></span><span class="is-full"><small>Qui</small><b>16</b><i>3/3</i></span><span><small>Sex</small><b>17</b><i>2</i></span><span class="is-full"><small>Sáb</small><b>18</b><i>3/3</i></span><span class="is-closed"><small>Dom</small><b>19</b><i>—</i></span></span>
+            <span class="wm-keys"><span class="wm-key is-full">Lotado</span><span class="wm-key is-closed">Fechado</span><small>Limite: 3 por dia</small></span>
+          </div>
+          <div class="mock-card order-mock" data-status="1">
+            <b class="om-time">15h</b>
+            <span class="om-what"><strong>Brigadeiro (cento)</strong>Marcos · retirada</span>
+            <span class="om-pill">Em produção</span>
+            <span class="om-btn">Ficou pronto →</span>
+          </div>
         </div>
       </article>
       <article class="step step-pistache">
@@ -147,9 +196,16 @@
           <p>A cliente disse que fez o Pix? Fica como informado até você conferir no banco. Conferiu, o pedido ganha o carimbo. No Meu mês, você vê quanto vendeu, quanto recebeu e quanto falta receber.</p>
           <ul class="checks"><li>Pedido sem sinal fica em amarelo</li><li>Pix informado separado do conferido</li><li>Resumo do mês pronto, sem planilha</li></ul>
         </div>
-        <div class="step-visual">
-          <figure class="phone phone-step"><div class="phone-screen"><img src="/landing/assets/passo-3-mes.jpg" width="750" height="1624" loading="lazy" alt="Tela Meu mês de outubro: 10 pedidos, R$ 1.800 vendidos, R$ 1.070 recebidos e R$ 730 a receber."></div></figure>
-          <div class="float-card fc-c" aria-hidden="true"><span class="stamp-mini">Sinal pago</span><span><b>R$ 90,00</b>conferido</span></div>
+        <div class="step-visual mock-visual" role="img" aria-label="Demonstração: o pedido de docinhos da Juliana está amarelo porque falta o sinal. O Pix de R$ 60,00 foi informado pela cliente; ao marcar conferido, o pedido ganha o carimbo Sinal pago e o Meu mês passa de R$ 1.010 para R$ 1.070 recebidos.">
+          <div class="mock-card pay-mock">
+            <span class="pm-top"><b class="om-time">18h</b><span class="om-what"><strong>Docinhos (50 un.)</strong>Juliana · R$ 120,00</span><em class="pm-flag">Falta o sinal</em><span class="stamp-mini pm-stamp">Sinal pago</span></span>
+            <span class="pm-pay"><span class="pm-amount">Pix de R$ 60,00</span><small class="pm-state"><span class="pm-wait">Informado pela cliente, ainda não conferido</span><span class="pm-ok">Conferido</span></small><span class="om-btn pm-btn">Marcar conferido</span></span>
+          </div>
+          <div class="mock-card month-mock">
+            <b class="mk-title">Meu mês</b>
+            <span class="mm-tiles"><span><small>Vendido</small><b>R$ 1.800</b></span><span class="is-in"><small>Recebido</small><b data-from="1010" data-to="1070">R$ 1.070</b></span><span class="is-due"><small>A receber</small><b data-from="790" data-to="730">R$ 730</b></span></span>
+            <small class="wm-note">Só conta o que você conferiu.</small>
+          </div>
         </div>
       </article>
     </section>
