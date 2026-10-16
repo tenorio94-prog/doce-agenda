@@ -107,4 +107,3 @@ Sacola kraft premium com alças de papel torcido, adesivo circular rosa sem text
 **18 — bastidores-confeitaria**
 
 Fotografia vista de cima, 90 graus, da bancada de uma confeiteira artesanal brasileira. Mármore creme, tigela com chocolate, fouet, saco de confeitar rosa, farinha, ovos, espátula, formas de doces e caderno espiral aberto sem escrita legível. Pano rosa-claro, iluminação natural lateral e organização espontânea de cozinha real. Proporção horizontal 16:9.
-

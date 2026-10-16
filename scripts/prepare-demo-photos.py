@@ -30,4 +30,3 @@ for index, (slug, identifier) in enumerate(FILES, 1):
     manifest.append({'id': index, 'slug': slug, 'generator': 'image_gen built-in', 'generation': identifier, 'original': original.relative_to(ROOT).as_posix(), 'dimensions': list(image.size), 'sha256': hashlib.sha256(original.read_bytes()).hexdigest(), 'application': 'catalogo-demo' if index <= 12 else 'capa-vitrine-demo' if index == 18 else 'reserva-editorial-ficticia', 'variants': variants})
 (ROOT / 'assets/demo-fotografias/manifest.json').write_text(json.dumps(manifest, indent=2, ensure_ascii=False) + '\n', encoding='utf-8')
 print(json.dumps({'approved': len(manifest), 'originalBytes': sum((ROOT / x['original']).stat().st_size for x in manifest), 'publishedVariantsBytes': sum(v['bytes'] for x in manifest if x['application'] != 'reserva-editorial-ficticia' for v in x['variants']), 'largestWebP': max(v['bytes'] for x in manifest for v in x['variants'])}))
-

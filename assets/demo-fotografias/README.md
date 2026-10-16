@@ -44,7 +44,14 @@ WebP com qualidade 84 e método 6, sem EXIF. Originais: 43.291.613 bytes. As 39 
 
 `npm run check`: 64 testes de regras, build e 11 suítes de interface concluídos com sucesso. Teste específico `node scripts/test-demo-photos.mjs`: Agenda, ficha, catálogo/foto, jornada de prévia completa, reload/persistência, exportação/importação e reinicialização; 320, 360, 390, 768, 1024 e 1440 px. Inclui DPR 2 em 390 px e conferência de 39 respostas WebP sem interceptação de imagens.
 
-Capturas antes em `docs/fotografias-demo/antes/`; após nas pastas `depois/` (seis larguras) e `depois-comparacao/` (mesmos 20 enquadramentos iniciais). Resultado publicado e versão final serão registrados após o deploy. Testes em Chromium automatizado; não certificam Safari, celular físico, conta real ou pesquisa com confeiteiras.
+Capturas antes em `docs/fotografias-demo/antes/`; após nas pastas `depois/` (seis larguras) e `depois-comparacao/` (mesmos 20 enquadramentos iniciais). Capturas reais publicadas em `docs/fotografias-demo/publicado/`, com resultados em `results.json`. Testes em Chromium automatizado; não certificam Safari, celular físico, conta real ou pesquisa com confeiteiras.
 
-Comparação: 13 capturas idênticas e sete alteradas nas áreas esperadas; lista em `docs/fotografias-demo/comparacao.json`. Pedidos e pagamentos comparados por igualdade profunda com o seed anterior: idênticos. Diagnóstico local isolando o momento do carregamento WebP: CLS das fotos igual a zero em 360/1440; o CLS inicial do app não é zero (desktop 0,79275, mesmo valor no build anterior), portanto não há declaração de estabilidade total do aplicativo. A verificação publicada usará respostas de rede reais, sem interceptação das fotos.
+Comparação: 13 capturas idênticas e sete alteradas nas áreas esperadas; lista em `docs/fotografias-demo/comparacao.json`. Pedidos e pagamentos comparados por igualdade profunda com o seed anterior: idênticos. Diagnóstico local isolando o momento do carregamento WebP: CLS das fotos igual a zero em 360/1440; o CLS inicial do app não é zero (desktop 0,79275, mesmo valor no build anterior), portanto não há declaração de estabilidade total do aplicativo.
 
+## Publicação verificada
+
+- Código integrado na `main`: `1ea7fd6`.
+- Cloudflare, 100% do tráfego: `1ec3fbfd-29ac-48e0-8b03-08e7fdbd6fc3`.
+- Endereço: https://lucast.app/demo/ (prévia da vitrine em Ajustes → Link de encomenda → Ver como a cliente vê).
+- Verificação no `https://lucast.app`: jornada completa nas seis larguras, DPR 2, 39 respostas WebP reais com tamanhos conferidos, nenhum erro de console da aplicação ou imagem ausente; cinco rotas passaram. `app.js`, `browser-store.js`, `encomenda/order.js`, `ui/vnext.css` e `landing/landing.css` publicados idênticos ao build local por conteúdo. Sem interceptação dos arquivos nesta verificação.
+- O teste de prévia passou a aguardar a navegação do iframe, evitando uma corrida observada na rede publicada. Ajuste apenas da automação, sem mudança adicional no site.

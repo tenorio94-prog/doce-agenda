@@ -58,8 +58,9 @@ try {
     const section = page.locator('details:has(#order-page-form)').first();
     if (!(await section.evaluate((el) => el.open))) await section.locator('summary').first().click();
     await page.locator('#order-page-form [data-action="preview-link"]').click();
-    const frame = page.frames().find((f) => f.url().includes('/encomenda/'));
+    const frame = await (await page.locator('#link-preview-dialog iframe').elementHandle()).contentFrame();
     assert.ok(frame, 'preview opened');
+    await frame.waitForURL(/\/encomenda\//);
     await frame.locator('.card').first().waitFor();
     await images(frame, '.card img, .cover img');
     for (const product of saved.orderPage.products.filter((p) => p.photo?.endsWith('.webp'))) {
