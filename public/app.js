@@ -828,19 +828,19 @@ function detailMarkup(order) {
   const stampDate = stampDay ? new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short" }).format(stampDay).replace(/\./g, "").replace(" de ", " ").toUpperCase() : "";
   const depositCard = !isCommitted(order) || isCancelled(order) ? "" : hasReceivedPayment(order.id)
     ? `<section class="deposit-card is-paid" aria-label="Sinal"><div class="deposit-top"><span class="deposit-label">Sinal</span><span>Total ${esc(orderTotalLabel(order))}</span></div><div class="deposit-main"><div class="deposit-amount">${esc(money(paidNow))}</div><span class="stamp stamp-large"><span>${balance !== null && balance <= 0 ? "Pago" : "Sinal pago"}</span>${stampDate ? `<small>${esc(stampDate)}</small>` : ""}</span></div><div class="deposit-note">${balance !== null && balance > 0 ? `Falta ${esc(money(balance))} na ${order.mode === "Entrega" ? "entrega" : "retirada"}` : order.totalKnown === false ? "Valor total ainda a combinar" : "Pagamento completo"}</div></section>`
-    : `<section class="deposit-card is-pending" aria-label="Sinal"><div class="deposit-top"><span class="deposit-label">Sinal</span><span>Total ${esc(orderTotalLabel(order))}</span></div><div class="deposit-amount">${informedNow > 0 ? esc(money(informedNow)) : confirmedPayments(order.id).length ? esc(money(0)) : "—"}</div><div class="deposit-note">${informedNow > 0 ? "Informado pela cliente, ainda não conferido" : confirmedPayments(order.id).length ? "Conferido: nenhum valor recebido" : "Ainda não recebido"}</div></section>`;
+    : `<section class="deposit-card is-pending" aria-label="Sinal"><div class="deposit-top"><span class="deposit-label">Sinal</span><span>Total ${esc(orderTotalLabel(order))}</span></div><div class="deposit-amount">${informedNow > 0 ? esc(money(informedNow)) : esc(money(0))}</div><div class="deposit-note">${informedNow > 0 ? "Informado pela cliente, ainda não conferido" : confirmedPayments(order.id).length ? "Conferido: nenhum valor recebido" : "Ainda não recebido"}</div></section>`;
   const pending = order.pendingChange ? `<div class="pending-banner"><strong>Alteração ainda pendente:</strong> ${esc(order.pendingChange)}</div>` : "";
   const details = order.details ? esc(order.details) : "Nenhum detalhe foi registrado ainda.";
   return `<div class="detail-shell${order.status === "Solicitação" ? " is-request" : ""}">
-    <div class="detail-topline"><div><p class="detail-when"><span class="detail-eyebrow">Ficha da encomenda</span> ${esc(whenLabel)}</p><h2 class="detail-client" id="detail-title">${esc(order.product || "Produto sem descrição")}</h2><p class="detail-product">para ${esc(clientName(order) || "cliente sem nome")}</p></div><div class="detail-top-actions">${statusBadge(order.status)}<button class="icon-button close-dialog" type="button" data-close="detail-dialog" aria-label="Fechar detalhes"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div></div>
+    <div class="detail-topline"><div><p class="detail-when">${esc(whenLabel)}</p><h2 class="detail-client" id="detail-title" tabindex="-1">${esc(order.product || "Produto sem descrição")}</h2><p class="detail-product">para ${esc(clientName(order) || "cliente sem nome")}</p></div><div class="detail-top-actions">${statusBadge(order.status)}<button class="icon-button close-dialog" type="button" data-close="detail-dialog" aria-label="Fechar detalhes"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div></div>
     ${sample}${order.status === "Solicitação" ? "" : (() => { const step = nextStepButton(order, "detail-advance"); return step ? `<div class="detail-next">${step}</div>` : ""; })()}<div class="detail-meta-line"><span class="meta-chip">${esc(dueAt)}</span><span class="meta-chip">${esc(order.mode || "Retirada")}</span>${order.contact ? `<span class="meta-chip">${esc(order.contact)}</span>` : ""}</div>
-    <div class="detail-summary"><div class="detail-summary-label">COMBINADO ATUAL</div>${details}${cakeDetailsMarkup(order)}</div>
+    <div class="detail-summary"><div class="detail-summary-label">Combinado</div>${details}${cakeDetailsMarkup(order)}</div>
     ${originMarkup(order)}${pending}${requestReviewMarkup(order)}
     ${depositCard}<p class="deposit-rule">O sinal só conta quando você confirma que recebeu.</p>
-    <div class="detail-split"><div class="detail-tile"><div class="detail-tile-label">Valor total</div><div class="detail-tile-value large">${esc(orderTotalLabel(order))}</div></div><div class="detail-tile"><div class="detail-tile-label">${isCommitted(order) ? "Saldo a receber" : "Recebido conferido"}</div><div class="detail-tile-value ${balance === null && isCommitted(order) ? "is-unknown" : "large"}">${balance === null ? (isCommitted(order) ? "Ainda não conferido" : esc(money(confirmedPayments(order.id).length ? confirmedPaid(order.id) : 0))) : esc(balanceLabel(balance))}${balance !== null && balance < 0 ? `<small>Confira os recebimentos registrados.</small>` : ""}</div></div>${location}${order.nextAction ? `<div class="detail-tile"><div class="detail-tile-label">Próxima ação${order.nextAt ? ` · ${esc(dateTimeLabel(order.nextAt))}` : ""}</div><div class="detail-tile-value">${esc(order.nextAction)}</div></div>` : ""}</div>
+    <div class="detail-split"><div class="detail-tile"><div class="detail-tile-label">Valor total</div><div class="detail-tile-value large">${esc(orderTotalLabel(order))}</div></div><div class="detail-tile"><div class="detail-tile-label">${isCommitted(order) ? "Saldo a receber" : "Recebido conferido"}</div><div class="detail-tile-value ${balance === null && isCommitted(order) && !(order.totalKnown !== false && Number(order.total) > 0) ? "is-unknown" : "large"}">${balance === null ? (isCommitted(order) ? (order.totalKnown !== false && Number(order.total) > 0 ? `${esc(money(order.total))}<small class="detail-tile-note">nada conferido ainda</small>` : "A combinar") : esc(money(confirmedPayments(order.id).length ? confirmedPaid(order.id) : 0))) : esc(balanceLabel(balance))}${balance !== null && balance < 0 ? `<small>Confira os recebimentos registrados.</small>` : ""}</div></div>${location}${order.nextAction ? `<div class="detail-tile"><div class="detail-tile-label">Próxima ação${order.nextAt ? ` · ${esc(dateTimeLabel(order.nextAt))}` : ""}</div><div class="detail-tile-value">${esc(order.nextAction)}</div></div>` : ""}</div>
     <section class="payment-section" ${order.status==='Solicitação'?'hidden':''}><div class="detail-section-title"><h3>Pagamentos</h3><div class="payment-buttons">${pixChargeButton(order)}<button class="button button-small" data-action="add-payment" data-id="${esc(order.id)}" type="button"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> Registrar</button></div></div>${payments.length ? `<div class="payment-list">${payments.map((payment) => `<div class="payment-item"><div class="payment-main"><div class="payment-amount">${esc(money(payment.amount))}</div><div class="payment-note">${esc(payment.note || "Sem observação")} · ${esc(formatWhenHistory(payment.createdAt))}</div></div><div class="payment-status"><span>${payment.status === "Conferido" ? "Recebimento conferido" : "Cliente informou"}</span>${payment.status !== "Conferido" ? `<button type="button" data-action="confirm-payment" data-id="${esc(payment.id)}">Marcar conferido</button>` : ""}</div></div>`).join("")}</div>` : `<p class="detail-empty">Nenhum pagamento registrado.</p>`}</section>
     <details class="history-section"><summary>Histórico (${history.length})</summary>${history.length ? `<div class="history-list">${history.map((item) => `<div class="history-item"><strong>${esc(formatWhenHistory(item.at))}</strong>${esc(item.text || "Atualização do pedido")}</div>`).join("")}</div>` : `<p class="detail-empty">As alterações do pedido aparecerão aqui.</p>`}</details>
-    <div class="detail-actions">${whatsAppLink(order)}<button class="button button-quiet" data-action="copy-summary" data-id="${esc(order.id)}" type="button">${order.reviewOutcome?'Copiar mensagem para a cliente':'Copiar resumo para WhatsApp'}</button><button class="button button-primary" data-action="edit-order" data-id="${esc(order.id)}" type="button" ${order.status==='Recusado'?'hidden':''}>${order.status==='Solicitação'?'Editar e aceitar':'Editar encomenda'}</button></div>
+    <div class="detail-actions">${whatsAppLink(order)}<button class="button button-quiet" data-action="copy-summary" data-id="${esc(order.id)}" type="button">${order.reviewOutcome?'Copiar mensagem para a cliente':'Copiar mensagem'}</button><button class="button button-primary" data-action="edit-order" data-id="${esc(order.id)}" type="button" ${order.status==='Recusado'?'hidden':''}>${order.status==='Solicitação'?'Editar e aceitar':'Editar'}</button></div>
   </div>`;
 }
 
@@ -849,7 +849,7 @@ function showOrderDetail(id) {
   if (!order) return;
   state.detailOrderId = order.id;
   $("#detail-content").innerHTML = detailMarkup(order);
-  if (!$("#detail-dialog").open) $("#detail-dialog").showModal();
+  if (!$("#detail-dialog").open) { $("#detail-dialog").showModal(); $("#detail-title")?.focus({ preventScroll: true }); }
 }
 
 function closeDetails() {
@@ -880,12 +880,33 @@ function whatsAppNumber(order) {
   if ((digits.length === 12 || digits.length === 13) && digits.startsWith("55")) return digits;
   return "";
 }
-// Opens the client's conversation with the summary already typed; she still reviews and sends it.
+// Suggested deposit in cents (Pix setting, default 30%). Only for a known positive total.
+function suggestedDepositCents(order) {
+  const totalCents = Math.round(Number(order.total || 0) * 100);
+  if (order.totalKnown === false || totalCents <= 0) return 0;
+  return Math.round(totalCents * (Number(state.pix?.depositPercent) || 30) / 100);
+}
+// What the next message to the client is about, by the order's situation. She reviews and sends it herself.
+function whatsAppIntent(order) {
+  const name = clientName(order) || "tudo bem";
+  const balance = balanceFor(order);
+  if (order.status === "Recusado") return { label: "Avisar a cliente", opening: "" };
+  if (order.status === "Solicitação") return { label: "Responder a cliente", opening: `Oi, ${name}! Recebi seu pedido pelo link e já estou vendo.` };
+  if (["Orçamento", "Aguardando confirmação"].includes(order.status)) return { label: "Mandar o orçamento", opening: `Oi, ${name}! Segue o orçamento do seu pedido:` };
+  if (needsDeposit(order)) {
+    const deposit = suggestedDepositCents(order);
+    return { label: deposit ? `Pedir o sinal de ${money(deposit / 100)}` : "Pedir o sinal", opening: `Oi, ${name}! Seu pedido está confirmado. Para garantir a data${deposit ? `, o sinal é de ${money(deposit / 100)}` : ", combinamos o sinal"}.` };
+  }
+  if (order.status === "Pronto") return { label: "Avisar que está pronto", opening: `Oi, ${name}! Seu pedido está pronto${(order.mode || "Retirada") === "Retirada" ? " para retirar" : ""}.` };
+  if (order.status === "Entregue" && balance > 0) return { label: `Cobrar ${money(balance)}`, opening: `Oi, ${name}! Obrigada pela encomenda. Ficou faltando ${money(balance)}.` };
+  return { label: "Mandar o resumo", opening: `Oi, ${name}! Confira se registrei certinho seu pedido:` };
+}
+// Opens the client's conversation with the message already typed (wa.me); nothing is sent automatically.
 function whatsAppLink(order) {
   const number = whatsAppNumber(order);
   // Demo phones are made up and could belong to a real person: never link them.
   if (!number || sampleOrder(order) || isDemoMode()) return "";
-  return `<a class="button button-primary detail-whatsapp" href="https://wa.me/${number}?text=${encodeURIComponent(makeWhatsAppSummary(order))}" target="_blank" rel="noopener">Abrir conversa com o resumo</a>`;
+  return `<a class="vn-zap detail-whatsapp" href="https://wa.me/${number}?text=${encodeURIComponent(makeWhatsAppSummary(order))}" target="_blank" rel="noopener">${icon("whatsapp")}<span>${esc(whatsAppIntent(order).label)}</span></a>`;
 }
 
 function makeWhatsAppSummary(order) {
@@ -894,7 +915,7 @@ function makeWhatsAppSummary(order) {
     return [`Oi, ${order.client || "tudo bem"}! Obrigada pelo pedido de ${order.product || "doce"}${when}.`, `Infelizmente não vou conseguir atender desta vez${order.refusalReason ? `: ${order.refusalReason}` : "."}`, "", "Espero poder te atender numa próxima!"].join("\n");
   }
   const lines = [
-    `Oi, ${order.client || "tudo bem"}! Confira se registrei certinho seu pedido:`,
+    whatsAppIntent(order).opening,
     "",
     `Pedido: ${order.product || "não informado"}`,
   ];

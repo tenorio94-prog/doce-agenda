@@ -505,3 +505,21 @@ body.vnext:has(dialog[open]) { overflow: hidden; }
 @media (prefers-reduced-motion: no-preference) { .vn-order.comanda.is-advanced .vn-stamp.is-ok { animation: vn-stamp-in .42s cubic-bezier(.2, .9, .2, 1.2) both; } }
 @keyframes vn-stamp-in { from { transform: rotate(-5deg) scale(1.6); opacity: 0; } }
 @media (max-width: 380px) { .vn-order.comanda { grid-template-columns: 54px minmax(0, 1fr); gap: 0 10px; } .cmd-when .vn-time { font-size: 21px; } .cmd-body h3, .cmd-meta { padding-right: 82px; } }
+
+/* ---- Fase 3 da direção Comanda (16/10): ficha do pedido e WhatsApp ---- */
+/* WhatsApp: verde só aqui, sempre com o ícone e o verbo do momento. */
+.vn-zap { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 0 18px; border: 0; border-radius: 999px; background: var(--vn-zap); color: #fff; font: 700 15px var(--vn-font); text-decoration: none; }
+.vn-zap:hover { background: #0f7a40; }
+.vn-zap .vn-icon { width: 20px; height: 20px; }
+.vnext .detail-actions .vn-zap { flex: 1 1 100%; }
+.vnext .detail-actions .vn-zap ~ .button { flex: 1 1 40%; }
+.vnext .detail-dialog .detail-actions .vn-zap ~ .button-primary { background: var(--vn-soft); border: 1px solid #ecd9df; color: var(--vn-wine); box-shadow: none; }
+/* Título recebe o foco ao abrir, sem anel. */
+.vnext .detail-dialog #detail-title:focus { outline: none; }
+/* Data, modo e telefone como texto, não como botões. */
+.vnext .detail-dialog .detail-meta-line { gap: 4px 14px; }
+.vnext .detail-dialog .meta-chip { padding: 0; border: 0; background: none; color: var(--vn-muted); font: 600 14px var(--vn-font); }
+.vnext .detail-dialog .detail-summary-label { text-transform: none; letter-spacing: 0; font: 700 14px var(--vn-font); color: var(--vn-ink); }
+.vnext .detail-dialog .deposit-label { text-transform: none; letter-spacing: 0; }
+.vnext .detail-dialog .detail-tile-note { display: block; margin-top: 2px; color: var(--vn-muted); font: 600 13px var(--vn-font); letter-spacing: 0; }
+.vnext .detail-dialog .detail-tile-value.large { font-family: var(--vn-title); white-space: nowrap; }
