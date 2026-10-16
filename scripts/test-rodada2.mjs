@@ -8,7 +8,7 @@ const browser = await chromium.launch();
 const results = [];
 const check = (name) => results.push(name);
 try {
-  for (const [width, height] of [[320, 640], [390, 844], [1440, 900]]) {
+  for (const [width, height] of [[320, 640], [360, 800], [390, 844], [1440, 900]]) {
     const context = await browser.newContext({ viewport: { width, height }, locale: 'pt-BR', timezoneId: 'America/Sao_Paulo', reducedMotion: 'reduce', serviceWorkers: 'block' });
     await context.route('**/*', (route) => new URL(route.request().url()).origin === server.origin ? route.continue() : route.abort());
     await context.addInitScript(() => localStorage.setItem('doce-agenda.onboarding.demo.v1', JSON.stringify({ dismissed: true, done: [] })));
@@ -68,7 +68,7 @@ try {
     assert.equal(await confirm.count(), 1, 'um botão de conferir por pagamento informado');
     const footerTop = await page.locator('#detail-dialog .detail-actions').evaluate((el) => el.getBoundingClientRect().top);
     const confirmBox = await confirm.boundingBox();
-    if (height >= 800) assert.ok(confirmBox.y + confirmBox.height <= footerTop + 1, `conferir escondido sob o rodapé (${Math.round(confirmBox.y + confirmBox.height)} > ${Math.round(footerTop)})`);
+    assert.ok(confirmBox.y + confirmBox.height <= footerTop + 1, `conferir escondido sob o rodapé (${Math.round(confirmBox.y + confirmBox.height)} > ${Math.round(footerTop)})`);
     await page.keyboard.press('Escape');
     check(`${width}px: ficha sem linha espremida nem foto vazando, conferir à vista`);
 

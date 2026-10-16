@@ -777,3 +777,25 @@ body.vnext:has(dialog[open]) { overflow: hidden; }
 .vn-att-jump { min-height: 44px; }
 .vnext #view-today .vn-weekbar .week-step { height: 44px; min-height: 44px; }
 .vnext .detail-dialog .detail-phone { min-height: 44px; }
+
+/* ---- Rodada 3 (16/10): ficha em telas baixas ---- */
+/* Com Pix informado, "Conferi" fica logo abaixo do carimbo, antes das linhas do canhoto. */
+.vnext .detail-dialog .stub-confirm { margin-top: 26px; }
+.vnext .detail-dialog .stub-confirm + .ledger { margin-top: 10px; }
+.vnext .detail-dialog .stub-confirm .stub-note { margin: 2px 0 0; }
+@media (max-width: 760px) {
+  /* No celular, a ficha usa quase a tela toda: sobra espaço para o que importa. */
+  .vnext .detail-dialog { width: calc(100% - 16px); max-height: calc(100dvh - 16px); }
+  .vnext .detail-dialog .detail-when { margin-top: 10px; }
+  .vnext .detail-dialog .detail-when b { font-size: 34px; }
+  .vnext .detail-dialog .detail-client { margin-top: 6px; font-size: 24px; }
+  .vnext .detail-shell { gap: 12px; }
+}
+@media (max-height: 700px) {
+  .vnext .detail-dialog .detail-when b { font-size: 28px; }
+  .vnext .detail-dialog .detail-client { font-size: 21px; }
+  .vnext .detail-dialog .detail-next .row-advance { min-height: 46px; }
+}
+.vnext .detail-dialog .detail-when .vn-badge { align-self: center; background: #ffffff26; color: #fff; box-shadow: none; }
+.vnext .detail-dialog .detail-bar { min-width: 0; }
+.vnext .detail-dialog .detail-tools { flex: none; }

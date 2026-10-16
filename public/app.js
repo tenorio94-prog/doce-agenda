@@ -923,9 +923,10 @@ function detailMarkup(order) {
     const zeroNote = confirmedPayments(order.id).length && paidNow <= 0 ? '<p class="stub-note">Conferido: nenhum valor recebido.</p>' : "";
     moneyStub = `<section class="deposit-card money-stub" aria-labelledby="money-title">
       <h3 id="money-title">Dinheiro</h3>${stamp}
+      ${confirmButtons ? `<div class="stub-actions stub-confirm">${confirmButtons}<p class="stub-note">Só marque depois de ver o dinheiro na conta.</p></div>` : ""}
       <dl class="ledger">${rows}</dl>${zeroNote}
-      <div class="stub-actions">${confirmButtons}${moneyIntent ? zap : ""}${pixChargeButton(order)}<button class="vn-btn quiet" data-action="add-payment" data-id="${esc(order.id)}" type="button">${icon("plus")}Registrar recebimento</button></div>
-      ${informedList.length ? '<p class="stub-note">Só marque depois de ver o dinheiro na conta.</p>' : needsDeposit(order) ? '<p class="stub-note">O sinal só conta quando você confirma que recebeu.</p>' : ""}
+      <div class="stub-actions">${moneyIntent ? zap : ""}${pixChargeButton(order)}<button class="vn-btn quiet" data-action="add-payment" data-id="${esc(order.id)}" type="button">${icon("plus")}Registrar recebimento</button></div>
+      ${!informedList.length && needsDeposit(order) ? '<p class="stub-note">O sinal só conta quando você confirma que recebeu.</p>' : ""}
     </section>`;
   }
   const location = order.location ? `<div class="detail-tile"><div class="detail-tile-label">${mode === "Entrega" ? "Local de entrega" : "Local de retirada"}</div><div class="detail-tile-value">${esc(order.location)}</div></div>` : "";
@@ -938,8 +939,8 @@ function detailMarkup(order) {
   const canEdit = !["Recusado", "Solicitação"].includes(order.status);
   return `<div class="detail-shell${order.status === "Solicitação" ? " is-request" : ""}">
     <div class="detail-topline detail-head">
-      <div class="detail-bar"><span class="detail-mode">${icon(mode === "Entrega" ? "delivery" : "bag")}${esc(mode)}</span>${statusBadge(order.status)}<span class="detail-tools">${canEdit ? `<button class="detail-edit" data-action="edit-order" data-id="${esc(order.id)}" type="button">Editar</button>` : ""}<button class="icon-button close-dialog" type="button" data-close="detail-dialog" aria-label="Fechar detalhes"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></span></div>
-      <p class="detail-when">${date ? `<b>${esc(shortTime(order.dueAt))}</b>` : ""}<span>${esc(dayLabel)}</span></p>
+      <div class="detail-bar"><span class="detail-mode">${icon(mode === "Entrega" ? "delivery" : "bag")}${esc(mode)}</span><span class="detail-tools">${canEdit ? `<button class="detail-edit" data-action="edit-order" data-id="${esc(order.id)}" type="button">Editar</button>` : ""}<button class="icon-button close-dialog" type="button" data-close="detail-dialog" aria-label="Fechar detalhes"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></span></div>
+      <p class="detail-when">${date ? `<b>${esc(shortTime(order.dueAt))}</b>` : ""}<span>${esc(dayLabel)}</span>${statusBadge(order.status)}</p>
       <h2 class="detail-client" id="detail-title" tabindex="-1">${esc(order.product || "Produto sem descrição")}</h2>
       <p class="detail-product">para ${esc(clientName(order) || "cliente sem nome")}</p>
     </div>
