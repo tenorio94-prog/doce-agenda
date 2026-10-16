@@ -6,8 +6,15 @@ Atualizado em **16/10/2026**. Passagem de bastão: estado real, decisões e o qu
 
 ## 1. Onde paramos
 
-- **Tudo publicado até 16/10.** Site na Cloudflare versão `0bf890d1` (commit `445df33`, caixa de entrada); funções Supabase `doce-api` v8 (JWT) e `doce-public` v6. Rotas 5/5 em `lucast.app` e `www`.
-- Última entrega: **caixa de entrada** em Pedidos → Novos (Para revisar / Em negociação, origem "Recebido pelo link" mantida após revisão, valor e ocupação da data).
+- **Tudo publicado até 16/10.** Site na Cloudflare versão `c845cfce` (commit `1064ca0`); funções Supabase `doce-api` v8 (JWT) e `doce-public` v6. Rotas 5/5 em `lucast.app` e `www`.
+- **Última entrega (16/10, feedback de usabilidade, 3 commits `726308e`, `e3f6220`, `1064ca0`):**
+  - Textos: ajudas de pagamento curtas ("Deixe R$ 0 se ainda não recebeu nada"), erros em tom de conversa, recusa sem lista de motivos (grava `reasonCode: 'outro'`) com mensagem educada pronta, formulário com 5 campos visíveis (combinado e retirada/entrega em "Mais detalhes"), cópia de segurança dentro de "Avançado".
+  - Uma mão: botões de 48 px, letras de apoio 14 px, "Novo" no centro da barra do celular. Cores fixas sempre com texto: âmbar = falta sinal/conferir, verde = conferido/pronto, vermelho-tijolo (`--vn-red`) = dia lotado/"Atrasado" (Confirmado/Em produção/Pronto com horário passado), cinza = fechado; framboesa só na marca.
+  - Agenda: lista do dia primeiro, depois "Ver outro dia da semana" (tocar leva à lista), depois **Falta cobrar** (sinal faltando, Pix informado sem conferir, entregue com saldo; só mostra).
+  - Aceite: "Aceitar pedido" (Confirmado) / "Ainda vou passar o preço" (Orçamento) / "Recusar". Pedido com telefone ganha "Abrir conversa com o resumo" (wa.me com texto; fora da demo/exemplos). Resumo inclui a chave Pix se o Pix estiver ligado.
+  - Verificado: `npm run check` passou; demo local 360/1280 e demo publicada 360 (barra, ordem da Agenda, revisão, rodapé do pedido). Não verificado: conta real, iPhone, abrir o WhatsApp de verdade.
+  - Decidido não fazer: aceite único perguntando do sinal (misturaria situação com dinheiro); rosa forte para alerta (é a cor da marca).
+- Antes: **caixa de entrada** em Pedidos → Novos (Para revisar / Em negociação, origem "Recebido pelo link" mantida após revisão, valor e ocupação da data).
 - Antes dela, publicados em 16/10: **nova identidade vnext** (`public/ui/vnext.css`, fontes Outfit e Plus Jakarta Sans, barra lateral a partir de 1100 px), **Vitrine V1** (estilos, fotos no Storage, Worker com `og:` por confeitaria, kit de divulgação), **Clientes** e **Pix escondido** (`?pix=teste`).
 - 16/10: único subagente permitido é o `triagem-haiku`, só leitura (commit `4cdebbc`).
 - **Não iniciar outra melhoria sem pedido.**
@@ -19,6 +26,7 @@ Atualizado em **16/10/2026**. Passagem de bastão: estado real, decisões e o qu
 3. **Política de privacidade** ainda cita Netlify (atualizar só com aprovação). `www` não redireciona para a raiz.
 4. **Aguardam decisão:** engenharia etapa 3 (regras compartilhadas app/servidor); Compras B (quantidade, vínculo com produtos do link, data de produção); limpar o visual Glacê antigo de `style.css` com comparação de capturas; `app.js` grande em arquivo único.
 5. **Pedido anunciado por Lucas:** personalizar mais a loja da cliente (ele manda o prompt).
+5b. **Notificação de pedido novo pelo link** (do feedback de 16/10): adiada, exige decisão própria. E-mail precisa de serviço de envio e talvez DNS; aviso no celular só funciona no iPhone com o app instalado na tela inicial. Mexe no Supabase.
 6. **Nunca verificado:** conta real de confeiteira, Safari/iPhone, aparelho físico, prévia real no WhatsApp. Sugestão em aberto: mostrar o app à amiga confeiteira antes de grandes mudanças.
 7. Antigas: duas contas sintéticas `.invalid` com páginas desativadas; aviso de RLS em `public.n8n_chat_histories` (fora do app, não mexer); Netlify antigo pode ser desativado quando Lucas quiser.
 
