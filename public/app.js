@@ -810,7 +810,7 @@ function detailMarkup(order) {
     <div class="detail-split"><div class="detail-tile"><div class="detail-tile-label">Valor total</div><div class="detail-tile-value large">${esc(orderTotalLabel(order))}</div></div><div class="detail-tile"><div class="detail-tile-label">${isCommitted(order) ? "Saldo a receber" : "Recebido conferido"}</div><div class="detail-tile-value ${balance === null && isCommitted(order) ? "is-unknown" : "large"}">${balance === null ? (isCommitted(order) ? "Ainda não conferido" : esc(money(confirmedPayments(order.id).length ? confirmedPaid(order.id) : 0))) : esc(balanceLabel(balance))}${balance !== null && balance < 0 ? `<small>Confira os recebimentos registrados.</small>` : ""}</div></div>${location}${order.nextAction ? `<div class="detail-tile"><div class="detail-tile-label">Próxima ação${order.nextAt ? ` · ${esc(dateTimeLabel(order.nextAt))}` : ""}</div><div class="detail-tile-value">${esc(order.nextAction)}</div></div>` : ""}</div>
     <section class="payment-section" ${order.status==='Solicitação'?'hidden':''}><div class="detail-section-title"><h3>Pagamentos</h3><div class="payment-buttons">${pixChargeButton(order)}<button class="button button-small" data-action="add-payment" data-id="${esc(order.id)}" type="button"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> Registrar</button></div></div>${payments.length ? `<div class="payment-list">${payments.map((payment) => `<div class="payment-item"><div class="payment-main"><div class="payment-amount">${esc(money(payment.amount))}</div><div class="payment-note">${esc(payment.note || "Sem observação")} · ${esc(formatWhenHistory(payment.createdAt))}</div></div><div class="payment-status"><span>${payment.status === "Conferido" ? "Recebimento conferido" : "Cliente informou"}</span>${payment.status !== "Conferido" ? `<button type="button" data-action="confirm-payment" data-id="${esc(payment.id)}">Marcar conferido</button>` : ""}</div></div>`).join("")}</div>` : `<p class="detail-empty">Nenhum pagamento registrado.</p>`}</section>
     <details class="history-section"><summary>Histórico (${history.length})</summary>${history.length ? `<div class="history-list">${history.map((item) => `<div class="history-item"><strong>${esc(formatWhenHistory(item.at))}</strong>${esc(item.text || "Atualização do pedido")}</div>`).join("")}</div>` : `<p class="detail-empty">As alterações do pedido aparecerão aqui.</p>`}</details>
-    <div class="detail-actions"><button class="button button-quiet" data-action="copy-summary" data-id="${esc(order.id)}" type="button">${order.reviewOutcome?'Copiar mensagem para a cliente':'Copiar resumo para WhatsApp'}</button><button class="button button-primary" data-action="edit-order" data-id="${esc(order.id)}" type="button" ${order.status==='Recusado'?'hidden':''}>${order.status==='Solicitação'?'Editar e aceitar':'Editar encomenda'}</button></div>
+    <div class="detail-actions">${whatsAppLink(order)}<button class="button button-quiet" data-action="copy-summary" data-id="${esc(order.id)}" type="button">${order.reviewOutcome?'Copiar mensagem para a cliente':'Copiar resumo para WhatsApp'}</button><button class="button button-primary" data-action="edit-order" data-id="${esc(order.id)}" type="button" ${order.status==='Recusado'?'hidden':''}>${order.status==='Solicitação'?'Editar e aceitar':'Editar encomenda'}</button></div>
   </div>`;
 }
 
@@ -843,6 +843,20 @@ function openPaymentForm(orderId) {
   setTimeout(() => form.elements.namedItem("amount").focus(), 0);
 }
 
+// Phone from the order, as an international number for wa.me (Brazil). Unknown formats return "".
+function whatsAppNumber(order) {
+  const digits = String(order.contact || "").replace(/\D/g, "");
+  if (digits.length === 10 || digits.length === 11) return `55${digits}`;
+  if ((digits.length === 12 || digits.length === 13) && digits.startsWith("55")) return digits;
+  return "";
+}
+// Opens the client's conversation with the summary already typed; she still reviews and sends it.
+function whatsAppLink(order) {
+  const number = whatsAppNumber(order);
+  if (!number || sampleOrder(order)) return "";
+  return `<a class="button button-primary detail-whatsapp" href="https://wa.me/${number}?text=${encodeURIComponent(makeWhatsAppSummary(order))}" target="_blank" rel="noopener">Abrir conversa com o resumo</a>`;
+}
+
 function makeWhatsAppSummary(order) {
   if (order.status === "Recusado") {
     const when = order.dueAt ? ` para ${dateTimeLabel(order.dueAt)}` : "";
@@ -863,6 +877,8 @@ function makeWhatsAppSummary(order) {
     lines.push(`Pagamento conferido: ${confirmedPayments(order.id).length ? money(confirmedPaid(order.id)) : "Ainda não conferido"}`);
     lines.push(`Saldo restante: ${balanceLabel(balanceFor(order))}`);
   }
+  const balance = balanceFor(order);
+  if (isCommitted(order) && pixEnabled() && pixReady() && (balance === null || balance > 0)) lines.push(`Pix para pagamento: ${state.pix.key}${state.pix.name ? ` (${state.pix.name})` : ""}`);
   if (order.pendingChange) lines.push(`Mudança pendente de confirmação: ${order.pendingChange}`);
   if (order.status === "Cancelado") lines.push("Este pedido está cancelado.");
   lines.push("", "Está tudo correto? Se precisar ajustar algo, me avise.");
@@ -1612,7 +1628,7 @@ function requestReviewMarkup(order){
  if(order.status!=='Solicitação')return order.reviewOutcome==='refused'?`<p class="pending-banner">Solicitação recusada${order.refusalReason?`: ${esc(order.refusalReason)}`:'.'}</p>`:'';
  const day=order.dueAt?.slice(0,10),available=day?availabilityFor(day):{limit:null},pending=state.orders.filter(o=>o.status==='Solicitação'&&day&&o.dueAt?.slice(0,10)===day).length;
  const remaining=Number.isInteger(available.limit)?Math.max(0,available.limit-available.count):null;
- return `<section class="request-review"><h3>Solicitação${order.publicCode ? ` ${esc(order.publicCode)}` : ""} · Aguardando revisão</h3><p>Ainda não confirmada. Confira data, detalhes e valor antes de aceitar.</p><p><strong>Valor total: ${esc(orderTotalLabel(order))}</strong></p>${dateCapacityMarkup(order)}${order.possibleDuplicate?'<p class="form-error">Possível duplicata: compare com as outras solicitações antes de aceitar.</p>':''}${remaining!==null&&pending>remaining?`<p class="form-error">${pending} solicitações para ${remaining} ${remaining===1?'vaga restante':'vagas restantes'} nesta data.</p>`:''}<div class="request-actions"><button class="button button-primary" type="button" data-action="accept-request" data-id="${esc(order.id)}" data-status="Confirmado">Aceitar como Confirmado</button><button class="button button-quiet" type="button" data-action="accept-request" data-id="${esc(order.id)}" data-status="Orçamento">Aceitar como Orçamento</button><button class="text-link" type="button" data-action="refuse-request" data-id="${esc(order.id)}">Recusar</button></div></section>`;
+ return `<section class="request-review"><h3>Solicitação${order.publicCode ? ` ${esc(order.publicCode)}` : ""} · Aguardando revisão</h3><p>Ainda não confirmada. Confira data, detalhes e valor antes de aceitar.</p><p><strong>Valor total: ${esc(orderTotalLabel(order))}</strong></p>${dateCapacityMarkup(order)}${order.possibleDuplicate?'<p class="form-error">Possível duplicata: compare com as outras solicitações antes de aceitar.</p>':''}${remaining!==null&&pending>remaining?`<p class="form-error">${pending} solicitações para ${remaining} ${remaining===1?'vaga restante':'vagas restantes'} nesta data.</p>`:''}<div class="request-actions"><button class="button button-primary" type="button" data-action="accept-request" data-id="${esc(order.id)}" data-status="Confirmado">Aceitar pedido</button><button class="button button-quiet" type="button" data-action="accept-request" data-id="${esc(order.id)}" data-status="Orçamento">Ainda vou passar o preço</button><button class="text-link" type="button" data-action="refuse-request" data-id="${esc(order.id)}">Recusar</button></div></section>`;
 }
 async function reviewRequest(id,status){
  try{await apiRequest(`/orders/${encodeURIComponent(id)}/accept`,{method:'POST',body:{status}});closeDetails();await loadState({silent:true});showOrderDetail(id);showToast('Solicitação aceita. Você pode copiar a mensagem para a cliente.');}

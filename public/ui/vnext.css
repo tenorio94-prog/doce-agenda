@@ -423,3 +423,6 @@ body.vnext { background: var(--vn-canvas); }
 .vn-collect-row small { display: block; color: var(--vn-muted); font-size: 14px; }
 .vn-collect-row .vn-badge { white-space: normal; }
 .vn-collect + .text-link, .vn-collect .text-link { margin-top: 8px; min-height: 44px; }
+.vnext .detail-actions .detail-whatsapp { flex: 1 1 100%; display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
+.vnext .detail-actions .detail-whatsapp ~ .button { flex: 1 1 40%; }
+.vnext .detail-dialog .detail-actions .detail-whatsapp ~ .button-primary { background: var(--vn-soft); border: 1px solid #f3dce3; color: var(--vn-wine); box-shadow: none; }
