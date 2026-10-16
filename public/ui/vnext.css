@@ -243,3 +243,26 @@ body.vnext { background: var(--vn-canvas); }
 .vnext .dialog .button-primary { border-radius: 999px; background: var(--vn-berry); border-color: var(--vn-berry); color: #fff; }
 .vnext .dialog .button-quiet { border-radius: 999px; background: var(--vn-soft); border-color: #f3dce3; color: var(--vn-wine); }
 .vnext .dialog wa-button[variant="brand"]::part(base) { background: var(--vn-berry); border-color: var(--vn-berry); }
+
+/* ---- Etapa 3: Pedidos e Novos (mesmo cartão da Agenda, com a data) ---- */
+.vnext #view-orders { font-family: var(--vn-font); color: var(--vn-ink); }
+.vnext #view-orders h1, .vnext #view-orders h2, .vnext #view-orders h3 { font-family: var(--vn-title); letter-spacing: -.02em; color: var(--vn-ink); }
+.vnext #view-orders .toolbar { margin: 0 0 14px; }
+.vnext #view-orders .search-wrap { border: 0; border-bottom: 1px solid #dfcbd2; border-radius: 0; background: transparent; box-shadow: none; }
+.vnext #view-orders .search-input { background: transparent; border: 0; font-family: var(--vn-font); font-size: 15px; }
+.vnext #view-orders .stage-strip { gap: 6px; }
+.vnext #view-orders .stage-chip { min-height: 40px; border: 1px solid var(--vn-line); border-radius: 999px; background: #fff; color: var(--vn-muted); font: 700 13px var(--vn-font); }
+.vnext #view-orders .stage-chip.is-current { background: var(--vn-berry); border-color: var(--vn-berry); color: #fff; }
+.vnext #view-orders .stage-count { background: var(--vn-soft); color: var(--vn-berry); }
+.vnext #view-orders .stage-chip.is-current .stage-count { background: #ffffff2b; color: #fff; }
+.vnext #view-orders .order-results { color: var(--vn-muted); font-size: 13px; }
+.vnext #view-orders .request-banner { margin-bottom: 18px; border: 1px solid #f4dce3; border-radius: var(--vn-r); background: var(--vn-soft); box-shadow: none; }
+.vnext #view-orders .request-banner .button { background: var(--vn-berry); border-color: var(--vn-berry); color: #fff; border-radius: 999px; }
+.vnext #view-orders .tip, .vnext #view-month .tip, .vnext #view-settings .tip { border-radius: 14px; background: var(--vn-soft); border: 0; font-family: var(--vn-font); }
+.vn-inbox-banner { display: flex; align-items: center; gap: 14px; margin: 16px 0 18px; padding: 18px 20px; border: 1px solid #f4dce3; border-radius: var(--vn-r); background: var(--vn-soft); }
+.vnext .vn-inbox-banner h2 { margin: 0; font-size: 19px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.vn-inbox-banner p { margin: 4px 0 0; color: var(--vn-muted); font-size: 13px; }
+.vn-day-label { font-size: .8em; color: var(--vn-muted); font-weight: 500; }
+.vnext #view-orders .empty-state { border: 1px dashed #d9bcc5; border-radius: var(--vn-r); background: #fff9; font-family: var(--vn-font); }
+.vnext #view-orders .empty-state .button-primary { background: var(--vn-berry); border-color: var(--vn-berry); border-radius: 999px; }
+.vnext .vn-order-list.orders-full-list { margin-top: 6px; }

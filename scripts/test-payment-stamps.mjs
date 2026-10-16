@@ -51,8 +51,10 @@ try {
   await page.locator('.nav-item[data-view="orders"]').click();
   for (const [id, stamp] of Object.entries(expected)) {
     const row = page.locator(`#view-orders [data-open-order="${id}"]`);
-    assert.equal(await row.locator('.stamp').count(), stamp ? 1 : 0, `${id}: row stamp presence`);
-    if (stamp) assert.equal(await row.locator('.stamp').innerText(), stamp.toUpperCase(), `${id}: row stamp label`);
+    // Na lista nova (identidade do laboratório) o carimbo virou selo verde: Sinal pago → Sinal conferido, Pago → Total conferido.
+    const badge = { 'Sinal pago': 'Sinal conferido', 'Pago': 'Total conferido' }[stamp];
+    assert.equal(await row.locator('.vn-badge.green', { hasText: 'conferido' }).count(), stamp ? 1 : 0, `${id}: row badge presence`);
+    if (stamp) assert.equal(await row.locator('.vn-badge.green', { hasText: 'conferido' }).innerText(), badge, `${id}: row badge label`);
     if (id === 'zero') assert.match(await row.innerText(), /Falta o sinal/);
     await row.click();await page.locator('#detail-dialog').waitFor();
     const card = page.locator('#detail-content .deposit-card');
@@ -78,7 +80,7 @@ try {
   assert.equal(saved.payments.find(p => p.orderId === 'zero' && p.amount === 0)?.status, 'Conferido', 'Original zero receipt remains in history');
   await page.keyboard.press('Escape');await page.reload();await page.locator('#view-today h1').waitFor();
   await page.locator('.nav-item[data-view="orders"]').click();
-  assert.equal(await page.locator('#view-orders [data-open-order="zero"] .stamp').innerText(), 'PAGO');
+  assert.equal(await page.locator('#view-orders [data-open-order="zero"] .vn-badge.green').innerText(), 'Total conferido');
   await page.goto(origin + '/', {waitUntil: 'networkidle'});
   assert.match(await page.locator('h1').first().innerText(), /Saiba o que fazer, entregar e cobrar/);
   assert.equal((await page.locator('body').innerText()).includes('Três campos'), false);
