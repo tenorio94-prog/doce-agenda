@@ -1,6 +1,6 @@
 // Vitrine da confeitaria e pedido em 3 passos. Empacotado pelo esbuild em /encomenda/order.js.
 // O pedido enviado é o mesmo de antes (mesmos campos e regras no servidor), mais os itens extras opcionais.
-import { VITRINE_STYLE_INFO, vitrinePalette, photoUrl, initials, formatCents } from '../../cloud/vitrine-theme.js';
+import { VITRINE_STYLE_INFO, vitrinePalette, photoUrl, photoAttrs, initials, formatCents } from '../../cloud/vitrine-theme.js';
 
 const $ = (s, root = document) => root.querySelector(s), $$ = (s, root = document) => [...root.querySelectorAll(s)];
 const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -54,9 +54,9 @@ function applyTheme() {
   $('meta[name=theme-color]').content = style === 'moderna' ? p.ink : style === 'doceria' ? p.tint : style === 'caseira' ? '#f7f0e3' : '#ffffff';
   document.title = `${config.displayName} · encomendas`;
 }
-const img = (key, alt = '', eager = false) => `<img class="ph" src="${esc(photoUrl(key))}" alt="${esc(alt)}" ${eager ? 'fetchpriority="high"' : 'loading="lazy"'} decoding="async">`;
+const img = (key, alt = '', eager = false, sizes = '(max-width: 600px) 50vw, 320px') => `<img class="ph" src="${esc(photoUrl(key))}" ${photoAttrs(key, key.includes('bastidores-confeitaria') ? '(max-width: 960px) 100vw, 960px' : sizes)} alt="${esc(alt)}" ${eager ? 'fetchpriority="high"' : 'loading="lazy"'} decoding="async">`;
 const mono = (letter) => `<div class="mono"><span>${esc(letter)}</span></div>`;
-const productPhoto = (p, alt = '') => (p.photo ? img(p.photo, alt) : mono(p.name[0]));
+const productPhoto = (p, alt = '', sizes) => (p.photo ? img(p.photo, alt, false, sizes) : mono(p.name[0]));
 const logoHtml = () => (config.logo ? img(config.logo, `Logo de ${config.displayName}`, true) : `<div class="wordmark" aria-hidden="true">${esc(initials(config.displayName))}</div>`);
 // Foto que não carrega (apagada ou sem rede) vira o monograma, sem ícone quebrado.
 document.addEventListener('error', (event) => {
@@ -128,7 +128,7 @@ addEventListener('popstate', (event) => show(event.state));
 function openSheet(p) {
   if (!p) return;
   const sheet = $('#product-sheet');
-  $('#sheet-photo').innerHTML = productPhoto(p, p.name); $('#sheet-title').textContent = p.name;
+  $('#sheet-photo').innerHTML = productPhoto(p, p.name, '(max-width: 560px) 100vw, 560px'); $('#sheet-title').textContent = p.name;
   const priced = Number.isInteger(p.priceFromCents);
   $('#sheet-price').hidden = !priced; $('#sheet-price').textContent = priced ? `a partir de ${formatCents(p.priceFromCents)}` : '';
   $('#sheet-desc').textContent = p.description || ''; $('#sheet-desc').hidden = !p.description;

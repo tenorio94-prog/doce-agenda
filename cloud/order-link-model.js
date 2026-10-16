@@ -15,9 +15,9 @@ export function normalizeWhatsApp(value, required = false) {
   if (!/^[1-9]\d{7,14}$/.test(international)) linkError('Informe um WhatsApp com DDD e código do país.');
   return `+${international}`;
 }
-// Photo keys: "<account folder>/<uuid>.webp|jpg" in Storage, or a bundled example ("exemplo/<name>.svg").
+// Photo keys: "<account folder>/<uuid>.webp|jpg" in Storage, or a bundled example ("exemplo/<name>.svg|webp").
 // Which folder belongs to the account is checked by the server (doce-api), not here.
-export const PHOTO_KEY = /^(?:[a-f0-9]{32}\/[a-f0-9-]{36}\.(?:webp|jpg)|exemplo\/[a-z0-9-]{1,40}\.svg)$/;
+export const PHOTO_KEY = /^(?:[a-f0-9]{32}\/[a-f0-9-]{36}\.(?:webp|jpg)|exemplo\/[a-z0-9-]{1,40}\.(?:svg|webp))$/;
 function photoKey(value, label) {
   if (value === undefined || value === null || value === '') return '';
   if (typeof value !== 'string' || !PHOTO_KEY.test(value)) linkError(`${label}: imagem inválida.`);

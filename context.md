@@ -6,6 +6,7 @@ Atualizado em **16/10/2026**. Passagem de bastão: estado real, decisões e o qu
 
 ## 1. Onde paramos
 
+- **Fotografias da demo (16/10, publicação em andamento):** 18 fotos independentes geradas e revisadas; 12 no catálogo fictício, bastidores na capa, cinco em reserva editorial fora do site. Originais e mapeamento em `assets/demo-fotografias/`. Agenda/ficha usam miniaturas coerentes com o catálogo, aliases só na demo; 21 pedidos e pagamentos idênticos à versão anterior. Demos já salvas preservam o catálogo até **Recomeçar demonstração**. `npm run check` passou (64 regras + 11 suítes); jornada nas seis larguras 320/360/390/768/1024/1440, DPR 2 em 390, persistência/reset/backup e 39 WebP locais passaram. Comparação de 20 capturas: 13 idênticas, sete alterações esperadas. Corrigido botão final da landing em 320 px. Revisão architect sem bloqueios; falta registrar deploy e verificação publicada. Nenhum acesso a conta real/Supabase.
 - **Tudo publicado até 16/10.** Site na Cloudflare versão `c845cfce` (commit `1064ca0`); funções Supabase `doce-api` v8 (JWT) e `doce-public` v6. Rotas 5/5 em `lucast.app` e `www`.
 - **Última entrega (16/10, feedback de usabilidade, 3 commits `726308e`, `e3f6220`, `1064ca0`):**
   - Textos: ajudas de pagamento curtas ("Deixe R$ 0 se ainda não recebeu nada"), erros em tom de conversa, recusa sem lista de motivos (grava `reasonCode: 'outro'`) com mensagem educada pronta, formulário com 5 campos visíveis (combinado e retirada/entrega em "Mais detalhes"), cópia de segurança dentro de "Avançado".

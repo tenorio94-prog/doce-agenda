@@ -1,0 +1,596 @@
+[
+  {
+    "id": 1,
+    "slug": "brigadeiros-gourmet",
+    "generator": "image_gen built-in",
+    "generation": "d9c8de30-414f-4a45-b95e-9efb09e0fcad",
+    "original": "assets/demo-fotografias/originais/brigadeiros-gourmet.png",
+    "dimensions": [
+      1254,
+      1254
+    ],
+    "sha256": "6f6f69ef26d1bd33c7d4dd014bcfcf5f6d636e2efab536aa80ddf1a0db7137a8",
+    "application": "catalogo-demo",
+    "variants": [
+      {
+        "file": "public/encomenda/exemplos/brigadeiros-gourmet-160.webp",
+        "width": 160,
+        "height": 160,
+        "bytes": 7648
+      },
+      {
+        "file": "public/encomenda/exemplos/brigadeiros-gourmet-480.webp",
+        "width": 480,
+        "height": 480,
+        "bytes": 40942
+      },
+      {
+        "file": "public/encomenda/exemplos/brigadeiros-gourmet-960.webp",
+        "width": 960,
+        "height": 960,
+        "bytes": 112794
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "slug": "bolo-pistache",
+    "generator": "image_gen built-in",
+    "generation": "bac2cf97-3aa5-45d2-97f3-89d9b5f31311",
+    "original": "assets/demo-fotografias/originais/bolo-pistache.png",
+    "dimensions": [
+      1254,
+      1254
+    ],
+    "sha256": "f789db70f1474f8e9f34a771340b9e540c9901b55b20004e77f2e21297822797",
+    "application": "catalogo-demo",
+    "variants": [
+      {
+        "file": "public/encomenda/exemplos/bolo-pistache-160.webp",
+        "width": 160,
+        "height": 160,
+        "bytes": 8790
+      },
+      {
+        "file": "public/encomenda/exemplos/bolo-pistache-480.webp",
+        "width": 480,
+        "height": 480,
+        "bytes": 44544
+      },
+      {
+        "file": "public/encomenda/exemplos/bolo-pistache-960.webp",
+        "width": 960,
+        "height": 960,
+        "bytes": 113736
+      }
+    ]
+  },
+  {
+    "id": 3,
+    "slug": "bolo-chocolate-morango",
+    "generator": "image_gen built-in",
+    "generation": "86e70147-447b-462f-9dab-d3cb361666a6",
+    "original": "assets/demo-fotografias/originais/bolo-chocolate-morango.png",
+    "dimensions": [
+      1254,
+      1254
+    ],
+    "sha256": "3ea3d47f4f196b735e5ab9013362154ed0d300cdb0bc8a2aaf7ef083a29280dc",
+    "application": "catalogo-demo",
+    "variants": [
+      {
+        "file": "public/encomenda/exemplos/bolo-chocolate-morango-160.webp",
+        "width": 160,
+        "height": 160,
+        "bytes": 7826
+      },
+      {
+        "file": "public/encomenda/exemplos/bolo-chocolate-morango-480.webp",
+        "width": 480,
+        "height": 480,
+        "bytes": 50464
+      },
+      {
+        "file": "public/encomenda/exemplos/bolo-chocolate-morango-960.webp",
+        "width": 960,
+        "height": 960,
+        "bytes": 163846
+      }
+    ]
+  },
+  {
+    "id": 4,
+    "slug": "bento-cake",
+    "generator": "image_gen built-in",
+    "generation": "c63ef903-9f3c-4433-a3be-366d06c57340",
+    "original": "assets/demo-fotografias/originais/bento-cake.png",
+    "dimensions": [
+      1254,
+      1254
+    ],
+    "sha256": "9bac67a37b5393207abf2afaba5a1fa854a916490a50b1d0370929e3bdebb389",
+    "application": "catalogo-demo",
+    "variants": [
+      {
+        "file": "public/encomenda/exemplos/bento-cake-160.webp",
+        "width": 160,
+        "height": 160,
+        "bytes": 6762
+      },
+      {
+        "file": "public/encomenda/exemplos/bento-cake-480.webp",
+        "width": 480,
+        "height": 480,
+        "bytes": 36282
+      },
+      {
+        "file": "public/encomenda/exemplos/bento-cake-960.webp",
+        "width": 960,
+        "height": 960,
+        "bytes": 100188
+      }
+    ]
+  },
+  {
+    "id": 5,
+    "slug": "caixa-docinhos",
+    "generator": "image_gen built-in",
+    "generation": "fecf5023-fb1e-4f66-bdf6-c076e30805f4",
+    "original": "assets/demo-fotografias/originais/caixa-docinhos.png",
+    "dimensions": [
+      1254,
+      1254
+    ],
+    "sha256": "c3e001b72799f416ce3c4fa5054564fe6972853bd10fadb69387c79e32b1ecc3",
+    "application": "catalogo-demo",
+    "variants": [
+      {
+        "file": "public/encomenda/exemplos/caixa-docinhos-160.webp",
+        "width": 160,
+        "height": 160,
+        "bytes": 7448
+      },
+      {
+        "file": "public/encomenda/exemplos/caixa-docinhos-480.webp",
+        "width": 480,
+        "height": 480,
+        "bytes": 47366
+      },
+      {
+        "file": "public/encomenda/exemplos/caixa-docinhos-960.webp",
+        "width": 960,
+        "height": 960,
+        "bytes": 144418
+      }
+    ]
+  },
+  {
+    "id": 6,
+    "slug": "kit-festa",
+    "generator": "image_gen built-in",
+    "generation": "17a2af96-c97a-44db-9556-fadc5315a750",
+    "original": "assets/demo-fotografias/originais/kit-festa.png",
+    "dimensions": [
+      1254,
+      1254
+    ],
+    "sha256": "f2aafccde60833600b71d719c698402d74ca9b272894257b44b81a71a98048fa",
+    "application": "catalogo-demo",
+    "variants": [
+      {
+        "file": "public/encomenda/exemplos/kit-festa-160.webp",
+        "width": 160,
+        "height": 160,
+        "bytes": 9762
+      },
+      {
+        "file": "public/encomenda/exemplos/kit-festa-480.webp",
+        "width": 480,
+        "height": 480,
+        "bytes": 55746
+      },
+      {
+        "file": "public/encomenda/exemplos/kit-festa-960.webp",
+        "width": 960,
+        "height": 960,
+        "bytes": 147402
+      }
+    ]
+  },
+  {
+    "id": 7,
+    "slug": "bolo-infantil",
+    "generator": "image_gen built-in",
+    "generation": "decc5897-ebbf-4355-83c4-fd7740f21c02",
+    "original": "assets/demo-fotografias/originais/bolo-infantil.png",
+    "dimensions": [
+      1254,
+      1254
+    ],
+    "sha256": "0bd8e1c4252b449798fc332f749788d33c7f248fc2db7ca7f163efc76d403d5f",
+    "application": "catalogo-demo",
+    "variants": [
+      {
+        "file": "public/encomenda/exemplos/bolo-infantil-160.webp",
+        "width": 160,
+        "height": 160,
+        "bytes": 7788
+      },
+      {
+        "file": "public/encomenda/exemplos/bolo-infantil-480.webp",
+        "width": 480,
+        "height": 480,
+        "bytes": 41754
+      },
+      {
+        "file": "public/encomenda/exemplos/bolo-infantil-960.webp",
+        "width": 960,
+        "height": 960,
+        "bytes": 103976
+      }
+    ]
+  },
+  {
+    "id": 8,
+    "slug": "bolo-aniversario-frutas",
+    "generator": "image_gen built-in",
+    "generation": "d8d5520f-7473-4902-b69d-63673d3a125b",
+    "original": "assets/demo-fotografias/originais/bolo-aniversario-frutas.png",
+    "dimensions": [
+      1254,
+      1254
+    ],
+    "sha256": "af141d4984ea09f3259fcbc3a0deace534421a7d8d5927b7f4b2264ebfb4d7cd",
+    "application": "catalogo-demo",
+    "variants": [
+      {
+        "file": "public/encomenda/exemplos/bolo-aniversario-frutas-160.webp",
+        "width": 160,
+        "height": 160,
+        "bytes": 7940
+      },
+      {
+        "file": "public/encomenda/exemplos/bolo-aniversario-frutas-480.webp",
+        "width": 480,
+        "height": 480,
+        "bytes": 49220
+      },
+      {
+        "file": "public/encomenda/exemplos/bolo-aniversario-frutas-960.webp",
+        "width": 960,
+        "height": 960,
+        "bytes": 146722
+      }
+    ]
+  },
+  {
+    "id": 9,
+    "slug": "brownies",
+    "generator": "image_gen built-in",
+    "generation": "12c85cfa-7892-4f16-bc12-fc3441b81045",
+    "original": "assets/demo-fotografias/originais/brownies.png",
+    "dimensions": [
+      1254,
+      1254
+    ],
+    "sha256": "45a6f6c6a25ad91afc7d7e0c285d74931770a34000d708684ea51193e0cdc4bf",
+    "application": "catalogo-demo",
+    "variants": [
+      {
+        "file": "public/encomenda/exemplos/brownies-160.webp",
+        "width": 160,
+        "height": 160,
+        "bytes": 9360
+      },
+      {
+        "file": "public/encomenda/exemplos/brownies-480.webp",
+        "width": 480,
+        "height": 480,
+        "bytes": 62540
+      },
+      {
+        "file": "public/encomenda/exemplos/brownies-960.webp",
+        "width": 960,
+        "height": 960,
+        "bytes": 187712
+      }
+    ]
+  },
+  {
+    "id": 10,
+    "slug": "sobremesas-individuais",
+    "generator": "image_gen built-in",
+    "generation": "6529cea8-7a55-4fa0-bc86-4c2a33251359",
+    "original": "assets/demo-fotografias/originais/sobremesas-individuais.png",
+    "dimensions": [
+      1254,
+      1254
+    ],
+    "sha256": "21c20a5a7cb10dcf34a27d594196b575176c4fd400b6c4ceb9495f0e2be6584b",
+    "application": "catalogo-demo",
+    "variants": [
+      {
+        "file": "public/encomenda/exemplos/sobremesas-individuais-160.webp",
+        "width": 160,
+        "height": 160,
+        "bytes": 7466
+      },
+      {
+        "file": "public/encomenda/exemplos/sobremesas-individuais-480.webp",
+        "width": 480,
+        "height": 480,
+        "bytes": 46196
+      },
+      {
+        "file": "public/encomenda/exemplos/sobremesas-individuais-960.webp",
+        "width": 960,
+        "height": 960,
+        "bytes": 135430
+      }
+    ]
+  },
+  {
+    "id": 11,
+    "slug": "cupcakes",
+    "generator": "image_gen built-in",
+    "generation": "e57b24c4-de94-4b7e-8372-f943ce81d794",
+    "original": "assets/demo-fotografias/originais/cupcakes.png",
+    "dimensions": [
+      1254,
+      1254
+    ],
+    "sha256": "6b2f176a978ae17ff66c68d1d127f40f5460df92730ffb21ab44a9a69486ecd3",
+    "application": "catalogo-demo",
+    "variants": [
+      {
+        "file": "public/encomenda/exemplos/cupcakes-160.webp",
+        "width": 160,
+        "height": 160,
+        "bytes": 7558
+      },
+      {
+        "file": "public/encomenda/exemplos/cupcakes-480.webp",
+        "width": 480,
+        "height": 480,
+        "bytes": 39938
+      },
+      {
+        "file": "public/encomenda/exemplos/cupcakes-960.webp",
+        "width": 960,
+        "height": 960,
+        "bytes": 103514
+      }
+    ]
+  },
+  {
+    "id": 12,
+    "slug": "bolo-cenoura-chocolate",
+    "generator": "image_gen built-in",
+    "generation": "453a9aaa-3993-4eaf-a58b-221a5ddcbc3f",
+    "original": "assets/demo-fotografias/originais/bolo-cenoura-chocolate.png",
+    "dimensions": [
+      1254,
+      1254
+    ],
+    "sha256": "73733b17a9e855800dc17999c9c2743d005672f9f49923ced0124371dd04e1ec",
+    "application": "catalogo-demo",
+    "variants": [
+      {
+        "file": "public/encomenda/exemplos/bolo-cenoura-chocolate-160.webp",
+        "width": 160,
+        "height": 160,
+        "bytes": 8976
+      },
+      {
+        "file": "public/encomenda/exemplos/bolo-cenoura-chocolate-480.webp",
+        "width": 480,
+        "height": 480,
+        "bytes": 60724
+      },
+      {
+        "file": "public/encomenda/exemplos/bolo-cenoura-chocolate-960.webp",
+        "width": 960,
+        "height": 960,
+        "bytes": 192294
+      }
+    ]
+  },
+  {
+    "id": 13,
+    "slug": "confeiteira-em-acao",
+    "generator": "image_gen built-in",
+    "generation": "ca01e33d-7b0d-450d-86f7-690dfd920ed7",
+    "original": "assets/demo-fotografias/originais/confeiteira-em-acao.png",
+    "dimensions": [
+      1122,
+      1402
+    ],
+    "sha256": "10d5ed883f1f878f69dbf35f6bdd67106a86df01623003dca6a3267a562857a2",
+    "application": "reserva-editorial-ficticia",
+    "variants": [
+      {
+        "file": "assets/demo-fotografias/reserva/confeiteira-em-acao-160.webp",
+        "width": 160,
+        "height": 200,
+        "bytes": 9536
+      },
+      {
+        "file": "assets/demo-fotografias/reserva/confeiteira-em-acao-480.webp",
+        "width": 480,
+        "height": 600,
+        "bytes": 45262
+      },
+      {
+        "file": "assets/demo-fotografias/reserva/confeiteira-em-acao-960.webp",
+        "width": 960,
+        "height": 1200,
+        "bytes": 110664
+      }
+    ]
+  },
+  {
+    "id": 14,
+    "slug": "cliente-feliz",
+    "generator": "image_gen built-in",
+    "generation": "4bdf18e6-b6c6-4175-a63b-7f3f5d892ef4",
+    "original": "assets/demo-fotografias/originais/cliente-feliz.png",
+    "dimensions": [
+      1122,
+      1402
+    ],
+    "sha256": "df3cea382936ab5373b411cda372e79e0940e9b48a3b405482f9a9b1fdcdbb14",
+    "application": "reserva-editorial-ficticia",
+    "variants": [
+      {
+        "file": "assets/demo-fotografias/reserva/cliente-feliz-160.webp",
+        "width": 160,
+        "height": 200,
+        "bytes": 8718
+      },
+      {
+        "file": "assets/demo-fotografias/reserva/cliente-feliz-480.webp",
+        "width": 480,
+        "height": 600,
+        "bytes": 41504
+      },
+      {
+        "file": "assets/demo-fotografias/reserva/cliente-feliz-960.webp",
+        "width": 960,
+        "height": 1200,
+        "bytes": 112108
+      }
+    ]
+  },
+  {
+    "id": 15,
+    "slug": "cliente-retirando-pedido",
+    "generator": "image_gen built-in",
+    "generation": "15a49c37-ce6c-4b2f-8d0f-68b1bfcf5b60",
+    "original": "assets/demo-fotografias/originais/cliente-retirando-pedido.png",
+    "dimensions": [
+      1122,
+      1402
+    ],
+    "sha256": "e2f0112fdf6d6ffb97e45e76c3302739b7f8acacaaccf487324a2bb7173a0307",
+    "application": "reserva-editorial-ficticia",
+    "variants": [
+      {
+        "file": "assets/demo-fotografias/reserva/cliente-retirando-pedido-160.webp",
+        "width": 160,
+        "height": 200,
+        "bytes": 8938
+      },
+      {
+        "file": "assets/demo-fotografias/reserva/cliente-retirando-pedido-480.webp",
+        "width": 480,
+        "height": 600,
+        "bytes": 44442
+      },
+      {
+        "file": "assets/demo-fotografias/reserva/cliente-retirando-pedido-960.webp",
+        "width": 960,
+        "height": 1200,
+        "bytes": 118248
+      }
+    ]
+  },
+  {
+    "id": 16,
+    "slug": "embalagem-mensagem",
+    "generator": "image_gen built-in",
+    "generation": "3a75337f-4e7c-4bfe-b0ef-ea8ca5b15149",
+    "original": "assets/demo-fotografias/originais/embalagem-mensagem.png",
+    "dimensions": [
+      1254,
+      1254
+    ],
+    "sha256": "4822a4ff5c53a3002ed12943409cf82b188f604cb6a8949040dcb57d4b6ace2e",
+    "application": "reserva-editorial-ficticia",
+    "variants": [
+      {
+        "file": "assets/demo-fotografias/reserva/embalagem-mensagem-160.webp",
+        "width": 160,
+        "height": 160,
+        "bytes": 7002
+      },
+      {
+        "file": "assets/demo-fotografias/reserva/embalagem-mensagem-480.webp",
+        "width": 480,
+        "height": 480,
+        "bytes": 42098
+      },
+      {
+        "file": "assets/demo-fotografias/reserva/embalagem-mensagem-960.webp",
+        "width": 960,
+        "height": 960,
+        "bytes": 123108
+      }
+    ]
+  },
+  {
+    "id": 17,
+    "slug": "embalagem-entrega",
+    "generator": "image_gen built-in",
+    "generation": "9e6efbcc-dff8-4fd4-a431-c35d084d3228",
+    "original": "assets/demo-fotografias/originais/embalagem-entrega.png",
+    "dimensions": [
+      1254,
+      1254
+    ],
+    "sha256": "e9bd6d03f23742a18889e4d9d543cba6c18b383161f4af86218f7a0db1aa663b",
+    "application": "reserva-editorial-ficticia",
+    "variants": [
+      {
+        "file": "assets/demo-fotografias/reserva/embalagem-entrega-160.webp",
+        "width": 160,
+        "height": 160,
+        "bytes": 5526
+      },
+      {
+        "file": "assets/demo-fotografias/reserva/embalagem-entrega-480.webp",
+        "width": 480,
+        "height": 480,
+        "bytes": 26244
+      },
+      {
+        "file": "assets/demo-fotografias/reserva/embalagem-entrega-960.webp",
+        "width": 960,
+        "height": 960,
+        "bytes": 84936
+      }
+    ]
+  },
+  {
+    "id": 18,
+    "slug": "bastidores-confeitaria",
+    "generator": "image_gen built-in",
+    "generation": "4d63830e-3b93-4428-9139-4dcb74ed95d4",
+    "original": "assets/demo-fotografias/originais/bastidores-confeitaria.png",
+    "dimensions": [
+      1672,
+      941
+    ],
+    "sha256": "be8bd9ec24ceef8027d915bef5ad8ed84e8cfd02faddbb1e250c043bbb3777f4",
+    "application": "capa-vitrine-demo",
+    "variants": [
+      {
+        "file": "public/encomenda/exemplos/bastidores-confeitaria-160.webp",
+        "width": 160,
+        "height": 90,
+        "bytes": 5620
+      },
+      {
+        "file": "public/encomenda/exemplos/bastidores-confeitaria-480.webp",
+        "width": 480,
+        "height": 270,
+        "bytes": 33924
+      },
+      {
+        "file": "public/encomenda/exemplos/bastidores-confeitaria-960.webp",
+        "width": 960,
+        "height": 540,
+        "bytes": 102426
+      }
+    ]
+  }
+]

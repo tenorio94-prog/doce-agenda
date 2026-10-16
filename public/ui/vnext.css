@@ -485,6 +485,7 @@ body.vnext:has(dialog[open]) { overflow: hidden; }
 .cmd-meta { margin: 0; padding-right: 94px; color: var(--vn-muted); font-size: 14px; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .cmd-meta .vn-client { color: var(--vn-ink); font-weight: 700; font-size: 14px; }
 .cmd-when .vn-thumb { width: 48px; height: 48px; margin-top: 8px; border-radius: 12px; object-fit: cover; }
+.vnext .detail-photo { float: right; width: 72px; height: 72px; margin: 0 0 12px 12px; border-radius: 12px; object-fit: cover; }
 .vn-order.comanda .vn-card-foot { margin-top: 12px; padding: 0; border: 0; justify-content: flex-end; }
 .vn-order.comanda .vn-card-foot > .vn-badge:first-child { margin-right: auto; }
 .vn-order.comanda .vn-note { margin-top: 10px; }

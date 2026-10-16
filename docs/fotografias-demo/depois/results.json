@@ -1,0 +1,68 @@
+{
+  "origin": "http://127.0.0.1:58351",
+  "results": [
+    {
+      "width": 320,
+      "agenda": "pass",
+      "detail": "pass",
+      "catalogPhotos": 12,
+      "previewJourney": "pass",
+      "persistence": "pass",
+      "landing": "pass",
+      "agendaCLS": 0
+    },
+    {
+      "width": 360,
+      "agenda": "pass",
+      "detail": "pass",
+      "catalogPhotos": 12,
+      "previewJourney": "pass",
+      "persistence": "pass",
+      "landing": "pass",
+      "agendaCLS": 0.16194507119088397
+    },
+    {
+      "width": 390,
+      "agenda": "pass",
+      "detail": "pass",
+      "catalogPhotos": 12,
+      "previewJourney": "pass",
+      "persistence": "pass",
+      "landing": "pass",
+      "agendaCLS": 0.12291394863474366
+    },
+    {
+      "width": 768,
+      "agenda": "pass",
+      "detail": "pass",
+      "catalogPhotos": 12,
+      "previewJourney": "pass",
+      "persistence": "pass",
+      "landing": "pass",
+      "agendaCLS": 0.07261079327789796
+    },
+    {
+      "width": 1024,
+      "agenda": "pass",
+      "detail": "pass",
+      "catalogPhotos": 12,
+      "previewJourney": "pass",
+      "persistence": "pass",
+      "landing": "pass",
+      "agendaCLS": 0.06046137698861056
+    },
+    {
+      "width": 1440,
+      "agenda": "pass",
+      "detail": "pass",
+      "catalogPhotos": 12,
+      "previewJourney": "pass",
+      "persistence": "pass",
+      "landing": "pass",
+      "agendaCLS": 0.7927519379844962
+    }
+  ],
+  "assetResponses": 39,
+  "errors": [],
+  "accountIsolation": "fixture only; no real account accessed"
+}

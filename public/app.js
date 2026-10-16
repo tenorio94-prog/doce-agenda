@@ -2,10 +2,11 @@
 
 import { renderSVG } from "uqr";
 import { pixPayload } from "../cloud/pix-code.js";
-import { DEFAULT_COLOR, VITRINE_PRESETS, VITRINE_STYLE_INFO, formatCents, initials, photoUrl, vitrinePalette } from "../cloud/vitrine-theme.js";
+import { DEFAULT_COLOR, VITRINE_PRESETS, VITRINE_STYLE_INFO, formatCents, initials, photoUrl, photoAttrs, vitrinePalette } from "../cloud/vitrine-theme.js";
 import { blobToBase64, dominantColor, preparePhoto, shareImage } from "./photo-prep.js";
 import { printQr, shareOrDownload, storyImage } from "./share-kit.js";
 import { icon } from "./ui/icons.js";
+import { demoOrderPhoto } from "../cloud/demo-photos.js";
 
 const ORDER_STATUSES = ["Solicitação", "Orçamento", "Aguardando confirmação", "Confirmado", "Em produção", "Pronto", "Entregue", "Cancelado", "Recusado"];
 const PAYMENT_STATUSES = ["Informado", "Conferido"];
@@ -343,7 +344,7 @@ const weekDates = () => {
 // ---- Agenda na nova identidade (laboratório visual). Mesmos dados e regras; só a apresentação muda. ----
 const informedFor = (orderId) => state.payments.filter((payment) => payment.orderId === orderId && payment.status === "Informado").reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
 // Foto só quando a própria confeitaria cadastrou o produto com foto na vitrine; nunca uma foto inventada.
-const vitrinePhotoFor = (order) => (state.orderPage?.products || []).find((product) => product.photo && product.name.toLocaleLowerCase("pt-BR") === String(order.product || "").toLocaleLowerCase("pt-BR"))?.photo;
+const vitrinePhotoFor = (order) => demoOrderPhoto(order, state.orderPage?.products || [], window.DoceStore?.isDemo === true);
 function paymentBadge(order) {
   if (isCancelled(order) || sampleOrder(order)) return "";
   if (needsDeposit(order)) return '<span class="vn-badge amber">Falta o sinal</span>';
@@ -386,7 +387,7 @@ function agendaCardMarkup(order, options = {}) {
   const mode = order.mode || "Retirada";
   const step = options.compact ? "" : nextStepButton(order, "vn-btn primary small");
   const day = date && options.withDate ? `<span class="vn-day-label">${esc(dateLabel(order.dueAt, { weekday: "short", day: "numeric", month: "short" }).replace(/./g, ""))}</span>` : "";
-  const when = `<div class="cmd-when">${day}<b class="vn-time">${date ? esc(shortTime(order.dueAt)) : "—"}</b><small>${icon(mode === "Entrega" ? "delivery" : "bag")}${esc(mode.toLowerCase())}</small>${photo && !options.compact ? `<img class="vn-thumb" src="${esc(photoUrl(photo))}" alt="" loading="lazy">` : ""}</div>`;
+  const when = `<div class="cmd-when">${day}<b class="vn-time">${date ? esc(shortTime(order.dueAt)) : "—"}</b><small>${icon(mode === "Entrega" ? "delivery" : "bag")}${esc(mode.toLowerCase())}</small>${photo && !options.compact ? `<img class="vn-thumb" src="${esc(photoUrl(photo))}" ${photoAttrs(photo, '48px')} alt="" loading="lazy" decoding="async">` : ""}</div>`;
   // A etapa já está no verbo do botão; o rótulo só aparece quando não há botão (entregue, cancelado, lista compacta).
   const stage = isLate(order) ? '<span class="vn-badge red">Atrasado</span>' : step ? "" : statusBadge(order.status);
   return `<article class="${classes}" data-open-order="${esc(order.id)}">
@@ -818,6 +819,7 @@ function formatWhenHistory(value) {
 }
 
 function detailMarkup(order) {
+  const photo = vitrinePhotoFor(order);
   const payments = orderPayments(order.id).sort((a, b) => timeValue(b.createdAt) - timeValue(a.createdAt));
   const balance = balanceFor(order);
   const history = Array.isArray(order.history) ? [...order.history].reverse() : [];
@@ -838,7 +840,7 @@ function detailMarkup(order) {
   return `<div class="detail-shell${order.status === "Solicitação" ? " is-request" : ""}">
     <div class="detail-topline"><div><p class="detail-when">${esc(whenLabel)}</p><h2 class="detail-client" id="detail-title" tabindex="-1">${esc(order.product || "Produto sem descrição")}</h2><p class="detail-product">para ${esc(clientName(order) || "cliente sem nome")}</p></div><div class="detail-top-actions">${statusBadge(order.status)}<button class="icon-button close-dialog" type="button" data-close="detail-dialog" aria-label="Fechar detalhes"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div></div>
     ${sample}${order.status === "Solicitação" ? "" : (() => { const step = nextStepButton(order, "detail-advance"); return step ? `<div class="detail-next">${step}</div>` : ""; })()}<div class="detail-meta-line"><span class="meta-chip">${esc(dueAt)}</span><span class="meta-chip">${esc(order.mode || "Retirada")}</span>${order.contact ? `<span class="meta-chip">${esc(order.contact)}</span>` : ""}</div>
-    <div class="detail-summary"><div class="detail-summary-label">Combinado</div>${details}${cakeDetailsMarkup(order)}</div>
+    <div class="detail-summary">${photo ? `<img class="detail-photo" src="${esc(photoUrl(photo))}" ${photoAttrs(photo, '72px')} alt="" decoding="async">` : ""}<div class="detail-summary-label">Combinado</div>${details}${cakeDetailsMarkup(order)}</div>
     ${originMarkup(order)}${pending}${requestReviewMarkup(order)}
     ${depositCard}<p class="deposit-rule">O sinal só conta quando você confirma que recebeu.</p>
     <div class="detail-split"><div class="detail-tile"><div class="detail-tile-label">Valor total</div><div class="detail-tile-value large">${esc(orderTotalLabel(order))}</div></div><div class="detail-tile"><div class="detail-tile-label">${isCommitted(order) ? "Saldo a receber" : "Recebido conferido"}</div><div class="detail-tile-value ${balance === null && isCommitted(order) && !(order.totalKnown !== false && Number(order.total) > 0) ? "is-unknown" : "large"}">${balance === null ? (isCommitted(order) ? (order.totalKnown !== false && Number(order.total) > 0 ? `${esc(money(order.total))}<small class="detail-tile-note">nada conferido ainda</small>` : "A combinar") : esc(money(confirmedPayments(order.id).length ? confirmedPaid(order.id) : 0))) : esc(balanceLabel(balance))}${balance !== null && balance < 0 ? `<small>Confira os recebimentos registrados.</small>` : ""}</div></div>${location}${order.nextAction ? `<div class="detail-tile"><div class="detail-tile-label">Próxima ação${order.nextAt ? ` · ${esc(dateTimeLabel(order.nextAt))}` : ""}</div><div class="detail-tile-value">${esc(order.nextAction)}</div></div>` : ""}</div>
@@ -1420,7 +1422,7 @@ function priceToCents(text) {
   return Math.round(Number(normalized) * 100);
 }
 const centsToField = (cents) => Number.isInteger(cents) ? (cents / 100).toLocaleString("pt-BR", { minimumFractionDigits: cents % 100 ? 2 : 0 }) : "";
-const productThumb = (product) => product.photo ? `<img src="${esc(photoUrl(product.photo))}" alt="" loading="lazy">` : `<span aria-hidden="true">${esc((product.name || "?")[0])}</span>`;
+const productThumb = (product) => product.photo ? `<img src="${esc(photoUrl(product.photo))}" ${photoAttrs(product.photo, '64px')} alt="" loading="lazy" decoding="async">` : `<span aria-hidden="true">${esc((product.name || "?")[0])}</span>`;
 const productMeta = (product) => [product.category, Number.isInteger(product.priceFromCents) ? `a partir de ${formatCents(product.priceFromCents)}` : "", product.featured ? "mais pedido" : ""].filter(Boolean).join(" · ") || "Toque para editar";
 const productRowMarkup = (product = { name: "", description: "" }, open = false) => `<details class="product-item"${open ? " open" : ""}>
   <summary><span class="pi-thumb">${productThumb(product)}</span><span class="pi-text"><b>${esc(product.name || "Novo produto")}</b><small>${esc(productMeta(product))}</small></span></summary>

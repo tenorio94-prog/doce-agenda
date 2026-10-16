@@ -180,7 +180,7 @@ h2{margin:0;font-family:var(--font-title);font-size:clamp(30px,4vw,46px);font-we
 .closing-actions{display:flex;flex-wrap:wrap;gap:8px 24px;align-items:center}
 .closing .text-link{color:var(--papel)}
 .closing .text-link:hover{color:var(--glace)}
-@media (max-width:560px){.closing-actions .btn-cta{width:100%}.btn-cta::part(button){width:100%;padding-inline:16px;font-size:18px}}
+@media (max-width:560px){.closing-actions{width:100%;min-width:0}.closing-actions .btn-cta{width:100%;min-width:0}.btn-cta::part(button){width:100%;padding-inline:16px;font-size:18px;white-space:normal;height:auto;min-height:48px}}
 
 .site-footer{padding:0 clamp(16px,4vw,48px) 64px;color:var(--muted);font-size:13px}
 .footer-inner{display:flex;flex-wrap:wrap;gap:8px 24px;justify-content:space-between}

@@ -36,6 +36,13 @@ export function photoUrl(key) {
   return PHOTO_BASE + key;
 }
 
+// Only our bundled demo photographs have these variants. Never rewrite account photos.
+export function photoAttrs(key, sizes = '100vw') {
+  if (!/^exemplo\/[a-z0-9-]+-960\.webp$/.test(key || '')) return '';
+  const base = photoUrl(key).replace(/-960\.webp$/, '');
+  return `srcset="${base}-160.webp 160w, ${base}-480.webp 480w, ${base}-960.webp 960w" sizes="${sizes}" width="960" height="${key.includes('bastidores-confeitaria') ? 540 : 960}"`;
+}
+
 export function initials(name) {
   const words = String(name || '').replace(/\b(da|de|do|das|dos|e)\b/gi, ' ').trim().split(/\s+/).filter(Boolean);
   return (words.map((w) => w[0]).join('').slice(0, 2) || '?').toUpperCase();

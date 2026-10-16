@@ -1,0 +1,13 @@
+{
+  "diagnostic": "Local only, image requests delayed until layout/fonts settled; published validation uses unmodified responses",
+  "results": [
+    {
+      "width": 360,
+      "imageLoadCLS": 0
+    },
+    {
+      "width": 1440,
+      "imageLoadCLS": 0
+    }
+  ]
+}

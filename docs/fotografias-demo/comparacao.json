@@ -1,0 +1,27 @@
+{
+  "same": [
+    "cadastro-1280.png",
+    "cadastro-360.png",
+    "demo-ajustes-1280.png",
+    "demo-ajustes-360.png",
+    "demo-mes-1280.png",
+    "demo-mes-360.png",
+    "demo-novo-1280.png",
+    "demo-novo-360.png",
+    "landing-1280.png",
+    "previa-link-1280.png",
+    "previa-link-360.png",
+    "privacidade-1280.png",
+    "privacidade-360.png"
+  ],
+  "changed": [
+    "demo-agenda-1280.png",
+    "demo-agenda-360.png",
+    "demo-pedido-1280.png",
+    "demo-pedido-360.png",
+    "demo-pedidos-1280.png",
+    "demo-pedidos-360.png",
+    "landing-360.png"
+  ],
+  "explanation": "Changes expected in demo photos/catalog and responsive landing button; comparison is not a no-change refactor gate."
+}
