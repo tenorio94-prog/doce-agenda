@@ -235,7 +235,10 @@ body.vnext { background: var(--vn-canvas); }
 .vnext .detail-dialog .button-small, .vnext .detail-dialog .button-quiet { border-radius: 999px; border: 1px solid #f3dce3; background: var(--vn-soft); color: var(--vn-wine); font-family: var(--vn-font); }
 .vnext .detail-dialog .button-primary { border-radius: 999px; background: var(--vn-berry); border-color: var(--vn-berry); color: #fff; font-family: var(--vn-font); }
 .vnext .detail-dialog .history-section { border-radius: 14px; border-color: var(--vn-line-soft); background: #fff; }
-.vnext .detail-dialog .request-review { border-radius: var(--vn-r); background: var(--vn-soft); border: 1px solid #f4dce3; }
+.vnext .detail-dialog .request-review { border-radius: var(--vn-r); background: var(--vn-soft); border: 1px solid var(--vn-line-soft); }
+.vnext .detail-dialog .request-review .vn-note { margin: 12px 0; }
+.vnext .detail-dialog .vn-origin { margin: 0 0 16px; }
+.vnext .detail-dialog .is-request .detail-actions { position: static; }
 .vnext .detail-dialog .pending-banner { border-radius: 12px; background: var(--vn-vanilla); color: var(--vn-amber); }
 /* Outras janelas (nova encomenda, pagamento, recusa): mesmo topo vinho, sem as gotas do Glacê. */
 .vnext .dialog { background: var(--vn-canvas); font-family: var(--vn-font); border-radius: 24px; }
@@ -265,6 +268,26 @@ body.vnext { background: var(--vn-canvas); }
 .vn-inbox-banner { display: flex; align-items: center; gap: 14px; margin: 16px 0 18px; padding: 18px 20px; border: 1px solid #f4dce3; border-radius: var(--vn-r); background: var(--vn-soft); }
 .vnext .vn-inbox-banner h2 { margin: 0; font-size: 19px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .vn-inbox-banner p { margin: 4px 0 0; color: var(--vn-muted); font-size: 13px; }
+.vn-inbox-banner .vn-inbox-counts { color: var(--vn-wine); font-weight: 700; }
+.vn-inbox-counts a { display: inline-block; min-height: 44px; align-content: center; color: inherit; text-decoration: underline; text-underline-offset: 3px; }
+.vn-inbox-section { margin: 24px 0; }
+.vnext #view-orders .vn-inbox-section .section-head { margin-bottom: 4px; padding: 0; border: 0; }
+.vnext #view-orders .vn-inbox-section h2 { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 22px; }
+.vn-inbox-description { margin: 4px 0 16px; color: var(--vn-muted); font-size: 13px; }
+.vn-inbox-empty { padding: 20px; border: 1px dashed var(--vn-line); border-radius: var(--vn-r); color: var(--vn-muted); font-size: 14px; }
+.vn-inbox-list { grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); align-items: start; }
+.vn-inbox-list .vn-order { min-width: 0; height: 100%; display: flex; flex-direction: column; }
+.vn-inbox-top { flex-wrap: wrap; gap: 8px; }
+.vn-inbox-top .vn-eyebrow, .vn-inbox-top .vn-badge { overflow-wrap: anywhere; white-space: normal; }
+.vn-inbox-value { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; margin: 8px 0; }
+.vn-inbox-value > span { color: var(--vn-muted); font-size: 12px; }
+.vn-inbox-value .vn-total { color: var(--vn-berry); }
+.vn-inbox-list .vn-inbox-date { padding: 12px; border-radius: 12px; background: var(--vn-soft); color: var(--vn-wine); }
+.vn-inbox-list .vn-note:not(.vn-inbox-date):not(.vn-origin) { background: transparent; padding: 8px 0; }
+.vn-inbox-list .vn-card-foot { margin-top: auto; padding-top: 16px; }
+.vn-inbox-list .row-advance { width: 100%; justify-content: center; }
+.vn-inbox-list .vn-client, .vn-origin span { overflow-wrap: anywhere; }
+@media (max-width: 760px) { .vn-inbox-banner { align-items: flex-start; padding: 16px; gap: 10px; } }
 .vn-day-label { font-size: .8em; color: var(--vn-muted); font-weight: 500; }
 .vnext #view-orders .empty-state { border: 1px dashed #d9bcc5; border-radius: var(--vn-r); background: #fff9; font-family: var(--vn-font); }
 .vnext #view-orders .empty-state .button-primary { background: var(--vn-berry); border-color: var(--vn-berry); border-radius: 999px; }
