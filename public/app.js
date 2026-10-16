@@ -343,7 +343,7 @@ function toCollectMarkup() {
   const list = sortOrders(state.orders.filter((order) => !sampleOrder(order) && !isCancelled(order) && reasonFor(order)));
   if (!list.length) return "";
   return `<section class="vn-collect" aria-labelledby="collect-title"><div class="vn-section-row"><h2 id="collect-title">Falta cobrar <span class="vn-count">${list.length}</span></h2></div>
-    <div class="vn-collect-list">${list.slice(0, 5).map((order) => `<button class="vn-collect-row" type="button" data-open-order="${esc(order.id)}"><span class="vn-grow"><strong>${esc(clientName(order) || "Cliente sem nome")}</strong><small>${esc(order.product || "Produto sem descrição")}${order.dueAt ? ` · ${esc(dateLabel(order.dueAt, { day: "numeric", month: "short" }).replace(".", ""))}` : ""}</small></span><span class="vn-badge amber">${esc(reasonFor(order))}</span></button>`).join("")}</div>
+    <div class="vn-collect-list">${list.slice(0, 5).map((order) => `<button class="vn-collect-row" type="button" data-open-order="${esc(order.id)}"><span class="vn-grow"><strong>${esc(clientName(order) || "Cliente sem nome")}</strong><small>${esc(order.product || "Produto sem descrição")}${order.dueAt ? `, ${esc(dateLabel(order.dueAt, { day: "numeric", month: "short" }).replace(".", ""))}` : ""}</small></span>${moneyStamp(order, informedFor(order.id), { compact: true }).html || `<span class="vn-badge amber">${esc(reasonFor(order))}</span>`}</button>`).join("")}</div>
     ${list.length > 5 ? `<button class="text-link" type="button" data-view="orders">Ver todos em Pedidos</button>` : ""}</section>`;
 }
 
@@ -365,6 +365,7 @@ function paymentBadge(order) {
   if (needsDeposit(order)) return '<span class="vn-badge amber">Falta o sinal</span>';
   if (!hasReceivedPayment(order.id)) return "";
   const balance = balanceFor(order);
+  if (order.status === "Entregue" && balance > 0) return `<span class="vn-badge amber">Falta ${esc(money(balance))}</span>`;
   return `<span class="vn-badge green">${balance !== null && balance <= 0 ? "Total conferido" : "Sinal conferido"}</span>`;
 }
 const statusBadge = (status) => `<span class="vn-badge ${["Pronto", "Entregue"].includes(status) ? "green" : isCancelled({ status }) ? "muted" : "outline"}">${esc(status)}</span>`;
@@ -385,19 +386,32 @@ function cakeLine(order) {
   return Object.values(values).filter(Boolean).slice(0, 3).join(" · ");
 }
 // Carimbo do dinheiro (direção Comanda): cheio = conferido; tracejado = falta ou falta conferir. O texto completo fica no carimbo.
-function moneyStamp(order, informed) {
+// O carimbo é a única forma do dinheiro (rodada 2): quando falta algo, ele diz quanto.
+// Verde só com pagamento conferido e nada pendente naquele momento; entregue com saldo é sempre caramelo.
+const moneyShort = (value) => money(value).replace(/,00$/, "");
+function moneyStamp(order, informed = informedFor(order.id), options = {}) {
   if (isCancelled(order) || sampleOrder(order)) return { cls: "", html: "" };
-  if (informed > 0 && needsDeposit(order)) return { cls: "is-check", html: '<span class="vn-stamp is-check"><b>Pix</b> <small>falta conferir</small></span>' };
-  if (needsDeposit(order)) return { cls: "is-due", html: '<span class="vn-stamp is-due"><b>Falta</b> <small>o sinal</small></span>' };
+  const compact = options.compact;
+  // Texto visível completo, sem abreviação que precise de leitor de tela.
+  const stamp = (cls, big, small, mini) => ({ cls, html: compact
+    ? `<span class="vn-stamp ${cls} is-mini"><b>${esc(mini)}</b></span>`
+    : `<span class="${cls === "is-ok" ? "vn-badge green " : ""}vn-stamp ${cls}"><b>${esc(big)}</b> <small>${esc(small)}</small></span>` });
+  if (informed > 0 && isCommitted(order)) return stamp("is-check", `Pix ${moneyShort(informed)}`, "falta conferir", "Pix a conferir");
+  if (needsDeposit(order)) {
+    const deposit = suggestedDepositCents(order) / 100;
+    return deposit ? stamp("is-due", moneyShort(deposit), "falta o sinal", "Sem sinal") : stamp("is-due", "Falta", "o sinal", "Sem sinal");
+  }
   if (!hasReceivedPayment(order.id)) return { cls: "", html: "" };
-  const balance = balanceFor(order), full = balance !== null && balance <= 0;
-  return { cls: "is-ok", html: `<span class="vn-badge green vn-stamp is-ok"><b>${full ? "Total" : "Sinal"}</b> <small>conferido</small></span>` };
+  const balance = balanceFor(order);
+  if (order.status === "Entregue" && balance > 0) return stamp("is-due", `Falta ${moneyShort(balance)}`, "já entregue", `Falta ${moneyShort(balance)}`);
+  const full = balance !== null && balance <= 0;
+  return stamp("is-ok", full ? "Total" : "Sinal", "conferido", full ? "Pago" : "Com sinal");
 }
 function agendaCardMarkup(order, options = {}) {
   if (options.inbox) return inboxCardMarkup(order, options);
   const date = parseDate(order.dueAt), photo = vitrinePhotoFor(order), informed = informedFor(order.id);
   const detail = [order.details, cakeLine(order)].filter(Boolean).join(", ");
-  const stamp = moneyStamp(order, informed);
+  const stamp = moneyStamp(order, informed, { compact: options.compact });
   const classes = ["vn-order", "comanda", stamp.cls, isLate(order) ? "is-late" : "", options.compact ? "is-compact" : "", order.status === "Entregue" ? "is-delivered" : "", isCancelled(order) ? "is-cancelled" : "", String(order.id) === String(state.justAdvanced) ? "is-advanced" : ""].filter(Boolean).join(" ");
   const mode = order.mode || "Retirada";
   const step = options.compact ? "" : nextStepButton(order, "vn-btn primary small");
@@ -412,7 +426,6 @@ function agendaCardMarkup(order, options = {}) {
       <h3><button class="vn-open" type="button" aria-label="Abrir pedido de ${esc(clientName(order) || "cliente sem nome")}: ${esc(order.product || "produto sem descrição")}">${esc(order.product || "Produto sem descrição")}</button></h3>
       <p class="cmd-meta"><span class="vn-client">${esc(clientName(order) || "Cliente sem nome")}</span>${detail && !options.compact ? `, ${esc(detail)}` : ""}</p>
       ${!options.compact ? originMarkup(order) : ""}
-      ${!options.compact && informed > 0 ? `<div class="vn-note amber">${icon("info")}<span>Pix de ${esc(money(informed))} informado. Confira no banco.</span></div>` : ""}
       ${!options.compact && order.status === "Solicitação" ? dateCapacityMarkup(order) : ""}
       ${!options.compact && order.status === "Recusado" && order.refusalReason ? `<div class="vn-note">${icon("info")}<span>Recusado: ${esc(order.refusalReason)}</span></div>` : ""}
       ${options.compact ? "" : `<div class="vn-row vn-card-foot">${stage}${step || `<strong class="vn-total">${esc(orderTotalLabel(order))}</strong>`}</div>`}

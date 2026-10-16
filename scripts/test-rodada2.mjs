@@ -29,6 +29,16 @@ try {
     assert.doesNotMatch(firstText, /Entregue/, 'a lista começa pelos pedidos em aberto');
     check(`${width}px: Pedidos com dia e em aberto primeiro`);
 
+    // Etapa 1: entregue com saldo nunca fica verde; o carimbo diz quanto falta.
+    const roberta = page.locator('#view-orders .vn-order', { hasText: 'Roberta' }).first();
+    assert.equal(await roberta.locator('.vn-stamp.is-ok').count(), 0, 'entregue com saldo aparece como conferido');
+    assert.match(await roberta.locator('.vn-stamp').innerText(), /Falta R\$\s?55/);
+    const marcos = page.locator('#view-orders .vn-order', { hasText: 'Marcos' }).first();
+    assert.match(await marcos.locator('.vn-stamp').innerText(), /R\$\s?28,50\s+falta o sinal/);
+    const juliana = page.locator('#view-orders .vn-order', { hasText: 'Juliana' }).first();
+    assert.match(await juliana.locator('.vn-stamp').innerText(), /Pix R\$\s?60\s+falta conferir/);
+    check(`${width}px: carimbo com valor`);
+
     // Etapa 0: linha do Pix informado sem quebrar letra por letra; foto do combinado contida.
     await page.locator('#view-orders .vn-order', { hasText: 'Juliana' }).first().locator('.vn-open').click();
     await page.locator('#detail-dialog[open]').waitFor();

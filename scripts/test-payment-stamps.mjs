@@ -55,7 +55,7 @@ try {
     const badge = { 'Sinal pago': 'Sinal conferido', 'Pago': 'Total conferido' }[stamp];
     assert.equal(await row.locator('.vn-badge.green', { hasText: 'conferido' }).count(), stamp ? 1 : 0, `${id}: row badge presence`);
     if (stamp) assert.equal(await row.locator('.vn-badge.green', { hasText: 'conferido' }).innerText(), badge, `${id}: row badge label`);
-    if (id === 'zero') assert.match(await row.innerText(), /Falta o sinal/);
+    if (id === 'zero') assert.match(await row.innerText(), /falta o sinal/i);
     await row.click();await page.locator('#detail-dialog').waitFor();
     const card = page.locator('#detail-content .deposit-card');
     assert.equal(await card.locator('.stamp').count(), stamp && id !== 'cancelled' ? 1 : 0, `${id}: detail stamp presence`);
