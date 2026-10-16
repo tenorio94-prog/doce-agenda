@@ -8,7 +8,7 @@
   --vn-canvas: #f5f1f2; --vn-surface: #fff; --vn-soft: #f7eef1; --vn-rose: #f6e3e9; --vn-berry: #b0244a; --vn-berry-dark: #921d3d;
   --vn-wine: #3a1220; --vn-ink: #2a141b; --vn-muted: #6f5a61; --vn-line: #e9e0e3; --vn-line-soft: #efe8ea;
   --vn-green: #1e6b47; --vn-mint: #e3f2e9; --vn-amber: #7f4d00; --vn-vanilla: #fff0cc;
-  --vn-zap: #128c4a; --vn-zap-soft: #e7f6ec; --vn-zap-ink: #0b6b37;
+  --vn-zap: #0e7a3f; --vn-zap-soft: #e7f6ec; --vn-zap-ink: #0b6b37;
   --vn-r: 18px; --vn-r-ctl: 14px; --vn-shadow: 0 1px 0 #3a12200a, 0 6px 18px -10px #3a122026; --vn-shadow-hover: 0 1px 0 #3a12200f, 0 10px 24px -12px #3a122033;
   --vn-font: "Plus Jakarta Sans", Arial, sans-serif; --vn-title: "Bricolage Grotesque", "Plus Jakarta Sans", sans-serif;
   background: var(--vn-canvas);
@@ -505,7 +505,7 @@ body.vnext:has(dialog[open]) { overflow: hidden; }
 /* ---- Fase 3 da direção Comanda (16/10): ficha do pedido e WhatsApp ---- */
 /* WhatsApp: verde só aqui, sempre com o ícone e o verbo do momento. */
 .vn-zap { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 0 18px; border: 0; border-radius: var(--vn-pill); background: var(--vn-zap); color: #fff; font: 700 15px var(--vn-font); text-decoration: none; }
-.vn-zap:hover { background: #0f7a40; }
+.vn-zap:hover { background: #0b6b37; }
 .vn-zap .vn-icon { width: 20px; height: 20px; }
 .vnext .detail-actions .vn-zap { flex: 1 1 100%; }
 .vnext .detail-actions .vn-zap ~ .button { flex: 1 1 40%; }

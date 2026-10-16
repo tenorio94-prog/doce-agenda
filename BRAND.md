@@ -36,7 +36,7 @@ Direto e acolhedor, sem diminutivo. Instruções curtas e verbos diretos ("Nova 
 | Caramelo | `--vn-amber` / `--vn-vanilla` | `#7f4d00` / `#fff0cc` | falta o sinal, falta conferir |
 | Tijolo | `--vn-red` / `--vn-red-soft` | `#a3341a` / `#fdebe5` | atrasado, dia lotado |
 | Cinza | `--vn-muted` | `#6f5a61` | fechado, cancelado, texto de apoio |
-| Verde WhatsApp | `--vn-zap` | `#128c4a` | **só** botões que abrem o WhatsApp, sempre com o ícone |
+| Verde WhatsApp | `--vn-zap` | `#0e7a3f` | **só** botões que abrem o WhatsApp, sempre com o ícone |
 
 Texto sobre fundo precisa de contraste AA (4,5:1); o axe-core deve dar zero violações de contraste nas telas principais.
 
@@ -45,19 +45,23 @@ Texto sobre fundo precisa de contraste AA (4,5:1); o axe-core deve dar zero viol
 - **Bricolage Grotesque** (600 e 700): títulos, horários e valores.
 - **Plus Jakarta Sans** (variável): todo o resto, com números tabulares.
 
-Ambas SIL OFL 1.1, copiadas do `@fontsource` pelo build para `/fonts/vnext/`. Nenhum texto abaixo de 12 px. A landing ainda usa Outfit nos títulos (migrar junto com ela). A vitrine da cliente tem as letras próprias de cada estilo (Young Serif, Baloo 2, Caprasimo, Bricolage).
+Ambas SIL OFL 1.1, copiadas do `@fontsource` pelo build para `/fonts/vnext/`. Nenhum texto abaixo de 12 px. Landing e app usam as mesmas duas letras; Outfit saiu (rodada 2). A vitrine da cliente tem as letras próprias de cada estilo (Young Serif, Baloo 2, Caprasimo, Bricolage).
 
 ## Peças
 
 - **Cartão Comanda** (`.vn-order.comanda`): coluna da hora (com sacola para retirada, caminhão para entrega), produto como título-botão (`.vn-open`), cliente e detalhe numa linha, carimbo no canto, filete lateral com a cor do dinheiro (tijolo se atrasado), um botão.
-- **Carimbo** (`.vn-stamp`): `is-ok` (cheio, pistache), `is-due` (tracejado, "Falta o sinal"), `is-check` (tracejado, "Pix falta conferir"). Na ficha, o carimbo grande "SINAL PAGO / PAGO" com a data.
+- **Carimbo** (`.vn-stamp`, `moneyStamp()` em `app.js`): diz quanto. `is-ok` (cheio, pistache: "Sinal conferido", "Total conferido"), `is-due` (tracejado caramelo: "R$ 28,50 falta o sinal", "Falta R$ 55 já entregue"), `is-check` (tracejado: "Pix R$ 60 falta conferir"). Pequeno (`is-mini`) nas linhas: "Com sinal", "Pago", "Sem sinal", "Pix a conferir", "Falta R$ 55". Entregue com saldo nunca é verde. Na ficha, o carimbo grande "SINAL PAGO / PAGO" com a data.
+- **Canhoto do dinheiro** (`.money-stub` na ficha): picote no topo, uma linha por fato (total combinado, informado pela cliente "não conta ainda", conferido por você, sinal sugerido, saldo) e a ação logo abaixo ("Conferi os R$ 60,00", WhatsApp de cobrança, Pix, registrar).
+- **Semana no topo** (`.vn-weekbar`): sete dias com pontinhos de vagas (tijolo quando lota), grudada ao rolar; o dia escolhido em vinho.
+- **Pedem sua atenção** (`.vn-attention`): uma lista só para pedido do link, Pix a conferir, saldos, sinais e próximas ações; três à vista, o resto em "Ver mais".
+- **Linha baixa** (`.vn-line`): hora, produto, cliente e carimbo pequeno; usada em Próximos dias e na ficha da cliente. Pedidos agrupa cartões por dia (`.vn-date-head`).
 - **Rótulo** (`.vn-badge`): etapa só quando não há botão; `red` para "Atrasado"/"Dia lotado"; `outline` para estados neutros.
-- **WhatsApp** (`.vn-zap`): verbo do momento ("Pedir o sinal de R$ 54", "Mandar o orçamento", "Avisar que está pronto", "Cobrar R$ X"); nunca envia sozinho; desligado na demonstração.
+- **WhatsApp** (`.vn-zap`): verbo do momento ("Pedir o sinal de R$ 54", "Mandar o orçamento", "Avisar que está pronto", "Cobrar R$ X"); nunca envia sozinho. Na demonstração aparece igual, mas abre uma janela com a mensagem que seria escrita, sem abrir o WhatsApp (telefones inventados).
 - **Ícones** (`public/ui/icons.js`): traço 1,7, `currentColor`; cada ícone ligado a um conceito (sacola, entrega, batedor, Pix, cliente, alerta…). Ícone só onde ajuda a reconhecer.
 
 ## Forma
 
-Raios só pelos tokens: `--vn-r` 18 (cartões), `--vn-r-ctl` 14 (controles), `--vn-r-sm` 10 (selos e miniaturas), `--vn-r-dialog` 24 (janelas) e `--vn-pill` (botões e rótulos). Letras na escala `--vn-t12` a `--vn-t40` (12 · 14 · 16 · 20 · 28 · 40) nas telas novas. Uma sombra (`--vn-shadow`). Movimento: um único momento, o carimbo batendo quando ela confere; o resto só responde ao toque. Respeitar `prefers-reduced-motion`.
+Raios só pelos tokens: `--vn-r` 18 (cartões), `--vn-r-ctl` 14 (controles), `--vn-r-sm` 10 (selos e miniaturas), `--vn-r-dialog` 24 (janelas) e `--vn-pill` (botões e rótulos). Letras na escala `--vn-t12` a `--vn-t40` (12 · 14 · 16 · 20 · 28 · 40) nas telas novas. Uma sombra (`--vn-shadow`). Movimento: um único momento, o carimbo batendo quando ela confere (no app, no canhoto da ficha; na landing, no pedido preso na bancada); o resto só responde ao toque. Respeitar `prefers-reduced-motion`.
 
 ## Regras
 

@@ -903,7 +903,7 @@ function detailMarkup(order) {
   const delivered = order.status === "Entregue";
   const where = mode === "Entrega" ? "entrega" : "retirada";
   const zap = whatsAppLink(order);
-  const moneyIntent = needsDeposit(order) || (delivered && balance > 0);
+  const moneyIntent = (needsDeposit(order) && !informedNow) || (delivered && balance > 0);
   const row = (label, value, cls = "", note = "") => `<div class="ledger-row${cls ? ` ${cls}` : ""}"><dt>${label}</dt><dd>${value}${note ? `<small>${note}</small>` : ""}</dd></div>`;
   let moneyStub = "";
   if (committed) {
@@ -1004,7 +1004,7 @@ function whatsAppIntent(order) {
   if (order.status === "Recusado") return { label: "Avisar a cliente", opening: "" };
   if (order.status === "Solicitação") return { label: "Responder a cliente", opening: `Oi, ${name}! Recebi seu pedido pelo link e já estou vendo.` };
   if (["Orçamento", "Aguardando confirmação"].includes(order.status)) return { label: "Mandar o orçamento", opening: `Oi, ${name}! Segue o orçamento do seu pedido:` };
-  if (needsDeposit(order)) {
+  if (needsDeposit(order) && !informedFor(order.id)) {
     const deposit = suggestedDepositCents(order);
     return { label: deposit ? `Pedir o sinal de ${money(deposit / 100)}` : "Pedir o sinal", opening: `Oi, ${name}! Seu pedido está confirmado. Para garantir a data${deposit ? `, o sinal é de ${money(deposit / 100)}` : ", combinamos o sinal"}.` };
   }
