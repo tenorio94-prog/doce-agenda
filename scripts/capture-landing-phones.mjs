@@ -31,6 +31,7 @@ await page.locator('#order-dialog[open]').waitFor();
 const field = (name) => page.locator(`#order-form [name="${name}"]`);
 await field('client').locator('input').fill('Juliana');
 await field('product').locator('input').fill('Bolo de morango 2 kg');
+await page.locator('#order-form .optional-fields > summary').click();
 await field('details').locator('textarea').fill('Recheio de ninho com morango, topo com "Feliz aniversário, Bia".');
 await field('dueDate').locator('input').fill('2026-10-16');
 await field('dueTime').locator('input').fill('15:00');

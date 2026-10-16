@@ -144,7 +144,7 @@ try {
   }
   check('link pausado e endereço inexistente');
 
-  // Prévia com 3 produtos sem fotos: cartões grandes e monograma, nada é buscado.
+  // Prévia com 3 produtos sem fotos: cartões só de texto (sem letra no lugar da foto), nada é buscado.
   {
     const context = await browser.newContext({ viewport: { width: 360, height: 780 } });
     let fetched = false;
@@ -154,7 +154,8 @@ try {
     await page.goto(`${origin}/encomenda/?preview=1`);
     await page.locator('#vitrine:not([hidden])').waitFor();
     assert.equal(await page.locator('.grid.one .card').count(), 3);
-    assert.equal(await page.locator('.card .mono').count(), 3);
+    assert.equal(await page.locator('.card.is-text').count(), 3);
+    assert.equal(await page.locator('.card .mono').count(), 0);
     assert.equal(await page.locator('.chips').count(), 0);
     assert.match(await page.locator('.preview-banner').innerText(), /Prévia/);
     assert.equal(fetched, false);

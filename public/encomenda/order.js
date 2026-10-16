@@ -83,6 +83,8 @@ function headerHtml() {
 }
 function cardHtml(p, tag) {
   const i = config.products.indexOf(p), price = Number.isInteger(p.priceFromCents) ? `<p class="price">a partir de ${formatCents(p.priceFromCents)}</p>` : '';
+  // Sem foto: cartão só de texto (antes virava uma letra enorme no lugar da imagem, com cara de inacabado).
+  if (!p.photo) return `<button type="button" class="card is-text" data-product="${i}">${tag ? `<span class="tag">${tag}</span>` : ''}<h3>${esc(p.name)}</h3>${price}${p.description ? `<p class="sub">${esc(p.description)}</p>` : ''}<span class="card-go" aria-hidden="true">Ver e pedir</span></button>`;
   return `<button type="button" class="card" data-product="${i}"><div class="img">${productPhoto(p)}${tag ? `<span class="tag">${tag}</span>` : ''}</div><h3>${esc(p.name)}</h3>${price || (p.description ? `<p class="sub">${esc(p.description)}</p>` : '')}</button>`;
 }
 function renderHome() {

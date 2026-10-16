@@ -312,3 +312,19 @@ h1,h2{letter-spacing:-.03em}
 .drip{display:none}
 /* O carimbo vira o selo verde do app: "Sinal conferido", sem rotação. */
 .stamp-mini{border:0;border-radius:30px;background:#e5f7ef;color:#006947;font-family:"Plus Jakarta Sans",sans-serif;font-size:12px;letter-spacing:0;text-transform:none;transform:none;padding:5px 10px}
+
+/* Direção Comanda (16/10): mesmas cores, letras e carimbo do app. */
+@font-face{font-family:"Bricolage Grotesque";src:url("/fonts/vnext/bricolage-600.woff2") format("woff2");font-weight:500 650;font-display:swap}
+@font-face{font-family:"Bricolage Grotesque";src:url("/fonts/vnext/bricolage-700.woff2") format("woff2");font-weight:651 900;font-display:swap}
+:root{--font-title:"Bricolage Grotesque","Plus Jakarta Sans",sans-serif;--papel:#f5f1f2;--ameixa:#3a1220;--ink:#2a141b;--muted:#6f5a61;--link:#b0244a;--line:#e9e0e3;
+  --wa-color-brand-fill-loud:#b0244a;--wa-color-brand-border-loud:#b0244a}
+body,.top-band{background:#f5f1f2}
+.top-band{border-bottom-color:#e9e0e3}
+h1{font-weight:700}
+/* O título fala por inteiro: sem metade em outra cor. */
+h1 em{color:inherit}
+/* Rótulos em caixa normal. */
+.eyebrow,.step-eyebrow,.ld-label,.pain-list small{text-transform:none;letter-spacing:0}
+/* O carimbo volta a ser carimbo: borda verde, leve inclinação. */
+.stamp-mini{border:2px solid #1e6b47;border-radius:10px;background:#e3f2e9;color:#1e6b47;font-family:"Bricolage Grotesque",sans-serif;font-weight:700;transform:rotate(-5deg)}
+@media (prefers-reduced-motion:reduce){.stamp-mini{transform:none}}

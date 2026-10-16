@@ -7,3 +7,5 @@ h1,h2{font-family:var(--font-title);line-height:1.12}h1{font-size:clamp(30px,7vw
 a{color:var(--link)}a:focus-visible{outline:3px solid var(--focus);outline-offset:3px}
 footer{max-width:680px;margin:auto;padding:24px 20px 40px;font-size:12px;color:var(--muted)}
 @media(max-width:380px){header{padding:16px 20px}}
+/* Direção Comanda (16/10): mesmo fundo e cabeçalho do app. */
+body{background:#f5f1f2;color:#2a141b}header{background:#fff;border-bottom:1px solid #e9e0e3}h1,h2{font-family:"Bricolage Grotesque","Plus Jakarta Sans",sans-serif;letter-spacing:-.02em}

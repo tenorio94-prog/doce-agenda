@@ -270,3 +270,9 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px soli
   .sheet{max-width:620px}
   .foot{max-width:1180px;margin:0 auto}
 }
+/* Direção Comanda (16/10): produto sem foto vira cartão de texto, na cor da confeitaria. */
+.card.is-text{position:relative;justify-content:flex-start;gap:4px;min-height:132px;padding:16px;border-radius:var(--r-img);background:var(--a-tint);color:var(--t)}
+.card.is-text .tag{position:static;align-self:flex-start;margin-bottom:6px}
+.card.is-text h3{margin:0}
+.card.is-text .card-go{margin-top:auto;padding-top:10px;color:var(--a-ink);font-size:14px;font-weight:700}
+.grid.one .card.is-text{min-height:0}
