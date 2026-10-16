@@ -53,10 +53,16 @@ Capturas antes em `docs/fotografias-demo/antes/`; após nas pastas `depois/` (se
 
 Comparação: 13 capturas idênticas e sete alteradas nas áreas esperadas; lista em `docs/fotografias-demo/comparacao.json`. Pedidos e pagamentos comparados por igualdade profunda com o seed anterior: idênticos. Diagnóstico local isolando o momento do carregamento WebP: CLS das fotos igual a zero em 360/1440; o CLS inicial do app não é zero (desktop 0,79275, mesmo valor no build anterior), portanto não há declaração de estabilidade total do aplicativo.
 
-## Publicação verificada
+## Primeira publicação verificada
 
 - Código integrado na `main`: `1ea7fd6`.
 - Cloudflare, 100% do tráfego: `1ec3fbfd-29ac-48e0-8b03-08e7fdbd6fc3`.
 - Endereço: https://lucast.app/demo/ (prévia da vitrine em Ajustes → Link de encomenda → Ver como a cliente vê).
 - Verificação no `https://lucast.app`: jornada completa nas seis larguras, DPR 2, 39 respostas WebP reais com tamanhos conferidos, nenhum erro de console da aplicação ou imagem ausente; cinco rotas passaram. `app.js`, `browser-store.js`, `encomenda/order.js`, `ui/vnext.css` e `landing/landing.css` publicados idênticos ao build local por conteúdo. Sem interceptação dos arquivos nesta verificação.
 - O teste de prévia passou a aguardar a navegação do iframe, evitando uma corrida observada na rede publicada. Ajuste apenas da automação, sem mudança adicional no site.
+
+## Complemento publicado e verificado
+
+- Código `fe74b83`, branch `main`; Cloudflare `2e16bc61-2db0-4a53-9cc0-6d73d5ce8a43`, 100% do tráfego.
+- Verificação real em `https://lucast.app`: seis larguras, 16 cartões com foto, logo, quatro novas fichas, jornada/persistência/reset/backup e 54 respostas WebP corretas; erros da aplicação: zero. Rotas 5/5 e três bundles JS idênticos ao build local.
+- Capturas e resultados em `docs/completar-vitrine-lu/publicado/`. Para uma demo já salva, usar **Recomeçar**; o catálogo do navegador não é substituído silenciosamente.

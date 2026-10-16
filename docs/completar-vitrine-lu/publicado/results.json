@@ -1,0 +1,80 @@
+{
+  "origin": "https://lucast.app",
+  "results": [
+    {
+      "width": 320,
+      "agenda": "pass",
+      "detail": "pass",
+      "catalogPhotos": 16,
+      "logo": "pass",
+      "additionalProductSheets": 4,
+      "previewJourney": "pass",
+      "persistence": "pass",
+      "landing": "pass",
+      "agendaCLS": 0.1616514601431517
+    },
+    {
+      "width": 360,
+      "agenda": "pass",
+      "detail": "pass",
+      "catalogPhotos": 16,
+      "logo": "pass",
+      "additionalProductSheets": 4,
+      "previewJourney": "pass",
+      "persistence": "pass",
+      "landing": "pass",
+      "agendaCLS": 0.16194507119088397
+    },
+    {
+      "width": 390,
+      "agenda": "pass",
+      "detail": "pass",
+      "catalogPhotos": 16,
+      "logo": "pass",
+      "additionalProductSheets": 4,
+      "previewJourney": "pass",
+      "persistence": "pass",
+      "landing": "pass",
+      "agendaCLS": 0.12291394863474366
+    },
+    {
+      "width": 768,
+      "agenda": "pass",
+      "detail": "pass",
+      "catalogPhotos": 16,
+      "logo": "pass",
+      "additionalProductSheets": 4,
+      "previewJourney": "pass",
+      "persistence": "pass",
+      "landing": "pass",
+      "agendaCLS": 0.07261079327789796
+    },
+    {
+      "width": 1024,
+      "agenda": "pass",
+      "detail": "pass",
+      "catalogPhotos": 16,
+      "logo": "pass",
+      "additionalProductSheets": 4,
+      "previewJourney": "pass",
+      "persistence": "pass",
+      "landing": "pass",
+      "agendaCLS": 0.06145514781738436
+    },
+    {
+      "width": 1440,
+      "agenda": "pass",
+      "detail": "pass",
+      "catalogPhotos": 16,
+      "logo": "pass",
+      "additionalProductSheets": 4,
+      "previewJourney": "pass",
+      "persistence": "pass",
+      "landing": "pass",
+      "agendaCLS": 0.7927519379844962
+    }
+  ],
+  "assetResponses": 54,
+  "errors": [],
+  "accountIsolation": "fixture only; no real account accessed"
+}
