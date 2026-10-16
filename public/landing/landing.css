@@ -374,3 +374,21 @@ h1 em{color:inherit}
 .pay-mock.is-pending{border-color:#e9e0e3;background:#fff}
 .pm-stamp{display:grid;justify-items:center;padding:4px 9px 5px;line-height:1.05}
 @media (prefers-reduced-motion:reduce){.bench-order,.pm-flag.stamp-due{rotate:0deg}}
+
+/* ---- Rodada 3: landing mais curta ---- */
+/* O caderno: título de um lado, foto do outro; a lista de antes e depois saiu (os passos contam o mesmo). */
+.pains{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px 56px;align-items:center}
+.pains-body{display:block}
+@media (max-width:820px){.pains{grid-template-columns:1fr}}
+/* Passo 1 só com texto: não deixa coluna vazia. */
+.step-soft{grid-template-columns:minmax(0,1fr);max-width:680px}
+@media (max-width:820px){
+  .page-body{gap:48px}
+  .steps{gap:44px}
+  .step{gap:18px}
+  .closing{padding-block:32px}
+}
+/* No celular, a foto do caderno sai: o título já conta a dor, e a página fica com menos rolagem. */
+@media (max-width:820px){.pains-body{display:none}}
+@media (max-width:820px){.faq-list{gap:8px}.hero{gap:20px}}
+@media (max-width:820px){.bench>img{aspect-ratio:5/4;object-position:50% 40%}}
