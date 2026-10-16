@@ -1452,6 +1452,17 @@ function handleKeydown(event) {
 function attachEvents() {
   document.addEventListener("click", handleClick);
   document.addEventListener("keydown", handleKeydown);
+  // Com uma janela aberta, a roda do mouse ou o dedo sobre o fundo escurecido não rola a página de trás
+  // (ao fechar, a lista continua onde estava). Dentro da janela, a rolagem segue normal.
+  const onBackdrop = (event) => {
+    const dialog = event.target;
+    if (!(dialog instanceof HTMLDialogElement) || !dialog.open) return false;
+    const point = event.touches?.[0] || event;
+    const box = dialog.getBoundingClientRect();
+    return point.clientX < box.left || point.clientX > box.right || point.clientY < box.top || point.clientY > box.bottom;
+  };
+  document.addEventListener("wheel", (event) => { if (onBackdrop(event)) event.preventDefault(); }, { passive: false });
+  document.addEventListener("touchmove", (event) => { if (onBackdrop(event)) event.preventDefault(); }, { passive: false });
   $("#order-form").addEventListener("submit", submitOrder);
   const resetCapacityException = (event) => {
     if (event.target.name === "overrideReason" || $("#capacity-override-box").hidden) return;

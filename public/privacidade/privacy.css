@@ -9,3 +9,5 @@ footer{max-width:680px;margin:auto;padding:24px 20px 40px;font-size:12px;color:v
 @media(max-width:380px){header{padding:16px 20px}}
 /* Direção Comanda (16/10): mesmo fundo e cabeçalho do app. */
 body{background:#f5f1f2;color:#2a141b}header{background:#fff;border-bottom:1px solid #e9e0e3}h1,h2{font-family:"Bricolage Grotesque","Plus Jakarta Sans",sans-serif;letter-spacing:-.02em}
+/* Rodada 3: links soltos com pelo menos 44 px de altura. */
+main>p:last-child>a:only-child{display:inline-flex;align-items:center;min-height:44px}

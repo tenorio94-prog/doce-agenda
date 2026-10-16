@@ -18,6 +18,8 @@
 <script src="/encomenda/order.js" defer></script>
 </head>
 <body class="st-atelie">
+<script>/* Prévia aberta sozinha: o aviso nasce junto com a página, sem empurrar o conteúdo depois. */
+if (/[?&]preview=/.test(location.search) && window.top === window) document.write('<div class="preview-banner" role="note"><strong>Prévia.</strong> É assim que sua cliente vê o link. Nada é enviado.<span class="preview-missing"></span></div>');</script>
 <main id="main">
   <div id="loading" class="loading" role="status" aria-label="Abrindo a confeitaria">
     <div class="sk sk-cover"></div><div class="sk sk-logo"></div><div class="sk sk-line"></div><div class="sk sk-line short"></div>

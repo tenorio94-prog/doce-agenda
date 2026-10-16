@@ -83,6 +83,18 @@ try {
     await page.keyboard.press('Escape');
     check(`${width}px: WhatsApp visível na demonstração, sem abrir nada`);
 
+    // Rodada 3: com a ficha aberta, rolar sobre o fundo escurecido não mexe na lista de trás.
+    await page.evaluate(() => scrollTo(0, 400));
+    const before = await page.evaluate(() => scrollY);
+    await page.locator('#view-orders .vn-order', { hasText: 'Juliana' }).first().locator('.vn-open').evaluate((el) => el.click());
+    await page.locator('#detail-dialog[open]').waitFor();
+    await page.mouse.move(2, height - 2);
+    await page.mouse.wheel(0, 600);
+    await page.waitForTimeout(250);
+    assert.equal(await page.evaluate(() => scrollY), before, 'a página de trás rolou com a janela aberta');
+    await page.keyboard.press('Escape');
+    check(`${width}px: janela não rola a página de trás`);
+
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), 'rolagem lateral');
     assert.deepEqual(errors, []);
     await context.close();

@@ -276,3 +276,8 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px soli
 .card.is-text h3{margin:0}
 .card.is-text .card-go{margin-top:auto;padding-top:10px;color:var(--a-ink);font-size:14px;font-weight:700}
 .grid.one .card.is-text{min-height:0}
+/* Rodada 3: o conteúdo ocupa a tela enquanto a vitrine carrega; o rodapé não sobe e desce. */
+#main{min-height:100vh;min-height:100dvh}
+/* Rodada 3: alvos de toque do rodapé com pelo menos 44 px. */
+.foot .made{min-height:44px;padding-block:0}
+.foot .priv{display:inline-flex;align-items:center;min-height:44px}

@@ -310,6 +310,9 @@ $('#retry').addEventListener('click', () => location.reload());
 // Inside the app the preview window already says it is a preview; opened alone, the page says it.
 if (PREVIEW && window.top === window) document.addEventListener('DOMContentLoaded', () => {
   const draft = previewDraft(), missing = [!draft.products?.length && 'seus produtos', (!draft.displayName || draft.displayName === 'Sua confeitaria') && 'o nome da confeitaria'].filter(Boolean);
-  document.body.insertAdjacentHTML('afterbegin', `<div class="preview-banner" role="note"><strong>Prévia.</strong> É assim que sua cliente vê o link. Nada é enviado.${missing.length ? `<br>Falta preencher ${missing.join(' e ')} nos Ajustes.` : ''}</div>`);
+  const slot = document.querySelector('.preview-banner .preview-missing');
+  const note = missing.length ? `Falta preencher ${missing.join(' e ')} nos Ajustes.` : '';
+  if (slot) { if (note) slot.innerHTML = `<br>${note}`; }
+  else document.body.insertAdjacentHTML('afterbegin', `<div class="preview-banner" role="note"><strong>Prévia.</strong> É assim que sua cliente vê o link. Nada é enviado.${note ? `<br>${note}` : ''}</div>`);
 });
 start();

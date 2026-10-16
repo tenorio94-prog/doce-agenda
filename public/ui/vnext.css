@@ -457,7 +457,7 @@ body.vnext { font-variant-numeric: tabular-nums; -webkit-tap-highlight-color: tr
 .vnext :is(button, a, summary, [role="button"], wa-button) { touch-action: manipulation; }
 /* Janelas não arrastam a página de trás. */
 .vnext dialog { overscroll-behavior: contain; }
-body.vnext:has(dialog[open]) { overflow: hidden; }
+/* Janela aberta: a página de trás não rola pelo fundo (bloqueio em app.js, sem mexer no overflow, que fazia a lista voltar ao topo no computador). */
 /* Títulos e números na Bricolage. */
 .vnext .vn-heading h1, .vnext :is(#view-orders, #view-clients, #view-month, #view-settings) h1 { font-family: var(--vn-title); font-weight: 700; letter-spacing: -.03em; }
 .vn-time, .vn-total, .vnext .stat-value { font-family: var(--vn-title); letter-spacing: -.02em; }
@@ -799,3 +799,7 @@ body.vnext:has(dialog[open]) { overflow: hidden; }
 .vnext .detail-dialog .detail-when .vn-badge { align-self: center; background: #ffffff26; color: #fff; box-shadow: none; }
 .vnext .detail-dialog .detail-bar { min-width: 0; }
 .vnext .detail-dialog .detail-tools { flex: none; }
+/* Rodada 3: alvos de toque antigos com pelo menos 44 px. */
+.vnext .onboarding-skip { min-width: 44px; min-height: 44px; }
+.vnext .color-picker { width: 44px; height: 44px; }
+.vnext wa-button[data-due-shortcut]::part(base) { min-height: 44px; }
