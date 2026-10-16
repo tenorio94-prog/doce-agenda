@@ -53,11 +53,16 @@ export function demoSeedState(now = new Date()) {
   state.orderPage = {
     active: false, slug: 'doces-da-lu', displayName: 'Doces da Lu', whatsapp: '',
     welcome: 'Oi! Que bom te ver por aqui. Escolha o doce e a data, eu confirmo tudo pelo WhatsApp.',
+    // Vitrine de exemplo: ilustrações no lugar de fotos e valores "a partir de" fictícios da confeitaria de exemplo.
+    style: 'atelie', color: '#b8325a', instagram: '', logo: 'exemplo/logo-lu.svg', cover: 'exemplo/capa.svg', share: '',
     products: [
-      { name: 'Bolo de aniversário', description: 'A partir de 1 kg. Massa e recheio à sua escolha.' },
-      { name: 'Brigadeiro (cento)', description: 'Tradicional, ninho ou pistache.' },
-      { name: 'Kit festa', description: 'Bolo + 50 doces.' },
-      { name: 'Bolo de pote', description: 'Mínimo de 10 unidades.' },
+      { name: 'Bolo de aniversário', description: 'A partir de 1 kg. Massa e recheio à sua escolha.', category: 'Bolos', priceFromCents: 15000, featured: true, photo: 'exemplo/bolo.svg' },
+      { name: 'Brigadeiro (cento)', description: 'Tradicional, ninho ou pistache.', category: 'Docinhos', priceFromCents: 17000, featured: true, photo: 'exemplo/brigadeiro.svg' },
+      { name: 'Kit festa', description: 'Bolo + 50 doces.', category: 'Bolos', priceFromCents: 26000, featured: true, photo: 'exemplo/naked-cake.svg' },
+      { name: 'Bolo de pote', description: 'Mínimo de 10 unidades.', category: 'Bolos', priceFromCents: 1400, photo: 'exemplo/bolo-de-pote.svg' },
+      { name: 'Beijinho (cento)', description: 'Coco fresco ralado, com ou sem cravo.', category: 'Docinhos', priceFromCents: 16000, photo: 'exemplo/beijinho.svg' },
+      { name: 'Torta de limão', description: 'Massa amanteigada e merengue maçaricado.', category: 'Tortas', priceFromCents: 9000, photo: 'exemplo/torta-de-limao.svg' },
+      { name: 'Pudim de leite', description: 'Calda de caramelo. Forma de 22 cm.', category: 'Tortas', priceFromCents: 7000, photo: 'exemplo/pudim.svg' },
     ],
   };
   for (const [id, offset, time, client, product, total, status, payments, notice, extra = {}] of ORDERS) {

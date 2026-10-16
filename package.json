@@ -6,11 +6,15 @@
   "scripts": {
     "test": "node --test cloud/*.test.mjs",
     "build": "node scripts/build-cloudflare.mjs",
-    "test:ui": "node scripts/test-production-list.mjs && node scripts/test-order-form.mjs && node scripts/test-monthly-summary.mjs && node scripts/test-payment-stamps.mjs && node scripts/test-landing-entry.mjs && node scripts/test-onboarding.mjs && node scripts/test-pix.mjs && node scripts/test-clients.mjs",
+    "test:ui": "node scripts/test-production-list.mjs && node scripts/test-order-form.mjs && node scripts/test-monthly-summary.mjs && node scripts/test-payment-stamps.mjs && node scripts/test-landing-entry.mjs && node scripts/test-onboarding.mjs && node scripts/test-pix.mjs && node scripts/test-clients.mjs && node scripts/test-vitrine.mjs",
     "check": "npm test && npm run build && npm run test:ui",
     "screens": "node scripts/capture-screens.mjs"
   },
   "devDependencies": {
+    "@fontsource/baloo-2": "5.3.0",
+    "@fontsource/bricolage-grotesque": "5.3.0",
+    "@fontsource/caprasimo": "5.3.0",
+    "@fontsource/young-serif": "5.3.0",
     "esbuild": "0.28.2",
     "playwright": "1.62.1",
     "postcss": "8.5.28",

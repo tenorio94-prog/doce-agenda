@@ -7,7 +7,8 @@ const page={active:true,slug:'doces-da-ana',displayName:'Doces da Ana',welcome:'
 const initial=()=>({...createEmptyState(),orderPage:page});
 const body={client:'Cliente fictícia',contact:'11988887777',product:'Bolo',other:false,date:'2099-01-31',time:'15:00',mode:'Entrega',location:'Rua de teste',details:'Chocolate',consent:true};
 test('public page does not expose owner, orders, or counts; inactive is minimal',()=>{
-  const data=publicPageView(page,initial());assert.deepEqual(Object.keys(data).sort(),['active','displayName','orderTemplate','privacyUrl','products','welcome','whatsapp'].sort());
+  const data=publicPageView(page,initial());assert.deepEqual(Object.keys(data).sort(),['active','color','cover','displayName','instagram','logo','noticeHours','orderTemplate','privacyUrl','products','share','style','welcome','whatsapp'].sort());
+  assert.equal(data.style,'atelie');assert.equal(data.noticeHours,0);
   assert.deepEqual(Object.keys(publicPageView({...page,active:false},initial())).sort(),['active','message']);
 });
 test('page validates slug, lengths, product count and WhatsApp',()=>{
@@ -15,6 +16,22 @@ test('page validates slug, lengths, product count and WhatsApp',()=>{
   for(const slug of ['ab','../p','Doces','a'.repeat(41),'-abc'])assert.throws(()=>orderPageInput({...page,slug}));
   assert.throws(()=>orderPageInput({...page,products:Array(31).fill(page.products[0])}));
   assert.throws(()=>orderPageInput({...page,welcome:'x'.repeat(281)}));
+});
+test('vitrine fields are optional, validated and old pages keep working',()=>{
+  const old=orderPageInput(page);assert.equal(old.style,'atelie');assert.equal(old.color,'');assert.deepEqual(old.products,[{name:'Bolo',description:''}]);
+  const full=orderPageInput({...page,style:'caseira',color:'#AABBCC',instagram:'https://instagram.com/doces.da_ana/',logo:'exemplo/logo-lu.svg',
+    products:[{name:'Bolo',description:'',category:'Bolos',priceFromCents:15000,featured:true,photo:`${'a'.repeat(32)}/${'1'.repeat(8)}-1111-1111-1111-${'1'.repeat(12)}.webp`}]});
+  assert.equal(full.color,'#aabbcc');assert.equal(full.instagram,'doces.da_ana');assert.equal(full.products[0].priceFromCents,15000);assert.equal(full.products[0].featured,true);
+  for(const bad of [{style:'neon'},{color:'red'},{instagram:'não vale'},{logo:'../outra-conta/x.webp'},{cover:'https://evil.test/x.jpg'}])assert.throws(()=>orderPageInput({...page,...bad}));
+  for(const p of [{priceFromCents:1.5},{priceFromCents:-1},{category:'x'.repeat(31)},{photo:'a/b.png'}])assert.throws(()=>orderPageInput({...page,products:[{name:'Bolo',description:'',...p}]}));
+  const four=['A','B','C','D'].map(name=>({name,description:'',featured:true}));assert.throws(()=>orderPageInput({...page,products:four}),/até 3/);
+});
+test('extras become text in the details of a single request',()=>{
+  const s={...initial(),orderPage:{...page,products:[{name:'Bolo',description:''},{name:'Brigadeiro',description:''}]}};
+  const made=createPublicRequest(s,{...body,extras:['Brigadeiro']},'DA-ABC234');
+  assert.equal(made.order.product,'Bolo');assert.equal(made.order.details,'Chocolate\nTambém quero: Brigadeiro');assert.match(made.confirmation.summary,/Também quero: Brigadeiro/);
+  for(const extras of [['Bolo'],['Inventado'],'Brigadeiro',Array(6).fill('Brigadeiro')])assert.throws(()=>createPublicRequest(s,{...body,extras},'DA-ABC234'));
+  assert.equal(createPublicRequest(s,body,'DA-ABC234').order.details,'Chocolate');
 });
 test('availability spans month, excludes full dates and ignores requests',()=>{
   const s=initial();s.availability.dailyOrderLimit=1;

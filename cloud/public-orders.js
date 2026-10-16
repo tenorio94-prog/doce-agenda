@@ -14,10 +14,12 @@ export function availabilityDates(state, from, to) {
   }
   return dates;
 }
+// What the customer sees. Never the owner, orders or counts; only the page and the rule she needs to pick a date.
 export function publicPageView(page, state) {
   if (!page.active) return {active:false,message:'Esta confeitaria não está recebendo pedidos pelo link no momento'};
   return {active:true,displayName:page.displayName,welcome:page.welcome,products:page.products,whatsapp:page.whatsapp,
-    orderTemplate:state.orderTemplate,privacyUrl:'/privacidade/'};
+    style:page.style||'atelie',color:page.color||'',instagram:page.instagram||'',logo:page.logo||'',cover:page.cover||'',share:page.share||'',
+    noticeHours:state.availability?.minimumNoticeHours||0,orderTemplate:state.orderTemplate,privacyUrl:'/privacidade/'};
 }
 export function createPublicRequest(state, input, code, now = new Date().toISOString()) {
   const page = state.orderPage;
@@ -28,7 +30,13 @@ export function createPublicRequest(state, input, code, now = new Date().toISOSt
   const custom = input.other === true;
   if (!custom && !page.products.some(p=>p.name===productName)) linkError('Escolha um produto disponível ou Outro.');
   const client = limitedText(input.client,120,'Nome',true), contact = normalizeWhatsApp(input.contact,true);
-  const details = limitedText(input.details ?? '',1000,'Detalhes');
+  let details = limitedText(input.details ?? '',1000,'Detalhes');
+  // "Incluir mais alguma coisa?": other products of the page, kept as text in the details (one order, no cart).
+  if (input.extras !== undefined) {
+    if (!Array.isArray(input.extras) || input.extras.length > 5 || input.extras.some(name=>typeof name!=='string'||name===productName||!page.products.some(p=>p.name===name))) linkError('Escolha itens extras da lista da confeitaria.');
+    const extras=[...new Set(input.extras)];
+    if (extras.length) details=[details,`Também quero: ${extras.join(', ')}`].filter(Boolean).join('\n');
+  }
   if (!validPublicDay(input.date) || typeof input.time !== 'string' || !/^([01]\d|2[0-3]):[0-5]\d$/.test(input.time)) linkError('Escolha a data e o horário desejados.');
   if (!['Retirada','Entrega'].includes(input.mode)) linkError('Escolha retirada ou entrega.');
   const location = input.mode==='Entrega' ? limitedText(input.location,300,'Endereço',true) : '';

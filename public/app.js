@@ -2,6 +2,7 @@
 
 import { renderSVG } from "uqr";
 import { pixPayload } from "../cloud/pix-code.js";
+import { DEFAULT_COLOR, VITRINE_PRESETS, VITRINE_STYLE_INFO, formatCents, photoUrl, vitrinePalette } from "../cloud/vitrine-theme.js";
 
 const ORDER_STATUSES = ["Solicitação", "Orçamento", "Aguardando confirmação", "Confirmado", "Em produção", "Pronto", "Entregue", "Cancelado", "Recusado"];
 const PAYMENT_STATUSES = ["Informado", "Conferido"];
@@ -1140,6 +1141,7 @@ function handleClick(event) {
     case 'preview-link': previewOrderLink(); break;
     case 'add-product': addProductRow(); break;
     case 'remove-product': removeProductRow(action); break;
+    case 'move-product': moveProductRow(action); break;
     case 'link-metrics': loadLinkMetrics();break;
     case 'accept-request': reviewRequest(id,action.dataset.status);break;
     case 'refuse-request': refuseRequest(id);break;
@@ -1194,6 +1196,7 @@ function attachEvents() {
     if (field) state.openTemplateField = field.querySelector("[name=enabled]")?.value || "";
   });
   $("#view-settings").addEventListener('input',event=>{
+    if(event.target.closest('#order-page-form'))syncVitrineForm(event);
     if(event.target.name==='slug')event.target.dataset.edited='true';
     if(event.target.name==='displayName'){
       const slug=$('#order-page-form [name=slug]');if(slug&&!slug.dataset.edited)slug.value=slugFrom(event.target.value);
@@ -1243,29 +1246,66 @@ loadState();
 const LINK_BASE = "lucast.app/p/";
 const LINK_PREVIEW_KEY = "doce-agenda.link-preview";
 const slugFrom = (text) => String(text || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40).replace(/-+$/g, "");
-const productRowMarkup = (product = { name: "", description: "" }) => `<div class="product-row"><input name="productName" maxlength="80" value="${esc(product.name)}" placeholder="Ex.: Bolo de aniversário" aria-label="Nome do produto"><input name="productDescription" maxlength="160" value="${esc(product.description)}" placeholder="Detalhe opcional, ex.: a partir de 1 kg" aria-label="Detalhe do produto (opcional)"><button class="icon-button product-remove" type="button" data-action="remove-product" aria-label="Remover produto"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>`;
+// "a partir de" typed in reais ("150", "1.500,50") becomes integer cents; empty stays empty.
+function priceToCents(text) {
+  const raw = String(text || "").replace(/r\$|\s/gi, "");
+  if (!raw) return null;
+  const normalized = raw.includes(",") ? raw.replace(/\./g, "").replace(",", ".") : raw.replace(/\.(?=\d{3}(\D|$))/g, "");
+  if (!/^\d+(\.\d{1,2})?$/.test(normalized)) return NaN;
+  return Math.round(Number(normalized) * 100);
+}
+const centsToField = (cents) => Number.isInteger(cents) ? (cents / 100).toLocaleString("pt-BR", { minimumFractionDigits: cents % 100 ? 2 : 0 }) : "";
+const productThumb = (product) => product.photo ? `<img src="${esc(photoUrl(product.photo))}" alt="" loading="lazy">` : `<span aria-hidden="true">${esc((product.name || "?")[0])}</span>`;
+const productMeta = (product) => [product.category, Number.isInteger(product.priceFromCents) ? `a partir de ${formatCents(product.priceFromCents)}` : "", product.featured ? "mais pedido" : ""].filter(Boolean).join(" · ") || "Toque para editar";
+const productRowMarkup = (product = { name: "", description: "" }, open = false) => `<details class="product-item"${open ? " open" : ""}>
+  <summary><span class="pi-thumb">${productThumb(product)}</span><span class="pi-text"><b>${esc(product.name || "Novo produto")}</b><small>${esc(productMeta(product))}</small></span></summary>
+  <div class="pi-body">
+    <input type="hidden" name="productPhoto" value="${esc(product.photo || "")}">
+    <label class="field"><span>Nome</span><input name="productName" maxlength="80" value="${esc(product.name)}" placeholder="Ex.: Bolo de aniversário"></label>
+    <label class="field"><span>Descrição <small>(opcional)</small></span><textarea name="productDescription" maxlength="160" rows="2" placeholder="Ex.: massa e recheio à sua escolha, a partir de 1 kg">${esc(product.description)}</textarea></label>
+    <div class="pi-two">
+      <label class="field"><span>Categoria <small>(opcional)</small></span><input name="productCategory" maxlength="30" list="product-categories" value="${esc(product.category || "")}" placeholder="Ex.: Bolos"></label>
+      <label class="field"><span>A partir de <small>(opcional)</small></span><span class="money-field"><span>R$</span><input name="productPrice" inputmode="decimal" maxlength="12" value="${esc(centsToField(product.priceFromCents))}" placeholder="0"></span></label>
+    </div>
+    <label class="check-row"><input type="checkbox" name="productFeatured" ${product.featured ? "checked" : ""}><span>Mostrar em <b>Mais pedidos</b> <small>(até 3)</small></span></label>
+    <div class="pi-actions"><button class="button button-quiet button-small" type="button" data-action="move-product" data-step="-1">Subir</button><button class="button button-quiet button-small" type="button" data-action="move-product" data-step="1">Descer</button><button class="text-link pi-remove" type="button" data-action="remove-product">Remover</button></div>
+  </div></details>`;
+
+function vitrineStyleMarkup(p) {
+  const chosenStyle = p.style || "atelie", color = p.color || DEFAULT_COLOR, preset = VITRINE_PRESETS.some(([, value]) => value === color);
+  const palette = vitrinePalette(color);
+  return `<div class="style-cards" role="radiogroup" aria-label="Estilo da vitrine">${Object.entries(VITRINE_STYLE_INFO).map(([key, info]) => `<label class="style-card"><input type="radio" name="style" value="${key}" ${chosenStyle === key ? "checked" : ""}><span class="style-aa" style="font-family:${info.font.replace(/"/g, "'")};font-weight:${info.weight}">Aa</span><b>${info.name}</b><small>${info.hint}</small></label>`).join("")}</div>
+    <div class="field"><span>Cor</span><div class="color-row" role="radiogroup" aria-label="Cor da vitrine">${VITRINE_PRESETS.map(([name, value]) => `<label class="swatch" title="${name}"><input type="radio" name="color" value="${value}" ${color === value ? "checked" : ""} aria-label="${name}"><i style="background:${value}"></i></label>`).join("")}<label class="swatch custom-swatch"><input type="radio" name="color" value="${preset ? "#f2c94c" : esc(color)}" ${preset ? "" : "checked"} aria-label="Outra cor"><input type="color" class="color-picker" value="${preset ? "#f2c94c" : esc(color)}" aria-label="Escolher outra cor"><span>Outra</span></label></div>
+    <small id="color-note" class="color-note"${palette.adjusted ? "" : " hidden"}>Essa cor deixaria o texto dos botões difícil de ler. A vitrine usa um tom mais escuro dela nos botões.</small></div>`;
+}
 
 function orderPageMarkup() {
   const p = state.orderPage, cloud = window.DoceApi.mode === "cloud", live = cloud && p.active && p.slug;
   const products = p.products.length ? p.products : [{ name: "", description: "" }];
+  const categories = [...new Set(["Bolos", "Docinhos", "Tortas", "Presentes", ...p.products.map((item) => item.category).filter(Boolean)])];
   const hero = live
     ? `<div class="link-hero is-live"><span class="live-badge"><i aria-hidden="true"></i>No ar</span><h2>Seu link de encomenda</h2><p class="link-url">${esc(LINK_BASE)}<b>${esc(p.slug)}</b></p>
       <div class="link-share"><button class="button button-primary" type="button" data-action="copy-order-link">Copiar link</button><button class="button button-quiet" type="button" data-action="share-order-link">Mandar no WhatsApp</button></div>
       <button class="text-link" type="button" data-action="preview-link">Ver como a cliente vê</button>
       <p class="link-tip">Coloque na bio do Instagram e no status do WhatsApp. Cada pedido chega em <b>Novos</b> para você revisar antes de aceitar.</p></div>`
-    : `<div class="link-hero"><h2>Link de encomenda</h2><p>Sua cliente escolhe o doce e uma data livre e manda o pedido sozinha. Você revisa antes de aceitar. Leva uns 2 minutos para montar.</p>${cloud ? "" : '<p class="link-demo-note">Na demonstração dá para montar e ver a prévia. Para receber pedidos de verdade, crie sua conta grátis.</p>'}</div>`;
+    : `<div class="link-hero"><h2>Sua vitrine</h2><p>Uma página com a sua marca e os seus doces. A cliente escolhe, vê as datas livres e manda o pedido. Você revisa antes de aceitar.</p>${cloud ? "" : '<p class="link-demo-note">Na demonstração dá para montar e ver a prévia. Para receber pedidos de verdade, crie sua conta grátis.</p>'}</div>`;
   const actions = live
     ? '<button class="button button-primary" type="submit" name="intent" value="save">Salvar alterações</button><button class="button button-quiet" type="button" data-action="preview-link">Ver prévia</button><button class="text-link link-pause" type="submit" name="intent" value="pause">Pausar link</button>'
     : `${cloud ? '<button class="button button-primary" type="submit" name="intent" value="activate">Ativar meu link</button>' : ""}<button class="button ${cloud ? "button-quiet" : "button-primary"}" type="button" data-action="preview-link">Ver como a cliente vê</button>${cloud ? '<button class="text-link" type="submit" name="intent" value="save">Salvar sem ativar</button>' : ""}`;
   const form = `<form id="order-page-form" class="link-steps" novalidate>
-    <fieldset class="link-step"><legend><span class="step-n">1</span>Sua vitrine</legend>
+    <input type="hidden" name="logo" value="${esc(p.logo || "")}"><input type="hidden" name="cover" value="${esc(p.cover || "")}"><input type="hidden" name="share" value="${esc(p.share || "")}">
+    <fieldset class="link-step"><legend><span class="step-n">1</span>Sua marca</legend>
       <label class="field"><span>Nome da confeitaria</span><input name="displayName" maxlength="60" value="${esc(p.displayName)}" placeholder="Como sua confeitaria se chama?" autocomplete="organization"></label>
-      <label class="field"><span>Boas-vindas <small>(opcional)</small></span><textarea name="welcome" maxlength="280" rows="2" placeholder="Ex.: Oi! Escolha o doce e a data. Eu confirmo tudo pelo WhatsApp.">${esc(p.welcome)}</textarea></label></fieldset>
-    <fieldset class="link-step"><legend><span class="step-n">2</span>O que você aceita por encomenda</legend>
-      <div class="product-list" id="product-list">${products.map(productRowMarkup).join("")}</div>
+      <label class="field"><span>Frase de apresentação <small>(opcional)</small></span><textarea name="welcome" maxlength="280" rows="2" placeholder="Ex.: Bolos e docinhos feitos em casa, sob encomenda, em Campinas.">${esc(p.welcome)}</textarea></label>
+      <label class="field"><span>Instagram <small>(opcional)</small></span><input name="instagram" maxlength="60" value="${p.instagram ? "@" + esc(p.instagram) : ""}" placeholder="@suaconfeitaria" autocapitalize="none" spellcheck="false"></label></fieldset>
+    <fieldset class="link-step"><legend><span class="step-n">2</span>Estilo e cor</legend>${vitrineStyleMarkup(p)}</fieldset>
+    <fieldset class="link-step"><legend><span class="step-n">3</span>Seus doces</legend>
+      <p class="link-step-note">Valor "a partir de" é opcional: sem ele, a vitrine diz que o valor é combinado depois. Categorias aparecem quando há doces suficientes.</p>
+      <datalist id="product-categories">${categories.map((c) => `<option value="${esc(c)}"></option>`).join("")}</datalist>
+      <div class="product-list" id="product-list">${products.map((item) => productRowMarkup(item, !item.name)).join("")}</div>
       <button class="text-link add-product" type="button" data-action="add-product">+ Adicionar produto</button>
-      <p class="link-step-note">A cliente também pode escolher "Outro" e descrever o que quer.</p></fieldset>
-    <fieldset class="link-step"><legend><span class="step-n">3</span>Seu link</legend>
+      <p class="link-step-note">A cliente também pode descrever um doce que não está na lista.</p></fieldset>
+    <fieldset class="link-step"><legend><span class="step-n">4</span>Seu link</legend>
       <label class="field"><span>Endereço</span><span class="slug-field"><span class="slug-prefix">${esc(LINK_BASE)}</span><input name="slug" maxlength="40" value="${esc(p.slug)}" ${p.slug ? 'data-edited="true"' : ""} autocapitalize="none" autocomplete="off" spellcheck="false" placeholder="preenche sozinho com o nome"></span><small>Criado a partir do nome. Pode trocar: letras, números e hífen.</small></label>
       <label class="field"><span>Seu WhatsApp <small>(opcional)</small></span><input name="whatsapp" type="tel" maxlength="30" value="${esc(p.whatsapp)}" placeholder="(11) 99999-9999" autocomplete="tel"><small>Com o número, a cliente pode te avisar no WhatsApp depois de mandar o pedido.</small></label></fieldset>
     <p class="link-privacy">Ao ativar, você recebe os dados da cliente para atender a encomenda, conforme a <a href="/privacidade/" target="_blank" rel="noopener">política de privacidade</a>.</p>
@@ -1276,10 +1316,22 @@ function orderPageMarkup() {
   return `<section class="surface order-page-settings link-studio">${hero}${live ? `<details class="link-edit"><summary>Editar vitrine, produtos e endereço</summary>${form}</details>` : form}${extras}</section>`;
 }
 
+// Reads the form as it is now. Throws a friendly error for a price that is not a number.
 function linkFormValues(form) {
-  const data = new FormData(form), descriptions = data.getAll("productDescription");
-  const products = data.getAll("productName").map((name, index) => ({ name: String(name).trim(), description: String(descriptions[index] || "").trim() })).filter((product) => product.name);
-  return { displayName: String(data.get("displayName") || "").trim(), slug: String(data.get("slug") || "").trim(), welcome: String(data.get("welcome") || "").trim(), whatsapp: String(data.get("whatsapp") || "").trim(), products };
+  const data = new FormData(form), value = (name) => String(data.get(name) || "").trim();
+  const products = $$(".product-item", form).map((row) => {
+    const field = (name) => row.querySelector(`[name=${name}]`), name = field("productName").value.trim();
+    const product = { name, description: field("productDescription").value.trim() };
+    const category = field("productCategory").value.trim(), price = priceToCents(field("productPrice").value), photo = field("productPhoto").value;
+    if (Number.isNaN(price)) throw new Error(`Confira o valor "a partir de" de ${name || "um produto"}: use só números, como 150 ou 89,90.`);
+    if (category) product.category = category;
+    if (price !== null) product.priceFromCents = price;
+    if (field("productFeatured").checked) product.featured = true;
+    if (photo) product.photo = photo;
+    return product;
+  }).filter((product) => product.name);
+  return { displayName: value("displayName"), slug: value("slug"), welcome: value("welcome"), whatsapp: value("whatsapp"), products,
+    style: value("style") || "atelie", color: value("color"), instagram: value("instagram"), logo: value("logo"), cover: value("cover"), share: value("share") };
 }
 
 async function saveOrderPage(event) {
@@ -1287,8 +1339,9 @@ async function saveOrderPage(event) {
   const form = event.target, error = $("#order-page-error"), intent = event.submitter?.value || "save";
   if (window.DoceApi.mode !== "cloud") return;
   const active = intent === "activate" ? true : intent === "pause" ? false : state.orderPage.active;
-  const values = linkFormValues(form);
+  let values;
   error.hidden = true;
+  try { values = linkFormValues(form); } catch (failure) { error.textContent = failure.message; error.hidden = false; return; }
   if (active && (!values.displayName || !values.slug)) { error.textContent = "Para ativar, preencha o nome da confeitaria e o endereço do link."; error.hidden = false; return; }
   const buttons = $$("[type=submit]", form);
   buttons.forEach((button) => { button.disabled = true; });
@@ -1312,27 +1365,68 @@ function shareOrderLink() {
 }
 
 // The preview reads the form as it is now (even unsaved) and never sends anything.
+// It opens inside the app, over Ajustes, like a phone screen; the dialog is created on first use.
 function previewOrderLink() {
   const form = $("#order-page-form");
-  const values = form ? linkFormValues(form) : state.orderPage;
+  let values;
+  try { values = form ? linkFormValues(form) : state.orderPage; } catch (failure) { showToast(failure.message); return; }
   const draft = { ...values, displayName: values.displayName || "Sua confeitaria", orderTemplate: state.orderTemplate, availability: state.availability };
   try { localStorage.setItem(LINK_PREVIEW_KEY, JSON.stringify(draft)); } catch { /* a prévia usa o exemplo padrão */ }
-  window.open("/encomenda/?preview=1", "_blank", "noopener");
+  let dialog = $("#link-preview-dialog");
+  if (!dialog) {
+    document.body.insertAdjacentHTML("beforeend", `<dialog id="link-preview-dialog" class="link-preview-dialog" aria-label="Prévia da vitrine"><div class="lp-bar"><span><b>Prévia</b> · como a cliente vê</span><button class="button button-quiet button-small" type="button" data-close-preview>Fechar</button></div><iframe title="Prévia da vitrine"></iframe></dialog>`);
+    dialog = $("#link-preview-dialog");
+    dialog.addEventListener("click", (event) => { if (event.target.closest("[data-close-preview]") || event.target === dialog) dialog.close(); });
+  }
+  dialog.querySelector("iframe").src = `/encomenda/?preview=1&t=${Date.now()}`;
+  dialog.showModal();
 }
 
 function addProductRow() {
   const list = $("#product-list");
   if (!list) return;
   if (list.children.length >= 30) { showToast("O link aceita até 30 produtos."); return; }
-  list.insertAdjacentHTML("beforeend", productRowMarkup());
-  list.lastElementChild.querySelector("input")?.focus();
+  list.insertAdjacentHTML("beforeend", productRowMarkup(undefined, true));
+  list.lastElementChild.querySelector("[name=productName]")?.focus();
 }
 
 function removeProductRow(button) {
-  const list = $("#product-list"), row = button.closest(".product-row");
+  const list = $("#product-list"), row = button.closest(".product-item");
   if (!list || !row) return;
   row.remove();
-  if (!list.children.length) list.insertAdjacentHTML("beforeend", productRowMarkup());
+  if (!list.children.length) list.insertAdjacentHTML("beforeend", productRowMarkup(undefined, true));
+}
+
+function moveProductRow(button) {
+  const row = button.closest(".product-item"), step = Number(button.dataset.step);
+  const sibling = step < 0 ? row?.previousElementSibling : row?.nextElementSibling;
+  if (!row || !sibling) return;
+  if (step < 0) sibling.before(row); else sibling.after(row);
+  button.focus();
+}
+
+// Keeps the closed product summary in sync with what she types, and the style/color choice consistent.
+function syncVitrineForm(event) {
+  const target = event.target, row = target.closest?.(".product-item");
+  if (row) {
+    const name = row.querySelector("[name=productName]").value.trim(), price = priceToCents(row.querySelector("[name=productPrice]").value);
+    const product = { name, category: row.querySelector("[name=productCategory]").value.trim(), priceFromCents: Number.isNaN(price) ? null : price, featured: row.querySelector("[name=productFeatured]").checked, photo: row.querySelector("[name=productPhoto]").value };
+    row.querySelector(".pi-text b").textContent = name || "Novo produto";
+    row.querySelector(".pi-text small").textContent = productMeta(product);
+    if (!product.photo) row.querySelector(".pi-thumb").innerHTML = productThumb(product);
+    if (target.name === "productFeatured" && target.checked && $$("[name=productFeatured]:checked", target.form).length > 3) {
+      target.checked = false; showToast("Escolha até 3 doces para Mais pedidos."); syncVitrineForm(event);
+    }
+  }
+  if (target.classList?.contains("color-picker")) {
+    const radio = target.closest(".custom-swatch").querySelector("[name=color]");
+    radio.value = target.value; radio.checked = true;
+  }
+  if (target.name === "color" || target.classList?.contains("color-picker")) {
+    const color = target.form.querySelector("[name=color]:checked")?.value;
+    $("#color-note").hidden = !vitrinePalette(color).adjusted;
+    $$(".style-aa", target.form).forEach((sample) => { sample.style.color = vitrinePalette(color).ink; });
+  }
 }
 function requestReviewMarkup(order){
  if(order.status!=='Solicitação')return order.reviewOutcome==='refused'?`<p class="pending-banner">Solicitação recusada${order.refusalReason?`: ${esc(order.refusalReason)}`:'.'}</p>`:'';

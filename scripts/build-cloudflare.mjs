@@ -48,6 +48,14 @@ await copy('landing/index.html', 'index.html');
 await cp(path.join(source, 'landing'), path.join(output, 'landing'), {
   recursive: true, filter: (file) => !['index.html', 'main.js'].some((name) => path.resolve(file) === path.join(source, 'landing', name)),
 });
+// Vitrine of the order link: plain JS bundled with the shared theme rules; only the chosen style's font is downloaded.
+await bundle('public/encomenda/order.js', path.join(output, 'encomenda', 'order.js'));
+await mkdir(path.join(output, 'fonts', 'vitrine'), { recursive: true });
+for (const [name, file] of [['young-serif', 'young-serif/files/young-serif-latin-400-normal'], ['baloo-2', 'baloo-2/files/baloo-2-latin-800-normal'],
+  ['caprasimo', 'caprasimo/files/caprasimo-latin-400-normal'], ['bricolage-grotesque', 'bricolage-grotesque/files/bricolage-grotesque-latin-800-normal']]) {
+  await copyFile(path.join(root, 'node_modules', '@fontsource', `${file}.woff2`), path.join(output, 'fonts', 'vitrine', `${name}.woff2`));
+  await copyFile(path.join(root, 'node_modules', '@fontsource', name, 'LICENSE'), path.join(output, 'fonts', 'vitrine', `${name}-OFL.txt`));
+}
 // Landing script (Web Awesome + Motion) and the Web Awesome theme in our colors, both served from our own domain.
 await bundle('public/landing/main.js', path.join(output, 'landing', 'landing.js'));
 await build({ entryPoints: [path.join(source, 'ui', 'doce-wa.css')], outfile: path.join(output, 'ui', 'doce-wa.css'), bundle: true, minify: true });

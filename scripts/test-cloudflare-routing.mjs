@@ -6,7 +6,7 @@ const checks = [
   ['/app/', '/cloud-bootstrap.js'],
   ['/cadastro/', 'id="login-submit"'],
   ['/demo/', '/data-client.js'],
-  ['/privacidade/', 'Cloudflare e Netlify'],
+  ['/privacidade/', 'Cloudflare para hospedar'],
 ];
 for (const [route, expected] of checks) {
   const response = await fetch(origin + route, { redirect: 'manual' });

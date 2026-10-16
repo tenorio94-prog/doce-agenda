@@ -16,7 +16,9 @@ function execute(url,options={}){
     let state;try{state=JSON.parse(raw);}catch{return new Response(JSON.stringify({error:'Os dados deste navegador não puderam ser lidos. Não limpe o armazenamento antes de guardar uma cópia.'}),{status:500});}
     // Demos created before the example link existed get it once, if the link was never filled in.
     const page=state.orderPage;
-    if(IS_DEMO&&(!page||(!page.displayName&&!page.slug&&!(page.products||[]).length))){state.orderPage=demoSeedState(new Date()).orderPage;localStorage.setItem(KEY,JSON.stringify(state));}
+    // Demos with the untouched pre-vitrine example also get the new example (photos, categories, style).
+    const oldExample=page?.slug==='doces-da-lu'&&page.style===undefined&&(page.products||[]).length===4&&page.products[2]?.name==='Kit festa'&&page.products.every(p=>!p.photo);
+    if(IS_DEMO&&(!page||oldExample||(!page.displayName&&!page.slug&&!(page.products||[]).length))){state.orderPage=demoSeedState(new Date()).orderPage;localStorage.setItem(KEY,JSON.stringify(state));}
     const transaction=transactState(state,url,options);
     if(transaction.mutated){if(new URL(url,location.origin).pathname==='/api/import')localStorage.setItem(BACKUP_KEY,raw);localStorage.setItem(KEY,JSON.stringify(transaction.state));}
     return new Response(JSON.stringify(transaction.body),{status:transaction.status,headers:{'Content-Type':'application/json'}});

@@ -1,1 +1,113 @@
-<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#f7c5d0"><meta name="robots" content="noindex"><title>Solicitar encomenda — Doce Agenda</title><link rel="icon" href="/favicon.svg"><link rel="stylesheet" href="/tokens.css"><link rel="stylesheet" href="/encomenda/order.css"><script src="/encomenda/order.js" defer></script></head><body><header><a href="/" aria-label="Conheça o Doce Agenda"><img src="/logo.svg" width="156" height="42" alt="Doce Agenda"></a><span>Pedido por encomenda</span></header><main id="main"><p id="loading" role="status">Abrindo a confeitaria…</p><section id="unavailable" hidden><h1>Encomendas pelo link</h1><p id="unavailable-message"></p><button id="retry" type="button" hidden>Tentar novamente</button></section><section id="request-page" hidden><div class="intro"><span class="eyebrow">Feito para você, por encomenda</span><h1 id="business"></h1><p id="welcome"></p><p class="note">Conte o que você deseja. A confeitaria revisa antes de confirmar.</p></div><form id="request-form" novalidate><div class="field"><label for="product">O que você gostaria de encomendar?</label><select id="product" required></select><small id="product-description"></small></div><div class="field" id="other-field" hidden><label for="other-product">Qual produto?</label><input id="other-product" maxlength="80"></div><fieldset id="cake-fields" hidden><legend>Detalhes do bolo</legend><div id="cake-content"></div></fieldset><fieldset class="calendar"><legend>Qual data você gostaria?</legend><p class="help">Toque em uma data disponível. A vaga é conferida de novo no envio.</p><div class="calendar-nav"><button id="previous-month" type="button" aria-label="Mês anterior">←</button><h2 id="month-title"></h2><button id="next-month" type="button" aria-label="Próximo mês">→</button></div><div class="weekdays" aria-hidden="true"><span>D</span><span>S</span><span>T</span><span>Q</span><span>Q</span><span>S</span><span>S</span></div><div id="calendar-days" class="calendar-grid" role="group" aria-label="Datas disponíveis"></div><input id="date" type="hidden"><p id="chosen-date" class="help" aria-live="polite">Nenhuma data escolhida.</p></fieldset><div class="field"><label for="time">Horário desejado</label><input id="time" type="time" required><small>O horário será combinado com a confeitaria.</small></div><div class="field"><label for="mode">Retirada ou entrega?</label><select id="mode"><option>Retirada</option><option>Entrega</option></select></div><div class="field" id="address-field" hidden><label for="location">Endereço para entrega</label><input id="location" maxlength="300" autocomplete="street-address"></div><div class="field"><label for="details">Mais detalhes (opcional)</label><textarea id="details" maxlength="1000" rows="3" placeholder="Conte sabores, cores ou algo importante para sua encomenda."></textarea></div><div class="field"><label for="client">Seu nome</label><input id="client" maxlength="120" autocomplete="name" required></div><div class="field"><label for="contact">Seu WhatsApp com DDD</label><input id="contact" type="tel" maxlength="30" autocomplete="tel" required placeholder="(11) 99999-9999"><small>A confeitaria usa este número para responder.</small></div><div class="honeypot" aria-hidden="true"><label>Seu site<input id="website" autocomplete="off" tabindex="-1"></label></div><label class="consent"><input id="consent" type="checkbox" required><span>Autorizo o envio dos meus dados para <strong id="consent-business"></strong> para análise e atendimento desta encomenda. <a href="/privacidade/" target="_blank" rel="noopener">Política de privacidade</a>.</span></label><p id="form-error" class="error" role="alert" hidden></p><button id="send" class="primary" type="submit">Enviar solicitação</button><p class="help">Nenhum pagamento é solicitado pelo link.</p></form></section><section id="confirmation" hidden tabindex="-1"><span class="eyebrow">Solicitação enviada</span><h1>Agora é com a confeitaria.</h1><p class="note">Seu pedido ainda não está confirmado. A confeitaria vai responder pelo WhatsApp.</p><p>Guarde seu código: <strong id="code"></strong></p><pre id="summary"></pre><a id="whatsapp-link" class="primary" target="_blank" rel="noopener" hidden>Avisar no WhatsApp</a><p id="no-whatsapp" class="help" hidden>Guarde o código e aguarde o contato da confeitaria.</p></section></main><footer>Organizado com <a href="/">Doce Agenda</a> · <a href="/cadastro/">Tem uma confeitaria? Conheça o app.</a><br><a href="/privacidade/">Privacidade</a></footer></body></html>
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#ffffff">
+<meta name="robots" content="noindex">
+<title>Encomendas</title>
+<meta name="description" content="Escolha o doce e a data e envie seu pedido para a confeitaria.">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="pt_BR">
+<meta property="og:site_name" content="Doce Agenda">
+<meta property="og:title" content="Faça sua encomenda">
+<meta property="og:description" content="Escolha o doce e a data e envie seu pedido para a confeitaria.">
+<link rel="icon" href="/favicon.svg">
+<link rel="stylesheet" href="/tokens.css">
+<link rel="stylesheet" href="/encomenda/order.css">
+<script src="/encomenda/order.js" defer></script>
+</head>
+<body class="st-atelie">
+<main id="main">
+  <div id="loading" class="loading" role="status" aria-label="Abrindo a confeitaria">
+    <div class="sk sk-cover"></div><div class="sk sk-logo"></div><div class="sk sk-line"></div><div class="sk sk-line short"></div>
+    <div class="sk-grid"><div class="sk sk-card"></div><div class="sk sk-card"></div></div>
+  </div>
+
+  <section id="unavailable" class="unavailable" hidden>
+    <h1 id="unavailable-title">Encomendas pelo link</h1>
+    <p id="unavailable-message"></p>
+    <button id="retry" class="pill" type="button" hidden>Tentar novamente</button>
+  </section>
+
+  <!-- Vitrine: montada pelo order.js com os dados da confeitaria. -->
+  <div id="vitrine" hidden></div>
+
+  <!-- Pedido em 3 passos. Um formulário só: os valores ficam ao voltar e avançar. -->
+  <section id="request-page" class="order" hidden aria-labelledby="step-title">
+    <div class="order-bar">
+      <div class="order-bar-row"><button id="step-back" class="back" type="button"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg><span id="step-back-label">Vitrine</span></button><span id="step-count" class="step-count"></span></div>
+      <div class="progress" aria-hidden="true"><i></i><i></i><i></i></div>
+    </div>
+    <form id="request-form" class="order-body" novalidate>
+      <fieldset class="step" data-step="1">
+        <h2 id="step-title-1" class="step-title" tabindex="-1">Seu pedido</h2>
+        <div id="chosen" class="chosen"></div>
+        <div class="field" id="other-field" hidden><label for="other-product">Qual doce você quer?</label><input id="other-product" maxlength="80" placeholder="Ex.: bolo de dois andares tema jardim"><small>Conte o resto no campo de detalhes, no último passo.</small></div>
+        <fieldset id="cake-fields" class="group" hidden><legend>Detalhes do bolo</legend><div id="cake-content" class="group-body"></div></fieldset>
+        <fieldset id="extras-field" class="group" hidden><legend>Incluir mais alguma coisa? <span class="opt">(opcional)</span></legend><div id="extras" class="addons"></div></fieldset>
+        <button class="next" type="button" data-next="2">Escolher a data</button>
+      </fieldset>
+
+      <fieldset class="step" data-step="2" hidden>
+        <h2 id="step-title-2" class="step-title" tabindex="-1">Para quando?</h2>
+        <fieldset class="group" id="quick-field" hidden><legend>Próximas datas livres</legend><div id="quick-dates" class="quick" role="group" aria-label="Próximas datas livres"></div></fieldset>
+        <fieldset class="group calendar"><legend id="calendar-legend">Escolha no calendário</legend>
+          <div class="calendar-nav"><button id="previous-month" type="button" aria-label="Mês anterior">‹</button><h3 id="month-title" aria-live="polite"></h3><button id="next-month" type="button" aria-label="Próximo mês">›</button></div>
+          <div class="weekdays" aria-hidden="true"><span>S</span><span>T</span><span>Q</span><span>Q</span><span>S</span><span>S</span><span>D</span></div>
+          <div id="calendar-days" class="calendar-grid" role="group" aria-labelledby="calendar-legend"></div>
+          <input id="date" type="hidden">
+          <p id="chosen-date" class="help" aria-live="polite">Riscado: fechado, lotado ou sem antecedência. A vaga é conferida de novo no envio.</p>
+        </fieldset>
+        <div class="two">
+          <div class="field"><label for="time">Horário</label><input id="time" type="time" required></div>
+          <div class="field"><span class="label" id="mode-label">Como recebe</span><div class="seg" role="radiogroup" aria-labelledby="mode-label"><label><input type="radio" name="mode" value="Retirada" checked><span>Retirada</span></label><label><input type="radio" name="mode" value="Entrega"><span>Entrega</span></label></div></div>
+        </div>
+        <div class="field" id="address-field" hidden><label for="location">Endereço para entrega</label><input id="location" maxlength="300" autocomplete="street-address"></div>
+        <p id="step2-error" class="error" role="alert" hidden></p>
+        <button class="next" type="button" data-next="3">Continuar</button>
+      </fieldset>
+
+      <fieldset class="step" data-step="3" hidden>
+        <h2 id="step-title-3" class="step-title" tabindex="-1">Quase lá</h2>
+        <div class="field"><label for="client">Seu nome</label><input id="client" maxlength="120" autocomplete="name" required></div>
+        <div class="field"><label for="contact">Seu WhatsApp com DDD</label><input id="contact" type="tel" maxlength="30" autocomplete="tel" required placeholder="(11) 99999-9999"><small>A confeitaria usa este número para responder.</small></div>
+        <div class="field"><label for="details">Mais detalhes <span class="opt">(opcional)</span></label><textarea id="details" maxlength="900" rows="3" placeholder="Sabores, cores, quantidade ou algo importante."></textarea></div>
+        <div class="honeypot" aria-hidden="true"><label>Seu site<input id="website" autocomplete="off" tabindex="-1"></label></div>
+        <label class="consent"><input id="consent" type="checkbox" required><span>Autorizo o envio dos meus dados para <strong id="consent-business"></strong> para análise e atendimento desta encomenda. <a href="/privacidade/" target="_blank" rel="noopener">Política de privacidade</a>.</span></label>
+        <p id="form-error" class="error" role="alert" hidden></p>
+        <button id="send" class="next" type="submit">Enviar pedido</button>
+        <p class="honest" id="send-note"></p>
+      </fieldset>
+    </form>
+  </section>
+
+  <section id="confirmation" class="done" hidden tabindex="-1" aria-labelledby="done-title">
+    <div class="tick" aria-hidden="true"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
+    <h1 id="done-title" class="d">Pedido enviado</h1>
+    <p class="warn"><strong>Ainda não está confirmado.</strong> A confeitaria vai analisar e responder pelo WhatsApp.</p>
+    <p>Guarde seu código<br><strong id="code" class="code"></strong></p>
+    <pre id="summary"></pre>
+    <a id="whatsapp-link" class="pill wa" target="_blank" rel="noopener" hidden><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.3-.7-2.8-1.1-4.5-3.9-4.7-4.1-.1-.2-1.1-1.5-1.1-2.9s.7-2 1-2.3c.2-.3.6-.4.8-.4h.6c.2 0 .4 0 .6.5l.9 2.1c.1.2.1.4 0 .5l-.4.6-.4.4c-.1.2-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.3 2.4 1.5.3.1.5.1.6-.1l.9-1c.2-.3.4-.2.6-.1l2 .9c.3.2.5.2.5.4.1.1.1.7-.1 1.3Z"/></svg>Avisar no WhatsApp</a>
+    <p id="no-whatsapp" class="help" hidden>Guarde o código e aguarde o contato da confeitaria.</p>
+    <button id="back-home" class="pill soft" type="button">Voltar à vitrine</button>
+  </section>
+
+  <dialog id="product-sheet" class="sheet" aria-labelledby="sheet-title">
+    <button class="close" type="button" data-close aria-label="Fechar"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    <div id="sheet-photo" class="sheet-photo"></div>
+    <div class="sheet-in">
+      <h2 id="sheet-title" class="d"></h2>
+      <p id="sheet-price" class="price" hidden></p>
+      <p id="sheet-desc" class="desc"></p>
+      <p id="sheet-note" class="small"></p>
+      <button id="sheet-order" class="pill big" type="button">Quero este</button>
+    </div>
+  </dialog>
+</main>
+<footer class="foot">
+  <a class="made" href="/"><svg viewBox="0 0 10 13" width="10" height="13" aria-hidden="true"><path d="M5 0C5 0 0 6 0 8.5A5 5 0 0 0 10 8.5C10 6 5 0 5 0Z" fill="#f2a7bb"/></svg>Criado com Doce Agenda</a>
+  <a class="priv" href="/privacidade/">Privacidade</a>
+</footer>
+</body>
+</html>
