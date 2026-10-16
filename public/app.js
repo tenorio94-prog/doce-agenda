@@ -1015,9 +1015,19 @@ function whatsAppIntent(order) {
 // Opens the client's conversation with the message already typed (wa.me); nothing is sent automatically.
 function whatsAppLink(order) {
   const number = whatsAppNumber(order);
-  // Demo phones are made up and could belong to a real person: never link them.
-  if (!number || sampleOrder(order) || isDemoMode()) return "";
+  if (!number || sampleOrder(order)) return "";
+  // Na demonstração os telefones são inventados e podem ser de alguém de verdade: nunca abre o WhatsApp.
+  // O botão aparece igual e mostra a mensagem que seria escrita, para quem testa ver a função.
+  if (isDemoMode()) return `<button class="vn-zap detail-whatsapp" type="button" data-action="demo-whatsapp" data-id="${esc(order.id)}">${icon("whatsapp")}<span>${esc(whatsAppIntent(order).label)}</span></button>`;
   return `<a class="vn-zap detail-whatsapp" href="https://wa.me/${number}?text=${encodeURIComponent(makeWhatsAppSummary(order))}" target="_blank" rel="noopener">${icon("whatsapp")}<span>${esc(whatsAppIntent(order).label)}</span></a>`;
+}
+function showDemoWhatsApp(id) {
+  const order = orderById(id), dialog = $("#zap-demo-dialog");
+  if (!order || !dialog) return;
+  state.zapDemoText = makeWhatsAppSummary(order);
+  dialog.querySelector("#zap-demo-who").textContent = clientName(order) || "a cliente";
+  dialog.querySelector("#zap-demo-text").textContent = state.zapDemoText;
+  dialog.showModal();
 }
 
 function makeWhatsAppSummary(order) {
@@ -1396,6 +1406,8 @@ function handleClick(event) {
     case 'retry-clients': state.clientsError = ""; state.clientsData = null; renderClients(); break;
     case 'erase-client': eraseClient(action.dataset.clientKey); break;
     case 'clear-pix': clearPix(); break;
+    case 'demo-whatsapp': showDemoWhatsApp(id); break;
+    case 'copy-zap-demo': copyText(state.zapDemoText || "").then(() => showToast("Mensagem copiada.")).catch((error) => showToast(error.message)); break;
     case 'reset-demo':
       if (window.DoceStore?.resetDemo && window.confirm('Recomeçar a demonstração? Os pedidos de exemplo voltam ao início e o que você mudou aqui é apagado.')) { window.DoceStore.resetDemo(); try { localStorage.removeItem(onboardingKey()); } catch { /* sem armazenamento */ } location.reload(); }
       break;

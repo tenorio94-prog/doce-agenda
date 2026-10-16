@@ -757,3 +757,17 @@ body.vnext:has(dialog[open]) { overflow: hidden; }
 .vnext .client-tiles b { font-size: 15px; text-overflow: clip; }
 .vnext .client-tiles > div:nth-child(2) b { overflow: visible; }
 .vn-order.comanda.is-ok .cmd-body h3, .vn-order.comanda.is-ok .cmd-meta { padding-right: 112px; }
+
+/* ---- Rodada 2, etapa 6: demonstração ---- */
+/* O conteúdo ocupa a tela desde o início: o rodapé não sobe e desce enquanto a agenda monta (CLS). */
+.vnext #main-content { min-height: 100vh; min-height: 100dvh; }
+.vnext .demo-bar-link, .vnext .demo-bar-cta { min-height: 44px; display: inline-flex; align-items: center; }
+.vnext .connection { min-width: 64px; }
+/* WhatsApp na demonstração: mostra a mensagem que seria escrita, sem abrir nada. */
+.vnext .zap-demo-dialog { width: min(480px, calc(100% - 26px)); border-radius: var(--vn-r-dialog); background: var(--vn-canvas); color: var(--vn-ink); font-family: var(--vn-font); }
+.vnext .zap-demo-dialog form > p { margin: 0 0 12px; font-size: 15px; }
+.vnext .zap-demo-text { white-space: pre-wrap; padding: 12px 14px; border-radius: 4px 14px 14px 14px; background: #dcf8c6; color: #1b2b1f; font-size: 14px; line-height: 1.45; max-height: 40vh; overflow: auto; }
+.vnext .zap-demo-dialog .dialog-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; margin-top: 14px; }
+.vnext .zap-demo-dialog .button { border-radius: var(--vn-pill); min-height: 48px; }
+.vnext .zap-demo-dialog .button-primary { background: var(--vn-berry); border-color: var(--vn-berry); color: #fff; }
+.vnext .zap-demo-dialog .button-quiet { background: var(--vn-soft); border: 1px solid #f0dbe2; color: var(--vn-wine); }

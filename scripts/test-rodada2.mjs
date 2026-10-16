@@ -72,6 +72,17 @@ try {
     await page.keyboard.press('Escape');
     check(`${width}px: ficha sem linha espremida nem foto vazando, conferir à vista`);
 
+    // Etapa 6: na demonstração o botão verde aparece e mostra a mensagem, sem abrir o WhatsApp.
+    await page.locator('#view-orders .vn-order', { hasText: 'Marcos' }).first().locator('.vn-open').click();
+    const zap = page.locator('#detail-dialog [data-action="demo-whatsapp"]');
+    assert.match(await zap.innerText(), /Pedir o sinal de R\$\s?28,50/);
+    assert.equal(await page.locator('#detail-dialog a[href*="wa.me"]').count(), 0, 'demonstração nunca abre o WhatsApp');
+    await zap.click();
+    assert.match(await page.locator('#zap-demo-dialog[open] #zap-demo-text').innerText(), /Oi, Marcos!/);
+    await page.locator('#zap-demo-dialog button[type=submit]').click();
+    await page.keyboard.press('Escape');
+    check(`${width}px: WhatsApp visível na demonstração, sem abrir nada`);
+
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), 'rolagem lateral');
     assert.deepEqual(errors, []);
     await context.close();
