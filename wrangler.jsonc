@@ -8,8 +8,12 @@
     { "pattern": "www.lucast.app", "custom_domain": true }
   ],
   "build": { "command": "node scripts/build-cloudflare.mjs" },
+  // Código só para a vitrine (/p/*) e as fotos (/fotos/*); o resto do site são arquivos estáticos.
+  "main": "worker/index.js",
   "assets": {
     "directory": "./deploy-cloud/public",
+    "binding": "ASSETS",
+    "run_worker_first": ["/p/*", "/fotos/*"],
     "html_handling": "auto-trailing-slash",
     "not_found_handling": "none"
   }

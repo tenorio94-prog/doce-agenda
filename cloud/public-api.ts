@@ -39,7 +39,8 @@ export function createPublicHandler(deps:any={}) {
         if(!state.orderPage.active)return reply({error:'Esta confeitaria não está recebendo pedidos pelo link no momento'},403);
         if(request.method==='GET'){
           if(match[3]==='availability')return reply(availabilityDates(state,url.searchParams.get('from'),url.searchParams.get('to')));
-          await admin.rpc('record_pilot_page_visit',{p_owner:owner});
+          // visita=0: robô de prévia do WhatsApp/Instagram, lido pelo código da Cloudflare; não conta como visita.
+          if(url.searchParams.get('visita')!=='0')await admin.rpc('record_pilot_page_visit',{p_owner:owner});
           return reply(publicPageView(state.orderPage,state));
         }
         // CF-Connecting-IP is replaced by Cloudflare's edge. Never trust a client-provided X-Forwarded-For/body IP.

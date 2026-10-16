@@ -11,7 +11,8 @@ export const VITRINE_STYLE_INFO = {
   moderna: { name: 'Moderna', hint: 'Forte e direta, doces gourmet', font: '"Bricolage Grotesque","Figtree",sans-serif', weight: 800 },
 };
 export const DEFAULT_COLOR = '#b8325a';
-export const STORAGE_PHOTO_BASE = 'https://khvhnbopdluthpcduhqm.supabase.co/storage/v1/object/public/vitrine/';
+// Fotos guardadas no Supabase, entregues pelo nosso endereço (worker/index.js, com cache).
+export const PHOTO_BASE = '/fotos/';
 
 const rgb = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
 const hex = (c) => '#' + c.map((v) => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, '0')).join('');
@@ -32,7 +33,7 @@ export function vitrinePalette(color) {
 export function photoUrl(key) {
   if (!key) return '';
   if (key.startsWith('exemplo/')) return `/encomenda/exemplos/${key.slice(8)}`;
-  return STORAGE_PHOTO_BASE + key;
+  return PHOTO_BASE + key;
 }
 
 export function initials(name) {

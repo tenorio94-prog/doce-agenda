@@ -1328,3 +1328,5 @@ wa-input[aria-invalid="true"]::part(input-wrapper), wa-textarea[aria-invalid="tr
 .photo-status { grid-column: 1 / -1; color: var(--muted); font-size: var(--fs-xs); }
 .photo-status:empty { display: none; }
 .logo-swatch span { font-size: var(--fs-sm); font-weight: 600; }
+.link-kit { display: flex; flex-wrap: wrap; gap: 4px 18px; }
+.link-kit .text-link { min-height: 44px; }

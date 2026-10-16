@@ -4,6 +4,7 @@ import { renderSVG } from "uqr";
 import { pixPayload } from "../cloud/pix-code.js";
 import { DEFAULT_COLOR, VITRINE_PRESETS, VITRINE_STYLE_INFO, formatCents, initials, photoUrl, vitrinePalette } from "../cloud/vitrine-theme.js";
 import { blobToBase64, dominantColor, preparePhoto, shareImage } from "./photo-prep.js";
+import { printQr, shareOrDownload, storyImage } from "./share-kit.js";
 
 const ORDER_STATUSES = ["Solicitação", "Orçamento", "Aguardando confirmação", "Confirmado", "Em produção", "Pronto", "Entregue", "Cancelado", "Recusado"];
 const PAYMENT_STATUSES = ["Informado", "Conferido"];
@@ -1144,6 +1145,7 @@ function handleClick(event) {
     case 'remove-product': removeProductRow(action); break;
     case 'move-product': moveProductRow(action); break;
     case 'remove-photo': removePhoto(action); break;
+    case 'share-kit': makeShareKit(action); break;
     case 'link-metrics': loadLinkMetrics();break;
     case 'accept-request': reviewRequest(id,action.dataset.status);break;
     case 'refuse-request': refuseRequest(id);break;
@@ -1294,6 +1296,7 @@ function orderPageMarkup() {
   const hero = live
     ? `<div class="link-hero is-live"><span class="live-badge"><i aria-hidden="true"></i>No ar</span><h2>Seu link de encomenda</h2><p class="link-url">${esc(LINK_BASE)}<b>${esc(p.slug)}</b></p>
       <div class="link-share"><button class="button button-primary" type="button" data-action="copy-order-link">Copiar link</button><button class="button button-quiet" type="button" data-action="share-order-link">Mandar no WhatsApp</button></div>
+      <div class="link-kit"><button class="text-link" type="button" data-action="share-kit" data-kind="story">Imagem para status e story</button><button class="text-link" type="button" data-action="share-kit" data-kind="qr">QR para imprimir</button></div>
       <button class="text-link" type="button" data-action="preview-link">Ver como a cliente vê</button>
       <p class="link-tip">Coloque na bio do Instagram e no status do WhatsApp. Cada pedido chega em <b>Novos</b> para você revisar antes de aceitar.</p></div>`
     : `<div class="link-hero"><h2>Sua vitrine</h2><p>Uma página com a sua marca e os seus doces. A cliente escolhe, vê as datas livres e manda o pedido. Você revisa antes de aceitar.</p>${cloud ? "" : '<p class="link-demo-note">Na demonstração dá para montar e ver a prévia. Para receber pedidos de verdade, crie sua conta grátis.</p>'}</div>`;
@@ -1369,6 +1372,18 @@ function copyOrderLink() {
 }
 
 // WhatsApp opens with the message ready; she picks the contact or status and sends it herself.
+// Imagem para status/story ou QR para imprimir, feitos no aparelho com a vitrine salva.
+async function makeShareKit(button) {
+  const page = state.orderPage, url = `https://${LINK_BASE}${page.slug}`, story = button.dataset.kind === "story";
+  button.disabled = true;
+  try {
+    const blob = story ? await storyImage(page, url) : await printQr(page, url);
+    const result = await shareOrDownload(blob, story ? `${page.slug}-status.png` : `${page.slug}-qr.png`, story ? `Encomendas abertas: ${url}` : url);
+    if (result === "downloaded") showToast(story ? "Imagem salva. Poste no status ou no story." : "QR salvo. Imprima e cole na embalagem ou no balcão.");
+  } catch { showToast("Não deu para montar a imagem agora. Tente de novo."); }
+  finally { button.disabled = false; }
+}
+
 function shareOrderLink() {
   const text = `Agora você pode fazer sua encomenda por aqui, escolhendo o doce e a data: https://${LINK_BASE}${state.orderPage.slug}`;
   window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank", "noopener");

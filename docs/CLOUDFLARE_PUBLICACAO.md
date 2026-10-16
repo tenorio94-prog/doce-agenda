@@ -26,6 +26,15 @@ npx --yes --package wrangler@4.119.0 wrangler deployments status --config wrangl
 
 A regra `_redirects` `/p/:slug /encomenda/ 200` é reconhecida como proxy interno pela Cloudflare. O destino precisa ser o diretório: `/encomenda/index.html` dispara a canonicalização de HTML, redireciona a URL e perde o slug. `scripts/build-cloudflare.mjs` adapta apenas o pacote Cloudflare; o build Netlify permanece separado. O Wrangler executa esse build automaticamente antes de cada deploy. Demais rotas são diretórios reais, com barra final automática. Não há fallback que mostre a landing para rotas inexistentes.
 
+## Código da vitrine (desde 16/10/2026)
+
+O Worker deixou de ser só arquivos: `worker/index.js` roda **apenas** em `/p/*` e `/fotos/*` (`run_worker_first` em `wrangler.jsonc`); o resto continua estático.
+
+- `/p/<slug>`: busca a vitrine na `doce-public`, troca título e etiquetas `og:` (nome, frase e imagem 1200×630 da confeitaria, para a prévia do WhatsApp) e embute os dados na página (`#vitrine-data`). Robôs de prévia chamam a `doce-public` com `?visita=0` e não contam visita. Qualquer falha (Supabase fora, 404, tempo de 3 s) entrega a página de sempre. O `_redirects` não vale para rotas atendidas pelo Worker; o Worker busca `/encomenda/` explicitamente.
+- `/fotos/<pasta>/<uuid>.webp|jpg`: busca no Storage público `vitrine` do Supabase e guarda em cache por um ano (nomes nunca se repetem). Caminho fora do padrão dá 404 sem consultar nada.
+- Teste local antes de publicar: `node scripts/test-worker.mjs` (wrangler dev com Supabase simulado; usa `--compatibility-date 2026-08-08` porque o runtime local da versão fixada não aceita a data de produção).
+- Depois de publicar: `node scripts/test-cloudflare-routing.mjs` no endereço real.
+
 ## Autenticação
 
 Autorização por dispositivo concluída pelo próprio usuário no celular. Permissões solicitadas: leitura de conta/usuário e escrita de scripts Workers. Credenciais criptografadas pelo Wrangler, com chave no Windows Credential Manager; não são versionadas. A pasta `.wrangler/` está no `.gitignore`.
