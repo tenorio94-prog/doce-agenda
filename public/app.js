@@ -2,7 +2,8 @@
 
 import { renderSVG } from "uqr";
 import { pixPayload } from "../cloud/pix-code.js";
-import { DEFAULT_COLOR, VITRINE_PRESETS, VITRINE_STYLE_INFO, formatCents, photoUrl, vitrinePalette } from "../cloud/vitrine-theme.js";
+import { DEFAULT_COLOR, VITRINE_PRESETS, VITRINE_STYLE_INFO, formatCents, initials, photoUrl, vitrinePalette } from "../cloud/vitrine-theme.js";
+import { blobToBase64, dominantColor, preparePhoto, shareImage } from "./photo-prep.js";
 
 const ORDER_STATUSES = ["Solicitação", "Orçamento", "Aguardando confirmação", "Confirmado", "Em produção", "Pronto", "Entregue", "Cancelado", "Recusado"];
 const PAYMENT_STATUSES = ["Informado", "Conferido"];
@@ -1142,6 +1143,7 @@ function handleClick(event) {
     case 'add-product': addProductRow(); break;
     case 'remove-product': removeProductRow(action); break;
     case 'move-product': moveProductRow(action); break;
+    case 'remove-photo': removePhoto(action); break;
     case 'link-metrics': loadLinkMetrics();break;
     case 'accept-request': reviewRequest(id,action.dataset.status);break;
     case 'refuse-request': refuseRequest(id);break;
@@ -1203,7 +1205,7 @@ function attachEvents() {
     }
   });
   // Typed addresses become valid ones: lowercase, no accents, hyphens instead of spaces.
-  $("#view-settings").addEventListener("change", (event) => { if (event.target.name === "slug") event.target.value = slugFrom(event.target.value); });
+  $("#view-settings").addEventListener("change", (event) => { if (event.target.name === "slug") event.target.value = slugFrom(event.target.value); if (event.target.matches("[data-photo]")) handlePhotoPick(event.target); });
   $("#view-settings").addEventListener("toggle", (event) => {
     if (event.target.matches(".template-field") && event.target.open) state.openTemplateField = event.target.querySelector("[name=enabled]")?.value || "";
     // Saving re-renders Ajustes; remember which cards were open.
@@ -1261,6 +1263,7 @@ const productRowMarkup = (product = { name: "", description: "" }, open = false)
   <summary><span class="pi-thumb">${productThumb(product)}</span><span class="pi-text"><b>${esc(product.name || "Novo produto")}</b><small>${esc(productMeta(product))}</small></span></summary>
   <div class="pi-body">
     <input type="hidden" name="productPhoto" value="${esc(product.photo || "")}">
+    <div class="media-pick"><span class="media-preview pi-photo">${productThumb(product)}</span><span class="media-actions"><label class="button button-quiet button-small upload-button">${product.photo ? "Trocar foto" : "Pôr foto"}<input type="file" accept="image/*" data-photo="product" ${window.DoceApi.mode === "cloud" ? "" : "disabled"}></label><button class="text-link" type="button" data-action="remove-photo" data-target="product" ${product.photo ? "" : "hidden"}>Tirar foto</button></span><small class="photo-status" role="status"></small></div>
     <label class="field"><span>Nome</span><input name="productName" maxlength="80" value="${esc(product.name)}" placeholder="Ex.: Bolo de aniversário"></label>
     <label class="field"><span>Descrição <small>(opcional)</small></span><textarea name="productDescription" maxlength="160" rows="2" placeholder="Ex.: massa e recheio à sua escolha, a partir de 1 kg">${esc(product.description)}</textarea></label>
     <div class="pi-two">
@@ -1270,6 +1273,11 @@ const productRowMarkup = (product = { name: "", description: "" }, open = false)
     <label class="check-row"><input type="checkbox" name="productFeatured" ${product.featured ? "checked" : ""}><span>Mostrar em <b>Mais pedidos</b> <small>(até 3)</small></span></label>
     <div class="pi-actions"><button class="button button-quiet button-small" type="button" data-action="move-product" data-step="-1">Subir</button><button class="button button-quiet button-small" type="button" data-action="move-product" data-step="1">Descer</button><button class="text-link pi-remove" type="button" data-action="remove-product">Remover</button></div>
   </div></details>`;
+
+function mediaPickMarkup(kind, label, key, cloud) {
+  const preview = key ? `<img src="${esc(photoUrl(key))}" alt="">` : `<span aria-hidden="true">${kind === "logo" ? esc(initials(state.orderPage.displayName)) : "Sem capa"}</span>`;
+  return `<div class="field"><span>${label} <small>(opcional)</small></span><div class="media-pick media-${kind}"><span class="media-preview" data-preview="${kind}">${preview}</span><span class="media-actions"><label class="button button-quiet button-small upload-button">${key ? "Trocar" : "Enviar"}<input type="file" accept="image/*" data-photo="${kind}" ${cloud ? "" : "disabled"}></label><button class="text-link" type="button" data-action="remove-photo" data-target="${kind}" ${key ? "" : "hidden"}>Remover</button></span><small class="photo-status" role="status"></small></div></div>`;
+}
 
 function vitrineStyleMarkup(p) {
   const chosenStyle = p.style || "atelie", color = p.color || DEFAULT_COLOR, preset = VITRINE_PRESETS.some(([, value]) => value === color);
@@ -1297,7 +1305,9 @@ function orderPageMarkup() {
     <fieldset class="link-step"><legend><span class="step-n">1</span>Sua marca</legend>
       <label class="field"><span>Nome da confeitaria</span><input name="displayName" maxlength="60" value="${esc(p.displayName)}" placeholder="Como sua confeitaria se chama?" autocomplete="organization"></label>
       <label class="field"><span>Frase de apresentação <small>(opcional)</small></span><textarea name="welcome" maxlength="280" rows="2" placeholder="Ex.: Bolos e docinhos feitos em casa, sob encomenda, em Campinas.">${esc(p.welcome)}</textarea></label>
-      <label class="field"><span>Instagram <small>(opcional)</small></span><input name="instagram" maxlength="60" value="${p.instagram ? "@" + esc(p.instagram) : ""}" placeholder="@suaconfeitaria" autocapitalize="none" spellcheck="false"></label></fieldset>
+      <label class="field"><span>Instagram <small>(opcional)</small></span><input name="instagram" maxlength="60" value="${p.instagram ? "@" + esc(p.instagram) : ""}" placeholder="@suaconfeitaria" autocapitalize="none" spellcheck="false"></label>
+      ${mediaPickMarkup("logo", "Logo", p.logo, cloud)}${mediaPickMarkup("cover", "Foto de capa", p.cover, cloud)}
+      <p class="link-step-note">${cloud ? "Sem logo, o nome vira a marca, na letra do estilo. As fotos são reduzidas no seu celular e perdem a localização antes de enviar." : "Na demonstração, as fotos são exemplos. Com sua conta, você envia as suas."}</p></fieldset>
     <fieldset class="link-step"><legend><span class="step-n">2</span>Estilo e cor</legend>${vitrineStyleMarkup(p)}</fieldset>
     <fieldset class="link-step"><legend><span class="step-n">3</span>Seus doces</legend>
       <p class="link-step-note">Valor "a partir de" é opcional: sem ele, a vitrine diz que o valor é combinado depois. Categorias aparecem quando há doces suficientes.</p>
@@ -1403,6 +1413,72 @@ function moveProductRow(button) {
   if (!row || !sibling) return;
   if (step < 0) sibling.before(row); else sibling.after(row);
   button.focus();
+}
+
+// ---- Fotos da vitrine: preparadas no aparelho, enviadas na hora; publicadas quando ela salva ----
+const vitrineCanvases = { logo: null, cover: null };
+const kb = (bytes) => bytes >= 1048576 ? `${(bytes / 1048576).toLocaleString("pt-BR", { maximumFractionDigits: 1 })} MB` : `${Math.max(1, Math.round(bytes / 1024))} KB`;
+async function uploadPhoto(blob) {
+  const { key } = await apiRequest("/vitrine/fotos", { method: "POST", body: { type: blob.type, data: await blobToBase64(blob) } });
+  return key;
+}
+async function refreshShareImage(form) {
+  const share = form.elements.share;
+  if (!vitrineCanvases.cover && !vitrineCanvases.logo) { if (!form.elements.cover.value && !form.elements.logo.value) share.value = ""; return; }
+  const tint = vitrinePalette(form.querySelector("[name=color]:checked")?.value).tint;
+  share.value = await uploadPhoto(await shareImage({ cover: vitrineCanvases.cover, logo: vitrineCanvases.logo, tint }));
+}
+function suggestLogoColor(form, color) {
+  const row = form.querySelector(".color-row");
+  let label = row.querySelector(".logo-swatch");
+  if (!label) { row.insertAdjacentHTML("afterbegin", '<label class="swatch logo-swatch" title="Cor do seu logo"><input type="radio" name="color" aria-label="Cor do seu logo"><i></i><span>Do logo</span></label>'); label = row.querySelector(".logo-swatch"); }
+  const radio = label.querySelector("input");
+  radio.value = color; label.querySelector("i").style.background = color; radio.checked = true;
+  radio.dispatchEvent(new Event("input", { bubbles: true }));
+}
+async function handlePhotoPick(input) {
+  const file = input.files?.[0], kind = input.dataset.photo, form = input.form, row = input.closest(".product-item"), pick = input.closest(".media-pick");
+  const status = pick.querySelector(".photo-status");
+  input.value = "";
+  if (!file) return;
+  const buttons = $$("[type=submit]", form);
+  buttons.forEach((button) => { button.disabled = true; });
+  status.textContent = "Preparando a foto…";
+  try {
+    const prepared = await preparePhoto(file, kind === "product" ? "product" : kind);
+    status.textContent = "Enviando…";
+    const key = await uploadPhoto(prepared.blob), url = URL.createObjectURL(prepared.blob);
+    if (row) {
+      row.querySelector("[name=productPhoto]").value = key;
+      row.querySelector(".pi-thumb").innerHTML = row.querySelector(".pi-photo").innerHTML = `<img src="${url}" alt="">`;
+    } else {
+      form.elements[kind].value = key;
+      pick.querySelector(".media-preview").innerHTML = `<img src="${url}" alt="">`;
+      vitrineCanvases[kind] = prepared.canvas;
+      if (kind === "logo") { const color = dominantColor(prepared.canvas); if (color) suggestLogoColor(form, color); }
+      await refreshShareImage(form);
+    }
+    pick.querySelector("[data-action=remove-photo]").hidden = false;
+    pick.querySelector(".upload-button").firstChild.textContent = kind === "product" ? "Trocar foto" : "Trocar";
+    status.textContent = `Foto pronta (${kb(prepared.before)} → ${kb(prepared.blob.size)}). Toque em Salvar para publicar.`;
+  } catch (failure) {
+    status.textContent = failure.status === 0 || failure instanceof TypeError ? "Sem internet. A foto não foi enviada; tente de novo." : (failure.message || "Não deu para enviar a foto. Tente de novo.");
+  } finally { buttons.forEach((button) => { button.disabled = false; }); }
+}
+async function removePhoto(button) {
+  const form = button.form || button.closest("form"), kind = button.dataset.target, row = button.closest(".product-item"), pick = button.closest(".media-pick");
+  if (row) {
+    row.querySelector("[name=productPhoto]").value = "";
+    const product = { name: row.querySelector("[name=productName]").value };
+    row.querySelector(".pi-thumb").innerHTML = row.querySelector(".pi-photo").innerHTML = productThumb(product);
+  } else {
+    form.elements[kind].value = ""; vitrineCanvases[kind] = null;
+    pick.querySelector(".media-preview").innerHTML = `<span aria-hidden="true">${kind === "logo" ? esc(initials(form.elements.displayName.value)) : "Sem capa"}</span>`;
+    try { await refreshShareImage(form); } catch { form.elements.share.value = ""; }
+  }
+  button.hidden = true;
+  pick.querySelector(".upload-button").firstChild.textContent = kind === "product" ? "Pôr foto" : "Enviar";
+  pick.querySelector(".photo-status").textContent = "Foto retirada. Toque em Salvar para publicar.";
 }
 
 // Keeps the closed product summary in sync with what she types, and the style/color choice consistent.

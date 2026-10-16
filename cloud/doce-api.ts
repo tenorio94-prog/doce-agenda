@@ -1,5 +1,6 @@
 import { createEmptyState, transactState } from './state-engine.js';
 import { monthlySummary } from './monthly-summary.js';
+import { PHOTO_BUCKET, PHOTO_MAX_BYTES, PHOTO_MAX_FILES, checkPageOwnership, decodePhoto, photoFolder, photosToDelete } from './vitrine-photos.js';
 
 const MAX_BODY_BYTES = 5 * 1024 * 1024;
 const TABLE = 'pilot_agendas';
@@ -19,7 +20,28 @@ type Client = {
   auth: { getUser(jwt?: string): Promise<{ data: { user: AuthUser | null }; error: unknown | null }> };
   from(table: string): any;
   rpc(name: string, args: Record<string, unknown>): Promise<DbResult>;
+  storage?: any;
 };
+
+// The bucket is created on first use (public read, files only through this server). Checked once per instance.
+let photoBucketReady = false;
+async function ensurePhotoBucket(admin: Client): Promise<void> {
+  if (photoBucketReady) return;
+  const found = await admin.storage.getBucket(PHOTO_BUCKET);
+  if (found.error) {
+    const created = await admin.storage.createBucket(PHOTO_BUCKET, { public: true, fileSizeLimit: PHOTO_MAX_BYTES, allowedMimeTypes: ['image/webp', 'image/jpeg'] });
+    if (created.error && !/exists/i.test(String(created.error.message))) throw new Error('bucket');
+  }
+  photoBucketReady = true;
+}
+async function cleanupPhotos(admin: Client, folder: string, page: unknown): Promise<void> {
+  try {
+    const listed = await admin.storage.from(PHOTO_BUCKET).list(folder, { limit: 200 });
+    if (listed.error || !Array.isArray(listed.data)) return;
+    const remove = photosToDelete(listed.data, page, folder);
+    if (remove.length) await admin.storage.from(PHOTO_BUCKET).remove(remove);
+  } catch { /* limpeza é melhor esforço: a próxima vez tenta de novo */ }
+}
 type CreateClient = (url: string, key: string, options?: Record<string, unknown>) => Client;
 type HandlerDependencies = {
   env?: (name: string) => string | undefined;
@@ -111,7 +133,7 @@ function allowedRoute(path: string, method: string): boolean {
       || /^\/api\/orders\/[^/]+$/.test(path) || /^\/api\/payments\/[^/]+$/.test(path);
   }
   if (method === 'POST') {
-    return path === '/api/import' || path === '/api/orders' || /^\/api\/orders\/[^/]+\/(payments|accept|refuse)$/.test(path)
+    return path === '/api/import' || path === '/api/orders' || path === '/api/vitrine/fotos' || /^\/api\/orders\/[^/]+\/(payments|accept|refuse)$/.test(path)
       || /^\/api\/clientes\/[^/]+\/anonimizar$/.test(path);
   }
   return false;
@@ -285,9 +307,40 @@ export function createDoceApiHandler(dependencies: HandlerDependencies = {}) {
       return jsonResponse(origin,{visits:Number(metrics.data?.visits||0)},200,revision);
     }
 
+    // Vitrine photos: checked by bytes, stored in this account's folder; the state does not change here.
+    const folder = await photoFolder(serviceRoleKey, user.id);
+    if (route.path === '/api/vitrine/fotos') {
+      let photo;
+      try { photo = decodePhoto(envelope.body); } catch (error: any) { return jsonResponse(origin, apiError(error.message, error.status || 400), error.status || 400, revision); }
+      try {
+        await ensurePhotoBucket(admin);
+        const listed = await admin.storage.from(PHOTO_BUCKET).list(folder, { limit: 200 });
+        if (!listed.error && Array.isArray(listed.data) && listed.data.length >= PHOTO_MAX_FILES) {
+          await cleanupPhotos(admin, folder, row.state && (row.state as any).orderPage);
+          const again = await admin.storage.from(PHOTO_BUCKET).list(folder, { limit: 200 });
+          if (!again.error && Array.isArray(again.data) && again.data.length >= PHOTO_MAX_FILES) return jsonResponse(origin, apiError('Você chegou ao limite de fotos. Remova fotos que não usa e salve a vitrine.', 409, 'PHOTO_LIMIT'), 409, revision);
+        }
+        const key = `${folder}/${crypto.randomUUID()}.${photo.ext}`;
+        const uploaded = await admin.storage.from(PHOTO_BUCKET).upload(key, photo.bytes, { contentType: photo.contentType, cacheControl: '31536000', upsert: false });
+        if (uploaded.error) throw new Error('upload');
+        return jsonResponse(origin, { key, width: photo.width, height: photo.height }, 201, revision);
+      } catch {
+        return jsonResponse(origin, apiError('Não foi possível guardar a foto agora. Tente de novo.', 503), 503, revision);
+      }
+    }
+    let body = envelope.body ?? {};
+    const isPageSave = route.path === '/api/order-page' && route.method === 'PUT';
+    const isImportRoute = route.path.split('?')[0] === '/api/import' && route.method === 'POST';
+    try {
+      if (isPageSave) body = checkPageOwnership(body, folder);
+      if (isImportRoute && body && typeof body === 'object' && (body as any).orderPage) body = { ...(body as any), orderPage: checkPageOwnership((body as any).orderPage, folder, { strip: true }) };
+    } catch (error: any) {
+      return jsonResponse(origin, apiError(error.message, 400), 400, revision);
+    }
+
     const transaction = transactState(row.state as ReturnType<typeof createEmptyState>, route.path, {
       method: route.method,
-      body: JSON.stringify(envelope.body ?? {}),
+      body: JSON.stringify(body),
     });
     if (transaction.status >= 400) {
       return jsonResponse(origin, transaction.body, transaction.status, revision);
@@ -297,7 +350,7 @@ export function createDoceApiHandler(dependencies: HandlerDependencies = {}) {
       return jsonResponse(origin, transaction.body, transaction.status, revision);
     }
 
-    const isImport = route.path.split('?')[0] === '/api/import' && route.method === 'POST';
+    const isImport = isImportRoute;
     try {
       const committed = await admin.rpc(RPC, {
         p_owner: user.id,
@@ -316,6 +369,7 @@ export function createDoceApiHandler(dependencies: HandlerDependencies = {}) {
       }
       const nextRevision = readRevision(committed.data);
       if (nextRevision === null) return jsonResponse(origin, apiError('Não foi possível salvar os dados.', 503), 503, revision);
+      if ((isPageSave || isImportRoute) && admin.storage) await cleanupPhotos(admin, folder, (transaction.state as any).orderPage);
       return jsonResponse(origin, transaction.body, transaction.status, nextRevision);
     } catch {
       return jsonResponse(origin, apiError('Não foi possível salvar os dados.', 503), 503, revision);

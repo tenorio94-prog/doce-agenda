@@ -1312,3 +1312,19 @@ wa-input[aria-invalid="true"]::part(input-wrapper), wa-textarea[aria-invalid="tr
 .client-orders .stamp { display: none; }
 .client-orders .order-row.is-paid .row-product { padding-right: 0; }
 .color-row .color-picker { -webkit-appearance: none; appearance: none; width: 36px; height: 36px; min-height: 36px; padding: 0; flex: none; }
+/* Vitrine: logo, capa e fotos dos doces */
+.media-pick { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 8px 14px; }
+.media-preview { display: grid; place-items: center; overflow: hidden; background: var(--glace); color: var(--ink); font: 600 var(--fs-lg) var(--font-title); }
+.media-preview img { width: 100%; height: 100%; object-fit: cover; }
+.media-logo .media-preview { width: 72px; height: 72px; border-radius: 50%; border: var(--hairline); }
+.media-cover { grid-template-columns: minmax(0, 1fr); }
+.media-cover .media-preview { width: 100%; aspect-ratio: 2 / 1; border-radius: var(--r-m); font: 500 var(--fs-sm) var(--font-body); color: var(--muted); background: repeating-linear-gradient(45deg, var(--papel), var(--papel) 10px, var(--glace) 10px, var(--glace) 20px); }
+.pi-photo { width: 72px; height: 72px; border-radius: var(--r-s); font-size: var(--fs-xl); }
+.media-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
+.upload-button { position: relative; display: inline-flex; align-items: center; cursor: pointer; }
+.upload-button input { position: absolute; inset: 0; opacity: 0; width: 100%; cursor: pointer; }
+.upload-button:has(input:focus-visible) { outline: 3px solid var(--carimbo); outline-offset: 2px; }
+.upload-button:has(input:disabled) { opacity: .55; cursor: not-allowed; }
+.photo-status { grid-column: 1 / -1; color: var(--muted); font-size: var(--fs-xs); }
+.photo-status:empty { display: none; }
+.logo-swatch span { font-size: var(--fs-sm); font-weight: 600; }

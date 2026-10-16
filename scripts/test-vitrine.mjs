@@ -177,6 +177,8 @@ try {
     if (!(await card.evaluate((e) => e.open))) await card.locator('summary').first().click();
     const form = page.locator('#order-page-form');
     assert.equal(await form.locator('.product-item').count(), 7);
+    assert.ok(await form.locator('[data-photo="logo"]').isDisabled(), 'na demonstração não há envio de fotos');
+    assert.match(await form.innerText(), /Na demonstração, as fotos são exemplos/);
     await form.locator('.style-card', { hasText: 'Moderna' }).click();
     await form.locator('.product-item').nth(3).locator('summary').click();
     await form.locator('.product-item').nth(3).locator('[name=productFeatured]').click();

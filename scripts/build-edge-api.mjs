@@ -11,7 +11,7 @@ import { fileURLToPath } from 'node:url';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const rules = ['state-engine.js', 'order-link-model.js', 'monthly-summary.js', 'pix-code.js', 'clients.js'];
 const functions = {
-  'doce-api': { entry: 'edge-entry.ts', files: ['doce-api.ts', ...rules] },
+  'doce-api': { entry: 'edge-entry.ts', files: ['doce-api.ts', 'vitrine-photos.js', ...rules] },
   'doce-public': { entry: 'public-entry.ts', files: ['public-api.ts', 'public-orders.js', ...rules] },
 };
 

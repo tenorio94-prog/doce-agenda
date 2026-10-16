@@ -55,6 +55,7 @@ function makeHarness(options = {}) {
         };
         return builder;
       },
+      storage: options.storage,
       async rpc(name, args) {
         if(name==='record_pilot_owner_visit')return {data:null,error:null};
         calls.rpc.push({ name, args: structuredClone(args) });
@@ -254,4 +255,37 @@ test('business validation errors retain their status and body and do not commit'
   assert.deepEqual(await response.json(), { error: 'Preencha cliente e produto.' });
   assert.equal(response.headers.get('X-Agenda-Revision'), '3');
   assert.equal(calls.rpc.length, 0);
+});
+
+// Fotos da vitrine: Storage simulado em memória.
+function fakeStorage() {
+  const files = new Map(), log = { created: [], uploads: [], removed: [] };
+  const bucket = { async list(folder) { return { data: [...files].filter(([k]) => k.startsWith(folder + '/')).map(([k, v]) => ({ name: k.slice(folder.length + 1), created_at: v.created_at })), error: null }; },
+    async upload(key, bytes, options) { log.uploads.push({ key, options, size: bytes.length }); files.set(key, { created_at: '2020-01-01T00:00:00Z' }); return { data: { path: key }, error: null }; },
+    async remove(keys) { log.removed.push(...keys); keys.forEach((k) => files.delete(k)); return { data: [], error: null }; } };
+  return { files, log, getBucket: async () => ({ error: log.created.length ? null : { message: 'not found' } }), createBucket: async (id, options) => { log.created.push({ id, options }); return { error: null }; }, from: (id) => { assert.equal(id, 'vitrine'); return bucket; } };
+}
+const photoJpeg = () => { const b = new Uint8Array(300); b.set([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10, 0x4a, 0x46, 0x49, 0x46, 0x00, 0x01, 0x01, 0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0x00, 0xff, 0xc0, 0x00, 0x11, 0x08, 0x03, 0x84, 0x03, 0x84, 0x03]); return Buffer.from(b).toString('base64'); };
+
+test('vitrine photos: checked bytes go to the account folder; foreign photos are refused and old ones cleaned', async () => {
+  const storage = fakeStorage(), h = makeHarness({ row: { owner_user_id: 'auth-user-id', state: createEmptyState(), revision: 1 }, storage });
+  const bad = await h.send(envelope('/api/vitrine/fotos', 'POST', 1, { type: 'image/jpeg', data: Buffer.from('<script>alert(1)</script>'.repeat(5)).toString('base64') }));
+  assert.equal(bad.status, 400); assert.equal(storage.log.uploads.length, 0);
+  const ok = await h.send(envelope('/api/vitrine/fotos', 'POST', 1, { type: 'image/jpeg', data: photoJpeg() }));
+  assert.equal(ok.status, 201); const { key, width } = await ok.json(); assert.equal(width, 900);
+  assert.match(key, /^[a-f0-9]{32}\/[a-f0-9-]{36}\.jpg$/); assert.ok(!key.includes('auth-user-id'));
+  assert.equal(storage.log.created[0].options.public, true); assert.deepEqual(storage.log.created[0].options.allowedMimeTypes, ['image/webp', 'image/jpeg']);
+  assert.equal(storage.log.uploads[0].options.contentType, 'image/jpeg'); assert.equal(h.calls.rpc.length, 0, 'upload does not touch the agenda');
+  const page = { active: false, slug: '', displayName: 'Doces', welcome: '', whatsapp: '', products: [{ name: 'Bolo', description: '', photo: key }] };
+  const foreign = await h.send(envelope('/api/order-page', 'PUT', 1, { ...page, logo: `${'b'.repeat(32)}/${key.split('/')[1]}` }));
+  assert.equal(foreign.status, 400); assert.match((await foreign.json()).error, /não pertence/);
+  // Uma foto antiga sem uso é apagada ao salvar; a usada fica.
+  const folder = key.split('/')[0], old = `${folder}/00000000-0000-0000-0000-000000000000.webp`; storage.files.set(old, { created_at: '2020-01-01T00:00:00Z' });
+  const saved = await h.send(envelope('/api/order-page', 'PUT', 1, page));
+  assert.equal(saved.status, 200); assert.deepEqual(storage.log.removed, [old]); assert.ok(storage.files.has(key));
+  assert.equal(h.row.state.orderPage.products[0].photo, key);
+  // Backup de outra conta: o produto volta, a foto de outra pasta não.
+  const backup = { ...createEmptyState(), orderPage: { ...page, products: [{ name: 'Bolo', description: '', photo: `${'c'.repeat(32)}/${key.split('/')[1]}` }] } };
+  const imported = await h.send(envelope('/api/import', 'POST', 2, backup));
+  assert.equal(imported.status, 200); assert.deepEqual(h.row.state.orderPage.products, [{ name: 'Bolo', description: '' }]);
 });
