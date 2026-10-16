@@ -523,3 +523,25 @@ body.vnext:has(dialog[open]) { overflow: hidden; }
 .vnext .detail-dialog .deposit-label { text-transform: none; letter-spacing: 0; }
 .vnext .detail-dialog .detail-tile-note { display: block; margin-top: 2px; color: var(--vn-muted); font: 600 13px var(--vn-font); letter-spacing: 0; }
 .vnext .detail-dialog .detail-tile-value.large { font-family: var(--vn-title); white-space: nowrap; }
+
+/* ---- Fase 4 da direção Comanda (16/10): telas secundárias ---- */
+/* Cabeçalhos de uma linha: o trabalho aparece mais cedo. */
+.vnext :is(#view-orders, #view-month) .vn-heading { margin: 4px 0 14px; }
+.vnext :is(#view-orders, #view-month, #view-clients, #view-settings) h1, .vnext .page-heading h1 { font-size: 28px; line-height: 1.1; }
+.vnext .page-heading { margin: 4px 0 14px; }
+/* Faixa da demonstração mais baixa. */
+.vnext .demo-bar { padding: 10px 14px; gap: 6px 14px; }
+.vnext .demo-bar p { font-size: 14px; }
+.vnext .demo-bar-actions { gap: 4px 14px; }
+.vnext .demo-bar-link, .vnext .demo-bar-cta { font-size: 14px; min-height: 36px; }
+/* Dicas compactas. */
+.vnext .tip { padding: 10px 12px; font-size: 14px; }
+/* Meu mês: Recebido em destaque, o resto discreto. */
+.vnext #view-month .vn-stat.is-hero { grid-column: 1 / -1; background: var(--vn-green); border-color: var(--vn-green); }
+.vnext #view-month .vn-stat.is-hero, .vnext #view-month .vn-stat.is-hero .vn-eyebrow, .vnext #view-month .vn-stat.is-hero .stat-value, .vnext #view-month .vn-stat.is-hero .vn-stat-note { color: #fff; }
+.vnext #view-month .vn-stat.is-hero .stat-value { font-size: clamp(30px, 9vw, 40px); }
+.vnext #view-month .vn-stat.is-amber .stat-value { color: var(--vn-amber); }
+/* Agenda no celular: o resumo financeiro repetia o Meu mês e o "Falta cobrar"; fica só no computador. */
+@media (max-width: 1000px) { .vnext #view-today .vn-aside .finance-summary { display: none; } }
+/* Filtros com 44 px de toque (antes 40). */
+.vnext :is(#view-orders, #view-clients, #view-settings) .stage-chip { min-height: 44px; font-size: 14px; }

@@ -580,7 +580,7 @@ function renderOrders() {
     const list = orders.filter((order) => section.statuses.includes(order.status));
     return `<section class="vn-inbox-section" aria-labelledby="inbox-${section.key}-title"><div class="section-head"><h2 id="inbox-${section.key}-title" tabindex="-1">${section.title} <span class="vn-badge">${list.length}</span></h2></div><p class="vn-inbox-description">${section.description}</p>${list.length ? `<div class="vn-order-list vn-inbox-list">${list.map((order) => agendaCardMarkup(order, { inbox: true })).join("")}</div>` : `<p class="vn-inbox-empty">${state.search.trim() ? "Nenhum resultado nesta seção para a busca." : section.empty}</p>`}</section>`;
   }).join("");
-  panel.innerHTML = `<header class="vn-heading"><div><span class="vn-date">Do orçamento à entrega</span><h1 id="orders-title" tabindex="-1">Seus pedidos</h1><p class="today-summary">O combinado de cada cliente, sempre à mão.</p></div><button class="vn-btn primary vn-heading-add page-add" data-action="new-order" type="button">${icon("plus")} Nova encomenda</button></header>${tipMarkup("orders")}
+  panel.innerHTML = `<header class="vn-heading"><div><h1 id="orders-title" tabindex="-1">Pedidos</h1></div><button class="vn-btn primary vn-heading-add page-add" data-action="new-order" type="button">${icon("plus")} Nova encomenda</button></header>${tipMarkup("orders")}
     ${state.statusFilter === "new" ? "" : requestBanner()}<div class="toolbar"><label class="search-wrap"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 4.5 4.5"/></svg><input class="search-input" id="order-search" type="search" placeholder="Buscar cliente, produto ou detalhe…" value="${esc(state.search)}" aria-label="Buscar pedidos"></label></div>
     <div class="stage-strip" role="group" aria-label="Ver pedidos por etapa">${stageChips}</div>${inbox}
     <p class="order-results" aria-live="polite"><strong>${orders.length}</strong> ${orders.length === 1 ? "pedido encontrado" : "pedidos encontrados"}</p>
@@ -660,7 +660,7 @@ function renderSettings() {
   const focusName = ["date-availability-form", "availability-form"].includes(focusForm) ? focused.name : "";
   const focusSelection = focusName && typeof focused.selectionStart === "number" ? focused.selectionStart : null;
   const summary = settingsSummaries();
-  content.innerHTML = `<div class="page-heading"><div><h1 id="settings-title">Ajustes</h1><p>Toque num item para ver ou mudar.</p></div></div>${tipMarkup("settings")}
+  content.innerHTML = `<div class="page-heading"><div><h1 id="settings-title">Ajustes</h1></div></div>${tipMarkup("settings")}
     <div class="settings-list">
       ${settingsCard("link", "Sua vitrine", summary.link, orderPageMarkup())}
       ${settingsCard("days", "Dias e limites", summary.days, availabilitySettingsMarkup(state.settingsDate))}
@@ -723,7 +723,8 @@ function renderMonth() {
   else if (!data) content = '<p class="month-feedback" role="status">Carregando seu mês…</p>';
   else if (!data.ordersCount) content = emptyState('Seu mês começa com uma encomenda', 'Aqui vão aparecer seus pedidos confirmados ou entregues, os valores e os recebimentos conferidos deste mês.', false);
   else {
-    content = `<div class="stats-grid month-stats vn-month-stats">${card('Pedidos',data.ordersCount,'is-count','<span class="vn-stat-note">confirmados ou entregues</span>','cake')}${card('Vendido',money(data.soldCents/100),'is-wine','<span class="vn-stat-note">soma dos pedidos do mês</span>','wallet')}${card('Recebido',money(data.receivedCents/100),'is-green','<span class="vn-badge green">Só conferidos</span>','check')}${card('A receber',money(data.receivableCents/100),'is-amber','<span class="vn-badge amber">Saldo dos pedidos</span>','clock')}</div>`;
+    // Recebido (só conferido) é o número que importa pela regra do produto: vem primeiro, em destaque.
+    content = `<div class="stats-grid month-stats vn-month-stats">${card('Recebido',money(data.receivedCents/100),'is-green is-hero','<span class="vn-stat-note">só o que você conferiu</span>','check')}${card('A receber',money(data.receivableCents/100),'is-amber','<span class="vn-stat-note">saldo dos pedidos</span>','clock')}${card('Vendido',money(data.soldCents/100),'','<span class="vn-stat-note">soma dos pedidos do mês</span>','wallet')}${card('Pedidos',data.ordersCount,'is-count','<span class="vn-stat-note">confirmados ou entregues</span>','cake')}</div>`;
     if (data.ordersWithoutValue) content += `<p class="month-note">${data.ordersWithoutValue} ${data.ordersWithoutValue===1?'pedido sem valor informado não entrou':'pedidos sem valor informado não entraram'} em Vendido. ${data.ordersWithoutValue===1?'Ele continua':'Eles continuam'} na contagem de Pedidos.</p>`;
     if (data.ordersCount < 3) content += '<p class="month-note">Com mais pedidos, mostramos aqui os dias e produtos que mais saem.</p>';
     else {
@@ -731,7 +732,7 @@ function renderMonth() {
       content += `<div class="month-details"><section class="surface"><h2>Dias mais cheios</h2><ol class="month-ranking">${data.busiestDays.map(item).join('')}</ol></section><section class="surface"><h2>O que mais sai</h2><ol class="month-ranking">${data.topProducts.map(item).join('')}</ol></section><section class="surface"><h2>Prazo médio de aviso</h2><p class="month-lead-value">${data.averageNoticeDays===null?'Sem datas de criação':`${esc(new Intl.NumberFormat('pt-BR',{maximumFractionDigits:1}).format(data.averageNoticeDays))} ${data.averageNoticeDays===1?'dia':'dias'}`}</p><p class="month-note">Entre o registro e a retirada ou entrega.${data.noticeOrdersCount<data.ordersCount?` Calculado com ${data.noticeOrdersCount} pedidos que têm data de criação.`:''}</p></section></div>`;
     }
   }
-  panel.innerHTML = `<header class="vn-heading"><div><span class="vn-date">Como foi o mês</span><h1 id="month-title" tabindex="-1">Meu mês</h1><p class="today-summary">O que entrou e o que ainda está por vir.</p></div></header><div class="week-controls month-controls vn-month-nav"><button class="icon-button" type="button" data-month-shift="-1" aria-label="Mês anterior" ${state.month==='1900-01'?'disabled':''}>${icon('left')}</button><span class="month-range" aria-live="polite">${esc(label)}</span><button class="icon-button" type="button" data-month-shift="1" aria-label="Próximo mês" ${state.month>=(data?.currentMonth||currentBusinessMonth())?'disabled':''}>${icon('right')}</button></div>${tipMarkup("month")}<div class="vn-month-grid"><div class="month-content" aria-busy="${state.monthLoading}" aria-live="polite">${content}</div><aside class="vn-wine-panel vn-month-note"><span class="vn-eyebrow">Mais clareza, menos papel</span><h2>Recebido não é lucro.</h2><p>Custos e despesas não fazem parte deste resumo.</p><p>Um Pix informado continua pendente até você conferir no banco e marcar no pedido.</p></aside></div><p class="month-note month-definition">Conta pedidos Confirmados e Entregues pela data de retirada ou entrega. Recebido inclui apenas pagamentos conferidos desses pedidos, mesmo que tenham sido recebidos em outro mês. Não inclui orçamentos, solicitações nem exemplos.</p>`;
+  panel.innerHTML = `<header class="vn-heading"><div><h1 id="month-title" tabindex="-1">Meu mês</h1></div></header><div class="week-controls month-controls vn-month-nav"><button class="icon-button" type="button" data-month-shift="-1" aria-label="Mês anterior" ${state.month==='1900-01'?'disabled':''}>${icon('left')}</button><span class="month-range" aria-live="polite">${esc(label)}</span><button class="icon-button" type="button" data-month-shift="1" aria-label="Próximo mês" ${state.month>=(data?.currentMonth||currentBusinessMonth())?'disabled':''}>${icon('right')}</button></div>${tipMarkup("month")}<div class="vn-month-grid"><div class="month-content" aria-busy="${state.monthLoading}" aria-live="polite">${content}</div><aside class="vn-wine-panel vn-month-note"><span class="vn-eyebrow">Mais clareza, menos papel</span><h2>Recebido não é lucro.</h2><p>Custos e despesas não fazem parte deste resumo.</p><p>Um Pix informado continua pendente até você conferir no banco e marcar no pedido.</p></aside></div><p class="month-note month-definition">Conta pedidos Confirmados e Entregues pela data de retirada ou entrega. Recebido inclui apenas pagamentos conferidos desses pedidos, mesmo que tenham sido recebidos em outro mês. Não inclui orçamentos, solicitações nem exemplos.</p>`;
   if (focused !== undefined) panel.querySelector(`[data-month-shift="${CSS.escape(focused)}"]`)?.focus({preventScroll:true});
   if (!state.monthData && !state.monthError && !state.monthLoading) loadMonth();
 }
@@ -751,7 +752,10 @@ function render() {
     button.classList.toggle("active", current);
     if (current) button.setAttribute("aria-current", "page"); else button.removeAttribute("aria-current");
   });
-  $("#nav-order-count").textContent = String(state.orders.filter((order) => !sampleOrder(order)).length);
+  const needsYou = state.orders.filter((order) => !sampleOrder(order) && !isCancelled(order) && (order.status === "Solicitação" || informedFor(order.id) > 0)).length;
+  $("#nav-order-count").textContent = String(needsYou);
+  $("#nav-order-count").hidden = !needsYou;
+  $("#nav-order-count").setAttribute("aria-label", `${needsYou} ${needsYou === 1 ? "pedido precisa" : "pedidos precisam"} de você`);
   $("#main-content").setAttribute("aria-busy", "false");
 }
 
@@ -1758,7 +1762,7 @@ function renderClients() {
       ${list.length ? `<div class="client-list">${list.map(clientRowMarkup).join("")}</div>` : '<p class="detail-empty">Nenhuma cliente encontrada.</p>'}`;
   }
   const focused = document.activeElement?.id === "clients-search" ? document.activeElement.selectionStart : null;
-  panel.innerHTML = `<div class="page-heading"><div><h1 id="clients-title">Clientes</h1><p>Montado a partir dos seus pedidos.</p></div></div>${tipMarkup("clients")}${body}`;
+  panel.innerHTML = `<div class="page-heading"><div><h1 id="clients-title">Clientes</h1></div></div>${tipMarkup("clients")}${body}`;
   if (focused !== null) { const input = $("#clients-search"); input?.focus(); input?.setSelectionRange(focused, focused); }
   if (!data && !state.clientsError && !state.clientsLoading) loadClients();
 }

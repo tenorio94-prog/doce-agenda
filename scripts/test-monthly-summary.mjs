@@ -24,14 +24,14 @@ async function open(data,width=360,inject='') {
 try {
  for(const width of [360,1440]){
   const {page,context}=await open(seed,width);await page.locator('.month-stats').waitFor();await page.evaluate(()=>document.fonts.ready);
-  assert.deepEqual(await page.locator('.month-stats .stat-value').allTextContents(),['3','R$\u00a0150,30','R$\u00a040,30','R$\u00a0110,00']);
+  assert.deepEqual(await page.locator('.month-stats .stat-value').allTextContents(),['R$\u00a040,30','R$\u00a0110,00','R$\u00a0150,30','3']);
   assert.match(await page.locator('.month-content').innerText(),/1 pedido sem valor informado/);assert.equal(await page.locator('.month-details section').count(),3);
   assert.equal(await page.locator('body').evaluate(b=>b.scrollWidth<=innerWidth),true);assert.equal(await page.getByRole('button',{name:'Próximo mês',exact:true}).isDisabled(),true);
   await page.screenshot({path:path.join(output,`month-${width}.png`),fullPage:true});
   await page.getByRole('button',{name:'Mês anterior',exact:true}).click();await page.getByRole('heading',{name:'Seu mês começa com uma encomenda'}).waitFor();assert.equal(await page.locator('.month-stats').count(),0);
   assert.equal(await page.locator('.month-range').innerText(),'Setembro de 2026');await page.getByRole('button',{name:'Próximo mês',exact:true}).click();await page.locator('.month-stats').waitFor();
   await page.locator('[data-action="new-order"]:visible').first().click();await page.locator('#order-form wa-input[name=client] input').fill('QA sem preço');await page.locator('#order-form wa-input[name=product] input').fill('Bolo sem valor');await page.locator('#order-form wa-input[name=dueDate] input').fill('2026-10-14');await page.locator('#order-form wa-input[name=dueTime] input').fill('16:00');await page.locator('#order-form wa-select[name=status]').click();await page.locator('#order-form wa-option[value=Confirmado]').click();await page.locator('#save-order-button').click();await page.waitForFunction(()=>!document.querySelector('#order-dialog').open);
-  await page.getByText(/2 pedidos sem valor informado não entraram/).waitFor();assert.equal(await page.locator('.month-stats .stat-value').first().innerText(),'4');
+  await page.getByText(/2 pedidos sem valor informado não entraram/).waitFor();assert.equal(await page.locator('.month-stats .stat-value').last().innerText(),'4');
   const stored=await page.evaluate(()=>JSON.parse(localStorage.getItem('doce-agenda.demo.v2')));assert.equal(stored.orders.at(-1).totalKnown,false);assert.equal(stored.orders.at(-1).total,0);
   results.push({case:'populated, month navigation, blank price',width,passed:true});await context.close();
  }
