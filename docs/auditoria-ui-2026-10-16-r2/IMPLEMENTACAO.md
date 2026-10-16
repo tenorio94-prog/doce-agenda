@@ -1,6 +1,6 @@
 # Rodada 2: o que foi implementado
 
-16/10/2026 · commits sobre `11e6844`, de `de0b1ac` a `c05f979` (mais um de alvos de toque e este de documentação) · **commitado no computador do Lucas, ainda sem push e sem publicação** (ver "Para publicar").
+16/10/2026 · 11 commits sobre `11e6844`, de `de0b1ac` a `1ad6335`, incluindo o ajuste de toque `adddbb4` · **enviado ao GitHub e publicado em 16/10**, Cloudflare `dc5e3b77-a839-4c3e-9046-af083be9c290` (100% do tráfego), árvore `1ad6335`.
 
 Relatório e protótipo que originaram esta etapa: `RELATORIO.md` e `prototipo/index.html`, nesta pasta.
 
@@ -17,7 +17,7 @@ Relatório e protótipo que originaram esta etapa: `RELATORIO.md` e `prototipo/i
 | 6a. Demonstração | `9a95024` | O botão verde do WhatsApp aparece na demonstração e mostra a mensagem que seria escrita, sem abrir nada. A tela não pula mais ao abrir. |
 | 6b. Landing | `8eab492` | Topo com foto real e um pedido do app preso na bancada. Vitrine do exemplo com fotos. Mocks com o visual atual. Lotado em tijolo, como no app. Sem cartões flutuando. |
 | Ajuste | `c05f979` | O WhatsApp não sugere "Pedir o sinal" quando a cliente já informou o Pix. Verde do WhatsApp mais escuro, com contraste AA. |
-| Ajuste | (próximo) | Botões novos com 44 px de altura (atalho "pedem sua atenção", setas da semana, telefone da ficha). |
+| Ajuste | `adddbb4` | Botões novos com 44 px de altura (atalho "pedem sua atenção", setas da semana, telefone da ficha). |
 
 ## Antes e depois (390 px, demonstração)
 
@@ -80,9 +80,15 @@ Regra: nenhuma imagem pode mostrar uma tela de app inventada. Onde houver celula
 
 Salvar em WebP (qualidade 80) em `public/landing/assets/` e avisar: o HTML aponta o arquivo e o texto alternativo.
 
-## Para publicar
+## Publicação realizada
 
-O ambiente da auditoria não tem acesso ao GitHub nem à Cloudflare com as suas credenciais. No terminal do seu computador (ou pelo Claude Code local), na pasta do projeto:
+O `npm run check` foi repetido no computador do Lucas: 64 regras e 12 suítes passaram. Push dos 11 commits concluído. A publicação real em `https://lucast.app` passou nas cinco rotas e em 19 verificações de Agenda, Pedidos, dinheiro, ficha Pix, WhatsApp da demo e landing, em 360×800, 390×844 e 1280×900. Os arquivos JS/CSS atualizados correspondem ao build local; HTML atual confirmado, sem interceptação dos arquivos nos testes. Capturas e resultado em `data/publicacao-r2/` (ignorado pelo Git). Nenhuma alteração de código, Supabase, DNS ou conta real nesta publicação.
+
+Limitação observada: em 360×800 o botão de conferir fica parcialmente sob o rodapé ao abrir a ficha e exige uma pequena rolagem interna; após rolar fica totalmente visível e acessível. O critério aprovado de 390×844 passou sem rolagem. Não foi feita correção de interface nesta tarefa de publicação.
+
+### Comandos de reprodução
+
+O ambiente original da auditoria não tinha credenciais. A publicação foi feita depois, no computador do Lucas, na pasta do projeto:
 
 ```
 npm run check
