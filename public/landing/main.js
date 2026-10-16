@@ -17,10 +17,6 @@ function popCard(card, delay) {
   animate(card, { scale: [0.6, 1] }, { ...springy, delay });
 }
 
-function float(card, delay) {
-  animate(card, { y: [0, -6, 0] }, { duration: 6, repeat: Infinity, ease: 'easeInOut', delay });
-}
-
 function dropStamp(stamp, delay) {
   animate(stamp, { opacity: [0, 1] }, { duration: 0.2, delay });
   animate(stamp, { scale: [2.2, 1] }, { type: 'spring', bounce: 0.5, duration: 0.6, delay });
@@ -31,21 +27,14 @@ function tap(el) {
   if (el) animate(el, { scale: [1, 0.92, 1] }, { duration: 0.32 });
 }
 
-// Topo: o celular sobe e os cartões aparecem um a um, depois flutuam devagar.
+// Topo: a foto entra e o carimbo bate uma vez no pedido preso na bancada. É o único movimento do topo.
 function revealHero() {
-  const device = document.querySelector('.hero-device');
-  if (!device) return;
-  const phone = device.querySelector('.phone');
-  animate(phone, { opacity: [0, 1] }, { duration: 0.4 });
-  animate(phone, { y: [48, 0] }, { type: 'spring', bounce: 0.2, duration: 0.9 });
-  device.querySelectorAll('.float-card').forEach((card, i) => {
-    popCard(card, 0.5 + i * 0.3);
-    float(card, 1.4 + i * 0.4);
-  });
-  const stamp = device.querySelector('.stamp-mini');
+  const bench = document.querySelector('.hero-bench .bench');
+  if (!bench) return;
+  const order = bench.querySelector('.bench-order');
+  if (order) { animate(order, { opacity: [0, 1] }, { duration: 0.3, delay: 0.5 }); animate(order, { y: [24, 0] }, { type: 'spring', bounce: 0.3, duration: 0.7, delay: 0.5 }); }
+  const stamp = bench.querySelector('.stamp-mini');
   if (stamp) dropStamp(stamp, 1.1);
-  const dot = device.querySelector('.fc-dot');
-  if (dot) animate(dot, { scale: [1, 1.35, 1] }, { duration: 1.6, repeat: Infinity, ease: 'easeInOut', delay: 1.8 });
 }
 
 // Link e Como funciona: cada bloco entra assim que começa a aparecer na tela.
@@ -54,11 +43,6 @@ function revealStep(step) {
   const visuals = step.querySelectorAll('.phone, .mock-card, .ld-stage');
   animate(visuals, { opacity: [0, 1] }, { duration: 0.35, delay: stagger(0.1, { startDelay: 0.05 }) });
   animate(visuals, { y: [40, 0] }, { type: 'spring', bounce: 0.2, duration: 0.8, delay: stagger(0.1, { startDelay: 0.05 }) });
-  const card = step.querySelector('.float-card');
-  if (card) {
-    popCard(card, 0.45);
-    float(card, 1.2);
-  }
 }
 
 // Link de encomenda: a cliente escolhe e envia; a solicitação passa para o lado da confeiteira,
@@ -160,7 +144,7 @@ function setupLinkDemo(root) {
 }
 
 // Semana: um pedido avança uma etapa a cada toque, enquanto está na tela.
-const ORDER_STEPS = [['Confirmado', 'Começar a fazer →'], ['Em produção', 'Ficou pronto →'], ['Pronto', 'Marcar entregue →'], ['Entregue', '']];
+const ORDER_STEPS = [['Confirmado', 'Começar a fazer'], ['Em produção', 'Ficou pronto'], ['Pronto', 'Marcar entregue'], ['Entregue', '']];
 function setupWeekDemo(visual) {
   const card = visual.querySelector('.order-mock');
   const pill = card.querySelector('.om-pill');
