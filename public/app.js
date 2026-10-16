@@ -669,6 +669,9 @@ function renderMonth() {
 
 function render() {
   $("#demo-bar").hidden = window.DoceApi.mode !== "browser";
+  // Barra lateral (computador): nome da confeitaria. Opcional: página antiga em cache pode não ter o elemento.
+  const studio = $("#nav-studio");
+  if (studio) { const name = state.orderPage?.displayName || ""; studio.hidden = !name; studio.innerHTML = name ? `<span class="nav-studio-initial" aria-hidden="true">${esc(initials(name))}</span><span><strong>${esc(name)}</strong><small>${window.DoceApi.mode === "cloud" ? "Sua confeitaria" : "Confeitaria de exemplo"}</small></span>` : ""; }
   // Optional: a page cached before this button existed must still load the agenda.
   const demoReset = $("#demo-reset");
   if (demoReset) demoReset.hidden = !window.DoceStore?.resetDemo;
