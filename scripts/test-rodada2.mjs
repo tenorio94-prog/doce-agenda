@@ -50,8 +50,14 @@ try {
       return !img || img.getBoundingClientRect().bottom <= box.getBoundingClientRect().bottom + 1;
     });
     assert.ok(contained, 'a foto do combinado sai do próprio bloco');
+    // Etapa 2: o botão de conferir aparece sem rolar, acima do rodapé fixo, e é o único da ficha.
+    const confirm = page.locator('#detail-dialog [data-action="confirm-payment"]');
+    assert.equal(await confirm.count(), 1, 'um botão de conferir por pagamento informado');
+    const footerTop = await page.locator('#detail-dialog .detail-actions').evaluate((el) => el.getBoundingClientRect().top);
+    const confirmBox = await confirm.boundingBox();
+    if (height >= 800) assert.ok(confirmBox.y + confirmBox.height <= footerTop + 1, `conferir escondido sob o rodapé (${Math.round(confirmBox.y + confirmBox.height)} > ${Math.round(footerTop)})`);
     await page.keyboard.press('Escape');
-    check(`${width}px: ficha sem linha espremida nem foto vazando`);
+    check(`${width}px: ficha sem linha espremida nem foto vazando, conferir à vista`);
 
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), 'rolagem lateral');
     assert.deepEqual(errors, []);

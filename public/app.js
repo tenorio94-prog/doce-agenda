@@ -373,7 +373,7 @@ const statusBadge = (status) => `<span class="vn-badge ${["Pronto", "Entregue"].
 const isLate = (order) => ["Confirmado", "Em produção", "Pronto"].includes(order.status) && (parseDate(order.dueAt)?.getTime() ?? Infinity) < Date.now();
 const lateBadge = (order) => isLate(order) ? '<span class="vn-badge red">Atrasado</span>' : "";
 // Origin is independent of the current situation. Older records may have no reliable origin.
-const originMarkup = (order) => order.origin === "link" ? `<div class="vn-note vn-origin">${icon("link")}<span>Recebido pelo link${order.publicCode ? ` · ${esc(order.publicCode)}` : ""}${order.possibleDuplicate ? " · possível duplicata" : ""}</span></div>` : "";
+const originMarkup = (order) => order.origin === "link" ? `<div class="vn-note vn-origin">${icon("link")}<span>Recebido pelo link${order.publicCode ? `, código ${esc(order.publicCode)}` : ""}${order.possibleDuplicate ? ". Possível duplicata" : ""}</span></div>` : "";
 function dateCapacityMarkup(order) {
   const day = order.dueAt?.slice(0, 10);
   if (!day) return `<div class="vn-note">${icon("calendar")}<span>Ocupação disponível quando a data for definida.</span></div>`;
@@ -846,35 +846,77 @@ function formatWhenHistory(value) {
   return date ? new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }).format(date) : "Data não informada";
 }
 
+// Ficha do pedido (rodada 2): na ordem do trabalho. Hora grande, próximo passo, o dinheiro como um canhoto
+// com a ação logo abaixo, combinado, contato e histórico. Mesmos dados, ações e regras de antes.
 function detailMarkup(order) {
   const photo = vitrinePhotoFor(order);
   const payments = orderPayments(order.id).sort((a, b) => timeValue(b.createdAt) - timeValue(a.createdAt));
   const balance = balanceFor(order);
   const history = Array.isArray(order.history) ? [...order.history].reverse() : [];
   const sample = order.isSample || order.isDemo || order.sample ? `<span class="demo-label">Exemplo fictício</span>` : "";
-  const location = order.location ? `<div class="detail-tile"><div class="detail-tile-label">${order.mode === "Entrega" ? "Local de entrega" : "Local de retirada"}</div><div class="detail-tile-value">${esc(order.location)}</div></div>` : "";
-  const dueAt = order.dueAt ? dateTimeLabel(order.dueAt) : "Data e horário a combinar";
-  const whenLabel = `${order.dueAt ? `${dateLabel(order.dueAt, { weekday: "short", day: "numeric", month: "short" }).replace(/\./g, "")} · ${shortTime(order.dueAt)}` : "Sem data"}`;
+  const date = parseDate(order.dueAt);
+  const dayLabel = date ? capitalize(dateLabel(order.dueAt, { weekday: "long", day: "numeric", month: "short", ...(date.getFullYear() !== new Date().getFullYear() ? { year: "numeric" } : {}) }).replace(/\./g, "").replace(/ de /g, " ")) : "Data e horário a combinar";
+  const mode = order.mode || "Retirada";
   const paidNow = confirmedPaid(order.id);
-  const informedNow = payments.filter((payment) => payment.status === "Informado").reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
+  const informedList = payments.filter((payment) => payment.status === "Informado");
+  const informedNow = informedList.reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
   const lastConfirmed = payments.find((payment) => payment.status === "Conferido" && Number(payment.amount) > 0);
   const stampDay = lastConfirmed ? (parseDate(lastConfirmed.confirmedAt || lastConfirmed.createdAt) || null) : null;
   const stampDate = stampDay ? new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short" }).format(stampDay).replace(/\./g, "").replace(" de ", " ").toUpperCase() : "";
-  const depositCard = !isCommitted(order) || isCancelled(order) ? "" : hasReceivedPayment(order.id)
-    ? `<section class="deposit-card is-paid" aria-label="Sinal"><div class="deposit-top"><span class="deposit-label">Sinal</span><span>Total ${esc(orderTotalLabel(order))}</span></div><div class="deposit-main"><div class="deposit-amount">${esc(money(paidNow))}</div><span class="stamp stamp-large"><span>${balance !== null && balance <= 0 ? "Pago" : "Sinal pago"}</span>${stampDate ? `<small>${esc(stampDate)}</small>` : ""}</span></div><div class="deposit-note">${balance !== null && balance > 0 ? `Falta ${esc(money(balance))} na ${order.mode === "Entrega" ? "entrega" : "retirada"}` : order.totalKnown === false ? "Valor total ainda a combinar" : "Pagamento completo"}</div></section>`
-    : `<section class="deposit-card is-pending" aria-label="Sinal"><div class="deposit-top"><span class="deposit-label">Sinal</span><span>Total ${esc(orderTotalLabel(order))}</span></div><div class="deposit-amount">${informedNow > 0 ? esc(money(informedNow)) : esc(money(0))}</div><div class="deposit-note">${informedNow > 0 ? "Informado pela cliente, ainda não conferido" : confirmedPayments(order.id).length ? "Conferido: nenhum valor recebido" : "Ainda não recebido"}</div></section>`;
+  const committed = isCommitted(order) && !isCancelled(order);
+  const totalKnown = order.totalKnown !== false && Number(order.total) > 0;
+  const delivered = order.status === "Entregue";
+  const where = mode === "Entrega" ? "entrega" : "retirada";
+  const zap = whatsAppLink(order);
+  const moneyIntent = needsDeposit(order) || (delivered && balance > 0);
+  const row = (label, value, cls = "", note = "") => `<div class="ledger-row${cls ? ` ${cls}` : ""}"><dt>${label}</dt><dd>${value}${note ? `<small>${note}</small>` : ""}</dd></div>`;
+  let moneyStub = "";
+  if (committed) {
+    const deposit = suggestedDepositCents(order) / 100;
+    const stamp = hasReceivedPayment(order.id) && !(delivered && balance > 0)
+      ? `<span class="stamp stamp-large"><span>${balance !== null && balance <= 0 ? "Pago" : "Sinal pago"}</span>${stampDate ? `<small>${esc(stampDate)}</small>` : ""}</span>`
+      : moneyStamp(order, informedNow).html;
+    const rows = [
+      row("Total combinado", esc(orderTotalLabel(order))),
+      informedNow > 0 ? row("Informado pela cliente", esc(money(informedNow)), "is-informed", "não conta ainda") : "",
+      row("Conferido por você", esc(money(paidNow)), paidNow > 0 ? "is-done" : ""),
+      needsDeposit(order) && !informedNow && deposit ? row(`Sinal sugerido (${Number(state.pix?.depositPercent) || 30}%)`, esc(money(deposit)), "is-due") : "",
+      balance !== null && balance < 0 ? row("Excedente", esc(money(Math.abs(balance))), "", "Confira os recebimentos registrados.")
+        : row(delivered ? "Falta receber" : "Saldo a receber", totalKnown || balance !== null ? esc(money(balance === null ? Number(order.total || 0) : Math.max(0, balance))) : "A combinar", delivered && balance > 0 ? "is-due" : "", balance === null && totalKnown ? "nada conferido ainda" : balance > 0 && !delivered ? `na ${where}` : ""),
+    ].join("");
+    const confirmButtons = informedList.map((payment) => `<button class="vn-btn ok" type="button" data-action="confirm-payment" data-id="${esc(payment.id)}">Conferi os ${esc(money(payment.amount))}</button>`).join("");
+    const zeroNote = confirmedPayments(order.id).length && paidNow <= 0 ? '<p class="stub-note">Conferido: nenhum valor recebido.</p>' : "";
+    moneyStub = `<section class="deposit-card money-stub" aria-labelledby="money-title">
+      <h3 id="money-title">Dinheiro</h3>${stamp}
+      <dl class="ledger">${rows}</dl>${zeroNote}
+      <div class="stub-actions">${confirmButtons}${moneyIntent ? zap : ""}${pixChargeButton(order)}<button class="vn-btn quiet" data-action="add-payment" data-id="${esc(order.id)}" type="button">${icon("plus")}Registrar recebimento</button></div>
+      ${informedList.length ? '<p class="stub-note">Só marque depois de ver o dinheiro na conta.</p>' : needsDeposit(order) ? '<p class="stub-note">O sinal só conta quando você confirma que recebeu.</p>' : ""}
+    </section>`;
+  }
+  const location = order.location ? `<div class="detail-tile"><div class="detail-tile-label">${mode === "Entrega" ? "Local de entrega" : "Local de retirada"}</div><div class="detail-tile-value">${esc(order.location)}</div></div>` : "";
+  const nextAction = order.nextAction ? `<div class="detail-tile"><div class="detail-tile-label">Próxima ação${order.nextAt ? ` · ${esc(dateTimeLabel(order.nextAt))}` : ""}</div><div class="detail-tile-value">${esc(order.nextAction)}</div></div>` : "";
+  const valueTiles = committed ? "" : `<div class="detail-tile"><div class="detail-tile-label">Valor total</div><div class="detail-tile-value large">${esc(orderTotalLabel(order))}</div></div>${confirmedPayments(order.id).length ? `<div class="detail-tile"><div class="detail-tile-label">Recebido conferido</div><div class="detail-tile-value large">${esc(money(paidNow))}</div></div>` : ""}`;
+  const tiles = valueTiles + location + nextAction;
   const pending = order.pendingChange ? `<div class="pending-banner"><strong>Alteração ainda pendente:</strong> ${esc(order.pendingChange)}</div>` : "";
   const details = order.details ? esc(order.details) : "Nenhum detalhe foi registrado ainda.";
+  const phone = order.contact ? (() => { const digits = String(order.contact).replace(/\D/g, ""); return digits.length >= 8 ? `<a class="detail-phone" href="tel:${esc(digits)}">${esc(order.contact)}</a>` : `<span class="detail-phone">${esc(order.contact)}</span>`; })() : "";
+  const canEdit = !["Recusado", "Solicitação"].includes(order.status);
   return `<div class="detail-shell${order.status === "Solicitação" ? " is-request" : ""}">
-    <div class="detail-topline"><div><p class="detail-when">${esc(whenLabel)}</p><h2 class="detail-client" id="detail-title" tabindex="-1">${esc(order.product || "Produto sem descrição")}</h2><p class="detail-product">para ${esc(clientName(order) || "cliente sem nome")}</p></div><div class="detail-top-actions">${statusBadge(order.status)}<button class="icon-button close-dialog" type="button" data-close="detail-dialog" aria-label="Fechar detalhes"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div></div>
-    ${sample}${order.status === "Solicitação" ? "" : (() => { const step = nextStepButton(order, "detail-advance"); return step ? `<div class="detail-next">${step}</div>` : ""; })()}<div class="detail-meta-line"><span class="meta-chip">${esc(dueAt)}</span><span class="meta-chip">${esc(order.mode || "Retirada")}</span>${order.contact ? `<span class="meta-chip">${esc(order.contact)}</span>` : ""}</div>
-    <div class="detail-summary">${photo ? `<img class="detail-photo" src="${esc(photoUrl(photo))}" ${photoAttrs(photo, '72px')} alt="" decoding="async">` : ""}<div class="detail-summary-label">Combinado</div>${details}${cakeDetailsMarkup(order)}</div>
+    <div class="detail-topline detail-head">
+      <div class="detail-bar"><span class="detail-mode">${icon(mode === "Entrega" ? "delivery" : "bag")}${esc(mode)}</span>${statusBadge(order.status)}<span class="detail-tools">${canEdit ? `<button class="detail-edit" data-action="edit-order" data-id="${esc(order.id)}" type="button">Editar</button>` : ""}<button class="icon-button close-dialog" type="button" data-close="detail-dialog" aria-label="Fechar detalhes"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></span></div>
+      <p class="detail-when">${date ? `<b>${esc(shortTime(order.dueAt))}</b>` : ""}<span>${esc(dayLabel)}</span></p>
+      <h2 class="detail-client" id="detail-title" tabindex="-1">${esc(order.product || "Produto sem descrição")}</h2>
+      <p class="detail-product">para ${esc(clientName(order) || "cliente sem nome")}</p>
+    </div>
+    ${sample}${order.status === "Solicitação" ? "" : (() => { const step = nextStepButton(order, "detail-advance"); return step ? `<div class="detail-next">${step}</div>` : ""; })()}
     ${originMarkup(order)}${pending}${requestReviewMarkup(order)}
-    ${depositCard}<p class="deposit-rule">O sinal só conta quando você confirma que recebeu.</p>
-    <div class="detail-split"><div class="detail-tile"><div class="detail-tile-label">Valor total</div><div class="detail-tile-value large">${esc(orderTotalLabel(order))}</div></div><div class="detail-tile"><div class="detail-tile-label">${isCommitted(order) ? "Saldo a receber" : "Recebido conferido"}</div><div class="detail-tile-value ${balance === null && isCommitted(order) && !(order.totalKnown !== false && Number(order.total) > 0) ? "is-unknown" : "large"}">${balance === null ? (isCommitted(order) ? (order.totalKnown !== false && Number(order.total) > 0 ? `${esc(money(order.total))}<small class="detail-tile-note">nada conferido ainda</small>` : "A combinar") : esc(money(confirmedPayments(order.id).length ? confirmedPaid(order.id) : 0))) : esc(balanceLabel(balance))}${balance !== null && balance < 0 ? `<small>Confira os recebimentos registrados.</small>` : ""}</div></div>${location}${order.nextAction ? `<div class="detail-tile"><div class="detail-tile-label">Próxima ação${order.nextAt ? ` · ${esc(dateTimeLabel(order.nextAt))}` : ""}</div><div class="detail-tile-value">${esc(order.nextAction)}</div></div>` : ""}</div>
-    <section class="payment-section" ${order.status==='Solicitação'?'hidden':''}><div class="detail-section-title"><h3>Pagamentos</h3><div class="payment-buttons">${pixChargeButton(order)}<button class="button button-small" data-action="add-payment" data-id="${esc(order.id)}" type="button"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> Registrar</button></div></div>${payments.length ? `<div class="payment-list">${payments.map((payment) => `<div class="payment-item"><div class="payment-main"><div class="payment-amount">${esc(money(payment.amount))}</div><div class="payment-note">${esc(payment.note || "Sem observação")} · ${esc(formatWhenHistory(payment.createdAt))}</div></div><div class="payment-status"><span>${payment.status === "Conferido" ? "Recebimento conferido" : "Cliente informou"}</span>${payment.status !== "Conferido" ? `<button type="button" data-action="confirm-payment" data-id="${esc(payment.id)}">Marcar conferido</button>` : ""}</div></div>`).join("")}</div>` : `<p class="detail-empty">Nenhum pagamento registrado.</p>`}</section>
+    ${moneyStub}
+    <div class="detail-summary">${photo ? `<img class="detail-photo" src="${esc(photoUrl(photo))}" ${photoAttrs(photo, '72px')} alt="" decoding="async">` : ""}<div class="detail-summary-label">Combinado</div>${details}${cakeDetailsMarkup(order)}</div>
+    ${tiles ? `<div class="detail-split">${tiles}</div>` : ""}
+    ${phone || order.client ? `<section class="detail-contact"><div><strong>${esc(clientName(order) || "Cliente sem nome")}</strong>${phone}</div>${!moneyIntent && zap ? zap : ""}</section>` : ""}
+    <section class="payment-section" ${order.status==='Solicitação'?'hidden':''}><div class="detail-section-title"><h3>Recebimentos</h3>${committed ? "" : `<div class="payment-buttons">${pixChargeButton(order)}<button class="button button-small" data-action="add-payment" data-id="${esc(order.id)}" type="button">${icon("plus")} Registrar</button></div>`}</div>${payments.length ? `<div class="payment-list">${payments.map((payment) => `<div class="payment-item"><div class="payment-main"><div class="payment-amount">${esc(money(payment.amount))}</div><div class="payment-note">${esc(payment.note || "Sem observação")}, ${esc(formatWhenHistory(payment.createdAt))}</div></div><div class="payment-status"><span class="${payment.status === "Conferido" ? "is-done" : "is-informed"}">${payment.status === "Conferido" ? "Conferido" : "Cliente informou"}</span>${payment.status !== "Conferido" && !committed ? `<button type="button" data-action="confirm-payment" data-id="${esc(payment.id)}">Marcar conferido</button>` : ""}</div></div>`).join("")}</div>` : `<p class="detail-empty">Nenhum pagamento registrado.</p>`}</section>
     <details class="history-section"><summary>Histórico (${history.length})</summary>${history.length ? `<div class="history-list">${history.map((item) => `<div class="history-item"><strong>${esc(formatWhenHistory(item.at))}</strong>${esc(item.text || "Atualização do pedido")}</div>`).join("")}</div>` : `<p class="detail-empty">As alterações do pedido aparecerão aqui.</p>`}</details>
-    <div class="detail-actions">${whatsAppLink(order)}<button class="button button-quiet" data-action="copy-summary" data-id="${esc(order.id)}" type="button">${order.reviewOutcome?'Copiar mensagem para a cliente':'Copiar mensagem'}</button><button class="button button-primary" data-action="edit-order" data-id="${esc(order.id)}" type="button" ${order.status==='Recusado'?'hidden':''}>${order.status==='Solicitação'?'Editar e aceitar':'Editar'}</button></div>
+    <div class="detail-actions"><button class="button button-quiet" data-action="copy-summary" data-id="${esc(order.id)}" type="button">${order.reviewOutcome?'Copiar mensagem para a cliente':'Copiar mensagem'}</button>${order.status === "Solicitação" ? `<button class="button button-primary" data-action="edit-order" data-id="${esc(order.id)}" type="button">Editar e aceitar</button>` : ""}</div>
   </div>`;
 }
 

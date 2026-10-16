@@ -60,9 +60,9 @@ try {
     const card = page.locator('#detail-content .deposit-card');
     assert.equal(await card.locator('.stamp').count(), stamp && id !== 'cancelled' ? 1 : 0, `${id}: detail stamp presence`);
     if (stamp) assert.equal(await card.locator('.stamp > span').innerText(), stamp.toUpperCase());
-    if (id === 'zero') { assert.match(await card.innerText(), /Conferido: nenhum valor recebido/); assert.match(await page.locator('#detail-content .detail-split').innerText(), /Saldo a receber\s*R\$\s*150,00/); await page.screenshot({path: path.join(output, 'zero-detail.png'), fullPage: true}); }
+    if (id === 'zero') { assert.match(await card.innerText(), /Conferido: nenhum valor recebido/); assert.match(await page.locator('#detail-content .deposit-card').innerText(), /Saldo a receber\s*R\$\s*150,00/); await page.screenshot({path: path.join(output, 'zero-detail.png'), fullPage: true}); }
     if (id === 'partial-zero') assert.match(await card.locator('.stamp small').innerText(), /12 OUT/, 'Zero entry must not change the actual receipt date');
-    if (id === 'excess') assert.match(await page.locator('#detail-content').innerText(), /Excedente R\$\s*25,00/);
+    if (id === 'excess') assert.match(await page.locator('#detail-content').innerText(), /Excedente\s*R\$\s*25,00/);
     await page.keyboard.press('Escape');results.push({case: id, stamp, passed: true});
   }
   // The same real payment form transitions zero -> partial -> full without changing old entries.
@@ -73,7 +73,7 @@ try {
     await page.locator('#payment-dialog [name=status]').selectOption('Conferido');
     await page.locator('#save-payment-button').click();await page.waitForFunction(() => !document.querySelector('#payment-dialog').open);
     assert.equal(await page.locator('#detail-content .deposit-card .stamp > span').innerText(), stamp);
-    assert.match(await page.locator('#detail-content .detail-split').innerText(), new RegExp(`Saldo a receber\\s*R\\$\\s*${balance}`));
+    assert.match(await page.locator('#detail-content .deposit-card').innerText(), new RegExp(`Saldo a receber\\s*R\\$\\s*${balance}`));
     results.push({case: `zero + ${amount}`, stamp, balance, passed: true});
   }
   const saved = await page.evaluate(async () => (await window.DoceStore.fetch('/api/state')).json());
