@@ -6,7 +6,7 @@
 
 **Promessa:** pedidos e agenda da semana em um só lugar, do combinado à entrega. A marca fala de organização e acompanhamento; não promete vendas, ausência de erros ou resultados financeiros.
 
-**Direção:** "Glacê + carimbo". A referência de design é o canvas "Versão final" (site, marca, Hoje, Nova encomenda, Pedido).
+**Direção:** em transição (desde 16/10/2026) para a nova identidade do laboratório visual (branch `codex/laboratorio-visual`, `lab/DESIGN.md`): canvas `#fff8f8`, framboesa `#ad2644`, vinho `#4a1525`, verde `#006947` para o que foi conferido, âmbar `#865508` para atenção; Outfit nos títulos e números, Plus Jakarta Sans no resto; cartões com raio 20. Implementada em `public/ui/vnext.css`, tela por tela; o logo oficial continua. As seções abaixo descrevem o visual "Glacê + carimbo", que vale para as telas ainda não migradas. A referência de design é o canvas "Versão final" (site, marca, Hoje, Nova encomenda, Pedido).
 
 ## Tom
 

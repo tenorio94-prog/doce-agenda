@@ -24,7 +24,7 @@ try {
     await page.locator('.settings-button, [data-view="settings"]').first().click();
     await page.locator('#settings-title').waitFor();
     assert.equal(await page.locator('.settings-card[data-settings="pix"]').count(), 0, 'Pix escondido sem o aviso de teste');
-    await page.locator('#view-today .order-row').first().click().catch(() => {});
+    await page.locator('#view-today .vn-order').first().click().catch(() => {});
     await page.close();
     results.push('Pix escondido sem ?pix=teste');
   }
@@ -41,7 +41,7 @@ try {
     assert.equal(new URL(page.url()).search, '', 'o aviso sai do endereço');
 
     // Sem chave: o botão do pedido leva ao cadastro do Pix.
-    const marcos = page.locator('#view-today .order-row', { hasText: 'Marcos' });
+    const marcos = page.locator('#view-today .vn-order', { hasText: 'Marcos' });
     await marcos.click();
     await page.locator('#detail-dialog[open] [data-action="pix-charge"]').click();
     const card = page.locator('.settings-card[data-settings="pix"][open]');
@@ -65,7 +65,7 @@ try {
 
     // Cobrar o sinal de 30% do pedido de R$ 95,00 do Marcos.
     await page.locator('.nav-item[data-view="today"]').click();
-    await page.locator('#view-today .order-row', { hasText: 'Marcos' }).click();
+    await page.locator('#view-today .vn-order', { hasText: 'Marcos' }).click();
     await page.locator('#detail-dialog[open] [data-action="pix-charge"]').click();
     const dialog = page.locator('#pix-dialog[open]');
     await dialog.waitFor();

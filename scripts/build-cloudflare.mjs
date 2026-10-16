@@ -60,6 +60,13 @@ for (const [name, file] of [['young-serif', 'young-serif/files/young-serif-latin
 await bundle('public/landing/main.js', path.join(output, 'landing', 'landing.js'));
 await build({ entryPoints: [path.join(source, 'ui', 'doce-wa.css')], outfile: path.join(output, 'ui', 'doce-wa.css'), bundle: true, minify: true });
 await bundle('public/ui/app-wa.js', path.join(output, 'ui', 'app-wa.js'));
+// Nova identidade (laboratório visual): folha escopada e fontes Outfit/Plus Jakarta Sans (OFL, @fontsource, versão fixa).
+await build({ entryPoints: [path.join(source, 'ui', 'vnext.css')], outfile: path.join(output, 'ui', 'vnext.css'), bundle: true, minify: true, external: ['/fonts/*'] });
+await mkdir(path.join(output, 'fonts', 'vnext'), { recursive: true });
+for (const [name, pkg] of [['outfit', 'outfit'], ['plus-jakarta-sans', 'plus-jakarta-sans']]) {
+  await copyFile(path.join(root, 'node_modules', '@fontsource-variable', pkg, 'files', `${pkg}-latin-wght-normal.woff2`), path.join(output, 'fonts', 'vnext', `${name}.woff2`));
+  await copyFile(path.join(root, 'node_modules', '@fontsource-variable', pkg, 'LICENSE'), path.join(output, 'fonts', 'vnext', `${name}-OFL.txt`));
+}
 await mkdir(path.join(output, 'account'), { recursive: true });
 for (const name of ['account.css', 'account-ui.js', 'account-controller.js', 'config.js']) await copy(path.join('account', name));
 await copy('account/index.html', 'cadastro/index.html');

@@ -11,6 +11,8 @@
     "screens": "node scripts/capture-screens.mjs"
   },
   "devDependencies": {
+    "@fontsource-variable/outfit": "5.3.0",
+    "@fontsource-variable/plus-jakarta-sans": "5.3.0",
     "@fontsource/baloo-2": "5.3.0",
     "@fontsource/bricolage-grotesque": "5.3.0",
     "@fontsource/caprasimo": "5.3.0",
