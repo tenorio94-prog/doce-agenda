@@ -556,3 +556,17 @@ body.vnext:has(dialog[open]) { overflow: hidden; }
 .vn-open:focus-visible { outline: none; }
 .vn-order:has(.vn-open:focus-visible) { outline: 3px solid var(--vn-green); outline-offset: 3px; }
 .vn-order :is(.vn-btn, .vn-zap, a, .vn-card-foot button) { position: relative; z-index: 2; }
+
+/* ---- Rodada 2 (16/10), etapa 0: defeitos ---- */
+/* Linha de pagamento: o texto encolhe e quebra por palavra; o botão desce quando falta espaço. */
+.vnext .detail-dialog .payment-item { flex-wrap: wrap; align-items: center; }
+.vnext .detail-dialog .payment-main { flex: 1 1 170px; min-width: 0; }
+.vnext .detail-dialog .payment-note { overflow-wrap: break-word; }
+.vnext .detail-dialog .payment-status { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 6px 10px; margin-left: auto; }
+/* A foto do combinado fica dentro do próprio bloco. */
+.vnext .detail-summary { display: flow-root; }
+/* Solicitação: situação numa linha própria. */
+.vnext .request-review .request-state { margin: 6px 0 10px; }
+/* Ficha da cliente: valores não quebram nem encostam na borda. */
+.vnext .client-tiles b { display: block; font-size: 17px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vn-order.comanda .cmd-when .vn-day-label { white-space: nowrap; }

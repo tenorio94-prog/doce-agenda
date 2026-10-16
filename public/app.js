@@ -69,6 +69,14 @@ const dateTimeInput = (value) => {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}T${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
 };
 const isCancelled = (order) => ["Cancelado", "Recusado"].includes(order.status);
+// Dia curto para listas: "sex, 16 out"; com o ano quando não é o ano atual.
+const listDayLabel = (value) => {
+  const date = parseDate(value);
+  if (!date) return "Sem data";
+  const options = { weekday: "short", day: "numeric", month: "short" };
+  if (date.getFullYear() !== new Date().getFullYear()) options.year = "numeric";
+  return dateLabel(value, options).replace(/\./g, "").replace(/ de /g, " ");
+};
 const isFinished = (order) => ["Entregue", "Cancelado", "Recusado"].includes(order.status);
 const isCommitted = (order) => ["Confirmado", "Em produção", "Pronto", "Entregue"].includes(order.status);
 const orderPayments = (orderId) => state.payments.filter((payment) => String(payment.orderId) === String(orderId));
@@ -107,6 +115,13 @@ function nextStepButton(order, extraClass = "") {
   return "";
 }
 const timeValue = (value) => parseDate(value)?.getTime() ?? Number.MAX_SAFE_INTEGER;
+// Lista de Pedidos: o que ainda está em aberto vem primeiro, do mais próximo ao mais distante;
+// entregues, cancelados e recusados depois, do mais recente ao mais antigo.
+const sortForList = (orders) => {
+  const open = sortOrders(orders.filter((order) => !isFinished(order)));
+  const done = sortOrders(orders.filter(isFinished)).reverse();
+  return [...open, ...done];
+};
 const sortOrders = (orders) => [...orders].sort((a, b) => timeValue(a.dueAt) - timeValue(b.dueAt) || timeValue(a.createdAt) - timeValue(b.createdAt));
 const orderById = (id) => state.orders.find((order) => String(order.id) === String(id));
 const sampleOrder = (order) => !!(order?.isSample || order?.isDemo || order?.sample);
@@ -386,7 +401,7 @@ function agendaCardMarkup(order, options = {}) {
   const classes = ["vn-order", "comanda", stamp.cls, isLate(order) ? "is-late" : "", options.compact ? "is-compact" : "", order.status === "Entregue" ? "is-delivered" : "", isCancelled(order) ? "is-cancelled" : "", String(order.id) === String(state.justAdvanced) ? "is-advanced" : ""].filter(Boolean).join(" ");
   const mode = order.mode || "Retirada";
   const step = options.compact ? "" : nextStepButton(order, "vn-btn primary small");
-  const day = date && options.withDate ? `<span class="vn-day-label">${esc(dateLabel(order.dueAt, { weekday: "short", day: "numeric", month: "short" }).replace(/./g, ""))}</span>` : "";
+  const day = date && options.withDate ? `<span class="vn-day-label">${esc(listDayLabel(order.dueAt))}</span>` : "";
   const when = `<div class="cmd-when">${day}<b class="vn-time">${date ? esc(shortTime(order.dueAt)) : "—"}</b><small>${icon(mode === "Entrega" ? "delivery" : "bag")}${esc(mode.toLowerCase())}</small>${photo && !options.compact ? `<img class="vn-thumb" src="${esc(photoUrl(photo))}" ${photoAttrs(photo, '48px')} alt="" loading="lazy" decoding="async">` : ""}</div>`;
   // A etapa já está no verbo do botão; o rótulo só aparece quando não há botão (entregue, cancelado, lista compacta).
   const stage = isLate(order) ? '<span class="vn-badge red">Atrasado</span>' : step ? "" : statusBadge(order.status);
@@ -529,7 +544,7 @@ function renderToday() {
   const toDeliver = todays.filter((order) => !isFinished(order));
   const missingDeposit = toDeliver.filter(needsDeposit);
   const todaySummary = toDeliver.length
-    ? `<strong>${toDeliver.length} para entregar</strong>${missingDeposit.length ? ` · ${missingDeposit.length} ${missingDeposit.length === 1 ? "falta" : "faltam"} o sinal` : ""}`
+    ? `<strong>${toDeliver.length} para entregar</strong>${missingDeposit.length ? `, ${missingDeposit.length} sem sinal` : ""}`
     : "Nada para entregar hoje";
   const financeNote = unknown ? unknown + (unknown === 1 ? ' pedido sem pagamento conferido ainda.' : ' pedidos sem pagamento conferido ainda.') : '';
   panel.innerHTML = `<header class="vn-heading"><div><span class="vn-date">${esc(capitalize(new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "numeric", month: "long" }).format(new Date())))}</span><h1 id="today-title" tabindex="-1">Sua agenda</h1><p class="today-summary">${todaySummary}</p></div><button class="vn-btn primary vn-heading-add" type="button" data-action="new-order">${icon("plus")} Nova encomenda</button></header>
@@ -551,7 +566,7 @@ function renderToday() {
 
 function filteredOrders() {
   const query = state.search.trim().toLocaleLowerCase("pt-BR");
-  return sortOrders(state.orders.filter((order) => !sampleOrder(order)).filter((order) => {
+  return sortForList(state.orders.filter((order) => !sampleOrder(order)).filter((order) => {
     const stage = ORDER_STAGES.find((item) => item.key === state.statusFilter) || ORDER_STAGES[0];
     const matchesStatus = !stage.statuses || stage.statuses.includes(order.status);
     const searchable = [order.client, order.product, order.details, order.location, order.contact, order.nextAction].join(" ").toLocaleLowerCase("pt-BR");
@@ -1686,7 +1701,7 @@ function requestReviewMarkup(order){
  if(order.status!=='Solicitação')return order.reviewOutcome==='refused'?`<p class="pending-banner">Solicitação recusada${order.refusalReason?`: ${esc(order.refusalReason)}`:'.'}</p>`:'';
  const day=order.dueAt?.slice(0,10),available=day?availabilityFor(day):{limit:null},pending=state.orders.filter(o=>o.status==='Solicitação'&&day&&o.dueAt?.slice(0,10)===day).length;
  const remaining=Number.isInteger(available.limit)?Math.max(0,available.limit-available.count):null;
- return `<section class="request-review"><h3>Solicitação${order.publicCode ? ` ${esc(order.publicCode)}` : ""} · Aguardando revisão</h3><p>Ainda não confirmada. Confira data, detalhes e valor antes de aceitar.</p><p><strong>Valor total: ${esc(orderTotalLabel(order))}</strong></p>${dateCapacityMarkup(order)}${order.possibleDuplicate?'<p class="form-error">Possível duplicata: compare com as outras solicitações antes de aceitar.</p>':''}${remaining!==null&&pending>remaining?`<p class="form-error">${pending} solicitações para ${remaining} ${remaining===1?'vaga restante':'vagas restantes'} nesta data.</p>`:''}<div class="request-actions"><button class="button button-primary" type="button" data-action="accept-request" data-id="${esc(order.id)}" data-status="Confirmado">Aceitar pedido</button><button class="button button-quiet" type="button" data-action="accept-request" data-id="${esc(order.id)}" data-status="Orçamento">Ainda vou passar o preço</button><button class="text-link" type="button" data-action="refuse-request" data-id="${esc(order.id)}">Recusar</button></div></section>`;
+ return `<section class="request-review"><h3>Solicitação${order.publicCode ? ` ${esc(order.publicCode)}` : ""}</h3><p class="request-state"><span class="vn-badge outline">Aguardando revisão</span></p><p>Ainda não confirmada. Confira data, detalhes e valor antes de aceitar.</p><p><strong>Valor total: ${esc(orderTotalLabel(order))}</strong></p>${dateCapacityMarkup(order)}${order.possibleDuplicate?'<p class="form-error">Possível duplicata: compare com as outras solicitações antes de aceitar.</p>':''}${remaining!==null&&pending>remaining?`<p class="form-error">${pending} solicitações para ${remaining} ${remaining===1?'vaga restante':'vagas restantes'} nesta data.</p>`:''}<div class="request-actions"><button class="button button-primary" type="button" data-action="accept-request" data-id="${esc(order.id)}" data-status="Confirmado">Aceitar pedido</button><button class="button button-quiet" type="button" data-action="accept-request" data-id="${esc(order.id)}" data-status="Orçamento">Ainda vou passar o preço</button><button class="text-link" type="button" data-action="refuse-request" data-id="${esc(order.id)}">Recusar</button></div></section>`;
 }
 async function reviewRequest(id,status){
  try{await apiRequest(`/orders/${encodeURIComponent(id)}/accept`,{method:'POST',body:{status}});closeDetails();await loadState({silent:true});showOrderDetail(id);showToast('Solicitação aceita. Você pode copiar a mensagem para a cliente.');}
