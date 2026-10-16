@@ -14,7 +14,7 @@
 - Prefira decisões rotineiras por conta própria dentro do escopo autorizado. Pergunte por informação indispensável, ação sensível ou escolha que afete o produto.
 - **Entregas por etapas:** implementar, testar, publicar e relatar uma feature por vez, com commit separado. Pare e peça autorização antes de começar a próxima feature.
 - **Mudança aprovada vai até o fim:** depois que Lucas aprova o que foi planejado, faça commit, push para `main` e publique no site sem pedir de novo; confira o endereço publicado. Ainda peça autorização para banco/Supabase, dados reais, política de privacidade, DNS/domínio/e-mail, serviços pagos, apagar dados, ou quando um teste falhar ou não for possível verificar.
-- A preferência vigente é trabalhar **sem subagentes**, após pedidos anteriores de delegação. Siga a preferência mais recente; não reative delegação nem mude modelos/configuração global por iniciativa própria.
+- Subagentes: só o `triagem-haiku` (Claude Code, `.claude/agents/triagem-haiku.md`), somente leitura, para explorar código, pesquisar documentação ou resumir saídas longas. Implementação, testes, decisões, Git e publicação ficam no agente principal. Não use outros subagentes nem mude modelos/configuração global por iniciativa própria.
 - Ao terminar uma etapa, atualize `context.md` com alterações, verificações, publicação e pendências. Registre resultados reais; diferencie implementado, testado e publicado.
 
 ## Regras do produto e dos dados

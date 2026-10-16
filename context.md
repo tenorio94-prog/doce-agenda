@@ -21,7 +21,7 @@ Atualizado em **16/10/2026**, após publicar a melhoria de clareza das solicita�
 
 ## 2. Como trabalhar com o usuário (decisões vigentes)
 
-- Lucas não é técnico, usa muito o celular. Português simples, curto, sem jargão. Execução pelo agente principal, **sem subagentes**.
+- Lucas não é técnico, usa muito o celular. Português simples, curto, sem jargão. Execução pelo agente principal; único subagente permitido é o `triagem-haiku`, só leitura (16/10).
 - **Fluxo combinado:** ele aprova uma mudança planejada → o agente constrói, testa, faz commit, push para `main` e **publica no site direto**, confere o endereço publicado, atualiza este arquivo e relata. Não perguntar "posso publicar?" de novo.
 - **Ainda pedir autorização antes de:** começar algo não aprovado; mexer em banco/Supabase (schema, funções), dados de contas reais ou política de privacidade; DNS, domínio ou e-mail; qualquer serviço pago; apagar dados; publicar com teste falhando ou sem conseguir verificar.
 - Ao propor mudanças de interface, ele gosta de uma análise "de designer" honesta (o que funciona, o que confunde, o que eu faria) antes de construir.
