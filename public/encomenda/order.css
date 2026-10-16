@@ -239,3 +239,34 @@ body.in-order .preview-banner{position:static}
 @media(max-width:360px){.two{grid-template-columns:1fr}.st-moderna h1.name{font-size:42px}}
 @media(prefers-reduced-motion:reduce){*,::before,::after{animation:none!important;transition:none!important}.pill:active,.next:active,.card:active .img{transform:none}}
 .st-doceria .how li::before,.st-caseira .how li::before{background:#fff}
+
+/* ---- Alinhamento com o "Link da loja" do laboratório visual (16/10/2026) ----
+   Texto em Plus Jakarta Sans (a mesma do app); títulos seguem a letra do estilo da confeitaria. */
+@font-face{font-family:"Plus Jakarta Sans";src:url(/fonts/vnext/plus-jakarta-sans.woff2) format("woff2");font-weight:200 800;font-display:swap}
+body{font-family:"Plus Jakarta Sans",var(--font-body),sans-serif}
+input,select,textarea{border-color:#dcc8cf;border-radius:12px}
+input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid var(--a-ink);outline-offset:2px;border-color:var(--a-ink)}
+.step-title{display:flex;align-items:center;gap:12px}
+.step-title::before{display:grid;place-items:center;flex:none;width:32px;height:32px;border-radius:50%;background:var(--a-ink);color:#fff;font:800 15px "Plus Jakarta Sans",sans-serif}
+.step[data-step="1"] .step-title::before{content:"1"}
+.step[data-step="2"] .step-title::before{content:"2"}
+.step[data-step="3"] .step-title::before{content:"3"}
+.send-note{display:flex;gap:10px;align-items:flex-start;margin:0;padding:12px 14px;border-radius:12px;background:var(--a-tint);color:var(--t);font-size:14px;line-height:1.45}
+.send-note svg{flex:none;margin-top:1px;color:var(--a-ink)}
+.card .img,.feat .card .img{box-shadow:0 4px 18px #4a152508}
+@media(min-width:1000px){
+  main{max-width:1180px;padding:32px 32px 0}
+  #vitrine{display:grid;grid-template-columns:380px minmax(0,1fr);column-gap:44px;align-items:start}
+  #vitrine>.hero{grid-column:1;grid-row:1/span 30;position:sticky;top:24px;padding-bottom:24px}
+  #vitrine>:not(.hero){grid-column:2}
+  #vitrine>.notice{margin:8px 0 0}
+  #vitrine .sec{padding-left:0;padding-right:0}
+  #vitrine .feat{margin:0;padding:0 0 6px}
+  #vitrine .chips{margin-left:0;margin-right:0;padding-left:0;padding-right:0}
+  #vitrine .grid .card .img{aspect-ratio:1/1}
+  #vitrine .grid.one .card .img{aspect-ratio:16/9}
+  .st-atelie .cover,.st-doceria .cover,.st-moderna .head{border-radius:24px}
+  #request-page,#confirmation{max-width:620px;margin:0 auto}
+  .sheet{max-width:620px}
+  .foot{max-width:1180px;margin:0 auto}
+}

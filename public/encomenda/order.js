@@ -295,7 +295,7 @@ async function start() {
     await refreshDates();
     renderHome();
     $('#consent-business').textContent = config.displayName;
-    $('#send-note').textContent = `Ainda não é uma compra. ${config.displayName} confirma pelo WhatsApp.`;
+    $('#send-note').textContent = `Nenhum pagamento agora. Enviar não confirma nem reserva a data: ${config.displayName} responde pelo WhatsApp.`;
     $('#loading').hidden = true; $('#vitrine').hidden = false;
     history.replaceState({ v: 'home' }, '');
   } catch (error) {
