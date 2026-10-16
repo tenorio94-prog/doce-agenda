@@ -368,22 +368,52 @@ function cakeLine(order) {
   const values = order.cake?.values || {};
   return Object.values(values).filter(Boolean).slice(0, 3).join(" · ");
 }
+// Carimbo do dinheiro (direção Comanda): cheio = conferido; tracejado = falta ou falta conferir. O texto completo fica no carimbo.
+function moneyStamp(order, informed) {
+  if (isCancelled(order) || sampleOrder(order)) return { cls: "", html: "" };
+  if (informed > 0 && needsDeposit(order)) return { cls: "is-check", html: '<span class="vn-stamp is-check"><b>Pix</b> <small>falta conferir</small></span>' };
+  if (needsDeposit(order)) return { cls: "is-due", html: '<span class="vn-stamp is-due"><b>Falta</b> <small>o sinal</small></span>' };
+  if (!hasReceivedPayment(order.id)) return { cls: "", html: "" };
+  const balance = balanceFor(order), full = balance !== null && balance <= 0;
+  return { cls: "is-ok", html: `<span class="vn-badge green vn-stamp is-ok"><b>${full ? "Total" : "Sinal"}</b> <small>conferido</small></span>` };
+}
 function agendaCardMarkup(order, options = {}) {
+  if (options.inbox) return inboxCardMarkup(order, options);
   const date = parseDate(order.dueAt), photo = vitrinePhotoFor(order), informed = informedFor(order.id);
-  const detail = [order.details, cakeLine(order)].filter(Boolean).join(" · ");
-  const classes = ["vn-order", options.compact ? "is-compact" : "", order.status === "Entregue" ? "is-delivered" : "", isCancelled(order) ? "is-cancelled" : "", String(order.id) === String(state.justAdvanced) ? "is-advanced" : ""].filter(Boolean).join(" ");
+  const detail = [order.details, cakeLine(order)].filter(Boolean).join(", ");
+  const stamp = moneyStamp(order, informed);
+  const classes = ["vn-order", "comanda", stamp.cls, isLate(order) ? "is-late" : "", options.compact ? "is-compact" : "", order.status === "Entregue" ? "is-delivered" : "", isCancelled(order) ? "is-cancelled" : "", String(order.id) === String(state.justAdvanced) ? "is-advanced" : ""].filter(Boolean).join(" ");
   const mode = order.mode || "Retirada";
-  const thumb = photo ? `<img class="vn-thumb" src="${esc(photoUrl(photo))}" alt="" loading="lazy">` : `<span class="vn-thumb is-initial" aria-hidden="true">${esc((order.product || "?").trim()[0] || "?")}</span>`;
   const step = options.compact ? "" : nextStepButton(order, "vn-btn primary small");
+  const day = date && options.withDate ? `<span class="vn-day-label">${esc(dateLabel(order.dueAt, { weekday: "short", day: "numeric", month: "short" }).replace(/./g, ""))}</span>` : "";
+  const when = `<div class="cmd-when">${day}<b class="vn-time">${date ? esc(shortTime(order.dueAt)) : "—"}</b><small>${icon(mode === "Entrega" ? "delivery" : "bag")}${esc(mode.toLowerCase())}</small>${photo && !options.compact ? `<img class="vn-thumb" src="${esc(photoUrl(photo))}" alt="" loading="lazy">` : ""}</div>`;
+  // A etapa já está no verbo do botão; o rótulo só aparece quando não há botão (entregue, cancelado, lista compacta).
+  const stage = isLate(order) ? '<span class="vn-badge red">Atrasado</span>' : step ? "" : statusBadge(order.status);
   return `<article class="${classes}" data-open-order="${esc(order.id)}" tabindex="0" role="button" aria-label="Abrir pedido de ${esc(clientName(order) || "cliente sem nome")}">
-    ${options.inbox ? `<div class="vn-row vn-inbox-top"><span class="vn-eyebrow">${esc(order.status === "Solicitação" ? "Solicitação" : "Pedido")}${order.publicCode ? ` · ${esc(order.publicCode)}` : ""}</span>${order.status === "Solicitação" ? '<span class="vn-badge outline">Aguardando revisão</span>' : statusBadge(order.status)}</div>` : `<div class="vn-row"><span class="vn-time">${icon("clock")}${date ? `${options.withDate ? `<span class="vn-day-label">${esc(dateLabel(order.dueAt, { weekday: "short", day: "numeric", month: "short" }).replace(/\./g, ""))} ·</span> ` : ""}${esc(shortTime(order.dueAt))}` : "Sem data"} <small>· ${esc(mode)}</small></span>${lateBadge(order)}${paymentBadge(order)}</div>`}
-    <div class="vn-product">${thumb}<div><span class="vn-client">${esc(clientName(order) || "Cliente sem nome")}</span><h3>${esc(order.product || "Produto sem descrição")}</h3>${options.inbox ? `<div class="vn-inbox-value"><span>Valor total</span><strong class="vn-total">${esc(orderTotalLabel(order))}</strong></div>` : ""}${detail && !options.compact ? `<p>${esc(detail)}</p>` : ""}</div>${icon("right", "vn-chevron")}</div>
-    ${!options.compact ? originMarkup(order) : ""}
-    ${options.inbox ? `<div class="vn-note vn-inbox-date">${icon("clock")}<span>${esc(date ? dateTimeLabel(order.dueAt) : "Data e horário a combinar")} · ${esc(mode)}</span></div>` : ""}
-    ${!options.compact && informed > 0 ? `<div class="vn-note amber">${icon("info")}<span>Pix de ${esc(money(informed))} informado. Falta conferir.</span></div>` : ""}
-    ${options.inbox || (!options.compact && order.status === "Solicitação") ? dateCapacityMarkup(order) : ""}
-    ${!options.compact && order.status === "Recusado" && order.refusalReason ? `<div class="vn-note">${icon("info")}<span>Recusado: ${esc(order.refusalReason)}</span></div>` : ""}
-    ${options.compact ? "" : `<div class="vn-row vn-card-foot">${options.inbox ? "" : statusBadge(order.status)}${step || (options.inbox ? "" : `<strong class="vn-total">${esc(orderTotalLabel(order))}</strong>`)}</div>`}
+    ${when}
+    <div class="cmd-body">
+      ${stamp.html}
+      <h3>${esc(order.product || "Produto sem descrição")}</h3>
+      <p class="cmd-meta"><span class="vn-client">${esc(clientName(order) || "Cliente sem nome")}</span>${detail && !options.compact ? `, ${esc(detail)}` : ""}</p>
+      ${!options.compact ? originMarkup(order) : ""}
+      ${!options.compact && informed > 0 ? `<div class="vn-note amber">${icon("info")}<span>Pix de ${esc(money(informed))} informado. Confira no banco.</span></div>` : ""}
+      ${!options.compact && order.status === "Solicitação" ? dateCapacityMarkup(order) : ""}
+      ${!options.compact && order.status === "Recusado" && order.refusalReason ? `<div class="vn-note">${icon("info")}<span>Recusado: ${esc(order.refusalReason)}</span></div>` : ""}
+      ${options.compact ? "" : `<div class="vn-row vn-card-foot">${stage}${step || `<strong class="vn-total">${esc(orderTotalLabel(order))}</strong>`}</div>`}
+    </div>
+  </article>`;
+}
+// Caixa de entrada (Pedidos → Novos): mantém valor e ocupação da data em destaque para decidir.
+function inboxCardMarkup(order, options) {
+  const date = parseDate(order.dueAt), mode = order.mode || "Retirada";
+  return `<article class="vn-order is-inbox" data-open-order="${esc(order.id)}" tabindex="0" role="button" aria-label="Abrir pedido de ${esc(clientName(order) || "cliente sem nome")}">
+    <div class="vn-row vn-inbox-top"><span class="vn-eyebrow">${esc(order.status === "Solicitação" ? "Solicitação" : "Pedido")}${order.publicCode ? ` ${esc(order.publicCode)}` : ""}</span>${order.status === "Solicitação" ? '<span class="vn-badge outline">Aguardando revisão</span>' : statusBadge(order.status)}</div>
+    <div class="vn-product"><div><span class="vn-client">${esc(clientName(order) || "Cliente sem nome")}</span><h3>${esc(order.product || "Produto sem descrição")}</h3><div class="vn-inbox-value"><span>Valor total</span><strong class="vn-total">${esc(orderTotalLabel(order))}</strong></div></div></div>
+    ${originMarkup(order)}
+    <div class="vn-note vn-inbox-date">${icon("clock")}<span>${esc(date ? dateTimeLabel(order.dueAt) : "Data e horário a combinar")}, ${esc(mode.toLowerCase())}</span></div>
+    ${dateCapacityMarkup(order)}
+    ${informedFor(order.id) > 0 ? `<div class="vn-note amber">${icon("info")}<span>Pix de ${esc(money(informedFor(order.id)))} informado. Confira no banco.</span></div>` : ""}
+    ${nextStepButton(order, "vn-btn primary small") ? `<div class="vn-row vn-card-foot">${nextStepButton(order, "vn-btn primary small")}</div>` : ""}
   </article>`;
 }
 
