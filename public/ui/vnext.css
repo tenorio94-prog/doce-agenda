@@ -2,14 +2,19 @@
    Tokens com prefixo --vn- e classes vn-*: não alteram as telas que ainda usam o visual Glacê (style.css).
    Etapa 1: moldura (topo, faixa da demonstração, navegação) e Agenda. Textos com no mínimo 12 px (BRAND.md). */
 @font-face { font-family: "Outfit"; src: url("/fonts/vnext/outfit.woff2") format("woff2"); font-weight: 100 900; font-display: swap; }
+@font-face { font-family: "Bricolage Grotesque"; src: url("/fonts/vnext/bricolage-600.woff2") format("woff2"); font-weight: 500 650; font-display: swap; }
+@font-face { font-family: "Bricolage Grotesque"; src: url("/fonts/vnext/bricolage-700.woff2") format("woff2"); font-weight: 651 900; font-display: swap; }
 @font-face { font-family: "Plus Jakarta Sans"; src: url("/fonts/vnext/plus-jakarta-sans.woff2") format("woff2"); font-weight: 200 800; font-display: swap; }
 
 .vnext {
-  --vn-canvas: #fff8f8; --vn-surface: #fff; --vn-soft: #fff0f2; --vn-rose: #ffe1e7; --vn-berry: #ad2644; --vn-berry-dark: #921f3a;
-  --vn-wine: #4a1525; --vn-ink: #27171c; --vn-muted: #795f67; --vn-line: #efdee2; --vn-line-soft: #f4e8ec;
-  --vn-green: #006947; --vn-mint: #e5f7ef; --vn-amber: #865508; --vn-vanilla: #fff5d9;
-  --vn-r: 20px; --vn-shadow: 0 4px 18px #4a152508; --vn-shadow-hover: 0 6px 24px #4a15250f;
-  --vn-font: "Plus Jakarta Sans", Arial, sans-serif; --vn-title: "Outfit", "Plus Jakarta Sans", sans-serif;
+  /* Direção Comanda (16/10): cada cor tem um trabalho. Framboesa = marca e ação, nunca estado. Pistache = conferido/pronto;
+     caramelo = falta; tijolo = atraso/lotado; verde WhatsApp só em ações que abrem o WhatsApp. */
+  --vn-canvas: #f5f1f2; --vn-surface: #fff; --vn-soft: #f7eef1; --vn-rose: #f6e3e9; --vn-berry: #b0244a; --vn-berry-dark: #921d3d;
+  --vn-wine: #3a1220; --vn-ink: #2a141b; --vn-muted: #6f5a61; --vn-line: #e9e0e3; --vn-line-soft: #efe8ea;
+  --vn-green: #1e6b47; --vn-mint: #e3f2e9; --vn-amber: #7f4d00; --vn-vanilla: #fff0cc;
+  --vn-zap: #128c4a; --vn-zap-soft: #e7f6ec; --vn-zap-ink: #0b6b37;
+  --vn-r: 18px; --vn-r-ctl: 14px; --vn-shadow: 0 1px 0 #3a12200a, 0 6px 18px -10px #3a122026; --vn-shadow-hover: 0 1px 0 #3a12200f, 0 10px 24px -12px #3a122033;
+  --vn-font: "Plus Jakarta Sans", Arial, sans-serif; --vn-title: "Bricolage Grotesque", "Plus Jakarta Sans", sans-serif;
   background: var(--vn-canvas);
 }
 /* Todas as telas do app já usam a nova identidade: as letras antigas (Fredoka, Figtree) saem também dos formulários. */
@@ -446,3 +451,18 @@ details.settings-data-tools > summary::-webkit-details-marker { display: none; }
 details.settings-data-tools > summary::after { content: ""; flex: 0 0 auto; width: 10px; height: 10px; border-right: 2.5px solid currentColor; border-bottom: 2.5px solid currentColor; transform: rotate(45deg) translateY(-3px); transition: transform .2s; }
 details.settings-data-tools[open] > summary::after { transform: rotate(-135deg) translateY(-3px); }
 @media (prefers-reduced-motion: reduce) { details.settings-data-tools > summary::after { transition: none; } }
+
+/* ---- Fase 1 da direção Comanda (16/10): base ---- */
+/* Rótulos em caixa normal (sem maiúsculas espaçadas). */
+.vn-eyebrow, .vnext #view-today .upcoming-label, .vnext #view-today .next-action-card .section-head h2, .vnext .detail-dialog .detail-eyebrow { text-transform: none; letter-spacing: 0; font-size: 13px; font-weight: 700; }
+.vnext #view-today .upcoming-label { font-size: 15px; color: var(--vn-ink); }
+/* Números com largura fixa; títulos sem palavra sozinha na última linha. */
+body.vnext { font-variant-numeric: tabular-nums; -webkit-tap-highlight-color: transparent; }
+.vnext h1, .vnext h2, .vnext h3 { text-wrap: balance; }
+.vnext :is(button, a, summary, [role="button"], wa-button) { touch-action: manipulation; }
+/* Janelas não arrastam a página de trás. */
+.vnext dialog { overscroll-behavior: contain; }
+body.vnext:has(dialog[open]) { overflow: hidden; }
+/* Títulos e números na Bricolage. */
+.vnext .vn-heading h1, .vnext :is(#view-orders, #view-clients, #view-month, #view-settings) h1 { font-family: var(--vn-title); font-weight: 700; letter-spacing: -.03em; }
+.vn-time, .vn-total, .vnext .stat-value { font-family: var(--vn-title); letter-spacing: -.02em; }

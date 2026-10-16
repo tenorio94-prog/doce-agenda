@@ -100,9 +100,9 @@ function nextStepButton(order, extraClass = "") {
   if (sampleOrder(order)) return "";
   const next = NEXT_STEP[order.status];
   const id = esc(order.id), cls = `row-advance${extraClass ? ` ${extraClass}` : ""}`;
-  if (next) return `<button class="${cls}" type="button" data-action="advance-order" data-id="${id}" data-status="${esc(next[0])}">${esc(next[1])} <span aria-hidden="true">→</span></button>`;
-  if (["Orçamento", "Aguardando confirmação"].includes(order.status)) return `<button class="${cls}" type="button" data-action="confirm-order" data-id="${id}">Confirmar pedido <span aria-hidden="true">→</span></button>`;
-  if (order.status === "Solicitação") return `<button class="${cls}" type="button" data-action="review-request" data-id="${id}">Revisar pedido <span aria-hidden="true">→</span></button>`;
+  if (next) return `<button class="${cls}" type="button" data-action="advance-order" data-id="${id}" data-status="${esc(next[0])}">${esc(next[1])}</button>`;
+  if (["Orçamento", "Aguardando confirmação"].includes(order.status)) return `<button class="${cls}" type="button" data-action="confirm-order" data-id="${id}">Confirmar pedido</button>`;
+  if (order.status === "Solicitação") return `<button class="${cls}" type="button" data-action="review-request" data-id="${id}">Revisar pedido</button>`;
   return "";
 }
 const timeValue = (value) => parseDate(value)?.getTime() ?? Number.MAX_SAFE_INTEGER;
@@ -311,7 +311,7 @@ function upcomingMarkup(orders) {
     const key = localDateKey(parseDate(order.dueAt));
     groups.set(key, [...(groups.get(key) || []), order]);
   });
-  return `<section class="coming-soon"><div class="section-head"><h2>Próximos dias</h2><button class="text-link" type="button" data-view="orders">Todos os pedidos →</button></div>
+  return `<section class="coming-soon"><div class="section-head"><h2>Próximos dias</h2><button class="text-link" type="button" data-view="orders">Ver todos os pedidos</button></div>
     ${[...groups].map(([key, list]) => `<div class="upcoming-day"><h3 class="upcoming-label">${key === tomorrow ? "Amanhã" : esc(capitalize(calendarDateLabel(key, { weekday: "long", day: "numeric", month: "short" }).replace(".", "")))}</h3><div class="vn-order-list">${list.map((order) => agendaCardMarkup(order, { compact: true })).join("")}</div></div>`).join("")}</section>`;
 }
 
@@ -328,7 +328,7 @@ function toCollectMarkup() {
   if (!list.length) return "";
   return `<section class="vn-collect" aria-labelledby="collect-title"><div class="vn-section-row"><h2 id="collect-title">Falta cobrar <span class="vn-count">${list.length}</span></h2></div>
     <div class="vn-collect-list">${list.slice(0, 5).map((order) => `<button class="vn-collect-row" type="button" data-open-order="${esc(order.id)}"><span class="vn-grow"><strong>${esc(clientName(order) || "Cliente sem nome")}</strong><small>${esc(order.product || "Produto sem descrição")}${order.dueAt ? ` · ${esc(dateLabel(order.dueAt, { day: "numeric", month: "short" }).replace(".", ""))}` : ""}</small></span><span class="vn-badge amber">${esc(reasonFor(order))}</span></button>`).join("")}</div>
-    ${list.length > 5 ? `<button class="text-link" type="button" data-view="orders">Ver todos em Pedidos →</button>` : ""}</section>`;
+    ${list.length > 5 ? `<button class="text-link" type="button" data-view="orders">Ver todos em Pedidos</button>` : ""}</section>`;
 }
 
 const scheduledOn = (key) => sortOrders(state.orders.filter((order) => order.status !== 'Solicitação' && !sampleOrder(order) && !isCancelled(order) && order.dueAt && localDateKey(parseDate(order.dueAt) || new Date(0)) === key));

@@ -67,6 +67,9 @@ for (const [name, pkg] of [['outfit', 'outfit'], ['plus-jakarta-sans', 'plus-jak
   await copyFile(path.join(root, 'node_modules', '@fontsource-variable', pkg, 'files', `${pkg}-latin-wght-normal.woff2`), path.join(output, 'fonts', 'vnext', `${name}.woff2`));
   await copyFile(path.join(root, 'node_modules', '@fontsource-variable', pkg, 'LICENSE'), path.join(output, 'fonts', 'vnext', `${name}-OFL.txt`));
 }
+// Direção Comanda (16/10): Bricolage Grotesque para títulos, horários e valores (OFL, @fontsource 5.3.0).
+for (const weight of [600, 700]) await copyFile(path.join(root, 'node_modules', '@fontsource', 'bricolage-grotesque', 'files', `bricolage-grotesque-latin-${weight}-normal.woff2`), path.join(output, 'fonts', 'vnext', `bricolage-${weight}.woff2`));
+await copyFile(path.join(root, 'node_modules', '@fontsource', 'bricolage-grotesque', 'LICENSE'), path.join(output, 'fonts', 'vnext', 'bricolage-grotesque-OFL.txt'));
 await mkdir(path.join(output, 'account'), { recursive: true });
 for (const name of ['account.css', 'account-ui.js', 'account-controller.js', 'config.js']) await copy(path.join('account', name));
 await copy('account/index.html', 'cadastro/index.html');
