@@ -94,6 +94,8 @@ const statusPill = (status) => `<span class="status-pill status-${statusSlug(sta
 // Stages of the Pedidos tab group the existing situations; stored statuses are unchanged.
 const ORDER_STAGES = [
   { key: "all", label: "Todos", statuses: null },
+  // Em aberto: ainda tem trabalho (confirmado, fazendo, pronto) ou ainda tem dinheiro a receber depois de entregue.
+  { key: "open", label: "Em aberto", test: (order) => (isCommitted(order) && order.status !== "Entregue") || (order.status === "Entregue" && balanceFor(order) > 0) },
   { key: "new", label: "Novos", statuses: ["Solicitação", "Orçamento", "Aguardando confirmação"] },
   { key: "confirmed", label: "Confirmados", statuses: ["Confirmado"] },
   { key: "production", label: "Fazendo", statuses: ["Em produção"] },
@@ -326,9 +328,11 @@ function upcomingMarkup(orders) {
     ${[...groups].map(([key, list]) => `<div class="upcoming-day"><h3 class="upcoming-label">${esc(label(key))}</h3><div class="vn-lines">${list.map((order) => agendaLineMarkup(order)).join("")}</div></div>`).join("")}</section>`;
 }
 // Linha baixa de pedido (Próximos dias): hora, produto, cliente e o carimbo pequeno. A linha inteira abre a ficha.
-function agendaLineMarkup(order) {
+function agendaLineMarkup(order, options = {}) {
   const mode = (order.mode || "Retirada").toLowerCase();
-  return `<button class="vn-line" type="button" data-open-order="${esc(order.id)}"><span class="vn-line-time">${esc(shortTime(order.dueAt) || "—")}</span><span class="vn-line-main"><b>${esc(order.product || "Produto sem descrição")}</b><small>${esc(clientName(order) || "Cliente sem nome")}, ${esc(mode)}</small></span>${moneyStamp(order, informedFor(order.id), { compact: true }).html}</button>`;
+  const sub = options.withDate ? `${order.dueAt ? listDayLabel(order.dueAt) : "Sem data"}, ${order.status.toLocaleLowerCase("pt-BR")}` : `${clientName(order) || "Cliente sem nome"}, ${mode}`;
+  const side = options.withDate ? `<span class="vn-line-side"><b>${esc(orderTotalLabel(order))}</b>${moneyStamp(order, informedFor(order.id), { compact: true }).html}</span>` : moneyStamp(order, informedFor(order.id), { compact: true }).html;
+  return `<button class="vn-line${options.withDate ? " has-date" : ""}" type="button" data-open-order="${esc(order.id)}"><span class="vn-line-time">${esc(shortTime(order.dueAt) || "—")}</span><span class="vn-line-main"><b>${esc(order.product || "Produto sem descrição")}</b><small>${esc(sub)}</small></span>${side}</button>`;
 }
 
 // "Pedem sua atenção": tudo o que pede decisão ou cobrança, numa lista só, na ordem de urgência.
@@ -430,7 +434,7 @@ function agendaCardMarkup(order, options = {}) {
   const date = parseDate(order.dueAt), photo = vitrinePhotoFor(order), informed = informedFor(order.id);
   const detail = [order.details, cakeLine(order)].filter(Boolean).join(", ");
   const stamp = moneyStamp(order, informed, { compact: options.compact });
-  const classes = ["vn-order", "comanda", stamp.cls, isLate(order) ? "is-late" : "", options.compact ? "is-compact" : "", order.status === "Entregue" ? "is-delivered" : "", isCancelled(order) ? "is-cancelled" : "", String(order.id) === String(state.justAdvanced) ? "is-advanced" : ""].filter(Boolean).join(" ");
+  const classes = ["vn-order", "comanda", stamp.cls, isLate(order) ? "is-late" : "", options.compact ? "is-compact" : "", options.list ? "is-list" : "", order.status === "Entregue" ? "is-delivered" : "", isCancelled(order) ? "is-cancelled" : "", String(order.id) === String(state.justAdvanced) ? "is-advanced" : ""].filter(Boolean).join(" ");
   const mode = order.mode || "Retirada";
   const step = options.compact ? "" : nextStepButton(order, "vn-btn primary small");
   const day = date && options.withDate ? `<span class="vn-day-label">${esc(listDayLabel(order.dueAt))}</span>` : "";
@@ -588,12 +592,36 @@ function filteredOrders() {
   const query = state.search.trim().toLocaleLowerCase("pt-BR");
   return sortForList(state.orders.filter((order) => !sampleOrder(order)).filter((order) => {
     const stage = ORDER_STAGES.find((item) => item.key === state.statusFilter) || ORDER_STAGES[0];
-    const matchesStatus = !stage.statuses || stage.statuses.includes(order.status);
+    const matchesStatus = stage.test ? stage.test(order) : !stage.statuses || stage.statuses.includes(order.status);
     const searchable = [order.client, order.product, order.details, order.location, order.contact, order.nextAction].join(" ").toLocaleLowerCase("pt-BR");
     return matchesStatus && (!query || searchable.includes(query));
   }));
 }
 
+// Lista de Pedidos agrupada por dia: o cabeçalho diz quando; o cartão diz o quê, quanto e o próximo passo.
+function listDayHeading(key) {
+  if (!key) return "Sem data";
+  const today = new Date(), at = (offset) => localDateKey(new Date(today.getFullYear(), today.getMonth(), today.getDate() + offset));
+  const date = parseDate(`${key}T12:00`);
+  const sameYear = date.getFullYear() === today.getFullYear();
+  const weekday = new Intl.DateTimeFormat("pt-BR", { weekday: "long" }).format(date);
+  const dayMonth = new Intl.DateTimeFormat("pt-BR", { day: "numeric", month: "short", ...(sameYear ? {} : { year: "numeric" }) }).format(date).replace(/\./g, "").replace(/ de /g, " ");
+  const prefix = key === at(0) ? "Hoje, " : key === at(1) ? "Amanhã, " : key === at(-1) ? "Ontem, " : "";
+  return capitalize(`${prefix}${weekday} ${dayMonth}`);
+}
+function ordersByDayMarkup(orders) {
+  const groups = [];
+  let finishedStarted = false;
+  orders.forEach((order) => {
+    const key = order.dueAt ? localDateKey(parseDate(order.dueAt)) : "";
+    const finished = isFinished(order);
+    const last = groups[groups.length - 1];
+    if (last && last.key === key && last.finished === finished) { last.list.push(order); return; }
+    groups.push({ key, finished, list: [order], divider: finished && !finishedStarted && groups.length > 0 });
+    if (finished) finishedStarted = true;
+  });
+  return `<div class="orders-full-list vn-orders-by-day">${groups.map((group) => `${group.divider ? '<h2 class="vn-list-divider">Encerrados</h2>' : ""}<section class="vn-day-group"><h3 class="vn-date-head">${esc(listDayHeading(group.key))}<span>${group.list.length} ${group.list.length === 1 ? "pedido" : "pedidos"}${group.key && !group.finished && availabilityFor(group.key).full ? ", lotado" : ""}</span></h3><div class="vn-order-list">${group.list.map((order) => agendaCardMarkup(order, { list: true })).join("")}</div></section>`).join("")}</div>`;
+}
 function renderOrders() {
   const panel = $("#view-orders");
   const queryWasFocused = document.activeElement?.id === "order-search";
@@ -602,7 +630,7 @@ function renderOrders() {
   const orders = filteredOrders();
   const own = state.orders.filter((order) => !sampleOrder(order));
   const stageChips = ORDER_STAGES.map((stage) => {
-    const count = stage.statuses ? own.filter((order) => stage.statuses.includes(order.status)).length : own.length;
+    const count = stage.test ? own.filter(stage.test).length : stage.statuses ? own.filter((order) => stage.statuses.includes(order.status)).length : own.length;
     const current = stage.key === state.statusFilter;
     return `<button class="stage-chip${current ? " is-current" : ""}${count ? "" : " is-empty"}" type="button" data-stage="${stage.key}" aria-pressed="${current}">${esc(stage.label)}<span class="stage-count">${count}</span></button>`;
   }).join("");
@@ -617,10 +645,10 @@ function renderOrders() {
     return `<section class="vn-inbox-section" aria-labelledby="inbox-${section.key}-title"><div class="section-head"><h2 id="inbox-${section.key}-title" tabindex="-1">${section.title} <span class="vn-badge">${list.length}</span></h2></div><p class="vn-inbox-description">${section.description}</p>${list.length ? `<div class="vn-order-list vn-inbox-list">${list.map((order) => agendaCardMarkup(order, { inbox: true })).join("")}</div>` : `<p class="vn-inbox-empty">${state.search.trim() ? "Nenhum resultado nesta seção para a busca." : section.empty}</p>`}</section>`;
   }).join("");
   panel.innerHTML = `<header class="vn-heading"><div><h1 id="orders-title" tabindex="-1">Pedidos</h1></div><button class="vn-btn primary vn-heading-add page-add" data-action="new-order" type="button">${icon("plus")} Nova encomenda</button></header>${tipMarkup("orders")}
-    ${state.statusFilter === "new" ? "" : requestBanner()}<div class="toolbar"><label class="search-wrap"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 4.5 4.5"/></svg><input class="search-input" id="order-search" type="search" placeholder="Buscar cliente, produto ou detalhe…" value="${esc(state.search)}" aria-label="Buscar pedidos"></label></div>
+    <div class="toolbar"><label class="search-wrap"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 4.5 4.5"/></svg><input class="search-input" id="order-search" type="search" placeholder="Buscar cliente, produto ou detalhe…" value="${esc(state.search)}" aria-label="Buscar pedidos"></label></div>
     <div class="stage-strip" role="group" aria-label="Ver pedidos por etapa">${stageChips}</div>${inbox}
     <p class="order-results" aria-live="polite"><strong>${orders.length}</strong> ${orders.length === 1 ? "pedido encontrado" : "pedidos encontrados"}</p>
-    ${state.statusFilter === "new" ? inboxSections() : orders.length ? `<div class="orders-full-list vn-order-list">${orders.map((order) => agendaCardMarkup(order, { withDate: true })).join("")}</div>` : state.orders.some((order) => !sampleOrder(order)) ? emptyState("Nada por aqui com esse filtro", "Tente outro nome ou situação para encontrar o pedido.", false) : emptyState("Seu próximo pedido começa aqui", "Cadastre o combinado com a cliente e acompanhe pagamentos, mudanças e data de entrega.", true)}`;
+    ${state.statusFilter === "new" ? inboxSections() : orders.length ? ordersByDayMarkup(orders) : state.orders.some((order) => !sampleOrder(order)) ? emptyState("Nada por aqui com esse filtro", "Tente outro nome ou situação para encontrar o pedido.", false) : emptyState("Seu próximo pedido começa aqui", "Cadastre o combinado com a cliente e acompanhe pagamentos, mudanças e data de entrega.", true)}`;
   panel.hidden = state.activeView !== "orders";
   if (queryWasFocused) {
     const input = $("#order-search"); input?.focus(); input?.setSelectionRange(caret, caret);
@@ -1859,14 +1887,14 @@ function openClient(key) {
   const reminder = state.clientsData.reminders.find((item) => item.key === key);
   const orders = client.orderIds.map(orderById).filter(Boolean);
   dialog.innerHTML = `<div class="dialog-heading"><div><h2 id="client-title">${esc(client.name)}</h2><p class="client-phone">${client.phone ? esc(formatPhone(client.phone)) : "Sem WhatsApp nos pedidos"}</p></div><button class="icon-button close-dialog" type="button" data-close="client-dialog" aria-label="Fechar ficha"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
-    <div class="client-tiles"><div><small>Pedidos</small><b>${client.purchases}</b></div><div><small>Total</small><b>${esc(moneyCents(client.totalCents))}</b></div><div><small>Último</small><b>${client.lastPurchaseDay ? esc(dayLabel(client.lastPurchaseDay)) : "—"}</b></div></div>
+    <div class="client-tiles"><div><small>Pedidos</small><b>${client.purchases}</b></div><div><small>Total</small><b>${esc(moneyCents(client.totalCents))}</b></div><div><small>Último</small><b>${client.lastPurchaseDay ? esc(listDayLabel(`${client.lastPurchaseDay}T12:00`).replace(/^[^,]+, /, "")) : "—"}</b></div></div>
     ${client.nextOrderDay ? `<p class="client-note">Próximo pedido: <strong>${esc(dayLabel(client.nextOrderDay))}</strong>.</p>` : ""}
     ${client.away ? `<p class="client-note is-away">Faz ${client.daysSinceLast} dias que ela não pede. Que tal mandar um oi?</p>` : ""}
     ${reminder ? `<p class="client-note">Em ${esc(dayLabel(reminder.originalDay, true))} ela pediu ${esc(reminder.product || "uma encomenda")}. Pode ter festa de novo daqui a ${reminder.daysUntil} ${reminder.daysUntil === 1 ? "dia" : "dias"}.</p>` : ""}
     ${client.topProducts.length ? `<p class="client-products">Mais pede: ${client.topProducts.map(({ product, count }) => `<span>${esc(product)}${count > 1 ? ` (${count})` : ""}</span>`).join("")}</p>` : ""}
     ${client.sameNameAs.length ? `<p class="client-note">Pode ser a mesma pessoa que ${client.sameNameAs.map((other) => `<button class="text-link" type="button" data-client="${esc(other.key)}">${esc(other.name)}${other.phone ? ` · ${esc(formatPhone(other.phone))}` : " (sem WhatsApp)"}</button>`).join(", ")}. As fichas não se juntam sozinhas: para juntar, coloque o mesmo WhatsApp nos pedidos.</p>` : ""}
     <h3 class="client-orders-title">Pedidos</h3>
-    <div class="order-list client-orders">${orders.map((order) => rowMarkup(order)).join("")}</div>
+    <div class="vn-lines client-orders">${orders.map((order) => agendaLineMarkup(order, { withDate: true })).join("")}</div>
     <div class="client-actions">${client.phone ? (isDemoMode() ? `<p class="vn-muted client-demo-note">Na demonstração o WhatsApp fica desligado: os telefones são inventados.</p>` : `<a class="button button-primary" href="https://wa.me/55${esc(client.phone)}" target="_blank" rel="noopener">Abrir conversa no WhatsApp</a>`) : ""}<button class="text-link client-erase" type="button" data-action="erase-client" data-client-key="${esc(client.key)}">Apagar dados desta cliente</button></div>`;
   if (!dialog.open) dialog.showModal();
 }

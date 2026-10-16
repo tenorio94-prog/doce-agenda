@@ -736,3 +736,24 @@ body.vnext:has(dialog[open]) { overflow: hidden; }
 .vn-order.comanda:is(.is-check, .is-due) .cmd-body h3, .vn-order.comanda:is(.is-check, .is-due) .cmd-meta { padding-right: 136px; }
 .vn-order.comanda.is-ok .cmd-body h3, .vn-order.comanda.is-ok .cmd-meta { padding-right: 104px; }
 @media (max-width: 380px) { .vn-order.comanda:is(.is-check, .is-due) .cmd-body h3, .vn-order.comanda:is(.is-check, .is-due) .cmd-meta { padding-right: 112px; } }
+
+/* ---- Rodada 2, etapa 4: Pedidos por dia ---- */
+.vn-orders-by-day { display: grid; gap: 4px; }
+.vn-day-group { display: grid; }
+.vn-date-head { position: sticky; top: 0; z-index: 3; display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin: 0; padding: 14px 2px 8px; background: var(--vn-canvas); color: var(--vn-ink); font: 700 15px var(--vn-font); letter-spacing: 0; }
+.vn-date-head span { color: var(--vn-muted); font: 600 13px var(--vn-font); white-space: nowrap; }
+.vn-list-divider { margin: 22px 0 0; padding-top: 16px; border-top: 1px solid var(--vn-line); color: var(--vn-muted); font: 700 13px var(--vn-font); letter-spacing: 0; }
+.vn-order.comanda.is-list { padding-block: 12px; }
+.vn-order.comanda.is-list .cmd-when .vn-thumb { width: 40px; height: 40px; margin-top: 6px; }
+.vn-order.comanda.is-list .vn-card-foot { margin-top: 8px; }
+@media (min-width: 761px) { .vn-order.comanda.is-list .cmd-meta { -webkit-line-clamp: 1; } }
+/* Pedidos dentro da ficha da cliente: as mesmas linhas baixas, com o dia */
+.vnext #client-dialog .client-orders { margin-top: 8px; }
+.vn-line.has-date { grid-template-columns: 44px minmax(0, 1fr) auto; }
+.vn-line-side { display: grid; justify-items: end; gap: 4px; }
+.vn-line-side > b { font: 700 14px var(--vn-font); font-variant-numeric: tabular-nums; white-space: nowrap; }
+/* Ficha da cliente: dinheiro nunca é cortado; o quadrinho aperta a letra antes. */
+.vnext .client-tiles > div { padding: 10px; min-width: 0; }
+.vnext .client-tiles b { font-size: 15px; text-overflow: clip; }
+.vnext .client-tiles > div:nth-child(2) b { overflow: visible; }
+.vn-order.comanda.is-ok .cmd-body h3, .vn-order.comanda.is-ok .cmd-meta { padding-right: 112px; }

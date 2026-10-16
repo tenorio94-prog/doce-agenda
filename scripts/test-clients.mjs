@@ -56,7 +56,7 @@ try {
     assert.equal(await ficha.locator('a[href^="https://wa.me/"]').count(), 0, 'demo nunca abre WhatsApp de telefone inventado');
     assert.equal(await ficha.locator('.client-demo-note').count(), 1);
     if (shots) await page.screenshot({ path: path.join(shots, `ficha-${width}.png`) });
-    await ficha.locator('.order-row').first().click();
+    await ficha.locator('.vn-line').first().click();
     await page.locator('#detail-dialog[open]').waitFor();
     await page.keyboard.press('Escape');
     await ficha.waitFor();

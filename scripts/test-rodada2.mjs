@@ -33,9 +33,11 @@ try {
     await page.locator('[data-view="orders"]:visible').first().click();
     const cards = page.locator('#view-orders .vn-order');
     await cards.first().waitFor();
-    const labels = await page.locator('#view-orders .vn-day-label').allInnerTexts();
-    assert.ok(labels.length >= 15, 'cada pedido da lista mostra o dia');
-    assert.ok(labels.every((label) => /\d/.test(label)), `rótulo de dia vazio: ${labels.join('|')}`);
+    // Etapa 4: a lista é agrupada por dia; cada grupo diz o dia.
+    const labels = await page.locator('#view-orders .vn-date-head').allInnerTexts();
+    assert.ok(labels.length >= 8, `grupos por dia (${labels.length})`);
+    assert.ok(labels.every((label) => /\d/.test(label) || /Sem data/.test(label)), `cabeçalho de dia vazio: ${labels.join('|')}`);
+    assert.match(labels[0], /^Hoje, /);
     const firstText = await cards.first().innerText();
     assert.doesNotMatch(firstText, /Entregue/, 'a lista começa pelos pedidos em aberto');
     check(`${width}px: Pedidos com dia e em aberto primeiro`);
