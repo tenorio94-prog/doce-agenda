@@ -298,3 +298,17 @@ h2{margin:0;font-family:var(--font-title);font-size:clamp(30px,4vw,46px);font-we
   .motion .ld-switch{display:flex}
   .motion .ld-stage[data-side="client"] .ld-baker,.motion .ld-stage[data-side="baker"] .ld-client{display:none}
 }
+
+/* Nova identidade (laboratório visual, 16/10/2026): mesmos textos, seções e animações.
+   Os tokens do app são redefinidos só nesta página; letras Outfit e Plus Jakarta Sans servidas pelo nosso domínio. */
+@font-face{font-family:"Outfit";src:url("/fonts/vnext/outfit.woff2") format("woff2");font-weight:100 900;font-display:swap}
+@font-face{font-family:"Plus Jakarta Sans";src:url("/fonts/vnext/plus-jakarta-sans.woff2") format("woff2");font-weight:200 800;font-display:swap}
+:root{--font-title:"Outfit","Plus Jakarta Sans",sans-serif;--font-body:"Plus Jakarta Sans",Arial,sans-serif;--papel:#fff8f8;--glace:#ffe1e7;--ameixa:#4a1525;--ink:#27171c;--muted:#795f67;--link:#ad2644;--line:#efdee2;
+  --wa-color-brand-fill-loud:#ad2644;--wa-color-brand-border-loud:#ad2644;--wa-color-brand-on-loud:#fff}
+body{background:#fff8f8}
+h1,h2{letter-spacing:-.03em}
+.top-band{background:#fff8f8;border-bottom:1px solid #efdee2}
+.top-band::before,.top-band::after{display:none}
+.drip{display:none}
+/* O carimbo vira o selo verde do app: "Sinal conferido", sem rotação. */
+.stamp-mini{border:0;border-radius:30px;background:#e5f7ef;color:#006947;font-family:"Plus Jakarta Sans",sans-serif;font-size:12px;letter-spacing:0;text-transform:none;transform:none;padding:5px 10px}

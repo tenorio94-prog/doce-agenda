@@ -12,6 +12,9 @@
   --vn-font: "Plus Jakarta Sans", Arial, sans-serif; --vn-title: "Outfit", "Plus Jakarta Sans", sans-serif;
   background: var(--vn-canvas);
 }
+/* Todas as telas do app já usam a nova identidade: as letras antigas (Fredoka, Figtree) saem também dos formulários. */
+body.vnext { --font-title: var(--vn-title); --font-body: var(--vn-font); --ameixa: var(--vn-wine); --link: var(--vn-berry);
+  --wa-color-brand-fill-loud: var(--vn-berry); --wa-color-brand-border-loud: var(--vn-berry); --wa-color-brand-on-loud: #fff; }
 .vnext :focus-visible { outline: 3px solid var(--vn-green); outline-offset: 3px; }
 
 /* ---- Primitivos ---- */
@@ -297,3 +300,35 @@ body.vnext { background: var(--vn-canvas); }
 .vn-month-note p { color: #e4bdc9; font-size: 14px; margin: 0 0 10px; }
 @media (max-width: 1000px) { .vn-month-grid { grid-template-columns: minmax(0, 1fr); } .vnext #view-month .vn-month-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 380px) { .vnext #view-month .vn-stat { padding: 16px; } .vnext #view-month .vn-stat .stat-value { font-size: 22px; } }
+
+/* ---- Etapa 5: Clientes e Ajustes (mesma estrutura; componentes na nova linguagem) ---- */
+.vnext :is(#view-clients, #view-settings) { font-family: var(--vn-font); color: var(--vn-ink); }
+.vnext :is(#view-clients, #view-settings) :is(h1, h2, h3, legend) { font-family: var(--vn-title); letter-spacing: -.02em; color: var(--vn-ink); }
+.vnext :is(#view-clients, #view-settings) .page-heading { margin: 6px 0 24px; }
+.vnext :is(#view-clients, #view-settings) .page-heading h1 { font-size: clamp(30px, 4vw, 38px); font-weight: 600; }
+.vnext :is(#view-clients, #view-settings) .page-heading p { color: var(--vn-muted); font-size: 14px; }
+.vnext :is(#view-clients, #view-settings) :is(.button-primary, .button.button-primary) { background: var(--vn-berry); border-color: var(--vn-berry); color: #fff; border-radius: 999px; font-family: var(--vn-font); box-shadow: 0 4px 10px #ad264418; }
+.vnext :is(#view-clients, #view-settings) :is(.button-primary, .button.button-primary):hover { background: var(--vn-berry-dark); }
+.vnext :is(#view-clients, #view-settings) :is(.button-quiet, .button-small) { background: var(--vn-soft); border: 1px solid #f3dce3; color: var(--vn-wine); border-radius: 999px; font-family: var(--vn-font); }
+.vnext :is(#view-clients, #view-settings) .text-link { color: var(--vn-berry); }
+.vnext :is(#view-clients, #view-settings) .search-wrap { border: 0; border-bottom: 1px solid #dfcbd2; border-radius: 0; background: transparent; box-shadow: none; }
+.vnext :is(#view-clients, #view-settings) .search-input { background: transparent; border: 0; font-family: var(--vn-font); }
+.vnext :is(#view-clients, #view-settings) .stage-chip { min-height: 40px; border: 1px solid var(--vn-line); border-radius: 999px; background: #fff; color: var(--vn-muted); font: 700 13px var(--vn-font); }
+.vnext :is(#view-clients, #view-settings) .stage-chip.is-current, .vnext :is(#view-clients, #view-settings) .stage-chip[aria-pressed="true"] { background: var(--vn-berry); border-color: var(--vn-berry); color: #fff; }
+.vnext :is(#view-clients, #view-settings) .stage-count { background: var(--vn-soft); color: var(--vn-berry); }
+.vnext :is(#view-clients, #view-settings) :is(.stage-chip.is-current, .stage-chip[aria-pressed="true"]) .stage-count { background: #ffffff2b; color: #fff; }
+.vnext :is(#view-clients, #view-settings) :is(.client-row, .client-reminders, .settings-card, .surface, .backup-card, .empty-state) { border: 1px solid var(--vn-line-soft); border-radius: var(--vn-r); background: #fff; box-shadow: var(--vn-shadow); }
+.vnext :is(#view-clients, #view-settings) .empty-state { border-style: dashed; border-color: #d9bcc5; background: #fff9; box-shadow: none; }
+.vnext #view-clients .client-row:hover { box-shadow: var(--vn-shadow-hover); }
+.vnext #view-clients .client-reminders { background: var(--vn-soft); border-color: #f4dce3; box-shadow: none; }
+.vnext #view-clients :is(.client-tag, .client-status) { border-radius: 30px; background: var(--vn-rose); color: #8d2841; font-family: var(--vn-font); }
+.vnext #view-settings .settings-card[open] { box-shadow: var(--vn-shadow-hover); }
+.vnext #view-settings .settings-card-title { font: 600 19px var(--vn-title); color: var(--vn-ink); }
+.vnext #view-settings .settings-card-summary { color: var(--vn-muted); font-size: 13px; }
+.vnext #view-settings .step-n { background: var(--vn-berry); color: #fff; }
+.vnext #view-settings .link-hero.is-live { background: var(--vn-mint); }
+.vnext #view-settings .live-badge { background: #fff; color: var(--vn-green); }
+.vnext #view-settings .product-item { border-color: var(--vn-line-soft); border-radius: 16px; }
+.vnext #view-settings .style-card:has(input:checked), .vnext #view-settings .swatch:has(input:checked) i { border-color: var(--vn-berry); box-shadow: 0 0 0 1px var(--vn-berry); }
+.vnext :is(#view-clients, #view-settings) .field :is(input, select, textarea), .vnext #view-settings .money-field, .vnext #view-settings .slug-field { border-color: #dcc8cf; border-radius: 12px; font-family: var(--vn-font); }
+.vnext :is(#view-clients, #view-settings) .field > span { font-family: var(--vn-font); font-weight: 700; }

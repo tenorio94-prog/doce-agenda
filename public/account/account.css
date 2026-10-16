@@ -92,3 +92,31 @@ body{background:var(--papel);font-family:var(--font-body);font-size:16px}
 .mode-tab[aria-current="page"]{color:var(--ink)}
 .mode-tab[aria-current="page"]::after{background:var(--glace);height:4px;border-radius:4px}
 .notice-pending{background:var(--baunilha);border-color:var(--baunilha);color:var(--ink)}
+
+/* Nova identidade (laboratório visual, 16/10/2026): mesmos campos, textos e fluxo de conta. */
+@font-face{font-family:"Outfit";src:url("/fonts/vnext/outfit.woff2") format("woff2");font-weight:100 900;font-display:swap}
+@font-face{font-family:"Plus Jakarta Sans";src:url("/fonts/vnext/plus-jakarta-sans.woff2") format("woff2");font-weight:200 800;font-display:swap}
+body{background:#fff8f8;color:#27171c;font-family:"Plus Jakarta Sans",Arial,sans-serif}
+.site-header{margin-bottom:28px;border-bottom:1px solid #efdee2}
+.site-header::before,.site-header::after{display:none}
+@media (min-width:761px){.site-header{margin-bottom:40px}}
+.header-link{color:#4a1525}
+.intro h1,.card-content h2{font-family:"Outfit","Plus Jakarta Sans",sans-serif;font-weight:600;letter-spacing:-.03em;color:#27171c}
+.intro h1 em{color:#ad2644}
+.eyebrow{color:#ad2644;letter-spacing:.12em}
+.intro-copy,.form-intro,.field-hint,.terms-note{color:#795f67}
+.detail-icon{background:#ffe1e7;color:#ad2644}
+.account-card{border:1px solid #f4e8ec;border-radius:24px;box-shadow:0 4px 18px #4a152508;background:#fff}
+.mode-tab{font-family:"Plus Jakarta Sans",sans-serif;color:#795f67}
+.mode-tab[aria-current="page"]{color:#ad2644}
+.mode-tab[aria-current="page"]::after{background:#ad2644}
+.field label,.field>span{font-family:"Plus Jakarta Sans",sans-serif;font-weight:700}
+.field input,.password-control{border-color:#dcc8cf;border-radius:12px;font-family:"Plus Jakarta Sans",sans-serif}
+.field input:focus-visible,.password-control:focus-within{outline:3px solid #006947;outline-offset:2px}
+.button-primary{background:#ad2644;border-color:#ad2644;color:#fff;border-radius:999px;box-shadow:0 4px 10px #ad264418}
+.button-primary:hover{background:#921f3a}
+.button-secondary{background:#fff0f2;border-color:#f3dce3;color:#4a1525;border-radius:999px}
+.text-link{color:#ad2644}
+.notice{border-radius:12px}
+.notice-error{background:#fdecee;color:#9b1c31}
+.notice-pending{background:#fff5d9;color:#865508}

@@ -593,7 +593,7 @@ function renderSettings() {
   const summary = settingsSummaries();
   content.innerHTML = `<div class="page-heading"><div><h1 id="settings-title">Ajustes</h1><p>Toque num item para ver ou mudar.</p></div></div>${tipMarkup("settings")}
     <div class="settings-list">
-      ${settingsCard("link", "Link de encomenda", summary.link, orderPageMarkup())}
+      ${settingsCard("link", "Sua vitrine", summary.link, orderPageMarkup())}
       ${settingsCard("days", "Dias e limites", summary.days, availabilitySettingsMarkup(state.settingsDate))}
       ${pixEnabled() ? settingsCard("pix", "Pix", pixSummary(), pixSettingsMarkup()) : ""}
       ${settingsCard("cake", "Detalhes do bolo", summary.cake, `<p class="settings-intro">Os campos que aparecem quando o pedido é um bolo, aqui e no seu link. Campos obrigatórios só são exigidos ao confirmar.</p>${orderTemplateSettingsMarkup()}`)}
