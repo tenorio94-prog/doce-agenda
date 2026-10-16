@@ -75,7 +75,7 @@ const html = await readFile(path.join(source, 'index.html'), 'utf8');
 
 // Demonstration: data stays in this browser, so the page loads the local store before the app.
 let demoHtml = swap(html, '<script src="/data-client.js" defer></script>', '<script src="/browser-store.js" defer></script>\n    <script src="/data-client.js" defer></script>');
-demoHtml = swap(demoHtml, 'Não foi possível atualizar seus pedidos.', 'Não foi possível acessar o armazenamento local.');
+demoHtml = swap(demoHtml, 'Não foi possível atualizar seus pedidos.', 'Não deu para guardar os dados da demonstração.');
 await mkdir(path.join(output, 'demo'), { recursive: true });
 await writeFile(path.join(output, 'demo', 'index.html'), demoHtml);
 await bundle('public/app.js', path.join(output, 'app.js'));

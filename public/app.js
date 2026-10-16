@@ -186,7 +186,7 @@ async function loadState({ silent = false } = {}) {
     render();
   } catch (error) {
     $("#loading-state").hidden = true;
-    setError(LOCAL_ONLY ? "Não foi possível acessar o armazenamento local. Seus dados anteriores continuam na tela." : "Confira se o serviço está aberto. Seus dados anteriores continuam na tela.");
+    setError(LOCAL_ONLY ? "Este navegador não deixou guardar os dados. Se estiver em janela anônima, abra numa janela normal." : "Confira sua internet e toque em Tentar de novo. O que já estava na tela continua aqui.");
     if (!state.orders.length) render();
     console.error("Falha ao carregar a agenda:", error);
   }
@@ -479,7 +479,7 @@ function renderToday() {
   const todaySummary = toDeliver.length
     ? `<strong>${toDeliver.length} para entregar</strong>${missingDeposit.length ? ` · ${missingDeposit.length} ${missingDeposit.length === 1 ? "falta" : "faltam"} o sinal` : ""}`
     : "Nada para entregar hoje";
-  const financeNote = unknown ? (balances.length ? 'Saldo parcial conhecido · ' : 'Nenhum saldo conhecido: ') + unknown + (unknown === 1 ? ' pedido ainda sem recebimento conferido.' : ' pedidos ainda sem recebimento conferido.') : '';
+  const financeNote = unknown ? unknown + (unknown === 1 ? ' pedido sem pagamento conferido ainda.' : ' pedidos sem pagamento conferido ainda.') : '';
   panel.innerHTML = `<header class="vn-heading"><div><span class="vn-date">${esc(capitalize(new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "numeric", month: "long" }).format(new Date())))}</span><h1 id="today-title" tabindex="-1">Sua agenda</h1><p class="today-summary">${todaySummary}</p></div><button class="vn-btn primary vn-heading-add" type="button" data-action="new-order">${icon("plus")} Nova encomenda</button></header>
     ${onboardingMarkup()}${requestBanner()}${firstUse && !onboardingVisible() ? `<section class="welcome-panel"><h2>Cadastre seu primeiro pedido</h2><p>Comece com cliente, produto e valor. Complete os detalhes quando estiverem combinados.</p><div class="welcome-actions"><button class="button button-primary" type="button" data-action="new-order">Nova encomenda</button></div></section>` : ''}
     ${sample && firstUse ? `<section class="sample-card" aria-label="Pedido de exemplo">${rowMarkup(sample)}<p>Toque para ver como fica um pedido completo. O exemplo não entra na sua agenda.</p></section>` : sample ? `<details class="sample-examples"><summary>Exemplo fictício — não entra na sua agenda</summary><div class="sample-example-list">${state.orders.filter(sampleOrder).map((order) => `<button class="text-link" type="button" data-open-order="${esc(order.id)}">Ver exemplo: ${esc(clientName(order) || order.product || "pedido")}</button>`).join("")}</div></details>` : ''}
@@ -823,6 +823,10 @@ function openPaymentForm(orderId) {
 }
 
 function makeWhatsAppSummary(order) {
+  if (order.status === "Recusado") {
+    const when = order.dueAt ? ` para ${dateTimeLabel(order.dueAt)}` : "";
+    return [`Oi, ${order.client || "tudo bem"}! Obrigada pelo pedido de ${order.product || "doce"}${when}.`, `Infelizmente não vou conseguir atender desta vez${order.refusalReason ? `: ${order.refusalReason}` : "."}`, "", "Espero poder te atender numa próxima!"].join("\n");
+  }
   const lines = [
     `Oi, ${order.client || "tudo bem"}! Confira se registrei certinho seu pedido:`,
     "",
@@ -1598,7 +1602,7 @@ function refuseRequest(id){
 }
 $('#refuse-form').addEventListener('submit',async event=>{
  event.preventDefault();const form=event.target,button=form.querySelector('[type=submit]'),id=form.dataset.id;button.disabled=true;
- try{await apiRequest(`/orders/${encodeURIComponent(id)}/refuse`,{method:'POST',body:{reason:form.elements.reason.value,reasonCode:form.elements.reasonCode.value}});$('#refuse-dialog').close();closeDetails();await loadState({silent:true});showOrderDetail(id);showToast('Recusa registrada. Copie a mensagem para a cliente.');}
+ try{await apiRequest(`/orders/${encodeURIComponent(id)}/refuse`,{method:'POST',body:{reason:form.elements.reason.value,reasonCode:'outro'}});$('#refuse-dialog').close();closeDetails();await loadState({silent:true});showOrderDetail(id);showToast('Pedido recusado. Toque em "Copiar mensagem para a cliente".');}
  catch(e){const error=form.querySelector('[role=alert]');error.textContent=e.message;error.hidden=false;}finally{button.disabled=false;}
 });
 

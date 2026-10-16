@@ -49,6 +49,7 @@ try {
     if (shots) await page.screenshot({ path: path.join(shots, `form-${width}.png`) });
     await page.locator('wa-input[name="client"] input').fill('Cliente Teste');
     await page.locator('wa-input[name="product"] input').fill('Torta de teste');
+    await page.locator('#order-form .optional-fields > summary').click();
     await page.locator('wa-textarea[name="details"] textarea').fill('Massa branca, sem lactose.');
     await page.locator('[data-due-shortcut="1"]').click();
     const tomorrow = await localKey(page, 1);
