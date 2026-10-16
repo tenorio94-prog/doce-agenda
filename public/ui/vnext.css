@@ -193,3 +193,53 @@ body.vnext { background: var(--vn-canvas); }
 .vnext #view-today .next-action-card .section-head { border: 0; padding: 0; margin: 0 0 6px; }
 .vnext #view-today .next-action-card .section-head h2 { font: 750 12px var(--vn-font); letter-spacing: .12em; text-transform: uppercase; color: var(--vn-berry); }
 .vnext #view-today .next-action-copy strong { display: block; font: 600 18px var(--vn-title); color: var(--vn-ink); }
+
+/* ---- Etapa 2: detalhe do pedido e pagamentos (janela #detail-dialog, mesma estrutura e ações) ---- */
+.vnext .detail-dialog { background: var(--vn-canvas); color: var(--vn-ink); font-family: var(--vn-font); border-radius: 24px; }
+.vnext .detail-dialog h2, .vnext .detail-dialog h3 { font-family: var(--vn-title); letter-spacing: -.02em; color: var(--vn-ink); }
+.vnext .detail-dialog .detail-topline { display: flex; margin: -24px -24px 20px; padding: 22px 24px 24px; background: var(--vn-wine); color: #fff; border-radius: 24px 24px 0 0; }
+@media (max-width: 760px) { .vnext .detail-dialog .detail-topline { margin: -18px -18px 18px; padding: 18px; } }
+.vnext .detail-dialog .detail-topline::after, .vnext .detail-dialog .detail-topline::before { display: none; }
+.vnext .detail-dialog .detail-when { display: block; color: #f4cbd5; font: 600 13px var(--vn-font); margin: 0; }
+.vnext .detail-dialog .detail-eyebrow { display: block; margin-bottom: 4px; color: #f4aebf; font: 750 12px var(--vn-font); letter-spacing: .12em; text-transform: uppercase; }
+.vnext .detail-dialog .detail-client { color: #fff; font-size: clamp(24px, 4vw, 30px); font-weight: 600; margin: 6px 0 2px; }
+.vnext .detail-dialog .detail-product { color: #e4bdc9; margin: 0; }
+.vnext .detail-dialog .close-dialog { background: #ffffff1f; color: #fff; border: 0; }
+.vnext .detail-dialog .detail-top-actions .vn-badge { background: #ffffff26; color: #fff; }
+.vnext .detail-dialog .detail-next { margin-top: 18px; }
+.vnext .detail-dialog .detail-next .row-advance { width: 100%; min-height: 50px; border: 0; border-radius: 999px; background: var(--vn-berry); color: #fff; font: 700 15px var(--vn-font); box-shadow: 0 4px 10px #ad264418; }
+.vnext .detail-dialog .detail-next .row-advance:hover { background: var(--vn-berry-dark); }
+.vnext .detail-dialog .meta-chip { background: #fff; border: 1px solid var(--vn-line-soft); color: var(--vn-wine); border-radius: 30px; font-size: 13px; }
+.vnext .detail-dialog .detail-summary { padding: 16px; border: 0; border-radius: 14px; background: var(--vn-soft); color: var(--vn-ink); font-size: 14px; }
+.vnext .detail-dialog .detail-summary-label { color: var(--vn-muted); font: 750 12px var(--vn-font); letter-spacing: .1em; }
+.vnext .detail-dialog .deposit-card { border-radius: 18px; border: 0; box-shadow: none; }
+.vnext .detail-dialog .deposit-card.is-paid { background: var(--vn-mint); color: var(--vn-green); }
+.vnext .detail-dialog .deposit-card.is-pending { background: var(--vn-vanilla); color: var(--vn-amber); }
+.vnext .detail-dialog .deposit-card .deposit-label { font: 750 12px var(--vn-font); letter-spacing: .1em; }
+.vnext .detail-dialog .deposit-card .deposit-amount { font: 600 34px var(--vn-title); color: inherit; }
+.vnext .detail-dialog .deposit-card .deposit-note, .vnext .detail-dialog .deposit-card .deposit-top { color: inherit; font-size: 13px; }
+/* O carimbo vira um selo verde discreto, com a data em que o sinal foi conferido. */
+.vnext .detail-dialog .stamp, .vnext .stamp { border: 1.5px solid currentColor; color: var(--vn-green); background: #fff; border-radius: 12px; transform: none; box-shadow: none; font-family: var(--vn-font); animation: none; }
+.vnext .detail-dialog .deposit-rule { color: var(--vn-muted); font-size: 13px; }
+.vnext .detail-dialog .detail-tile { border: 0; border-radius: 14px; background: var(--vn-soft); }
+.vnext .detail-dialog .detail-tile-label { color: var(--vn-muted); font-size: 13px; }
+.vnext .detail-dialog .detail-tile-value.large { font: 600 22px var(--vn-title); color: var(--vn-ink); }
+.vnext .detail-dialog .payment-section { padding: 18px; border: 1px solid var(--vn-line-soft); border-radius: var(--vn-r); background: #fff; box-shadow: var(--vn-shadow); }
+.vnext .detail-dialog .payment-section h3::before { content: ""; display: inline-block; width: 18px; height: 18px; margin-right: 8px; vertical-align: -3px; background: currentColor; color: var(--vn-green); -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 2 3 6v6c0 5 9 10 9 10s9-5 9-10V6z m-5 10 3 3 6-6'/%3E%3C/svg%3E") center / contain no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 2 3 6v6c0 5 9 10 9 10s9-5 9-10V6z m-5 10 3 3 6-6'/%3E%3C/svg%3E") center / contain no-repeat; }
+.vnext .detail-dialog .payment-item { border: 1px solid var(--vn-line-soft); border-radius: 14px; background: var(--vn-canvas); }
+.vnext .detail-dialog .payment-amount { font: 600 17px var(--vn-title); }
+.vnext .detail-dialog .payment-status button { border-radius: 999px; background: var(--vn-green); border-color: var(--vn-green); color: #fff; font-weight: 700; }
+.vnext .detail-dialog .button-small, .vnext .detail-dialog .button-quiet { border-radius: 999px; border: 1px solid #f3dce3; background: var(--vn-soft); color: var(--vn-wine); font-family: var(--vn-font); }
+.vnext .detail-dialog .button-primary { border-radius: 999px; background: var(--vn-berry); border-color: var(--vn-berry); color: #fff; font-family: var(--vn-font); }
+.vnext .detail-dialog .history-section { border-radius: 14px; border-color: var(--vn-line-soft); background: #fff; }
+.vnext .detail-dialog .request-review { border-radius: var(--vn-r); background: var(--vn-soft); border: 1px solid #f4dce3; }
+.vnext .detail-dialog .pending-banner { border-radius: 12px; background: var(--vn-vanilla); color: var(--vn-amber); }
+/* Outras janelas (nova encomenda, pagamento, recusa): mesmo topo vinho, sem as gotas do Glacê. */
+.vnext .dialog { background: var(--vn-canvas); font-family: var(--vn-font); border-radius: 24px; }
+.vnext .dialog-heading { background: var(--vn-wine); color: #fff; }
+.vnext .dialog-heading::after { display: none; }
+.vnext .dialog-heading h2, .vnext .dialog-heading p, .vnext .dialog-heading .eyebrow { color: #fff; font-family: var(--vn-title); }
+.vnext .dialog-heading .icon-button { background: #ffffff1f; color: #fff; }
+.vnext .dialog .button-primary { border-radius: 999px; background: var(--vn-berry); border-color: var(--vn-berry); color: #fff; }
+.vnext .dialog .button-quiet { border-radius: 999px; background: var(--vn-soft); border-color: #f3dce3; color: var(--vn-wine); }
+.vnext .dialog wa-button[variant="brand"]::part(base) { background: var(--vn-berry); border-color: var(--vn-berry); }
