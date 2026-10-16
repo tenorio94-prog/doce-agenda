@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Doce Agenda — protótipo da direção "Comanda"</title>
+<!-- Protótipo isolado da auditoria de 16/10/2026. Não faz parte do app. Fontes do Google só aqui; no app viriam do @fontsource local. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Plus+Jakarta+Sans:wght@400..800&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* 7 cores, cada uma com um trabalho só. */
+  --vinho: #3a1220;      /* texto e títulos */
+  --framboesa: #b0244a;  /* marca e ação principal; nunca estado */
+  --farinha: #f5f1f2;    /* fundo da tela */
+  --acucar: #ffffff;     /* superfícies */
+  --linha: #e9e0e3;
+  --suave: #6f5a61;      /* texto de apoio, 4.9:1 sobre branco */
+  --pistache: #1e6b47; --pistache-bg: #e3f2e9;   /* conferido, pronto */
+  --caramelo: #7f4d00; --caramelo-bg: #fff0cc;   /* falta sinal, falta conferir */
+  --tijolo: #a3341a;   --tijolo-bg: #fce8e2;     /* atrasado, lotado */
+  --zap: #128c4a;      --zap-tint: #25d366;      /* só ações que abrem o WhatsApp */
+  --display: "Bricolage Grotesque", "Plus Jakarta Sans", sans-serif;
+  --ui: "Plus Jakarta Sans", system-ui, sans-serif;
+  --r-card: 18px; --r-ctl: 14px;
+  --sombra: 0 1px 0 #3a12200a, 0 6px 18px -10px #3a122026;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: #e8e2e4; color: var(--vinho); font: 400 16px/1.45 var(--ui); -webkit-font-smoothing: antialiased; }
+.stage { display: flex; flex-wrap: wrap; gap: 40px; justify-content: center; padding: 32px 16px 64px; }
+.caption { width: 390px; max-width: 100%; margin: 0 0 10px; font: 600 14px var(--ui); color: var(--suave); }
+.phone { width: 390px; max-width: 100%; height: 844px; overflow: hidden auto; position: relative; background: var(--farinha); border-radius: 36px; box-shadow: 0 30px 60px -30px #3a122066, 0 0 0 10px #1b0a10; scrollbar-width: none; }
+.phone::-webkit-scrollbar { display: none; }
+.num { font-variant-numeric: tabular-nums; }
+
+/* Topo */
+.top { display: flex; align-items: center; justify-content: space-between; padding: 18px 18px 6px; }
+.logo { font: 700 22px/1 var(--display); letter-spacing: -.03em; }
+.logo b { color: var(--framboesa); font-weight: 700; }
+.icon-btn { width: 44px; height: 44px; display: grid; place-items: center; border: 0; border-radius: 50%; background: transparent; color: var(--vinho); }
+.icon-btn svg { width: 24px; height: 24px; }
+.hello { padding: 8px 18px 0; }
+.hello h1 { margin: 0; font: 700 34px/1.05 var(--display); letter-spacing: -.035em; text-wrap: balance; }
+.hello p { margin: 6px 0 0; color: var(--suave); font-size: 15px; }
+.hello p strong { color: var(--vinho); }
+
+/* Faixa de pedido novo: o único bloco framboesa da tela */
+.inbox { margin: 16px 14px 0; padding: 14px 14px 14px 16px; display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; align-items: center; border-radius: var(--r-card); background: var(--vinho); color: #fff; }
+.inbox strong { font: 700 17px var(--display); }
+.inbox span { grid-column: 1; color: #f1d6de; font-size: 14px; }
+.inbox button { grid-row: 1 / span 2; grid-column: 2; min-height: 48px; padding: 0 18px; border: 0; border-radius: 999px; background: #fff; color: var(--vinho); font: 700 15px var(--ui); }
+
+/* Linha do dia: a hora é o eixo da tela */
+.section { padding: 22px 14px 0; }
+.section-head { display: flex; align-items: baseline; justify-content: space-between; padding: 0 4px 10px; }
+.section-head h2 { margin: 0; font: 700 20px var(--display); letter-spacing: -.02em; }
+.section-head small { color: var(--suave); font-size: 14px; }
+.timeline { display: grid; gap: 10px; }
+.slot { display: grid; grid-template-columns: 58px 1fr; gap: 8px; }
+.when { padding-top: 14px; text-align: right; font: 700 22px/1 var(--display); letter-spacing: -.03em; }
+.when small { display: block; margin-top: 4px; font: 600 12px var(--ui); letter-spacing: 0; color: var(--suave); }
+.slot.is-late .when { color: var(--tijolo); }
+
+/* Comanda: o cartão do pedido */
+.comanda { position: relative; padding: 14px 14px 12px 16px; border-radius: var(--r-card); background: var(--acucar); box-shadow: var(--sombra); overflow: hidden; }
+.comanda::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 4px; background: var(--linha); }
+.comanda.ok::before { background: var(--pistache); }
+.comanda.falta::before { background: #e3a92c; }
+.comanda.late::before { background: var(--tijolo); }
+.comanda h3, .comanda .meta { margin-right: 70px; }
+.comanda h3 { margin-top: 0; margin-bottom: 2px; font: 700 18px/1.25 var(--ui); letter-spacing: -.01em; }
+.meta { margin: 0; color: var(--suave); font-size: 14px; }
+.meta b { color: var(--vinho); font-weight: 650; }
+.foot { display: flex; align-items: center; gap: 8px; margin-top: 12px; }
+.etapa { display: inline-flex; align-items: center; gap: 6px; min-height: 30px; padding: 0 10px; border-radius: 999px; background: #f4eef0; font: 650 13px var(--ui); color: var(--vinho); }
+.etapa i { width: 8px; height: 8px; border-radius: 50%; background: currentColor; opacity: .55; }
+.etapa.pronto { background: var(--pistache-bg); color: var(--pistache); }
+.etapa.atraso { background: var(--tijolo-bg); color: var(--tijolo); }
+.go { margin-left: auto; min-height: 48px; padding: 0 18px; border: 0; border-radius: 999px; background: var(--framboesa); color: #fff; font: 700 15px var(--ui); }
+.money { margin-left: auto; font: 700 18px var(--display); letter-spacing: -.02em; }
+
+/* O carimbo: a única ousadia. Cheio = dinheiro conferido. Tracejado = falta. */
+.selo { position: absolute; top: 10px; right: 10px; width: 68px; height: 68px; display: grid; place-items: center; text-align: center; border-radius: 50%; font: 800 9px/1.1 var(--ui); letter-spacing: 0; transform: rotate(-9deg); }
+.selo span { display: block; font: 800 15px/1 var(--display); letter-spacing: -.02em; }
+.selo.ok { border: 2.5px solid var(--pistache); color: var(--pistache); background: radial-gradient(circle, #fff 58%, var(--pistache-bg) 59%); box-shadow: inset 0 0 0 3px #fff, inset 0 0 0 4px var(--pistache); }
+.selo.falta { border: 2px dashed #c98a12; color: var(--caramelo); background: #fffaf0; transform: rotate(-4deg); }
+.selo.conferir { border: 2px dashed #c98a12; color: var(--caramelo); background: var(--caramelo-bg); }
+@media (prefers-reduced-motion: no-preference) { .selo.ok.stamp-in { animation: stamp .42s cubic-bezier(.2,.9,.2,1.2) both; } }
+@keyframes stamp { from { transform: rotate(-9deg) scale(1.6); opacity: 0; } }
+
+/* WhatsApp: verde só aqui, com verbo do momento */
+.zap { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 0 16px; border: 0; border-radius: 999px; background: var(--zap); color: #fff; font: 700 15px var(--ui); text-decoration: none; }
+.zap svg { width: 20px; height: 20px; flex: none; }
+.zap.soft { background: #e7f6ec; color: #0b6b37; }
+.note { display: flex; gap: 8px; align-items: flex-start; margin-top: 10px; padding: 10px 12px; border-radius: 12px; background: var(--caramelo-bg); color: var(--caramelo); font-size: 14px; font-weight: 600; }
+
+/* Falta cobrar: lista densa, não cartões */
+.list { margin: 0; padding: 4px 0; list-style: none; background: var(--acucar); border-radius: var(--r-card); box-shadow: var(--sombra); }
+.list li { display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; align-items: center; padding: 12px 14px; border-top: 1px solid var(--linha); }
+.list li:first-child { border-top: 0; }
+.list strong { font-weight: 700; }
+.list small { grid-column: 1; color: var(--suave); font-size: 14px; }
+.list .valor { grid-row: 1 / span 2; grid-column: 2; text-align: right; font: 700 17px var(--display); }
+.list .valor em { display: block; font: 650 12px var(--ui); font-style: normal; color: var(--caramelo); }
+
+/* Barra de baixo */
+.nav { position: sticky; bottom: 0; display: grid; grid-template-columns: repeat(5, 1fr); align-items: end; margin-top: 28px; padding: 8px 6px 18px; background: #fffffff2; border-top: 1px solid var(--linha); backdrop-filter: blur(10px); }
+.nav a { position: relative; display: grid; justify-items: center; gap: 2px; min-height: 52px; padding-top: 4px; color: var(--suave); font: 600 12px var(--ui); text-decoration: none; }
+.nav a svg { width: 24px; height: 24px; }
+.nav a.on { color: var(--framboesa); }
+.nav a.on::before { content: ""; position: absolute; top: -9px; width: 28px; height: 3px; border-radius: 0 0 3px 3px; background: var(--framboesa); }
+.nav .novo span { display: grid; place-items: center; width: 54px; height: 54px; margin-top: -26px; border-radius: 18px; background: var(--framboesa); color: #fff; box-shadow: 0 8px 18px -6px #b0244a99; }
+.nav .badge { position: absolute; top: 0; left: 52%; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: var(--tijolo); color: #fff; font: 700 11px/18px var(--ui); }
+
+/* Ficha do pedido (folha que sobe) */
+.sheet-bg { background: #3a122055; }
+.sheet { position: absolute; inset: 64px 0 0; padding: 10px 18px 120px; background: var(--acucar); border-radius: 26px 26px 0 0; overflow: auto; }
+.grab { width: 40px; height: 5px; margin: 0 auto 14px; border-radius: 3px; background: var(--linha); }
+.sheet h2 { margin: 0; font: 700 28px/1.1 var(--display); letter-spacing: -.03em; }
+.sheet .sub { margin: 6px 0 0; color: var(--suave); }
+.steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin: 18px 0 6px; }
+.steps i { height: 6px; border-radius: 3px; background: var(--linha); }
+.steps i.done { background: var(--pistache); }
+.steps-label { display: flex; justify-content: space-between; font-size: 12px; font-weight: 600; color: var(--suave); }
+.box { margin-top: 16px; padding: 14px; border: 1px solid var(--linha); border-radius: 16px; }
+.box h4 { margin: 0 0 8px; font: 700 15px var(--ui); }
+.row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 15px; }
+.row b { font: 700 17px var(--display); }
+.row.total { border-top: 1px dashed var(--linha); margin-top: 4px; padding-top: 10px; }
+.dock { position: absolute; left: 0; right: 0; bottom: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 12px 16px 22px; background: #fff; border-top: 1px solid var(--linha); }
+.dock .go { margin: 0; grid-column: 1 / -1; }
+.dock .zap { grid-column: 1 / -1; }
+.ghost { min-height: 48px; border: 1px solid var(--linha); border-radius: 999px; background: #fff; color: var(--vinho); font: 700 15px var(--ui); }
+
+/* Painel de componentes */
+.kit { width: 390px; max-width: 100%; display: grid; gap: 18px; align-content: start; }
+.kit section { padding: 18px; border-radius: 22px; background: #fff; }
+.kit h3 { margin: 0 0 12px; font: 700 17px var(--display); }
+.kit .wrap { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.kit p { margin: 10px 0 0; color: var(--suave); font-size: 14px; }
+.sw { display: grid; grid-template-columns: 34px 1fr; gap: 4px 10px; align-items: center; font-size: 13px; }
+.sw i { width: 34px; height: 34px; border-radius: 10px; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-zap" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2.2a9.7 9.7 0 0 0-8.3 14.7L2.3 21.8l5-1.3A9.7 9.7 0 1 0 12 2.2Zm0 17.7a8 8 0 0 1-4.1-1.1l-.3-.2-3 .8.8-2.9-.2-.3A8 8 0 1 1 12 19.9Zm4.4-6c-.2-.1-1.4-.7-1.7-.8-.2-.1-.4-.1-.5.1l-.8 1c-.1.2-.3.2-.5.1a6.6 6.6 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.5-.4h-.5a.9.9 0 0 0-.7.3 2.8 2.8 0 0 0-.9 2.1 4.9 4.9 0 0 0 1 2.6 11.2 11.2 0 0 0 4.3 3.8c1.6.7 2.2.7 3 .6a2.6 2.6 0 0 0 1.7-1.2 2.1 2.1 0 0 0 .2-1.2c-.1-.1-.2-.2-.5-.3Z"/></symbol>
+  <symbol id="i-cal" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M8 3v4M16 3v4M3.5 10h17"/></g></symbol>
+  <symbol id="i-list" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1"/><circle cx="4.5" cy="12" r="1"/><circle cx="4.5" cy="18" r="1"/></g></symbol>
+  <symbol id="i-people" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="9" cy="8" r="3.5"/><path d="M3 20a6 6 0 0 1 12 0M16 4.5a3.5 3.5 0 0 1 0 7M18 14c1.9.7 3 2.6 3 6"/></g></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" d="M4 20h16M6.5 16v-5M12 16V5M17.5 16V9"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-gear" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></g></symbol>
+</svg>
+
+<div class="stage">
+
+  <!-- Tela 1: Agenda -->
+  <div>
+    <p class="caption">1. Agenda: a hora é o eixo, um botão por pedido</p>
+    <div class="phone">
+      <header class="top"><span class="logo">doce <b>agenda</b></span><button class="icon-btn" aria-label="Ajustes"><svg><use href="#i-gear"/></svg></button></header>
+      <div class="hello"><h1>Sexta, 16 de outubro</h1><p><strong>3 entregas hoje.</strong> Duas ainda sem sinal.</p></div>
+
+      <div class="inbox"><strong>Camila pediu pelo link</strong><span>Bolo de aniversário, terça 20. Não ocupa vaga até você aceitar.</span><button>Revisar</button></div>
+
+      <div class="section">
+        <div class="section-head"><h2>Hoje</h2><small>2 de 3 prontos</small></div>
+        <div class="timeline">
+          <div class="slot is-late">
+            <div class="when num">10h<small>retirada</small></div>
+            <article class="comanda late ok">
+              <div class="selo ok"><div><span>Pago</span>conferido</div></div>
+              <h3>Bolo de pistache</h3>
+              <p class="meta"><b>Ana Clara</b>, 1,5 kg, massa branca</p>
+              <div class="foot"><span class="etapa atraso"><i></i>Atrasado</span><button class="go">Entregue</button></div>
+            </article>
+          </div>
+          <div class="slot">
+            <div class="when num">15h<small>retirada</small></div>
+            <article class="comanda falta">
+              <div class="selo falta"><div><span>Sinal</span>falta</div></div>
+              <h3>Brigadeiro (cento)</h3>
+              <p class="meta"><b>Marcos</b>, metade ninho</p>
+              <div class="foot"><span class="etapa"><i></i>Fazendo</span><button class="go">Ficou pronto</button></div>
+              <a class="zap soft" href="#" style="margin-top:10px;width:100%"><svg><use href="#i-zap"/></svg>Cobrar o sinal no WhatsApp</a>
+            </article>
+          </div>
+          <div class="slot">
+            <div class="when num">18h<small>entrega</small></div>
+            <article class="comanda falta">
+              <div class="selo conferir"><div><span>Pix</span>conferir</div></div>
+              <h3>Docinhos sortidos (50)</h3>
+              <p class="meta"><b>Juliana</b>, Rua das Flores, 120</p>
+              <div class="note">Juliana avisou um Pix de R$ 60. Confira no banco.</div>
+              <div class="foot"><span class="etapa"><i></i>Confirmado</span><button class="go">Conferi o Pix</button></div>
+            </article>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><h2>Falta cobrar</h2><small class="num">R$ 415</small></div>
+        <ul class="list">
+          <li><strong>Roberta</strong><small>Torta de limão, entregue ontem</small><span class="valor num">R$ 55<em>a receber</em></span></li>
+          <li><strong>Patrícia</strong><small>Brigadeiro, domingo 18</small><span class="valor num">R$ 36<em>sinal</em></span></li>
+          <li><strong>Marcos</strong><small>Brigadeiro, hoje 15h</small><span class="valor num">R$ 54<em>sinal</em></span></li>
+        </ul>
+      </div>
+
+      <nav class="nav">
+        <a class="on" href="#"><svg><use href="#i-cal"/></svg>Agenda</a>
+        <a href="#"><svg><use href="#i-list"/></svg>Pedidos<span class="badge num">2</span></a>
+        <a class="novo" href="#"><span><svg width="26" height="26"><use href="#i-plus"/></svg></span>Novo</a>
+        <a href="#"><svg><use href="#i-people"/></svg>Clientes</a>
+        <a href="#"><svg><use href="#i-chart"/></svg>Meu mês</a>
+      </nav>
+    </div>
+  </div>
+
+  <!-- Tela 2: ficha do pedido -->
+  <div>
+    <p class="caption">2. Ficha: etapa, dinheiro e a próxima ação no polegar</p>
+    <div class="phone sheet-bg">
+      <div class="sheet">
+        <div class="grab"></div>
+        <h2>Brigadeiro (cento)</h2>
+        <p class="sub">Marcos, hoje às 15h, retirada</p>
+        <div class="steps"><i class="done"></i><i class="done"></i><i></i><i></i></div>
+        <div class="steps-label"><span>Confirmado</span><span>Fazendo</span><span>Pronto</span><span>Entregue</span></div>
+        <div class="box">
+          <h4>Dinheiro</h4>
+          <div class="row"><span>Valor do pedido</span><b class="num">R$ 180,00</b></div>
+          <div class="row"><span>Conferido</span><b class="num">R$ 0,00</b></div>
+          <div class="row total"><span>Falta receber</span><b class="num" style="color:var(--caramelo)">R$ 180,00</b></div>
+          <p class="meta" style="margin-top:8px">Sinal sugerido: R$ 54 (30%).</p>
+        </div>
+        <div class="box">
+          <h4>Combinado</h4>
+          <p class="meta" style="color:var(--vinho)">Metade tradicional, metade ninho. Forminha dourada. Retira na portaria.</p>
+        </div>
+      </div>
+      <div class="dock">
+        <a class="zap" href="#"><svg><use href="#i-zap"/></svg>Pedir o sinal de R$ 54</a>
+        <button class="ghost">Registrar pagamento</button>
+        <button class="ghost">Editar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Painel de componentes -->
+  <div class="kit">
+    <p class="caption" style="margin:0">3. O kit: poucas peças, cada uma com um significado</p>
+    <section>
+      <h3>Cores com trabalho fixo</h3>
+      <div class="sw">
+        <i style="background:var(--framboesa)"></i><span><b>Framboesa</b>: marca e ação principal. Nunca estado.</span>
+        <i style="background:var(--pistache)"></i><span><b>Pistache</b>: conferido, pronto.</span>
+        <i style="background:#e3a92c"></i><span><b>Caramelo</b>: falta sinal, falta conferir.</span>
+        <i style="background:var(--tijolo)"></i><span><b>Tijolo</b>: atrasado, dia lotado.</span>
+        <i style="background:var(--zap)"></i><span><b>Verde WhatsApp</b>: só no que abre o WhatsApp.</span>
+        <i style="background:var(--vinho)"></i><span><b>Vinho</b>: texto e a faixa de pedido novo.</span>
+      </div>
+    </section>
+    <section>
+      <h3>O carimbo do dinheiro</h3>
+      <div class="wrap" style="gap:18px">
+        <div class="selo ok" style="position:static"><div><span>Pago</span>conferido</div></div>
+        <div class="selo ok" style="position:static"><div><span>Sinal</span>conferido</div></div>
+        <div class="selo conferir" style="position:static"><div><span>Pix</span>conferir</div></div>
+        <div class="selo falta" style="position:static"><div><span>Sinal</span>falta</div></div>
+      </div>
+      <p>Mesmo formato em todo o app. Cheio quando ela conferiu; tracejado quando falta. Lê-se de longe, sem precisar ler o texto.</p>
+    </section>
+    <section>
+      <h3>Etapas</h3>
+      <div class="wrap"><span class="etapa"><i></i>Confirmado</span><span class="etapa"><i></i>Fazendo</span><span class="etapa pronto"><i></i>Pronto</span><span class="etapa atraso"><i></i>Atrasado</span></div>
+    </section>
+    <section>
+      <h3>WhatsApp com o verbo do momento</h3>
+      <div class="wrap" style="flex-direction:column;align-items:stretch">
+        <a class="zap" href="#"><svg><use href="#i-zap"/></svg>Pedir o sinal de R$ 54</a>
+        <a class="zap soft" href="#"><svg><use href="#i-zap"/></svg>Avisar que está pronto</a>
+        <a class="zap soft" href="#"><svg><use href="#i-zap"/></svg>Responder a Camila</a>
+      </div>
+      <p>A mensagem muda pela situação do pedido. Ela confere e envia; nada sai sozinho.</p>
+    </section>
+  </div>
+</div>
+</body>
+</html>

@@ -853,7 +853,8 @@ function whatsAppNumber(order) {
 // Opens the client's conversation with the summary already typed; she still reviews and sends it.
 function whatsAppLink(order) {
   const number = whatsAppNumber(order);
-  if (!number || sampleOrder(order)) return "";
+  // Demo phones are made up and could belong to a real person: never link them.
+  if (!number || sampleOrder(order) || isDemoMode()) return "";
   return `<a class="button button-primary detail-whatsapp" href="https://wa.me/${number}?text=${encodeURIComponent(makeWhatsAppSummary(order))}" target="_blank" rel="noopener">Abrir conversa com o resumo</a>`;
 }
 
@@ -1731,7 +1732,7 @@ function openClient(key) {
     ${client.sameNameAs.length ? `<p class="client-note">Pode ser a mesma pessoa que ${client.sameNameAs.map((other) => `<button class="text-link" type="button" data-client="${esc(other.key)}">${esc(other.name)}${other.phone ? ` · ${esc(formatPhone(other.phone))}` : " (sem WhatsApp)"}</button>`).join(", ")}. As fichas não se juntam sozinhas: para juntar, coloque o mesmo WhatsApp nos pedidos.</p>` : ""}
     <h3 class="client-orders-title">Pedidos</h3>
     <div class="order-list client-orders">${orders.map((order) => rowMarkup(order)).join("")}</div>
-    <div class="client-actions">${client.phone ? `<a class="button button-primary" href="https://wa.me/55${esc(client.phone)}" target="_blank" rel="noopener">Abrir conversa no WhatsApp</a>` : ""}<button class="text-link client-erase" type="button" data-action="erase-client" data-client-key="${esc(client.key)}">Apagar dados desta cliente</button></div>`;
+    <div class="client-actions">${client.phone ? (isDemoMode() ? `<p class="vn-muted client-demo-note">Na demonstração o WhatsApp fica desligado: os telefones são inventados.</p>` : `<a class="button button-primary" href="https://wa.me/55${esc(client.phone)}" target="_blank" rel="noopener">Abrir conversa no WhatsApp</a>`) : ""}<button class="text-link client-erase" type="button" data-action="erase-client" data-client-key="${esc(client.key)}">Apagar dados desta cliente</button></div>`;
   if (!dialog.open) dialog.showModal();
 }
 

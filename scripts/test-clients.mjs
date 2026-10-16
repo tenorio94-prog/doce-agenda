@@ -53,7 +53,8 @@ try {
     await ficha.waitFor();
     assert.match(await ficha.locator('.client-tiles').innerText(), /Pedidos\s+2[\s\S]*Total\s+R\$\s200,00/);
     assert.match(await ficha.innerText(), /Faz 120 dias que ela não pede/);
-    assert.equal(await ficha.locator('a[href="https://wa.me/5511900000115"]').count(), 1);
+    assert.equal(await ficha.locator('a[href^="https://wa.me/"]').count(), 0, 'demo nunca abre WhatsApp de telefone inventado');
+    assert.equal(await ficha.locator('.client-demo-note').count(), 1);
     if (shots) await page.screenshot({ path: path.join(shots, `ficha-${width}.png`) });
     await ficha.locator('.order-row').first().click();
     await page.locator('#detail-dialog[open]').waitFor();

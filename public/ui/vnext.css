@@ -426,3 +426,23 @@ body.vnext { background: var(--vn-canvas); }
 .vnext .detail-actions .detail-whatsapp { flex: 1 1 100%; display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
 .vnext .detail-actions .detail-whatsapp ~ .button { flex: 1 1 40%; }
 .vnext .detail-dialog .detail-actions .detail-whatsapp ~ .button-primary { background: var(--vn-soft); border: 1px solid #f3dce3; color: var(--vn-wine); box-shadow: none; }
+
+/* ---- Fase 0 da auditoria (16/10): defeitos ---- */
+/* D0: a linha de cima do cartão quebra em vez de empurrar o cartão para fora da tela a 360 px. */
+.vn-order > .vn-row:first-child { flex-wrap: wrap; row-gap: 8px; }
+.vn-order .vn-time { flex-wrap: wrap; row-gap: 2px; white-space: normal; min-width: 0; }
+.vn-order .vn-time > * { white-space: nowrap; }
+.vn-order .vn-card-foot { flex-wrap: wrap; row-gap: 8px; }
+/* D2: valor em R$ nunca parte no meio; o tamanho se ajusta à largura. */
+.vnext #view-month .vn-stat .stat-value, .vnext #view-today .vn-wine-panel .stat-value, .vn-total { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.vnext #view-month .vn-stat .stat-value { font-size: clamp(19px, 5.6vw, 28px); }
+/* Contraste: pedido entregue fica apagado só no fundo, não no texto (antes a opacidade derrubava o contraste). */
+.vn-order.is-delivered, .vn-order.is-cancelled { opacity: 1; background: #fbf8f9; }
+.vn-order.is-delivered .vn-thumb, .vn-order.is-cancelled .vn-thumb { opacity: .6; }
+.vnext #view-today .vn-day .day-count { color: #5f4a51; opacity: 1; }
+/* D6: "Avançado" com a mesma seta dos outros cartões de Ajustes. */
+details.settings-data-tools > summary { list-style: none; justify-content: space-between; gap: 12px; color: var(--vn-ink); }
+details.settings-data-tools > summary::-webkit-details-marker { display: none; }
+details.settings-data-tools > summary::after { content: ""; flex: 0 0 auto; width: 10px; height: 10px; border-right: 2.5px solid currentColor; border-bottom: 2.5px solid currentColor; transform: rotate(45deg) translateY(-3px); transition: transform .2s; }
+details.settings-data-tools[open] > summary::after { transform: rotate(-135deg) translateY(-3px); }
+@media (prefers-reduced-motion: reduce) { details.settings-data-tools > summary::after { transition: none; } }
