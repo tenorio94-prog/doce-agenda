@@ -545,3 +545,13 @@ body.vnext:has(dialog[open]) { overflow: hidden; }
 @media (max-width: 1000px) { .vnext #view-today .vn-aside .finance-summary { display: none; } }
 /* Filtros com 44 px de toque (antes 40). */
 .vnext :is(#view-orders, #view-clients, #view-settings) .stage-chip { min-height: 44px; font-size: 14px; }
+
+/* ---- Fase 5 (16/10): cartão sem interativo aninhado ----
+   O título é o botão que abre a ficha; uma camada invisível estende o toque ao cartão inteiro.
+   O botão de próximo passo fica acima dessa camada. */
+.vn-order { position: relative; }
+.vn-open { all: unset; cursor: pointer; font: inherit; color: inherit; overflow-wrap: anywhere; }
+.vn-open::after { content: ""; position: absolute; inset: 0; z-index: 1; border-radius: inherit; }
+.vn-open:focus-visible { outline: none; }
+.vn-order:has(.vn-open:focus-visible) { outline: 3px solid var(--vn-green); outline-offset: 3px; }
+.vn-order :is(.vn-btn, .vn-zap, a, .vn-card-foot button) { position: relative; z-index: 2; }

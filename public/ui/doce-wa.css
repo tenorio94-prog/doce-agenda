@@ -45,7 +45,7 @@
   --wa-color-text-quiet: var(--muted);
   --wa-color-text-link: var(--link);
 
-  /* Letras: Fredoka nos títulos, Figtree no resto */
+  /* Letras: Bricolage Grotesque nos títulos, Plus Jakarta Sans no resto (tokens.css) */
   --wa-font-family-body: var(--font-body);
   --wa-font-family-heading: var(--font-title);
   --wa-font-family-longform: var(--font-body);

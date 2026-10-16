@@ -389,11 +389,11 @@ function agendaCardMarkup(order, options = {}) {
   const when = `<div class="cmd-when">${day}<b class="vn-time">${date ? esc(shortTime(order.dueAt)) : "—"}</b><small>${icon(mode === "Entrega" ? "delivery" : "bag")}${esc(mode.toLowerCase())}</small>${photo && !options.compact ? `<img class="vn-thumb" src="${esc(photoUrl(photo))}" alt="" loading="lazy">` : ""}</div>`;
   // A etapa já está no verbo do botão; o rótulo só aparece quando não há botão (entregue, cancelado, lista compacta).
   const stage = isLate(order) ? '<span class="vn-badge red">Atrasado</span>' : step ? "" : statusBadge(order.status);
-  return `<article class="${classes}" data-open-order="${esc(order.id)}" tabindex="0" role="button" aria-label="Abrir pedido de ${esc(clientName(order) || "cliente sem nome")}">
+  return `<article class="${classes}" data-open-order="${esc(order.id)}">
     ${when}
     <div class="cmd-body">
       ${stamp.html}
-      <h3>${esc(order.product || "Produto sem descrição")}</h3>
+      <h3><button class="vn-open" type="button" aria-label="Abrir pedido de ${esc(clientName(order) || "cliente sem nome")}: ${esc(order.product || "produto sem descrição")}">${esc(order.product || "Produto sem descrição")}</button></h3>
       <p class="cmd-meta"><span class="vn-client">${esc(clientName(order) || "Cliente sem nome")}</span>${detail && !options.compact ? `, ${esc(detail)}` : ""}</p>
       ${!options.compact ? originMarkup(order) : ""}
       ${!options.compact && informed > 0 ? `<div class="vn-note amber">${icon("info")}<span>Pix de ${esc(money(informed))} informado. Confira no banco.</span></div>` : ""}
@@ -406,9 +406,9 @@ function agendaCardMarkup(order, options = {}) {
 // Caixa de entrada (Pedidos → Novos): mantém valor e ocupação da data em destaque para decidir.
 function inboxCardMarkup(order, options) {
   const date = parseDate(order.dueAt), mode = order.mode || "Retirada";
-  return `<article class="vn-order is-inbox" data-open-order="${esc(order.id)}" tabindex="0" role="button" aria-label="Abrir pedido de ${esc(clientName(order) || "cliente sem nome")}">
+  return `<article class="vn-order is-inbox" data-open-order="${esc(order.id)}">
     <div class="vn-row vn-inbox-top"><span class="vn-eyebrow">${esc(order.status === "Solicitação" ? "Solicitação" : "Pedido")}${order.publicCode ? ` ${esc(order.publicCode)}` : ""}</span>${order.status === "Solicitação" ? '<span class="vn-badge outline">Aguardando revisão</span>' : statusBadge(order.status)}</div>
-    <div class="vn-product"><div><span class="vn-client">${esc(clientName(order) || "Cliente sem nome")}</span><h3>${esc(order.product || "Produto sem descrição")}</h3><div class="vn-inbox-value"><span>Valor total</span><strong class="vn-total">${esc(orderTotalLabel(order))}</strong></div></div></div>
+    <div class="vn-product"><div><span class="vn-client">${esc(clientName(order) || "Cliente sem nome")}</span><h3><button class="vn-open" type="button" aria-label="Abrir pedido de ${esc(clientName(order) || "cliente sem nome")}: ${esc(order.product || "produto sem descrição")}">${esc(order.product || "Produto sem descrição")}</button></h3><div class="vn-inbox-value"><span>Valor total</span><strong class="vn-total">${esc(orderTotalLabel(order))}</strong></div></div></div>
     ${originMarkup(order)}
     <div class="vn-note vn-inbox-date">${icon("clock")}<span>${esc(date ? dateTimeLabel(order.dueAt) : "Data e horário a combinar")}, ${esc(mode.toLowerCase())}</span></div>
     ${dateCapacityMarkup(order)}

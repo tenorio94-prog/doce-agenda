@@ -1,9 +1,10 @@
-/* Tokens compartilhados do Doce Agenda: paleta "Glacê + carimbo", fontes e aliases.
-   Carregado antes de style.css, landing.css e account.css, nas três páginas.
-   Fredoka (títulos, horários e números) e Figtree (todo o resto): SIL OFL 1.1, servidas
-   localmente de /fonts, sem CDN. */
-@font-face { font-family: "Fredoka"; src: url("/fonts/Fredoka.ttf") format("truetype"); font-style: normal; font-weight: 300 700; font-stretch: 75% 125%; font-display: swap; }
-@font-face { font-family: "Figtree"; src: url("/fonts/Figtree.ttf") format("truetype"); font-style: normal; font-weight: 300 900; font-display: swap; }
+/* Tokens compartilhados do Doce Agenda: fontes e aliases usados por style.css, landing, cadastro, privacidade e vitrine.
+   Direção Comanda (16/10): Bricolage Grotesque (títulos, horários e valores) e Plus Jakarta Sans (todo o resto),
+   SIL OFL 1.1, servidas localmente de /fonts/vnext (copiadas do @fontsource pelo build), sem CDN.
+   Fredoka e Figtree saíram; o logo continua em contornos (não depende de fonte). */
+@font-face { font-family: "Bricolage Grotesque"; src: url("/fonts/vnext/bricolage-600.woff2") format("woff2"); font-weight: 500 650; font-display: swap; }
+@font-face { font-family: "Bricolage Grotesque"; src: url("/fonts/vnext/bricolage-700.woff2") format("woff2"); font-weight: 651 900; font-display: swap; }
+@font-face { font-family: "Plus Jakarta Sans"; src: url("/fonts/vnext/plus-jakarta-sans.woff2") format("woff2"); font-weight: 200 800; font-display: swap; }
 
 :root {
   color-scheme: light;
@@ -31,8 +32,8 @@
   --focus: var(--carimbo);
 
   /* Tipografia */
-  --font-title: "Fredoka", ui-rounded, "Segoe UI", system-ui, sans-serif;
-  --font-body: "Figtree", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-title: "Bricolage Grotesque", "Plus Jakarta Sans", system-ui, sans-serif;
+  --font-body: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --text-xs: 12px; --text-sm: 13px; --text-md: 15px;
   --text-lg: 18px; --text-xl: 22px; --text-2xl: 28px;
   --text-display: clamp(42px, 6.6vw, 84px);

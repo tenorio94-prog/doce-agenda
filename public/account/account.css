@@ -101,7 +101,7 @@ body{background:#fff8f8;color:#27171c;font-family:"Plus Jakarta Sans",Arial,sans
 .site-header::before,.site-header::after{display:none}
 @media (min-width:761px){.site-header{margin-bottom:40px}}
 .header-link{color:#4a1525}
-.intro h1,.card-content h2{font-family:"Outfit","Plus Jakarta Sans",sans-serif;font-weight:600;letter-spacing:-.03em;color:#27171c}
+.intro h1,.card-content h2{font-family:"Bricolage Grotesque","Plus Jakarta Sans",sans-serif;font-weight:700;letter-spacing:-.03em;color:#2a141b}
 .intro h1 em{color:#ad2644}
 .eyebrow{color:#ad2644;letter-spacing:.12em}
 .intro-copy,.form-intro,.field-hint,.terms-note{color:#795f67}
@@ -120,3 +120,5 @@ body{background:#fff8f8;color:#27171c;font-family:"Plus Jakarta Sans",Arial,sans
 .notice{border-radius:12px}
 .notice-error{background:#fdecee;color:#9b1c31}
 .notice-pending{background:#fff5d9;color:#865508}
+/* Direção Comanda (16/10): o título já diz o que é; sem rótulo em maiúsculas acima dele. */
+.card-eyebrow{display:none}

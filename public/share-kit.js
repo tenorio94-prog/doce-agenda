@@ -39,10 +39,10 @@ export async function storyImage(page, url) {
   x.textAlign = 'center'; x.textBaseline = 'alphabetic'; x.fillStyle = p.ink;
   let size = 104; x.font = font.replace('{size}', size); while (x.measureText(page.displayName).width > 940 && size > 48) { size -= 4; x.font = font.replace('{size}', size); }
   x.fillText(page.displayName, 540, top + 240);
-  x.fillStyle = '#3b2c34'; x.font = '600 46px Figtree, sans-serif'; x.fillText('Encomendas abertas', 540, top + 320);
+  x.fillStyle = '#3b2c34'; x.font = '600 46px "Plus Jakarta Sans", sans-serif'; x.fillText('Encomendas abertas', 540, top + 320);
   const qy = top + 390; x.fillStyle = '#ffffff'; round(330, qy, 420, 420, 36); x.fill();
   drawQr(x, url, 365, qy + 35, 350);
-  x.fillStyle = p.ink; x.font = '700 44px Figtree, sans-serif'; x.fillText(url.replace(/^https:\/\//, ''), 540, qy + 500);
+  x.fillStyle = p.ink; x.font = '700 44px "Plus Jakarta Sans", sans-serif'; x.fillText(url.replace(/^https:\/\//, ''), 540, qy + 500);
   return toBlob(canvas);
 }
 
@@ -53,9 +53,9 @@ export async function printQr(page, url) {
   x.textAlign = 'center'; x.fillStyle = p.ink;
   let size = 96; x.font = font.replace('{size}', size); while (x.measureText(page.displayName).width > 1040 && size > 44) { size -= 4; x.font = font.replace('{size}', size); }
   x.fillText(page.displayName, 600, 170);
-  x.fillStyle = '#3b2c34'; x.font = '600 48px Figtree, sans-serif'; x.fillText('Aponte a câmera para encomendar', 600, 260);
+  x.fillStyle = '#3b2c34'; x.font = '600 48px "Plus Jakarta Sans", sans-serif'; x.fillText('Aponte a câmera para encomendar', 600, 260);
   drawQr(x, url, 200, 340, 800);
-  x.fillStyle = p.ink; x.font = '700 46px Figtree, sans-serif'; x.fillText(url.replace(/^https:\/\//, ''), 600, 1320);
+  x.fillStyle = p.ink; x.font = '700 46px "Plus Jakarta Sans", sans-serif'; x.fillText(url.replace(/^https:\/\//, ''), 600, 1320);
   return toBlob(canvas);
 }
 

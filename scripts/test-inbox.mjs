@@ -120,7 +120,7 @@ try {
     await page.locator('#order-search').fill('');
 
     // Abrir com teclado e botão leva à mesma revisão, sem mudar situação/capacidade.
-    await card(page, 'known').focus(); await page.keyboard.press('Enter');
+    await card(page, 'known').locator('.vn-open').focus(); await page.keyboard.press('Enter');
     await page.locator('#detail-dialog[open]').waitFor();
     assert.match(await page.locator('.request-review').innerText(), /Valor total: R\$\s*155,50/);
     assert.match(await page.locator('.request-review').innerText(), /1\/2 vagas ocupadas/);

@@ -6,53 +6,65 @@
 
 **Promessa:** pedidos e agenda da semana em um só lugar, do combinado à entrega. A marca fala de organização e acompanhamento; não promete vendas, ausência de erros ou resultados financeiros.
 
-**Direção:** em transição (desde 16/10/2026) para a nova identidade do laboratório visual (branch `codex/laboratorio-visual`, `lab/DESIGN.md`): canvas `#fff8f8`, framboesa `#ad2644`, vinho `#4a1525`, verde `#006947` para o que foi conferido, âmbar `#865508` para atenção; Outfit nos títulos e números, Plus Jakarta Sans no resto; cartões com raio 20. Implementada em `public/ui/vnext.css`, tela por tela; o logo oficial continua. As seções abaixo descrevem o visual "Glacê + carimbo", que vale para as telas ainda não migradas. A referência de design é o canvas "Versão final" (site, marca, Hoje, Nova encomenda, Pedido).
+**Direção: "Comanda" (aprovada por Lucas em 16/10/2026).** Nasce do ofício: a comanda do pedido presa na bancada, a etiqueta da caixa e o carimbo de pago. Relatório, capturas e protótipo em `docs/auditoria-ui-2026-10-16/`. Implementada em `public/ui/vnext.css` (tokens `--vn-*`); `public/tokens.css` traz as fontes e aliases para as páginas fora do app. O visual antigo "Glacê" ainda existe por baixo em `public/style.css`, sobrescrito; não criar regras novas nele.
+
+## Princípios
+
+1. **A hora é o eixo.** Na Agenda, a coluna da esquerda é o horário, grande; o resto se alinha a ela.
+2. **Um pedido, um botão.** Cada cartão tem uma ação principal com o verbo da próxima etapa. O título abre a ficha.
+3. **O dinheiro tem forma.** Um carimbo só: cheio e verde quando conferido; tracejado em caramelo quando falta o sinal ou falta conferir. O texto vai sempre junto.
+4. **Cor é significado.** Nunca usar a cor da marca para estado.
+5. **Silêncio em volta.** Sem frases de efeito nas telas internas, sem rótulos em maiúsculas espaçadas, sem setas decorativas em botões, sem letra no lugar de foto.
 
 ## Tom
 
-Direto e acolhedor, sem diminutivo. Instruções curtas e verbos diretos. Nos botões e títulos do app: "Nova encomenda", "Salvar encomenda", "Quem pediu?", "O quê?", "Quando?". Mensagens de sucesso: "o que aconteceu + próximo passo" ("Encomenda salva. Copiar resumo"). Erros em português, nunca texto técnico de biblioteca.
+Direto e acolhedor, sem diminutivo. Instruções curtas e verbos diretos ("Nova encomenda", "Quem pediu?", "Ficou pronto", "Pedir o sinal de R$ 54"). Sucesso = o que aconteceu + próximo passo. Erros em português, dizendo o que fazer; nunca texto técnico de biblioteca.
 
 ## Logo
 
-"doce agenda" em Fredoka, com um fio de glacê e uma gota embaixo. A gota é o ícone do app (`public/favicon.svg`; os PNGs do manifest saem de `node scripts/build-icons.mjs`). O logo (`public/logo.svg`) tem o texto convertido em curvas e é gerado por `python scripts/build-logo.py`.
+"doce agenda" com um fio de glacê e uma gota embaixo, em contornos (`public/logo.svg`, gerado por `python scripts/build-logo.py`; não depende de fonte). A gota é o ícone do app (`public/favicon.svg`; PNGs do manifest por `node scripts/build-icons.mjs`).
 
 ## Cores e o que significam
 
-| Cor | Valor | Quando usar |
-|---|---|---|
-| Glacê | `#f7c5d0` | a marca: topo das telas, cabeçalho das janelas e destaques |
-| Baunilha | `#fbe9a9` | atenção: falta o sinal, faixa de demonstração |
-| Pistache | `#d3e7c1` | tudo certo: pronta, resumo do dia |
-| Branco | `#ffffff` | pedido normal, sem pendência |
-| Ameixa | `#2b1a2c` | texto e botão principal |
-| Carimbo | `#2e6a46` | carimbo de sinal pago e anel de foco |
-| Papel | `#fffaf2` | fundo |
+| Nome | Token | Valor | Trabalho |
+|---|---|---|---|
+| Vinho | `--vn-wine` / `--vn-ink` | `#3a1220` / `#2a141b` | texto, títulos, cabeçalho da ficha |
+| Framboesa | `--vn-berry` | `#b0244a` | marca e ação principal; **nunca estado** |
+| Farinha | `--vn-canvas` | `#f5f1f2` | fundo das telas |
+| Açúcar | `--vn-surface` | `#ffffff` | cartões e janelas |
+| Pistache | `--vn-green` / `--vn-mint` | `#1e6b47` / `#e3f2e9` | conferido, pronto, entregue |
+| Caramelo | `--vn-amber` / `--vn-vanilla` | `#7f4d00` / `#fff0cc` | falta o sinal, falta conferir |
+| Tijolo | `--vn-red` / `--vn-red-soft` | `#a3341a` / `#fdebe5` | atrasado, dia lotado |
+| Cinza | `--vn-muted` | `#6f5a61` | fechado, cancelado, texto de apoio |
+| Verde WhatsApp | `--vn-zap` | `#128c4a` | **só** botões que abrem o WhatsApp, sempre com o ícone |
 
-Texto secundário `#66536a` e `#4a3550`; link `#8f2a4f`. Bordas de campos `#9c8290` (contraste 3,49:1; o `#d9c6cf` do canvas não passa dos 3:1 exigidos para controles). Todos os valores vivem em `public/tokens.css`; as folhas antigas usam aliases dele e podem ser migradas aos poucos.
+Texto sobre fundo precisa de contraste AA (4,5:1); o axe-core deve dar zero violações de contraste nas telas principais.
 
 ## Letras
 
-- **Fredoka:** só títulos, horários e números.
-- **Figtree:** todo o resto.
+- **Bricolage Grotesque** (600 e 700): títulos, horários e valores.
+- **Plus Jakarta Sans** (variável): todo o resto, com números tabulares.
 
-Ambas em `public/fonts/` (SIL OFL 1.1), servidas localmente. Nenhum texto abaixo de 12 px.
+Ambas SIL OFL 1.1, copiadas do `@fontsource` pelo build para `/fonts/vnext/`. Nenhum texto abaixo de 12 px. A landing ainda usa Outfit nos títulos (migrar junto com ela). A vitrine da cliente tem as letras próprias de cada estilo (Young Serif, Baloo 2, Caprasimo, Bricolage).
 
-## Carimbo
+## Peças
 
-"Sinal pago" aparece quando a confeiteira confirma que recebeu (pagamento conferido), com a data. O sinal só conta depois de confirmado. Sem animação com `prefers-reduced-motion`.
+- **Cartão Comanda** (`.vn-order.comanda`): coluna da hora (com sacola para retirada, caminhão para entrega), produto como título-botão (`.vn-open`), cliente e detalhe numa linha, carimbo no canto, filete lateral com a cor do dinheiro (tijolo se atrasado), um botão.
+- **Carimbo** (`.vn-stamp`): `is-ok` (cheio, pistache), `is-due` (tracejado, "Falta o sinal"), `is-check` (tracejado, "Pix falta conferir"). Na ficha, o carimbo grande "SINAL PAGO / PAGO" com a data.
+- **Rótulo** (`.vn-badge`): etapa só quando não há botão; `red` para "Atrasado"/"Dia lotado"; `outline` para estados neutros.
+- **WhatsApp** (`.vn-zap`): verbo do momento ("Pedir o sinal de R$ 54", "Mandar o orçamento", "Avisar que está pronto", "Cobrar R$ X"); nunca envia sozinho; desligado na demonstração.
+- **Ícones** (`public/ui/icons.js`): traço 1,7, `currentColor`; cada ícone ligado a um conceito (sacola, entrega, batedor, Pix, cliente, alerta…). Ícone só onde ajuda a reconhecer.
 
 ## Forma
 
-Botões em pílula. O fio de glacê com gotas separa o topo da página do conteúdo.
-
-**Polimento (desde 15/10/2026, estilo shadcn):** só três raios (`--r-s` 12, `--r-m` 16, `--r-l` 24 px), borda fina de 1 px (`--hairline`) e sombras discretas (`--shadow-s/m/l`), todos em `public/tokens.css`. A landing já segue; o app migra tela por tela. Os raios antigos (24 a 28 px) continuam só no que ainda não foi revisado.
+Raio 18 nos cartões, 14 nos controles; pílula só em botões e rótulos. Uma sombra (`--vn-shadow`). Movimento: um único momento, o carimbo batendo quando ela confere; o resto só responde ao toque. Respeitar `prefers-reduced-motion`.
 
 ## Regras
 
-- Bibliotecas são bem-vindas quando deixam o produto melhor, desde que instaladas pelo npm com versão fixa e servidas pelo nosso próprio domínio (montadas pelo build). Em uso: **Web Awesome** (componentes; tema em `public/ui/doce-wa.css`, ajustes em `public/ui/wa-setup.js`) e **Motion** (animações).
+- Bibliotecas são bem-vindas quando deixam o produto melhor, desde que instaladas pelo npm com versão fixa e servidas pelo nosso próprio domínio (montadas pelo build). Em uso: **Web Awesome** (componentes; tema em `public/ui/doce-wa.css`) e **Motion** (animações).
 - Nada carregado de outros sites: sem CDN, fontes externas, analytics, rastreadores ou widgets. O ícone padrão da Web Awesome buscaria desenhos no Font Awesome; por isso ele fica desligado e só se usa `library="system"`.
-- Alvos de toque de pelo menos 44 px.
-- Foco de teclado sempre visível (anel de 3 px em `--carimbo`).
-- Respeitar `prefers-reduced-motion`.
+- Alvos de toque de pelo menos 44 px; 48 px nas ações principais.
+- Foco de teclado sempre visível (anel de 3 px verde).
+- Nada de interativo dentro de interativo (o cartão não é botão; o título é).
 - Modo claro apenas (`color-scheme: light`).
-- Imagem de compartilhamento: `node scripts/build-og-image.mjs`.
+- Imagem de compartilhamento: `node scripts/build-og-image.mjs` (ainda usa Fredoka/Figtree de `public/fonts/`).
