@@ -1,0 +1,599 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Comanda, segunda demão</title>
+<style id="fonts">
+@font-face { font-family: "Bricolage Grotesque"; src: url("fonts/bricolage-600.woff2") format("woff2"); font-weight: 500 650; font-display: swap; }
+@font-face { font-family: "Bricolage Grotesque"; src: url("fonts/bricolage-700.woff2") format("woff2"); font-weight: 651 900; font-display: swap; }
+@font-face { font-family: "Plus Jakarta Sans"; src: url("fonts/plus-jakarta-sans.woff2") format("woff2"); font-weight: 200 800; font-display: swap; }
+</style>
+<style>
+:root {
+  color-scheme: light;
+  /* Mesmos tokens do app (public/ui/vnext.css). Nada de cor nova: a mudança é de uso. */
+  --canvas: #f5f1f2; --surface: #fff; --soft: #f7eef1; --rose: #f6e3e9;
+  --berry: #b0244a; --berry-dark: #921d3d; --wine: #3a1220; --ink: #2a141b; --muted: #6f5a61;
+  --line: #e9e0e3; --line-soft: #efe8ea;
+  --green: #1e6b47; --mint: #e3f2e9; --amber: #7f4d00; --amber-line: #c98a12; --vanilla: #fff0cc; --cream: #fffaf0;
+  --red: #a3341a; --red-soft: #fdebe5; --zap: #128c4a; --zap-dark: #0f7a40;
+  --r: 18px; --r-ctl: 14px;
+  --shadow: 0 1px 0 #3a12200a, 0 6px 18px -10px #3a122026;
+  --title: "Bricolage Grotesque", "Plus Jakarta Sans", sans-serif;
+  --body: "Plus Jakarta Sans", Arial, sans-serif;
+  /* Escala única: 12 · 14 · 16 · 20 · 28 · 40 */
+  --t12: 12px; --t14: 14px; --t16: 16px; --t20: 20px; --t28: 28px; --t40: 40px;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--canvas); color: var(--ink); font: 400 var(--t16)/1.5 var(--body); font-variant-numeric: tabular-nums; -webkit-font-smoothing: antialiased; }
+button, a { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 3px solid var(--green); outline-offset: 3px; }
+h1, h2, h3, h4 { margin: 0; font-family: var(--title); letter-spacing: -.02em; text-wrap: balance; }
+p { margin: 0; }
+.icon { width: 20px; height: 20px; flex: none; }
+
+/* ---------- Página do protótipo ---------- */
+.page { max-width: 1240px; margin: 0 auto; padding: 32px 16px 96px; }
+.page > header { max-width: 720px; margin-bottom: 40px; }
+.page > header h1 { font-size: clamp(28px, 6vw, 40px); line-height: 1.05; }
+.page > header p { margin-top: 12px; color: var(--muted); }
+.chapter { margin-top: 64px; }
+.chapter > h2 { font-size: var(--t28); line-height: 1.1; }
+.chapter > p { max-width: 680px; margin-top: 8px; color: var(--muted); }
+.compare { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 28px; margin-top: 24px; align-items: start; }
+.compare figure { margin: 0; }
+.compare figcaption { margin-bottom: 10px; font: 700 var(--t14)/1.3 var(--body); color: var(--muted); }
+.compare figcaption b { color: var(--ink); }
+.before img { display: block; width: 100%; max-width: 390px; border-radius: 22px; border: 1px solid var(--line); }
+.notes { margin: 14px 0 0; padding-left: 18px; color: var(--muted); font-size: var(--t14); max-width: 390px; }
+.notes li + li { margin-top: 6px; }
+
+/* Moldura de celular simples (sem enfeite de aparelho) */
+.phone { position: relative; width: 100%; max-width: 390px; height: 780px; overflow: auto; overscroll-behavior: contain; border-radius: 26px; border: 1px solid var(--line); background: var(--canvas); box-shadow: 0 30px 60px -40px #3a122066; }
+.phone.tall { height: auto; overflow: visible; }
+
+/* ---------- App: topo ---------- */
+.topbar { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px 6px; }
+.topbar .logo { font: 700 20px/1 var(--title); color: var(--wine); letter-spacing: -.03em; }
+.topbar .saved { display: inline-flex; align-items: center; gap: 6px; font-size: var(--t12); color: var(--muted); }
+.topbar .saved::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--green); }
+.demo-line { margin: 6px 16px 0; padding: 10px 14px; border-radius: 14px; background: var(--wine); color: #fff; font-size: var(--t14); display: flex; justify-content: space-between; gap: 10px; align-items: center; }
+.demo-line a { font-weight: 700; white-space: nowrap; text-underline-offset: 3px; min-height: 44px; display: inline-flex; align-items: center; }
+
+/* ---------- Agenda ---------- */
+.today-head { padding: 14px 16px 4px; }
+.today-head .date { font: 600 var(--t14)/1.2 var(--body); color: var(--muted); }
+.today-head h1 { margin-top: 4px; font-size: var(--t28); line-height: 1.05; }
+.today-head .sub { margin-top: 6px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: var(--t14); color: var(--muted); }
+.flag { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; font: 700 var(--t12)/1.4 var(--body); }
+.flag.red { background: var(--red-soft); color: var(--red); }
+
+.week { position: sticky; top: 0; z-index: 3; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; padding: 10px 12px; background: color-mix(in srgb, var(--canvas) 92%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line-soft); }
+.day { position: relative; display: grid; justify-items: center; gap: 1px; min-height: 58px; padding: 6px 0 9px; border: 0; border-radius: 14px; background: transparent; color: var(--ink); }
+.day small { font: 600 var(--t12)/1 var(--body); color: var(--muted); }
+.day b { font: 700 var(--t20)/1.1 var(--title); }
+.day i { position: absolute; bottom: 5px; left: 50%; translate: -50% 0; display: flex; gap: 2px; }
+.day i span { width: 5px; height: 5px; border-radius: 50%; background: var(--line); }
+.day i span.on { background: var(--muted); }
+.day.full i span.on { background: var(--red); }
+.day.closed b { color: #b9aab0; }
+.day[aria-current="date"] { background: var(--wine); color: #fff; }
+.day[aria-current="date"] small { color: #f0dbe2; }
+.day[aria-current="date"] i span.on { background: #ff9c84; }
+.day[aria-current="date"] i span { background: #ffffff40; }
+
+.attention { margin: 14px 16px 0; border-radius: var(--r); background: var(--surface); box-shadow: var(--shadow); overflow: hidden; }
+.attention summary { list-style: none; display: flex; align-items: center; gap: 10px; min-height: 52px; padding: 0 16px; cursor: pointer; font: 700 var(--t16)/1.2 var(--body); }
+.attention summary::-webkit-details-marker { display: none; }
+.attention summary .count { display: inline-grid; place-items: center; min-width: 24px; height: 24px; padding: 0 7px; border-radius: 999px; background: var(--berry); color: #fff; font-size: var(--t12); }
+.attention summary .chev { margin-left: auto; transition: rotate .2s; color: var(--muted); }
+.attention[open] summary .chev { rotate: 180deg; }
+.att-row { display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 10px 14px 10px 16px; border-top: 1px solid var(--line-soft); }
+.att-row .glyph { width: 28px; height: 28px; display: grid; place-items: center; border-radius: 9px; }
+.att-row .glyph.link { background: var(--rose); color: var(--berry); }
+.att-row .glyph.money { background: var(--vanilla); color: var(--amber); }
+.att-row p { font-size: var(--t14); line-height: 1.35; }
+.att-row p b { font-weight: 700; }
+.att-row p span { color: var(--muted); }
+.att-more { display: block; width: 100%; min-height: 44px; border: 0; border-top: 1px solid var(--line-soft); background: none; color: var(--berry); font-weight: 700; font-size: var(--t14); }
+
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 0 16px; border-radius: 999px; border: 1px solid transparent; font: 700 var(--t14)/1 var(--body); white-space: nowrap; text-decoration: none; transition: background-color .15s, transform .15s; }
+.btn:active { transform: scale(.97); }
+.btn.solid { background: var(--berry); color: #fff; min-height: 52px; font-size: var(--t16); }
+.btn.solid:hover { background: var(--berry-dark); }
+.btn.tonal { background: var(--soft); color: var(--wine); border-color: #f0dbe2; }
+.btn.tonal:hover { background: var(--rose); }
+.btn.zap { background: var(--zap); color: #fff; }
+.btn.zap:hover { background: var(--zap-dark); }
+.btn.ok { background: var(--green); color: #fff; }
+.btn.quiet { background: transparent; color: var(--wine); border-color: var(--line); }
+.btn.block { width: 100%; }
+
+.section-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; padding: 22px 16px 10px; }
+.section-head h2 { font-size: var(--t20); }
+.progress { display: flex; align-items: center; gap: 8px; font-size: var(--t12); color: var(--muted); font-weight: 600; }
+.progress meter { width: 56px; height: 6px; }
+.progress meter::-webkit-meter-bar { background: var(--line); border: 0; border-radius: 99px; height: 6px; }
+.progress meter::-webkit-meter-optimum-value { background: var(--green); border-radius: 99px; }
+
+/* Cartão Comanda, segunda demão: mesma anatomia, ação mais quieta, dinheiro com valor. */
+.list { display: grid; gap: 10px; padding: 0 16px; }
+.order { position: relative; display: grid; grid-template-columns: 58px minmax(0, 1fr); gap: 0 12px; padding: 14px 14px 14px 12px; border-radius: var(--r); background: var(--surface); box-shadow: var(--shadow); overflow: hidden; }
+.order::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 4px; background: var(--line); }
+.order.ok::before { background: var(--green); } .order.due::before { background: #e3a92c; } .order.late::before { background: var(--red); }
+.when { display: grid; justify-items: end; align-content: start; gap: 3px; text-align: right; }
+.when b { font: 700 24px/1 var(--title); letter-spacing: -.03em; }
+.order.late .when b { color: var(--red); }
+.when small { display: inline-flex; align-items: center; gap: 3px; font: 600 var(--t12)/1 var(--body); color: var(--muted); }
+.when small .icon { width: 14px; height: 14px; }
+.when img { width: 48px; height: 48px; margin-top: 6px; border-radius: 12px; object-fit: cover; }
+.body { min-width: 0; }
+.body h3 { padding-right: 92px; font-size: 17px; line-height: 1.2; }
+.body h3 button { all: unset; cursor: pointer; }
+.body h3 button:focus-visible { outline: 3px solid var(--green); outline-offset: 3px; border-radius: 4px; }
+.body .who { margin-top: 3px; padding-right: 92px; font-size: var(--t14); color: var(--muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.body .who b { color: var(--ink); font-weight: 700; }
+.foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 12px; }
+.foot .state { font: 700 var(--t12)/1.3 var(--body); color: var(--muted); }
+.foot .state.late { color: var(--red); }
+
+/* O carimbo: única forma do dinheiro. Agora sempre com o valor quando falta algo. */
+.stamp { position: absolute; top: 12px; right: 12px; display: grid; justify-items: center; min-width: 82px; padding: 5px 9px 6px; border-radius: 10px; text-align: center; line-height: 1.05; rotate: -4deg; }
+.stamp b { font: 700 15px/1 var(--title); letter-spacing: -.02em; }
+.stamp small { margin-top: 2px; font: 700 var(--t12)/1.1 var(--body); }
+.stamp.ok { border: 2px solid var(--green); background: var(--mint); color: var(--green); box-shadow: inset 0 0 0 2px #fff, inset 0 0 0 3px #1e6b4766; }
+.stamp.due { border: 2px dashed var(--amber-line); background: var(--cream); color: var(--amber); rotate: -2deg; }
+.stamp.check { border: 2px dashed var(--amber-line); background: var(--vanilla); color: var(--amber); rotate: -2deg; }
+.stamp.mini { position: static; rotate: 0deg; min-width: 0; padding: 3px 8px; border-radius: 8px; }
+.stamp.mini b { font-size: 13px; }
+
+.next { padding: 0 16px; }
+.next-day { margin-top: 14px; font: 700 var(--t14)/1.2 var(--body); color: var(--muted); }
+.row { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 10px; align-items: center; min-height: 56px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.row:last-child { border-bottom: 0; }
+.row .t { font: 700 var(--t16)/1 var(--title); text-align: right; }
+.row p { font-size: var(--t14); line-height: 1.3; min-width: 0; }
+.row p b { display: block; font-size: var(--t16); color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.row p span { color: var(--muted); }
+.spacer { height: 104px; }
+
+.tabbar { position: sticky; bottom: 0; z-index: 4; display: grid; grid-template-columns: repeat(5, 1fr); align-items: end; padding: 8px 6px 12px; background: #fff; border-top: 1px solid var(--line); }
+.tabbar span { display: grid; justify-items: center; gap: 3px; font: 600 var(--t12)/1 var(--body); color: var(--muted); }
+.tabbar span.on { color: var(--berry); }
+.tabbar span .icon { width: 22px; height: 22px; }
+.tabbar .new { width: 52px; height: 52px; margin: -18px auto 0; border-radius: 50%; display: grid; place-items: center; background: var(--berry); color: #fff; box-shadow: 0 8px 18px -8px #b0244a; }
+
+/* ---------- Ficha ---------- */
+.sheet { background: var(--canvas); min-height: 100%; }
+.sheet-head { padding: 16px 16px 20px; background: var(--wine); color: #fff; border-radius: 0 0 22px 22px; }
+.sheet-head .bar { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.sheet-head .mode { display: inline-flex; align-items: center; gap: 6px; font: 600 var(--t14)/1 var(--body); color: #f0dbe2; }
+.sheet-head .tools { display: flex; gap: 6px; }
+.round { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 50%; border: 0; background: #ffffff1c; color: #fff; }
+.text-btn { min-height: 44px; padding: 0 14px; border: 0; border-radius: 999px; background: #ffffff1c; color: #fff; font: 700 var(--t14)/1 var(--body); }
+.sheet-head .time { display: flex; align-items: baseline; gap: 10px; margin-top: 14px; }
+.sheet-head .time b { font: 700 var(--t40)/.9 var(--title); letter-spacing: -.04em; }
+.sheet-head .time span { font: 600 var(--t16)/1.2 var(--body); color: #f0dbe2; }
+.sheet-head h2 { margin-top: 10px; font-size: var(--t28); line-height: 1.05; }
+.sheet-head .client { margin-top: 4px; color: #f0dbe2; }
+.sheet-body { display: grid; gap: 14px; padding: 16px; }
+.step-line { display: flex; align-items: center; gap: 8px; font: 600 var(--t14)/1.2 var(--body); color: var(--muted); }
+.step-line ol { display: flex; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.step-line li { width: 22px; height: 5px; border-radius: 9px; background: var(--line); }
+.step-line li.done { background: var(--wine); }
+
+/* Canhoto do dinheiro: a comanda destacável */
+.stub { position: relative; padding: 18px 16px 16px; border-radius: var(--r); background: var(--surface); box-shadow: var(--shadow); }
+.stub::before { content: ""; position: absolute; left: 14px; right: 14px; top: 0; height: 2px; background: repeating-linear-gradient(90deg, var(--line) 0 6px, transparent 6px 11px); }
+.stub h3 { font-size: var(--t16); padding-right: 128px; }
+.stub .stamp { top: 14px; right: 14px; }
+.stub .stamp.big { min-width: 112px; padding: 7px 12px 8px; }
+.stub .stamp.big b { font-size: 18px; }
+.ledger { margin: 30px 0 0; display: grid; gap: 0; }
+.ledger div { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 9px 0; border-bottom: 1px dashed var(--line); font-size: var(--t14); }
+.ledger div:last-child { border-bottom: 0; }
+.ledger dt { color: var(--muted); }
+.ledger dd { margin: 0; font: 700 var(--t16)/1.2 var(--body); white-space: nowrap; }
+.ledger .informed dt, .ledger .informed dd { color: var(--amber); }
+.ledger .informed dd small, .ledger dd small { display: block; text-align: right; font: 600 var(--t12)/1.3 var(--body); }
+.ledger .due dd { color: var(--amber); font-size: var(--t20); font-family: var(--title); }
+.ledger .done dd { color: var(--green); }
+.stub .actions { display: grid; gap: 8px; margin-top: 14px; }
+.stub .hint { margin-top: 10px; font-size: var(--t12); color: var(--muted); }
+
+.panel { padding: 16px; border-radius: var(--r); background: var(--surface); box-shadow: var(--shadow); display: flow-root; }
+.panel h3 { font-size: var(--t16); }
+.panel img { float: right; width: 76px; height: 76px; margin: 0 0 8px 12px; border-radius: 12px; object-fit: cover; }
+.panel p { margin-top: 6px; font-size: var(--t14); }
+.panel dl { margin: 10px 0 0; display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; font-size: var(--t14); }
+.panel dt { color: var(--muted); }
+.panel dd { margin: 0; }
+.contact { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.contact a { color: var(--wine); font-weight: 700; text-decoration: none; min-height: 44px; display: inline-flex; align-items: center; }
+details.history { border-radius: var(--r); background: var(--surface); box-shadow: var(--shadow); }
+details.history summary { list-style: none; display: flex; justify-content: space-between; align-items: center; min-height: 52px; padding: 0 16px; font-weight: 700; cursor: pointer; }
+details.history summary::-webkit-details-marker { display: none; }
+
+.state-switch { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 12px; }
+.state-switch button { min-height: 40px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--line); background: #fff; font: 700 var(--t12)/1 var(--body); color: var(--muted); }
+.state-switch button[aria-pressed="true"] { background: var(--wine); border-color: var(--wine); color: #fff; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .stamp.slam { animation: slam .45s cubic-bezier(.2, .9, .2, 1.25) both; }
+  @keyframes slam { 0% { opacity: 0; scale: 1.9; rotate: -12deg; } 60% { opacity: 1; } 100% { scale: 1; rotate: -4deg; } }
+  .ledger .flash { animation: flash 1.2s ease-out; }
+  @keyframes flash { from { background: var(--mint); } to { background: transparent; } }
+}
+
+/* ---------- Pedidos ---------- */
+.search { margin: 10px 16px 0; display: flex; align-items: center; gap: 8px; min-height: 48px; padding: 0 14px; border-radius: 14px; background: #fff; border: 1px solid var(--line); color: var(--muted); font-size: var(--t14); }
+.chips { display: flex; gap: 6px; overflow-x: auto; padding: 12px 16px 2px; scrollbar-width: none; }
+.chips span { flex: none; display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 14px; border-radius: 999px; background: #fff; border: 1px solid var(--line); font: 700 var(--t14)/1 var(--body); }
+.chips span.on { background: var(--wine); color: #fff; border-color: var(--wine); }
+.chips span em { font-style: normal; font-size: var(--t12); opacity: .75; }
+.date-head { position: sticky; top: 0; z-index: 2; display: flex; justify-content: space-between; align-items: baseline; padding: 14px 16px 6px; background: var(--canvas); font: 700 var(--t14)/1.2 var(--body); }
+.date-head span { color: var(--muted); font-weight: 600; font-size: var(--t12); }
+.ledger-list { margin: 0 16px; padding: 0 14px; border-radius: var(--r); background: #fff; box-shadow: var(--shadow); }
+.ledger-list .row { grid-template-columns: 44px minmax(0, 1fr) auto; }
+.ledger-list .row .side { display: grid; justify-items: end; gap: 4px; font: 700 var(--t14)/1 var(--body); }
+
+/* ---------- Landing ---------- */
+.lp { border-radius: 26px; overflow: hidden; border: 1px solid var(--line); background: var(--canvas); }
+.lp-hero { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 40px; align-items: center; padding: 48px clamp(16px, 5vw, 64px); }
+.lp-hero .kicker { font: 600 var(--t16)/1.3 var(--body); color: var(--muted); }
+.lp-hero h2 { margin-top: 10px; font-size: clamp(36px, 5vw, 56px); line-height: 1; letter-spacing: -.035em; }
+.lp-hero p.lead { margin-top: 16px; max-width: 34em; font-size: 18px; color: #4d3840; }
+.lp-hero .cta { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-top: 24px; }
+.lp-hero .cta a.link { min-height: 44px; display: inline-flex; align-items: center; font-weight: 700; color: var(--wine); text-underline-offset: 4px; }
+.lp-hero .facts { margin-top: 18px; font-size: var(--t14); color: var(--muted); }
+.bench { position: relative; aspect-ratio: 4 / 4.4; border-radius: 28px; overflow: hidden; background: #e8dcd6; }
+.bench > img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.bench .order { position: absolute; left: 6%; right: 6%; bottom: 7%; rotate: -1.5deg; box-shadow: 0 30px 50px -24px #2a141b99; }
+.bench .order::after { content: ""; position: absolute; top: -9px; left: 50%; width: 46px; height: 18px; translate: -50% 0; rotate: 3deg; background: #f3e6c9cc; border-radius: 2px; }
+.story { padding: 48px clamp(16px, 5vw, 64px); background: #fff; }
+.story h2 { font-size: clamp(28px, 3.6vw, 40px); line-height: 1.05; max-width: 18em; }
+.story > p { margin-top: 10px; color: var(--muted); max-width: 40em; }
+.steps { display: grid; grid-template-columns: repeat(4, minmax(220px, 1fr)); gap: 14px; margin: 28px 0 0; padding: 0; list-style: none; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 6px; }
+.steps li { scroll-snap-align: start; display: grid; grid-template-rows: auto auto 1fr; gap: 10px; padding: 16px; border-radius: var(--r); background: var(--canvas); }
+.steps .n { font: 700 var(--t14)/1 var(--title); color: var(--berry); }
+.steps h3 { font-size: var(--t20); line-height: 1.15; }
+.steps .scene { align-self: end; position: relative; min-height: 132px; display: grid; align-items: end; }
+.steps .scene .card { position: relative; padding: 12px; border-radius: 14px; background: #fff; box-shadow: var(--shadow); font-size: var(--t14); }
+.steps .scene .card b { display: block; font: 700 var(--t16)/1.2 var(--title); }
+.steps .scene .card span { color: var(--muted); }
+.steps .scene .card .stamp { top: -26px; right: -6px; }
+.steps .scene img.v { width: 100%; height: 100px; object-fit: cover; border-radius: 14px; }
+.money-line { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 32px; align-items: center; padding: 48px clamp(16px, 5vw, 64px); }
+.money-line h2 { font-size: clamp(28px, 3.6vw, 40px); line-height: 1.05; }
+.money-line p { margin-top: 10px; color: #4d3840; }
+
+@media (max-width: 860px) {
+  .lp-hero, .money-line { grid-template-columns: 1fr; }
+  .bench { aspect-ratio: 4 / 4.2; }
+}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-bag" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" d="M5 8h14l-1 13H6zM9 8V6a3 3 0 0 1 6 0v2"/></symbol>
+  <symbol id="i-truck" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" d="M3 7h11v9H3zM14 10h4l3 3v3h-7M7 19a2 2 0 1 0 0-.01M17 19a2 2 0 1 0 0-.01"/></symbol>
+  <symbol id="i-link" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" d="m9 15 6-6M8 16l-2 2a4 4 0 0 1-6-6l5-5a4 4 0 0 1 6 0m2 1 2-2a4 4 0 0 1 6 6l-5 5a4 4 0 0 1-6 0"/></symbol>
+  <symbol id="i-pix" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" d="m12 3 4 4-4 4-4-4zM3 12l4-4 4 4-4 4zM13 12l4-4 4 4-4 4zM12 13l4 4-4 4-4-4z"/></symbol>
+  <symbol id="i-wallet" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" d="M3 6h17v14H3zM3 6l14-3v3m-1 6h5v4h-5z"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" d="m6 9 6 6 6-6"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" d="M6 6l12 12M18 6 6 18"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" d="m20 20-4.5-4.5M17 10.5a6.5 6.5 0 1 1-13 0 6.5 6.5 0 0 1 13 0Z"/></symbol>
+  <symbol id="i-cal" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" d="M8 2v4m8-4v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14H3V6a2 2 0 0 1 2-2Z"/></symbol>
+  <symbol id="i-list" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM4 21a8 8 0 0 1 16 0"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" d="M4 20h16M7 16v-4M12 16V8M17 16v-6"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-zap" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2.2a9.7 9.7 0 0 0-8.3 14.7L2.3 21.8l5-1.3A9.7 9.7 0 1 0 12 2.2Zm0 17.7a8 8 0 0 1-4.1-1.1l-.3-.2-3 .8.8-2.9-.2-.3A8 8 0 1 1 12 19.9Zm4.4-6c-.2-.1-1.4-.7-1.7-.8-.2-.1-.4-.1-.5.1l-.8 1c-.1.2-.3.2-.5.1a6.6 6.6 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.5-.4h-.5a.9.9 0 0 0-.7.3 2.8 2.8 0 0 0-.9 2.1 4.9 4.9 0 0 0 1 2.6 11.2 11.2 0 0 0 4.3 3.8c1.6.7 2.2.7 3 .6a2.6 2.6 0 0 0 1.7-1.2 2.1 2.1 0 0 0 .2-1.2c-.1-.1-.2-.2-.5-.3Z"/></symbol>
+</svg>
+
+<main class="page">
+  <header>
+    <h1>Comanda, segunda demão</h1>
+    <p>Protótipo da rodada 2 da auditoria. Mesmas cores, letras e carimbo do app no ar; muda o lugar de cada coisa. Dados da demonstração de 16/10/2026. Nada aqui está publicado no app.</p>
+  </header>
+
+  <!-- ===================== AGENDA ===================== -->
+  <section class="chapter" id="agenda">
+    <h2>Agenda: uma pergunta por tela</h2>
+    <p>Hoje a Agenda empilha nove blocos (cerca de 4.000 px no celular). Aqui ela responde só "o que faço hoje?": a semana vira a navegação no topo, tudo que pede decisão ou cobrança cabe numa linha, e os pedidos do dia aparecem na primeira tela.</p>
+    <div class="compare">
+      <figure class="before">
+        <figcaption><b>Hoje no ar</b> · primeira tela a 390 px</figcaption>
+        <img src="img/antes-agenda-390.webp" alt="Agenda atual: faixa da demonstração, título e o cartão Experimente em 1 minuto ocupam a primeira tela, sem nenhum pedido visível." width="390" height="844" loading="lazy">
+        <ul class="notes">
+          <li>Nenhum pedido na primeira tela.</li>
+          <li>A semana fica abaixo da lista: para trocar de dia, rola-se até o fim.</li>
+          <li>Pedido do link, Falta cobrar e Próxima ação são três blocos separados.</li>
+        </ul>
+      </figure>
+      <figure>
+        <figcaption><b>Proposta</b> · role dentro da moldura</figcaption>
+        <div class="phone" tabindex="0" aria-label="Protótipo da Agenda">
+          <div class="topbar"><span class="logo">doce agenda</span><span class="saved">Salvo</span></div>
+          <div class="demo-line"><span><b>Demonstração</b>, só neste navegador</span><a href="#">Criar conta</a></div>
+          <div class="today-head">
+            <p class="date">Sexta-feira, 16 de outubro</p>
+            <h1>3 entregas hoje</h1>
+            <p class="sub"><span class="flag red">Dia lotado</span> 3 de 3 vagas ocupadas</p>
+          </div>
+          <nav class="week" aria-label="Dias da semana">
+            <button class="day" type="button"><small>seg</small><b>12</b><i><span class="on"></span><span></span><span></span></i></button>
+            <button class="day closed" type="button"><small>ter</small><b>13</b><i><span></span><span></span><span></span></i></button>
+            <button class="day" type="button"><small>qua</small><b>14</b><i><span class="on"></span><span></span><span></span></i></button>
+            <button class="day" type="button"><small>qui</small><b>15</b><i><span class="on"></span><span></span><span></span></i></button>
+            <button class="day full" type="button" aria-current="date"><small>sex</small><b>16</b><i><span class="on"></span><span class="on"></span><span class="on"></span></i></button>
+            <button class="day" type="button"><small>sáb</small><b>17</b><i><span class="on"></span><span></span><span></span></i></button>
+            <button class="day full" type="button"><small>dom</small><b>18</b><i><span class="on"></span><span class="on"></span><span class="on"></span></i></button>
+          </nav>
+
+          <details class="attention">
+            <summary><span class="count">6</span> Pedem sua atenção <svg class="icon chev"><use href="#i-chev"/></svg></summary>
+            <div class="att-row"><span class="glyph link"><svg class="icon"><use href="#i-link"/></svg></span><p><b>Camila pediu um bolo pelo link</b><br><span>Para quarta, 21. Ainda não ocupa vaga.</span></p><a class="btn tonal" href="#">Revisar</a></div>
+            <div class="att-row"><span class="glyph money"><svg class="icon"><use href="#i-pix"/></svg></span><p><b>Juliana informou um Pix de R$&nbsp;60</b><br><span>Confira no banco antes de marcar.</span></p><a class="btn tonal" href="#ficha">Conferir</a></div>
+            <div class="att-row"><span class="glyph money"><svg class="icon"><use href="#i-wallet"/></svg></span><p><b>Roberta ainda deve R$&nbsp;55</b><br><span>Torta de limão, entregue ontem.</span></p><a class="btn zap" href="#"><svg class="icon"><use href="#i-zap"/></svg>Cobrar</a></div>
+            <button class="att-more" type="button">Ver mais 3: dois sinais e um orçamento</button>
+          </details>
+
+          <div class="section-head"><h2>Hoje</h2><span class="progress"><meter min="0" max="3" value="1"></meter>1 de 3 prontas</span></div>
+          <div class="list">
+            <article class="order ok late">
+              <div class="when"><b>10h</b><small><svg class="icon"><use href="#i-bag"/></svg>retirada</small><img src="img/bolo-pistache-160.webp" alt="" width="48" height="48"></div>
+              <div class="body">
+                <span class="stamp ok"><b>Sinal</b><small>conferido</small></span>
+                <h3><button type="button">Bolo de pistache</button></h3>
+                <p class="who"><b>Ana Clara</b>, retirada na portaria. Caixa alta, sem laço.</p>
+                <div class="foot"><span class="state late">Pronto, retirada atrasada</span><a class="btn tonal" href="#">Marcar entregue</a></div>
+              </div>
+            </article>
+            <article class="order due">
+              <div class="when"><b>15h</b><small><svg class="icon"><use href="#i-bag"/></svg>retirada</small><img src="img/brigadeiros-gourmet-160.webp" alt="" width="48" height="48"></div>
+              <div class="body">
+                <span class="stamp due"><b>R$&nbsp;28,50</b><small>falta o sinal</small></span>
+                <h3><button type="button">Brigadeiro (cento)</button></h3>
+                <p class="who"><b>Marcos</b>, metade tradicional, metade de ninho.</p>
+                <div class="foot"><span class="state">Em produção</span><a class="btn tonal" href="#">Ficou pronto</a></div>
+              </div>
+            </article>
+            <article class="order due">
+              <div class="when"><b>18h</b><small><svg class="icon"><use href="#i-bag"/></svg>retirada</small><img src="img/caixa-docinhos-160.webp" alt="" width="48" height="48"></div>
+              <div class="body">
+                <span class="stamp check"><b>Pix R$&nbsp;60</b><small>falta conferir</small></span>
+                <h3><button type="button">Docinhos sortidos (50 un.)</button></h3>
+                <p class="who"><b>Juliana</b>, cliente disse que fez o Pix do sinal.</p>
+                <div class="foot"><span class="state">Confirmado</span><a class="btn tonal" href="#">Começar a fazer</a></div>
+              </div>
+            </article>
+          </div>
+
+          <div class="section-head"><h2>Próximos dias</h2><a class="btn quiet" href="#pedidos" style="min-height:40px">Todos</a></div>
+          <div class="next">
+            <p class="next-day">Amanhã, sábado 17</p>
+            <div class="row"><span class="t">9h</span><p><b>Bolo de chocolate 3 andares</b><span>Carla, entrega</span></p><span class="stamp mini ok"><b>Sinal ✓</b></span></div>
+            <p class="next-day">Domingo, 18 (lotado)</p>
+            <div class="row"><span class="t">10h</span><p><b>Kit festa (bolo + 50 doces)</b><span>Bia, retirada</span></p><span class="stamp mini ok"><b>Sinal ✓</b></span></div>
+            <div class="row"><span class="t">14h</span><p><b>Bolo de chocolate (1 kg)</b><span>Sônia, retirada</span></p><span class="stamp mini ok"><b>Sinal ✓</b></span></div>
+            <div class="row"><span class="t">16h</span><p><b>Brigadeiro (cento)</b><span>Patrícia, retirada</span></p><span class="stamp mini due"><b>Sem sinal</b></span></div>
+          </div>
+          <div class="spacer"></div>
+          <nav class="tabbar" aria-label="Navegação">
+            <span class="on"><svg class="icon"><use href="#i-cal"/></svg>Agenda</span>
+            <span><svg class="icon"><use href="#i-list"/></svg>Pedidos</span>
+            <span><span class="new"><svg class="icon"><use href="#i-plus"/></svg></span></span>
+            <span><svg class="icon"><use href="#i-user"/></svg>Clientes</span>
+            <span><svg class="icon"><use href="#i-chart"/></svg>Meu mês</span>
+          </nav>
+        </div>
+        <ul class="notes">
+          <li>Primeira tela: data, quantas entregas, semana e o primeiro pedido.</li>
+          <li>A ação do cartão fica tonal. O único botão cheio da tela é o "Novo".</li>
+          <li>Quando falta dinheiro, o carimbo diz quanto: "R$&nbsp;28,50 falta o sinal".</li>
+          <li>"Experimente em 1 minuto" vira a linha da demonstração (não aparece aqui).</li>
+        </ul>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ===================== FICHA ===================== -->
+  <section class="chapter" id="ficha">
+    <h2>Ficha: na ordem do trabalho</h2>
+    <p>Hoje a ação de dinheiro ("Marcar conferido", "Registrar") fica no fim da ficha, depois de três resumos que repetem o mesmo valor. Aqui o dinheiro vira um canhoto com uma linha por fato e a ação logo abaixo. Troque o estado e toque em "Conferi no banco" para ver o único movimento do app.</p>
+    <div class="compare">
+      <figure class="before">
+        <figcaption><b>Hoje no ar</b> · ficha da Juliana a 390 px, depois de rolar</figcaption>
+        <img src="img/antes-ficha-pix-390.webp" alt="Ficha atual: a descrição do Pix quebra uma letra por linha e o botão Marcar conferido fica no fim." width="390" height="844" loading="lazy">
+        <ul class="notes">
+          <li>Defeito: "Cliente informou o Pix" quebra uma letra por linha.</li>
+          <li>R$&nbsp;120 aparece três vezes (Total, Valor total, Saldo).</li>
+          <li>"Editar" é botão cheio, disputando com o próximo passo.</li>
+        </ul>
+      </figure>
+      <figure>
+        <figcaption><b>Proposta</b></figcaption>
+        <div class="state-switch" role="group" aria-label="Estado do pedido">
+          <button type="button" data-state="pix" aria-pressed="true">Pix informado</button>
+          <button type="button" data-state="due" aria-pressed="false">Falta o sinal</button>
+          <button type="button" data-state="balance" aria-pressed="false">Entregue com saldo</button>
+        </div>
+        <div class="phone" tabindex="0" aria-label="Protótipo da ficha do pedido">
+          <div class="sheet" id="sheet"></div>
+        </div>
+        <ul class="notes">
+          <li>Hora grande no cabeçalho, como no cartão. "Editar" sai do rodapé.</li>
+          <li>Informado e conferido em linhas separadas; só o conferido soma.</li>
+          <li>O verde do WhatsApp aparece uma vez, com o verbo e o valor.</li>
+        </ul>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ===================== PEDIDOS ===================== -->
+  <section class="chapter" id="pedidos">
+    <h2>Pedidos: um caderno com datas</h2>
+    <p>Hoje a lista mostra só a hora (a data some por um defeito) e repete o cartão grande da Agenda para 21 pedidos. Proposta: agrupar por dia, com linhas baixas. O carimbo continua sendo a forma do dinheiro.</p>
+    <div class="compare">
+      <figure class="before">
+        <figcaption><b>Hoje no ar</b> · Pedidos, Entregues a 390 px</figcaption>
+        <img src="img/antes-pedidos-390.webp" alt="Lista de pedidos atual: cartões grandes com hora, sem a data." width="390" height="844" loading="lazy">
+      </figure>
+      <figure>
+        <figcaption><b>Proposta</b></figcaption>
+        <div class="phone" tabindex="0" aria-label="Protótipo da lista de pedidos">
+          <div class="topbar"><span class="logo">Pedidos</span><span class="saved">Salvo</span></div>
+          <div class="search"><svg class="icon"><use href="#i-search"/></svg>Buscar cliente, produto ou detalhe…</div>
+          <div class="chips"><span class="on">Em aberto <em>9</em></span><span>Novos <em>2</em></span><span>Entregues <em>11</em></span><span>Cancelados <em>1</em></span></div>
+          <div class="date-head">Hoje, sexta 16 <span>3 pedidos</span></div>
+          <div class="ledger-list">
+            <div class="row"><span class="t">10h</span><p><b>Bolo de pistache</b><span>Ana Clara, atrasado</span></p><span class="side">R$&nbsp;180<span class="stamp mini ok"><b>Sinal ✓</b></span></span></div>
+            <div class="row"><span class="t">15h</span><p><b>Brigadeiro (cento)</b><span>Marcos</span></p><span class="side">R$&nbsp;95<span class="stamp mini due"><b>Sem sinal</b></span></span></div>
+            <div class="row"><span class="t">18h</span><p><b>Docinhos sortidos (50 un.)</b><span>Juliana</span></p><span class="side">R$&nbsp;120<span class="stamp mini check"><b>Pix a conferir</b></span></span></div>
+          </div>
+          <div class="date-head">Amanhã, sábado 17 <span>1 pedido</span></div>
+          <div class="ledger-list">
+            <div class="row"><span class="t">9h</span><p><b>Bolo de chocolate 3 andares</b><span>Carla, entrega</span></p><span class="side">R$&nbsp;420<span class="stamp mini ok"><b>Sinal ✓</b></span></span></div>
+          </div>
+          <div class="date-head">Domingo, 18 <span>3 pedidos, lotado</span></div>
+          <div class="ledger-list">
+            <div class="row"><span class="t">10h</span><p><b>Kit festa (bolo + 50 doces)</b><span>Bia</span></p><span class="side">R$&nbsp;350<span class="stamp mini ok"><b>Sinal ✓</b></span></span></div>
+            <div class="row"><span class="t">14h</span><p><b>Bolo de chocolate (1 kg)</b><span>Sônia</span></p><span class="side">R$&nbsp;150<span class="stamp mini ok"><b>Sinal ✓</b></span></span></div>
+            <div class="row"><span class="t">16h</span><p><b>Brigadeiro (cento)</b><span>Patrícia</span></p><span class="side">R$&nbsp;95<span class="stamp mini due"><b>Sem sinal</b></span></span></div>
+          </div>
+          <div class="date-head">Ontem, quinta 15 <span>entregue</span></div>
+          <div class="ledger-list">
+            <div class="row"><span class="t">17h</span><p><b>Torta de limão</b><span>Roberta</span></p><span class="side">R$&nbsp;110<span class="stamp mini due"><b>Falta R$&nbsp;55</b></span></span></div>
+          </div>
+          <div class="spacer"></div>
+        </div>
+        <ul class="notes">
+          <li>"Entregue com saldo" nunca fica verde: o carimbo mostra o que falta, e o pedido continua em aberto até ser pago.</li>
+          <li>Valores e datas são os da demonstração de 16/10.</li>
+        </ul>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ===================== LANDING ===================== -->
+  <section class="chapter" id="landing">
+    <h2>Landing: mostrar o produto de verdade</h2>
+    <p>A landing atual tem bom texto, mas a estrutura é de modelo pronto: rótulo colorido acima de cada título, seis celulares desenhados, cartões flutuando em volta do aparelho e ilustrações que já não batem com o app. A proposta usa o que o produto tem de mais forte: as fotos da vitrine e o carimbo. Uma encomenda real conta a história inteira.</p>
+    <div class="lp" style="margin-top:24px">
+      <div class="lp-hero">
+        <div>
+          <p class="kicker">Para quem vende doces por encomenda</p>
+          <h2>Cada encomenda presa na bancada, do recado ao sinal conferido.</h2>
+          <p class="lead">Anote o combinado, veja quando o dia lota e saiba que sinal você já conferiu no banco. A cliente pede por um link com as suas fotos. Tudo no celular.</p>
+          <div class="cta"><a class="btn solid" href="#">Experimentar sem cadastro</a><a class="link" href="#">Ver a vitrine de exemplo</a></div>
+          <p class="facts">Grátis no piloto. Sem cartão. Nada para instalar.</p>
+        </div>
+        <div class="bench">
+          <img src="img/bolo-pistache-960.webp" alt="Bolo de pistache com chantininho verde-claro sobre a bancada." width="960" height="960">
+          <article class="order ok">
+            <div class="when"><b>10h</b><small><svg class="icon"><use href="#i-bag"/></svg>retirada</small></div>
+            <div class="body">
+              <span class="stamp ok lp-stamp"><b>Sinal</b><small>conferido</small></span>
+              <h3>Bolo de pistache</h3>
+              <p class="who"><b>Ana Clara</b>, 1,5 kg, "Feliz aniversário, Lu!"</p>
+            </div>
+          </article>
+        </div>
+      </div>
+      <div class="story">
+        <h2>Uma encomenda, do recado à entrega</h2>
+        <p>O bolo da Camila, em quatro momentos. É a mesma tela que você vai usar.</p>
+        <ol class="steps">
+          <li><span class="n">1</span><h3>Ela escolhe pela sua vitrine</h3><div class="scene"><img class="v" src="img/bolo-aniversario-frutas-480.webp" alt="Bolo de aniversário com frutas, como aparece na vitrine." width="480" height="480"></div></li>
+          <li><span class="n">2</span><h3>Você confere a data e aceita</h3><div class="scene"><div class="card"><b>Quarta, 21, às 11h</b><span>Bolo de aniversário para Camila. 0 de 3 vagas ocupadas.</span></div></div></li>
+          <li><span class="n">3</span><h3>O Pix do sinal cai e você confere</h3><div class="scene"><div class="card"><span class="stamp ok"><b>Sinal</b><small>conferido</small></span><b>R$&nbsp;66</b><span>Só entra no recebido depois que você confere.</span></div></div></li>
+          <li><span class="n">4</span><h3>Ficou pronto: avise com um toque</h3><div class="scene"><a class="btn zap block" href="#"><svg class="icon"><use href="#i-zap"/></svg>Avisar que está pronto</a></div></li>
+        </ol>
+      </div>
+      <div class="money-line">
+        <div>
+          <h2>Recebido é só o que você conferiu.</h2>
+          <p>Cliente disse que pagou? Fica como informado, em amarelo, até você ver no banco. No fim do mês, o Doce Agenda soma só o que tem carimbo.</p>
+        </div>
+        <div class="stub" style="max-width:420px">
+          <h3>Docinhos sortidos, Juliana</h3>
+          <span class="stamp check big"><b>Pix R$&nbsp;60</b><small>falta conferir</small></span>
+          <dl class="ledger">
+            <div><dt>Total</dt><dd>R$&nbsp;120,00</dd></div>
+            <div class="informed"><dt>Informado pela cliente</dt><dd>R$&nbsp;60,00<small>não conta ainda</small></dd></div>
+            <div><dt>Conferido</dt><dd>R$&nbsp;0,00</dd></div>
+          </dl>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+// Ficha: três estados reais da demonstração. Só ilustra; nada é salvo.
+const money = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+const STATES = {
+  pix: { time: '18h', day: 'sexta, 16 de out', mode: 'Retirada', product: 'Docinhos sortidos (50 un.)', client: 'Juliana', step: 1, next: 'Começar a fazer', photo: 'img/caixa-docinhos-160.webp', phone: '(11) 90000-0109',
+    note: 'Cliente disse que fez o Pix do sinal. Confira no banco antes de marcar.', total: 120, informed: 60, confirmed: 0 },
+  due: { time: '15h', day: 'sexta, 16 de out', mode: 'Retirada', product: 'Brigadeiro (cento)', client: 'Marcos', step: 2, next: 'Ficou pronto', photo: 'img/brigadeiros-gourmet-160.webp', phone: '(11) 90000-0108',
+    note: 'Metade tradicional, metade de ninho.', total: 95, informed: 0, confirmed: 0, deposit: 28.5 },
+  balance: { time: '17h', day: 'quinta, 15 de out', mode: 'Retirada', product: 'Torta de limão', client: 'Roberta', step: 4, next: null, photo: 'img/torta-de-limao-160.webp', phone: '(11) 90000-0106',
+    note: 'Pagou o sinal. O restante ficou para o Pix na retirada.', total: 110, informed: 0, confirmed: 55, delivered: true },
+};
+let current = 'pix', conferred = false;
+function stampFor(s) {
+  if (s.informed && !conferred) return `<span class="stamp check big"><b>Pix ${money(s.informed).replace(',00', '')}</b><small>falta conferir</small></span>`;
+  const got = s.confirmed + (conferred ? s.informed : 0);
+  if (!got) return `<span class="stamp due big"><b>${money(s.deposit)}</b><small>falta o sinal</small></span>`;
+  if (got < s.total && s.delivered) return `<span class="stamp due big"><b>Falta ${money(s.total - got).replace(',00', '')}</b><small>já entregue</small></span>`;
+  return `<span class="stamp ok big${conferred ? ' slam' : ''}"><b>${got >= s.total ? 'Pago' : 'Sinal pago'}</b><small>16 out</small></span>`;
+}
+function render() {
+  const s = STATES[current], got = s.confirmed + (conferred ? s.informed : 0), rest = s.total - got;
+  const steps = ['Confirmado', 'Em produção', 'Pronto', 'Entregue'];
+  let actions = '';
+  if (s.informed && !conferred) actions = `<button class="btn ok block" type="button" data-confer>Conferi no banco: marcar ${money(s.informed)}</button><p class="hint">Só marque depois de ver o dinheiro na conta.</p>`;
+  else if (!got) actions = `<a class="btn zap block" href="#"><svg class="icon"><use href="#i-zap"/></svg>Pedir o sinal de ${money(s.deposit)}</a><button class="btn quiet block" type="button">Registrar um recebimento</button>`;
+  else if (rest > 0 && s.delivered) actions = `<a class="btn zap block" href="#"><svg class="icon"><use href="#i-zap"/></svg>Cobrar ${money(rest)}</a><button class="btn quiet block" type="button">Registrar um recebimento</button>`;
+  else actions = `<button class="btn quiet block" type="button">Registrar um recebimento</button>`;
+  document.getElementById('sheet').innerHTML = `
+    <div class="sheet-head">
+      <div class="bar"><span class="mode"><svg class="icon"><use href="#i-bag"/></svg>${s.mode}</span><span class="tools"><button class="text-btn" type="button">Editar</button><button class="round" type="button" aria-label="Fechar"><svg class="icon"><use href="#i-close"/></svg></button></span></div>
+      <div class="time"><b>${s.time}</b><span>${s.day}</span></div>
+      <h2>${s.product}</h2><p class="client">para ${s.client}</p>
+    </div>
+    <div class="sheet-body">
+      <div class="step-line"><ol aria-hidden="true">${steps.map((_, i) => `<li class="${i < s.step ? 'done' : ''}"></li>`).join('')}</ol>${steps[s.step - 1]}</div>
+      ${s.next ? `<button class="btn solid block" type="button">${s.next}</button>` : ''}
+      <section class="stub" aria-label="Dinheiro do pedido">
+        <h3>Dinheiro</h3>
+        ${stampFor(s)}
+        <dl class="ledger">
+          <div><dt>Total combinado</dt><dd>${money(s.total)}</dd></div>
+          ${s.informed && !conferred ? `<div class="informed"><dt>Informado pela cliente</dt><dd>${money(s.informed)}<small>não conta ainda</small></dd></div>` : ''}
+          <div class="${got ? 'done' : ''} ${conferred ? 'flash' : ''}"><dt>Conferido por você</dt><dd>${money(got)}</dd></div>
+          ${rest > 0 && !(s.informed && !conferred) ? `<div class="${!got || s.delivered ? 'due' : ''}"><dt>${!got ? 'Falta o sinal (30%)' : s.delivered ? 'Falta receber' : 'Falta na retirada'}</dt><dd>${money(!got ? s.deposit : rest)}</dd></div>` : ''}
+        </dl>
+        <div class="actions">${actions}</div>
+      </section>
+      <section class="panel"><img src="${s.photo}" alt="" width="76" height="76"><h3>Combinado</h3><p>${s.note}</p></section>
+      <section class="panel contact"><div><h3>${s.client}</h3><a href="#">${s.phone}</a></div><button class="btn quiet" type="button">Ver ficha</button></section>
+      <details class="history"><summary>Histórico <svg class="icon"><use href="#i-chev"/></svg></summary></details>
+      <div style="height:16px"></div>
+    </div>`;
+}
+document.querySelector('.state-switch').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-state]'); if (!b) return;
+  current = b.dataset.state; conferred = false;
+  document.querySelectorAll('.state-switch button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+  render();
+});
+document.getElementById('sheet').addEventListener('click', (e) => { if (e.target.closest('[data-confer]')) { conferred = true; render(); } });
+render();
+</script>
+</body>
+</html>
