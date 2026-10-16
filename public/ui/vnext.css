@@ -771,3 +771,9 @@ body.vnext:has(dialog[open]) { overflow: hidden; }
 .vnext .zap-demo-dialog .button { border-radius: var(--vn-pill); min-height: 48px; }
 .vnext .zap-demo-dialog .button-primary { background: var(--vn-berry); border-color: var(--vn-berry); color: #fff; }
 .vnext .zap-demo-dialog .button-quiet { background: var(--vn-soft); border: 1px solid #f0dbe2; color: var(--vn-wine); }
+
+/* ---- Rodada 2: verificação final ---- */
+/* Alvos de toque das peças novas com pelo menos 44 px. */
+.vn-att-jump { min-height: 44px; }
+.vnext #view-today .vn-weekbar .week-step { height: 44px; min-height: 44px; }
+.vnext .detail-dialog .detail-phone { min-height: 44px; }
