@@ -1,10 +1,6 @@
 /* Nova identidade do Doce Agenda (laboratório visual, branch codex/laboratorio-visual), integrada tela por tela.
    Tokens com prefixo --vn- e classes vn-*: não alteram as telas que ainda usam o visual Glacê (style.css).
    Etapa 1: moldura (topo, faixa da demonstração, navegação) e Agenda. Textos com no mínimo 12 px (BRAND.md). */
-@font-face { font-family: "Outfit"; src: url("/fonts/vnext/outfit.woff2") format("woff2"); font-weight: 100 900; font-display: swap; }
-@font-face { font-family: "Bricolage Grotesque"; src: url("/fonts/vnext/bricolage-600.woff2") format("woff2"); font-weight: 500 650; font-display: swap; }
-@font-face { font-family: "Bricolage Grotesque"; src: url("/fonts/vnext/bricolage-700.woff2") format("woff2"); font-weight: 651 900; font-display: swap; }
-@font-face { font-family: "Plus Jakarta Sans"; src: url("/fonts/vnext/plus-jakarta-sans.woff2") format("woff2"); font-weight: 200 800; font-display: swap; }
 
 .vnext {
   /* Direção Comanda (16/10): cada cor tem um trabalho. Framboesa = marca e ação, nunca estado. Pistache = conferido/pronto;
@@ -16,6 +12,10 @@
   --vn-r: 18px; --vn-r-ctl: 14px; --vn-shadow: 0 1px 0 #3a12200a, 0 6px 18px -10px #3a122026; --vn-shadow-hover: 0 1px 0 #3a12200f, 0 10px 24px -12px #3a122033;
   --vn-font: "Plus Jakarta Sans", Arial, sans-serif; --vn-title: "Bricolage Grotesque", "Plus Jakarta Sans", sans-serif;
   background: var(--vn-canvas);
+  /* Rodada 2: escalas únicas. Raios: --vn-r (cartões), --vn-r-ctl (controles), --vn-r-sm (selos), --vn-r-dialog (janelas), --vn-pill.
+     Letras: 12 · 14 · 16 · 20 · 28 · 40 (as telas novas usam esta escala; as antigas migram aos poucos). */
+  --vn-r-sm: 10px; --vn-r-dialog: 24px; --vn-pill: 999px;
+  --vn-t12: 12px; --vn-t14: 14px; --vn-t16: 16px; --vn-t20: 20px; --vn-t28: 28px; --vn-t40: 40px;
 }
 /* Todas as telas do app já usam a nova identidade: as letras antigas (Fredoka, Figtree) saem também dos formulários. */
 body.vnext { --font-title: var(--vn-title); --font-body: var(--vn-font); --ameixa: var(--vn-wine); --link: var(--vn-berry);
@@ -24,7 +24,7 @@ body.vnext { --font-title: var(--vn-title); --font-body: var(--vn-font); --ameix
 
 /* ---- Primitivos ---- */
 .vn-icon { flex-shrink: 0; vertical-align: middle; }
-.vn-btn { display: inline-flex; align-items: center; justify-content: center; gap: 9px; min-height: 46px; padding: 11px 20px; border: 1px solid transparent; border-radius: 999px; font: 700 14px/1.4 var(--vn-font); text-align: center; cursor: pointer; transition: background .18s, box-shadow .18s, transform .18s; }
+.vn-btn { display: inline-flex; align-items: center; justify-content: center; gap: 9px; min-height: 46px; padding: 11px 20px; border: 1px solid transparent; border-radius: var(--vn-pill); font: 700 14px/1.4 var(--vn-font); text-align: center; cursor: pointer; transition: background .18s, box-shadow .18s, transform .18s; }
 .vn-btn:active { transform: translateY(1px) scale(.985); }
 .vn-btn.primary { background: var(--vn-berry); color: #fff; box-shadow: 0 4px 10px #ad264418; }
 .vn-btn.primary:hover { background: var(--vn-berry-dark); box-shadow: 0 7px 18px #ad264426; }
@@ -32,7 +32,7 @@ body.vnext { --font-title: var(--vn-title); --font-body: var(--vn-font); --ameix
 .vn-btn.secondary:hover { background: var(--vn-rose); }
 .vn-btn.small { min-height: 44px; padding: 10px 16px; font-size: 13px; }
 .vn-btn .vn-icon { width: 18px; height: 18px; }
-.vn-badge { display: inline-flex; align-items: center; gap: 5px; padding: 5px 11px; border-radius: 30px; font: 650 12px/1.4 var(--vn-font); white-space: nowrap; background: var(--vn-rose); color: #8d2841; }
+.vn-badge { display: inline-flex; align-items: center; gap: 5px; padding: 5px 11px; border-radius: var(--vn-pill); font: 650 12px/1.4 var(--vn-font); white-space: nowrap; background: var(--vn-rose); color: #8d2841; }
 .vn-badge.green { background: var(--vn-mint); color: var(--vn-green); }
 .vn-badge.amber { background: var(--vn-vanilla); color: var(--vn-amber); }
 .vn-badge.muted { background: #f3eef0; color: var(--vn-muted); }
@@ -40,21 +40,21 @@ body.vnext { --font-title: var(--vn-title); --font-body: var(--vn-font); --ameix
 .vn-grow { flex: 1; min-width: 0; }
 .vn-muted { color: var(--vn-muted); font-size: 13px; }
 .vn-eyebrow { font: 750 12px var(--vn-font); letter-spacing: .12em; text-transform: uppercase; color: var(--vn-berry); }
-.vn-count { display: inline-grid; place-items: center; min-width: 26px; height: 26px; padding: 0 6px; border-radius: 13px; background: var(--vn-rose); color: var(--vn-berry); font: 600 13px var(--vn-font); margin-left: 6px; vertical-align: middle; }
-.vn-note { display: flex; gap: 9px; align-items: center; background: var(--vn-soft); color: var(--vn-wine); border-radius: 12px; padding: 10px 12px; font: 13px/1.5 var(--vn-font); margin-top: 4px; }
+.vn-count { display: inline-grid; place-items: center; min-width: 26px; height: 26px; padding: 0 6px; border-radius: var(--vn-r-ctl); background: var(--vn-rose); color: var(--vn-berry); font: 600 13px var(--vn-font); margin-left: 6px; vertical-align: middle; }
+.vn-note { display: flex; gap: 9px; align-items: center; background: var(--vn-soft); color: var(--vn-wine); border-radius: var(--vn-r-sm); padding: 10px 12px; font: 13px/1.5 var(--vn-font); margin-top: 4px; }
 .vn-note.amber { background: var(--vn-vanilla); color: var(--vn-amber); }
 .vn-note .vn-icon { width: 18px; height: 18px; }
-.vn-summary-icon { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 14px; background: var(--vn-rose); color: var(--vn-berry); flex-shrink: 0; }
+.vn-summary-icon { display: grid; place-items: center; width: 44px; height: 44px; border-radius: var(--vn-r-ctl); background: var(--vn-rose); color: var(--vn-berry); flex-shrink: 0; }
 .vn-empty { text-align: center; padding: 40px 20px; border: 1px dashed #d9bcc5; border-radius: var(--vn-r); background: #fff9; font-family: var(--vn-font); }
 .vn-empty > .vn-icon { width: 34px; height: 34px; color: var(--vn-berry); margin-bottom: 12px; }
 .vn-empty h3 { margin: 0; font: 600 19px/1.25 var(--vn-title); color: var(--vn-ink); }
 .vn-empty p { margin: 8px auto 18px; max-width: 300px; color: var(--vn-muted); font-size: 14px; }
-.vn-segmented { display: inline-flex; align-items: center; gap: 2px; padding: 4px; border-radius: 30px; background: #f7e9ed; }
-.vn-segmented button { min-height: 38px; padding: 6px 16px; border: 0; border-radius: 30px; background: transparent; color: var(--vn-muted); font: 700 13px var(--vn-font); cursor: pointer; }
+.vn-segmented { display: inline-flex; align-items: center; gap: 2px; padding: 4px; border-radius: var(--vn-pill); background: #f7e9ed; }
+.vn-segmented button { min-height: 38px; padding: 6px 16px; border: 0; border-radius: var(--vn-pill); background: transparent; color: var(--vn-muted); font: 700 13px var(--vn-font); cursor: pointer; }
 .vn-segmented button[aria-pressed="true"] { background: #fff; color: var(--vn-berry); box-shadow: 0 2px 6px #4a152509; }
-.vnext progress { display: block; width: 100%; height: 8px; border: 0; appearance: none; background: var(--vn-rose); border-radius: 20px; overflow: hidden; }
-.vnext progress::-webkit-progress-bar { background: var(--vn-rose); border-radius: 20px; }
-.vnext progress::-webkit-progress-value { background: var(--vn-green); border-radius: 20px; transition: width .3s; }
+.vnext progress { display: block; width: 100%; height: 8px; border: 0; appearance: none; background: var(--vn-rose); border-radius: var(--vn-r); overflow: hidden; }
+.vnext progress::-webkit-progress-bar { background: var(--vn-rose); border-radius: var(--vn-r); }
+.vnext progress::-webkit-progress-value { background: var(--vn-green); border-radius: var(--vn-r); transition: width .3s; }
 .vnext progress::-moz-progress-bar { background: var(--vn-green); }
 
 /* ---- Moldura: topo, faixa da demonstração e navegação (mesmos itens de antes) ---- */
@@ -65,7 +65,7 @@ body.vnext { background: var(--vn-canvas); }
 .vnext .settings-button { font-family: var(--vn-font); color: var(--vn-wine); }
 .vnext .header-add { background: var(--vn-berry); border-color: var(--vn-berry); font-family: var(--vn-font); box-shadow: 0 4px 10px #ad264418; }
 .vnext .header-add:hover { background: var(--vn-berry-dark); }
-.vnext .demo-bar { margin-top: 14px; background: var(--vn-wine); color: #fff; border: 0; border-radius: 14px; font-family: var(--vn-font); }
+.vnext .demo-bar { margin-top: 14px; background: var(--vn-wine); color: #fff; border: 0; border-radius: var(--vn-r-ctl); font-family: var(--vn-font); }
 .vnext .demo-bar p, .vnext .demo-bar strong { color: #fff; }
 .vnext .demo-bar-link, .vnext .demo-bar-cta { color: #fff; }
 .vnext .main-nav { border-bottom-color: var(--vn-line); font-family: var(--vn-font); }
@@ -75,7 +75,7 @@ body.vnext { background: var(--vn-canvas); }
 .vnext .nav-count { background: var(--vn-berry); color: #fff; }
 @media (max-width: 760px) {
   .vnext .main-nav { background: rgb(255 255 255 / 96%); border-top: 1px solid var(--vn-line); }
-  .vnext .nav-item.active { background: var(--vn-soft); color: var(--vn-berry); border-radius: 14px; }
+  .vnext .nav-item.active { background: var(--vn-soft); color: var(--vn-berry); border-radius: var(--vn-r-ctl); }
   .vnext .nav-item.active::after { display: none; }
   .vnext .nav-new-order .nav-icon { background: var(--vn-berry); color: #fff; }
 }
@@ -97,11 +97,11 @@ body.vnext { background: var(--vn-canvas); }
 .vnext #view-today .week-step { width: 44px; height: 44px; border: 0; border-radius: 50%; background: transparent; color: var(--vn-muted); }
 .vnext #view-today .week-step:hover { background: var(--vn-soft); }
 .vn-week { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; margin: 10px 0 16px; }
-.vnext #view-today .vn-day { display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 0; min-height: 98px; padding: 10px 2px; border: 1px solid #f2e6e9; border-radius: 16px; background: #fff; color: var(--vn-ink); font-family: var(--vn-font); box-shadow: 0 2px 4px #4a152503; cursor: pointer; transition: background .18s, box-shadow .18s; }
+.vnext #view-today .vn-day { display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 0; min-height: 98px; padding: 10px 2px; border: 1px solid #f2e6e9; border-radius: var(--vn-r); background: #fff; color: var(--vn-ink); font-family: var(--vn-font); box-shadow: 0 2px 4px #4a152503; cursor: pointer; transition: background .18s, box-shadow .18s; }
 .vnext #view-today .vn-day:hover:not(.is-selected) { background: var(--vn-soft); }
 .vnext #view-today .vn-day .day-name { font-size: 12px; }
 .vnext #view-today .vn-day .day-number { font: 600 24px/1.2 var(--vn-title); }
-.vnext #view-today .vn-day .day-count { font-size: 12px; padding: 1px 8px; border-radius: 20px; background: var(--vn-soft); color: var(--vn-muted); }
+.vnext #view-today .vn-day .day-count { font-size: 12px; padding: 1px 8px; border-radius: var(--vn-r); background: var(--vn-soft); color: var(--vn-muted); }
 .vnext #view-today .vn-day .day-availability { font-size: 12px; font-style: normal; }
 .vnext #view-today .vn-day.is-full .day-availability { color: var(--vn-amber); font-weight: 700; }
 .vnext #view-today .vn-day.is-closed { background: #f6f1f2; color: var(--vn-muted); }
@@ -126,7 +126,7 @@ body.vnext { background: var(--vn-canvas); }
 .vn-time > .vn-icon { width: 18px; height: 18px; color: var(--vn-berry); }
 .vn-time small { font: 500 13px var(--vn-font); color: var(--vn-wine); }
 .vn-product { display: flex; align-items: center; gap: 14px; padding: 16px 0 6px; min-width: 0; }
-.vn-thumb { width: 68px; height: 68px; border-radius: 13px; flex-shrink: 0; object-fit: cover; background: var(--vn-soft); }
+.vn-thumb { width: 68px; height: 68px; border-radius: var(--vn-r-ctl); flex-shrink: 0; object-fit: cover; background: var(--vn-soft); }
 .vn-thumb.is-initial { display: grid; place-items: center; color: var(--vn-berry); font: 600 26px var(--vn-title); background: var(--vn-soft) radial-gradient(var(--vn-rose) 1.2px, transparent 1.4px) 0 0 / 10px 10px; }
 .vn-product > div { flex: 1; min-width: 0; }
 .vn-client { font-size: 13px; font-weight: 750; color: var(--vn-ink); }
@@ -138,7 +138,7 @@ body.vnext { background: var(--vn-canvas); }
 .vn-order.is-compact { padding: 14px 16px; }
 .vn-order.is-compact .vn-time { font-size: 17px; }
 .vn-order.is-compact .vn-product { padding: 8px 0 0; }
-.vn-order.is-compact .vn-thumb { width: 48px; height: 48px; border-radius: 11px; font-size: 19px; }
+.vn-order.is-compact .vn-thumb { width: 48px; height: 48px; border-radius: var(--vn-r-sm); font-size: 19px; }
 .vn-order.is-compact h3 { font-size: 16px; }
 .vnext #view-today .agenda-adjust { margin-top: 12px; color: var(--vn-berry); }
 @media (prefers-reduced-motion: no-preference) {
@@ -150,7 +150,7 @@ body.vnext { background: var(--vn-canvas); }
 
 /* Coluna lateral: resumo no painel vinho */
 .vn-aside { display: grid; gap: 18px; min-width: 0; }
-.vn-wine-panel { padding: 24px; border-radius: 22px; background: var(--vn-wine); color: #fff; }
+.vn-wine-panel { padding: 24px; border-radius: var(--vn-r); background: var(--vn-wine); color: #fff; }
 .vn-wine-panel .vn-eyebrow { color: #f4aebf; }
 .vnext #view-today .vn-wine-panel h2 { margin: 12px 0 6px; color: #fff; font-size: 26px; }
 .vnext #view-today .vn-wine-panel .stats-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0; }
@@ -181,7 +181,7 @@ body.vnext { background: var(--vn-canvas); }
   .vn-heading h1 { font-size: 28px; }
   .vn-heading-add { display: none; }
   .vn-week { gap: 4px; }
-  .vnext #view-today .vn-day { min-height: 88px; border-radius: 13px; padding: 8px 0; }
+  .vnext #view-today .vn-day { min-height: 88px; border-radius: var(--vn-r-ctl); padding: 8px 0; }
   .vnext #view-today .vn-day .day-number { font-size: 21px; }
   .vnext #view-today .vn-day .day-count { padding: 1px 5px; }
   .vn-order { padding: 16px; }
@@ -198,7 +198,7 @@ body.vnext { background: var(--vn-canvas); }
 .vnext #view-today .next-action-copy strong { display: block; font: 600 18px var(--vn-title); color: var(--vn-ink); }
 
 /* ---- Etapa 2: detalhe do pedido e pagamentos (janela #detail-dialog, mesma estrutura e ações) ---- */
-.vnext .detail-dialog { background: var(--vn-canvas); color: var(--vn-ink); font-family: var(--vn-font); border-radius: 24px; }
+.vnext .detail-dialog { background: var(--vn-canvas); color: var(--vn-ink); font-family: var(--vn-font); border-radius: var(--vn-r-dialog); }
 .vnext .detail-dialog h2, .vnext .detail-dialog h3 { font-family: var(--vn-title); letter-spacing: -.02em; color: var(--vn-ink); }
 .vnext .detail-dialog .detail-topline { display: flex; margin: -24px -24px 20px; padding: 22px 24px 24px; background: var(--vn-wine); color: #fff; border-radius: 24px 24px 0 0; }
 @media (max-width: 760px) { .vnext .detail-dialog .detail-topline { margin: -18px -18px 18px; padding: 18px; } }
@@ -210,44 +210,44 @@ body.vnext { background: var(--vn-canvas); }
 .vnext .detail-dialog .close-dialog { background: #ffffff1f; color: #fff; border: 0; }
 .vnext .detail-dialog .detail-top-actions .vn-badge { background: #ffffff26; color: #fff; }
 .vnext .detail-dialog .detail-next { margin-top: 18px; }
-.vnext .detail-dialog .detail-next .row-advance { width: 100%; min-height: 50px; border: 0; border-radius: 999px; background: var(--vn-berry); color: #fff; font: 700 15px var(--vn-font); box-shadow: 0 4px 10px #ad264418; }
+.vnext .detail-dialog .detail-next .row-advance { width: 100%; min-height: 50px; border: 0; border-radius: var(--vn-pill); background: var(--vn-berry); color: #fff; font: 700 15px var(--vn-font); box-shadow: 0 4px 10px #ad264418; }
 .vnext .detail-dialog .detail-next .row-advance:hover { background: var(--vn-berry-dark); }
-.vnext .detail-dialog .meta-chip { background: #fff; border: 1px solid var(--vn-line-soft); color: var(--vn-wine); border-radius: 30px; font-size: 13px; }
-.vnext .detail-dialog .detail-summary { padding: 16px; border: 0; border-radius: 14px; background: var(--vn-soft); color: var(--vn-ink); font-size: 14px; }
+.vnext .detail-dialog .meta-chip { background: #fff; border: 1px solid var(--vn-line-soft); color: var(--vn-wine); border-radius: var(--vn-pill); font-size: 13px; }
+.vnext .detail-dialog .detail-summary { padding: 16px; border: 0; border-radius: var(--vn-r-ctl); background: var(--vn-soft); color: var(--vn-ink); font-size: 14px; }
 .vnext .detail-dialog .detail-summary-label { color: var(--vn-muted); font: 750 12px var(--vn-font); letter-spacing: .1em; }
-.vnext .detail-dialog .deposit-card { border-radius: 18px; border: 0; box-shadow: none; }
+.vnext .detail-dialog .deposit-card { border-radius: var(--vn-r); border: 0; box-shadow: none; }
 .vnext .detail-dialog .deposit-card.is-paid { background: var(--vn-mint); color: var(--vn-green); }
 .vnext .detail-dialog .deposit-card.is-pending { background: var(--vn-vanilla); color: var(--vn-amber); }
 .vnext .detail-dialog .deposit-card .deposit-label { font: 750 12px var(--vn-font); letter-spacing: .1em; }
 .vnext .detail-dialog .deposit-card .deposit-amount { font: 600 34px var(--vn-title); color: inherit; }
 .vnext .detail-dialog .deposit-card .deposit-note, .vnext .detail-dialog .deposit-card .deposit-top { color: inherit; font-size: 13px; }
 /* O carimbo vira um selo verde discreto, com a data em que o sinal foi conferido. */
-.vnext .detail-dialog .stamp, .vnext .stamp { border: 1.5px solid currentColor; color: var(--vn-green); background: #fff; border-radius: 12px; transform: none; box-shadow: none; font-family: var(--vn-font); animation: none; }
+.vnext .detail-dialog .stamp, .vnext .stamp { border: 1.5px solid currentColor; color: var(--vn-green); background: #fff; border-radius: var(--vn-r-sm); transform: none; box-shadow: none; font-family: var(--vn-font); animation: none; }
 .vnext .detail-dialog .deposit-rule { color: var(--vn-muted); font-size: 13px; }
-.vnext .detail-dialog .detail-tile { border: 0; border-radius: 14px; background: var(--vn-soft); }
+.vnext .detail-dialog .detail-tile { border: 0; border-radius: var(--vn-r-ctl); background: var(--vn-soft); }
 .vnext .detail-dialog .detail-tile-label { color: var(--vn-muted); font-size: 13px; }
 .vnext .detail-dialog .detail-tile-value.large { font: 600 22px var(--vn-title); color: var(--vn-ink); }
 .vnext .detail-dialog .payment-section { padding: 18px; border: 1px solid var(--vn-line-soft); border-radius: var(--vn-r); background: #fff; box-shadow: var(--vn-shadow); }
 .vnext .detail-dialog .payment-section h3::before { content: ""; display: inline-block; width: 18px; height: 18px; margin-right: 8px; vertical-align: -3px; background: currentColor; color: var(--vn-green); -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 2 3 6v6c0 5 9 10 9 10s9-5 9-10V6z m-5 10 3 3 6-6'/%3E%3C/svg%3E") center / contain no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 2 3 6v6c0 5 9 10 9 10s9-5 9-10V6z m-5 10 3 3 6-6'/%3E%3C/svg%3E") center / contain no-repeat; }
-.vnext .detail-dialog .payment-item { border: 1px solid var(--vn-line-soft); border-radius: 14px; background: var(--vn-canvas); }
+.vnext .detail-dialog .payment-item { border: 1px solid var(--vn-line-soft); border-radius: var(--vn-r-ctl); background: var(--vn-canvas); }
 .vnext .detail-dialog .payment-amount { font: 600 17px var(--vn-title); }
-.vnext .detail-dialog .payment-status button { border-radius: 999px; background: var(--vn-green); border-color: var(--vn-green); color: #fff; font-weight: 700; }
-.vnext .detail-dialog .button-small, .vnext .detail-dialog .button-quiet { border-radius: 999px; border: 1px solid #f3dce3; background: var(--vn-soft); color: var(--vn-wine); font-family: var(--vn-font); }
-.vnext .detail-dialog .button-primary { border-radius: 999px; background: var(--vn-berry); border-color: var(--vn-berry); color: #fff; font-family: var(--vn-font); }
-.vnext .detail-dialog .history-section { border-radius: 14px; border-color: var(--vn-line-soft); background: #fff; }
+.vnext .detail-dialog .payment-status button { border-radius: var(--vn-pill); background: var(--vn-green); border-color: var(--vn-green); color: #fff; font-weight: 700; }
+.vnext .detail-dialog .button-small, .vnext .detail-dialog .button-quiet { border-radius: var(--vn-pill); border: 1px solid #f3dce3; background: var(--vn-soft); color: var(--vn-wine); font-family: var(--vn-font); }
+.vnext .detail-dialog .button-primary { border-radius: var(--vn-pill); background: var(--vn-berry); border-color: var(--vn-berry); color: #fff; font-family: var(--vn-font); }
+.vnext .detail-dialog .history-section { border-radius: var(--vn-r-ctl); border-color: var(--vn-line-soft); background: #fff; }
 .vnext .detail-dialog .request-review { border-radius: var(--vn-r); background: var(--vn-soft); border: 1px solid var(--vn-line-soft); }
 .vnext .detail-dialog .request-review .vn-note { margin: 12px 0; }
 .vnext .detail-dialog .vn-origin { margin: 0 0 16px; }
 .vnext .detail-dialog .is-request .detail-actions { position: static; }
-.vnext .detail-dialog .pending-banner { border-radius: 12px; background: var(--vn-vanilla); color: var(--vn-amber); }
+.vnext .detail-dialog .pending-banner { border-radius: var(--vn-r-sm); background: var(--vn-vanilla); color: var(--vn-amber); }
 /* Outras janelas (nova encomenda, pagamento, recusa): mesmo topo vinho, sem as gotas do Glacê. */
-.vnext .dialog { background: var(--vn-canvas); font-family: var(--vn-font); border-radius: 24px; }
+.vnext .dialog { background: var(--vn-canvas); font-family: var(--vn-font); border-radius: var(--vn-r-dialog); }
 .vnext .dialog-heading { background: var(--vn-wine); color: #fff; }
 .vnext .dialog-heading::after { display: none; }
 .vnext .dialog-heading h2, .vnext .dialog-heading p, .vnext .dialog-heading .eyebrow { color: #fff; font-family: var(--vn-title); }
 .vnext .dialog-heading .icon-button { background: #ffffff1f; color: #fff; }
-.vnext .dialog .button-primary { border-radius: 999px; background: var(--vn-berry); border-color: var(--vn-berry); color: #fff; }
-.vnext .dialog .button-quiet { border-radius: 999px; background: var(--vn-soft); border-color: #f3dce3; color: var(--vn-wine); }
+.vnext .dialog .button-primary { border-radius: var(--vn-pill); background: var(--vn-berry); border-color: var(--vn-berry); color: #fff; }
+.vnext .dialog .button-quiet { border-radius: var(--vn-pill); background: var(--vn-soft); border-color: #f3dce3; color: var(--vn-wine); }
 .vnext .dialog wa-button[variant="brand"]::part(base) { background: var(--vn-berry); border-color: var(--vn-berry); }
 
 /* ---- Etapa 3: Pedidos e Novos (mesmo cartão da Agenda, com a data) ---- */
@@ -257,14 +257,14 @@ body.vnext { background: var(--vn-canvas); }
 .vnext #view-orders .search-wrap { border: 0; border-bottom: 1px solid #dfcbd2; border-radius: 0; background: transparent; box-shadow: none; }
 .vnext #view-orders .search-input { background: transparent; border: 0; font-family: var(--vn-font); font-size: 15px; }
 .vnext #view-orders .stage-strip { gap: 6px; }
-.vnext #view-orders .stage-chip { min-height: 40px; border: 1px solid var(--vn-line); border-radius: 999px; background: #fff; color: var(--vn-muted); font: 700 13px var(--vn-font); }
+.vnext #view-orders .stage-chip { min-height: 40px; border: 1px solid var(--vn-line); border-radius: var(--vn-pill); background: #fff; color: var(--vn-muted); font: 700 13px var(--vn-font); }
 .vnext #view-orders .stage-chip.is-current { background: var(--vn-berry); border-color: var(--vn-berry); color: #fff; }
 .vnext #view-orders .stage-count { background: var(--vn-soft); color: var(--vn-berry); }
 .vnext #view-orders .stage-chip.is-current .stage-count { background: #ffffff2b; color: #fff; }
 .vnext #view-orders .order-results { color: var(--vn-muted); font-size: 13px; }
 .vnext #view-orders .request-banner { margin-bottom: 18px; border: 1px solid #f4dce3; border-radius: var(--vn-r); background: var(--vn-soft); box-shadow: none; }
-.vnext #view-orders .request-banner .button { background: var(--vn-berry); border-color: var(--vn-berry); color: #fff; border-radius: 999px; }
-.vnext #view-orders .tip, .vnext #view-month .tip, .vnext #view-settings .tip { border-radius: 14px; background: var(--vn-soft); border: 0; font-family: var(--vn-font); }
+.vnext #view-orders .request-banner .button { background: var(--vn-berry); border-color: var(--vn-berry); color: #fff; border-radius: var(--vn-pill); }
+.vnext #view-orders .tip, .vnext #view-month .tip, .vnext #view-settings .tip { border-radius: var(--vn-r-ctl); background: var(--vn-soft); border: 0; font-family: var(--vn-font); }
 .vn-inbox-banner { display: flex; align-items: center; gap: 14px; margin: 16px 0 18px; padding: 18px 20px; border: 1px solid #f4dce3; border-radius: var(--vn-r); background: var(--vn-soft); }
 .vnext .vn-inbox-banner h2 { margin: 0; font-size: 19px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .vn-inbox-banner p { margin: 4px 0 0; color: var(--vn-muted); font-size: 13px; }
@@ -282,7 +282,7 @@ body.vnext { background: var(--vn-canvas); }
 .vn-inbox-value { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; margin: 8px 0; }
 .vn-inbox-value > span { color: var(--vn-muted); font-size: 12px; }
 .vn-inbox-value .vn-total { color: var(--vn-berry); }
-.vn-inbox-list .vn-inbox-date { padding: 12px; border-radius: 12px; background: var(--vn-soft); color: var(--vn-wine); }
+.vn-inbox-list .vn-inbox-date { padding: 12px; border-radius: var(--vn-r-sm); background: var(--vn-soft); color: var(--vn-wine); }
 .vn-inbox-list .vn-note:not(.vn-inbox-date):not(.vn-origin) { background: transparent; padding: 8px 0; }
 .vn-inbox-list .vn-card-foot { margin-top: auto; padding-top: 16px; }
 .vn-inbox-list .row-advance { width: 100%; justify-content: center; }
@@ -290,7 +290,7 @@ body.vnext { background: var(--vn-canvas); }
 @media (max-width: 760px) { .vn-inbox-banner { align-items: flex-start; padding: 16px; gap: 10px; } }
 .vn-day-label { font-size: .8em; color: var(--vn-muted); font-weight: 500; }
 .vnext #view-orders .empty-state { border: 1px dashed #d9bcc5; border-radius: var(--vn-r); background: #fff9; font-family: var(--vn-font); }
-.vnext #view-orders .empty-state .button-primary { background: var(--vn-berry); border-color: var(--vn-berry); border-radius: 999px; }
+.vnext #view-orders .empty-state .button-primary { background: var(--vn-berry); border-color: var(--vn-berry); border-radius: var(--vn-pill); }
 .vnext .vn-order-list.orders-full-list { margin-top: 6px; }
 
 /* ---- Etapa 4: Meu mês (números do servidor; só a apresentação muda) ---- */
@@ -330,13 +330,13 @@ body.vnext { background: var(--vn-canvas); }
 .vnext :is(#view-clients, #view-settings) .page-heading { margin: 6px 0 24px; }
 .vnext :is(#view-clients, #view-settings) .page-heading h1 { font-size: clamp(30px, 4vw, 38px); font-weight: 600; }
 .vnext :is(#view-clients, #view-settings) .page-heading p { color: var(--vn-muted); font-size: 14px; }
-.vnext :is(#view-clients, #view-settings) :is(.button-primary, .button.button-primary) { background: var(--vn-berry); border-color: var(--vn-berry); color: #fff; border-radius: 999px; font-family: var(--vn-font); box-shadow: 0 4px 10px #ad264418; }
+.vnext :is(#view-clients, #view-settings) :is(.button-primary, .button.button-primary) { background: var(--vn-berry); border-color: var(--vn-berry); color: #fff; border-radius: var(--vn-pill); font-family: var(--vn-font); box-shadow: 0 4px 10px #ad264418; }
 .vnext :is(#view-clients, #view-settings) :is(.button-primary, .button.button-primary):hover { background: var(--vn-berry-dark); }
-.vnext :is(#view-clients, #view-settings) :is(.button-quiet, .button-small) { background: var(--vn-soft); border: 1px solid #f3dce3; color: var(--vn-wine); border-radius: 999px; font-family: var(--vn-font); }
+.vnext :is(#view-clients, #view-settings) :is(.button-quiet, .button-small) { background: var(--vn-soft); border: 1px solid #f3dce3; color: var(--vn-wine); border-radius: var(--vn-pill); font-family: var(--vn-font); }
 .vnext :is(#view-clients, #view-settings) .text-link { color: var(--vn-berry); }
 .vnext :is(#view-clients, #view-settings) .search-wrap { border: 0; border-bottom: 1px solid #dfcbd2; border-radius: 0; background: transparent; box-shadow: none; }
 .vnext :is(#view-clients, #view-settings) .search-input { background: transparent; border: 0; font-family: var(--vn-font); }
-.vnext :is(#view-clients, #view-settings) .stage-chip { min-height: 40px; border: 1px solid var(--vn-line); border-radius: 999px; background: #fff; color: var(--vn-muted); font: 700 13px var(--vn-font); }
+.vnext :is(#view-clients, #view-settings) .stage-chip { min-height: 40px; border: 1px solid var(--vn-line); border-radius: var(--vn-pill); background: #fff; color: var(--vn-muted); font: 700 13px var(--vn-font); }
 .vnext :is(#view-clients, #view-settings) .stage-chip.is-current, .vnext :is(#view-clients, #view-settings) .stage-chip[aria-pressed="true"] { background: var(--vn-berry); border-color: var(--vn-berry); color: #fff; }
 .vnext :is(#view-clients, #view-settings) .stage-count { background: var(--vn-soft); color: var(--vn-berry); }
 .vnext :is(#view-clients, #view-settings) :is(.stage-chip.is-current, .stage-chip[aria-pressed="true"]) .stage-count { background: #ffffff2b; color: #fff; }
@@ -344,16 +344,16 @@ body.vnext { background: var(--vn-canvas); }
 .vnext :is(#view-clients, #view-settings) .empty-state { border-style: dashed; border-color: #d9bcc5; background: #fff9; box-shadow: none; }
 .vnext #view-clients .client-row:hover { box-shadow: var(--vn-shadow-hover); }
 .vnext #view-clients .client-reminders { background: var(--vn-soft); border-color: #f4dce3; box-shadow: none; }
-.vnext #view-clients :is(.client-tag, .client-status) { border-radius: 30px; background: var(--vn-rose); color: #8d2841; font-family: var(--vn-font); }
+.vnext #view-clients :is(.client-tag, .client-status) { border-radius: var(--vn-pill); background: var(--vn-rose); color: #8d2841; font-family: var(--vn-font); }
 .vnext #view-settings .settings-card[open] { box-shadow: var(--vn-shadow-hover); }
 .vnext #view-settings .settings-card-title { font: 600 19px var(--vn-title); color: var(--vn-ink); }
 .vnext #view-settings .settings-card-summary { color: var(--vn-muted); font-size: 13px; }
 .vnext #view-settings .step-n { background: var(--vn-berry); color: #fff; }
 .vnext #view-settings .link-hero.is-live { background: var(--vn-mint); }
 .vnext #view-settings .live-badge { background: #fff; color: var(--vn-green); }
-.vnext #view-settings .product-item { border-color: var(--vn-line-soft); border-radius: 16px; }
+.vnext #view-settings .product-item { border-color: var(--vn-line-soft); border-radius: var(--vn-r); }
 .vnext #view-settings .style-card:has(input:checked), .vnext #view-settings .swatch:has(input:checked) i { border-color: var(--vn-berry); box-shadow: 0 0 0 1px var(--vn-berry); }
-.vnext :is(#view-clients, #view-settings) .field :is(input, select, textarea), .vnext #view-settings .money-field, .vnext #view-settings .slug-field { border-color: #dcc8cf; border-radius: 12px; font-family: var(--vn-font); }
+.vnext :is(#view-clients, #view-settings) .field :is(input, select, textarea), .vnext #view-settings .money-field, .vnext #view-settings .slug-field { border-color: #dcc8cf; border-radius: var(--vn-r-sm); font-family: var(--vn-font); }
 .vnext :is(#view-clients, #view-settings) .field > span { font-family: var(--vn-font); font-weight: 700; }
 
 /* ---- Etapa 6: barra lateral no computador (mesmos itens; no celular continua a barra inferior) ---- */
@@ -365,16 +365,16 @@ body.vnext { background: var(--vn-canvas); }
   .vnext .main-nav { position: fixed; z-index: 30; inset: 0 auto 0 0; width: 248px; display: flex; flex-direction: column; align-items: stretch; gap: 4px; margin: 0; padding: 24px 16px; border: 0; border-right: 1px solid var(--vn-line); background: #fff; overflow-y: auto; }
   .vnext .nav-brand { display: block; padding: 4px 10px 18px; }
   .vnext .nav-brand img { display: block; width: 150px; height: auto; }
-  .vnext .nav-studio:not([hidden]) { display: flex; align-items: center; gap: 10px; margin: 0 0 18px; padding: 12px; border-radius: 16px; background: var(--vn-soft); }
+  .vnext .nav-studio:not([hidden]) { display: flex; align-items: center; gap: 10px; margin: 0 0 18px; padding: 12px; border-radius: var(--vn-r); background: var(--vn-soft); }
   .nav-studio-initial { display: grid; place-items: center; width: 40px; height: 40px; flex: none; border-radius: 50%; background: var(--vn-berry); color: #fff; font: 600 16px var(--vn-title); }
   .vnext .nav-studio strong { display: block; font: 700 14px var(--vn-font); color: var(--vn-ink); }
   .vnext .nav-studio small { color: var(--vn-muted); font-size: 12px; }
-  .vnext .nav-item { justify-content: flex-start; gap: 12px; min-height: 48px; padding: 12px 14px; border-radius: 14px; font-size: 15px; }
+  .vnext .nav-item { justify-content: flex-start; gap: 12px; min-height: 48px; padding: 12px 14px; border-radius: var(--vn-r-ctl); font-size: 15px; }
   .vnext .nav-item:hover { background: var(--vn-soft); }
   .vnext .nav-item.active { background: var(--vn-soft); color: var(--vn-berry); }
   .vnext .nav-item.active::after { display: none; }
   .vnext .nav-count { margin-left: auto; }
-  .vnext .nav-new-order { margin-top: 12px; justify-content: center; background: var(--vn-berry); color: #fff; border-radius: 999px; }
+  .vnext .nav-new-order { margin-top: 12px; justify-content: center; background: var(--vn-berry); color: #fff; border-radius: var(--vn-pill); }
   .vnext .nav-new-order:hover { background: var(--vn-berry-dark); }
   .vnext .nav-new-order .nav-icon { background: transparent; color: #fff; }
   .vnext .vn-heading-add, .vnext #view-orders .page-add { display: none; }
@@ -418,7 +418,7 @@ body.vnext { background: var(--vn-canvas); }
 .vnext #view-today .vn-week-title { margin: 0 0 6px; font: 600 17px var(--vn-title); }
 .vn-collect { margin-top: 26px; }
 .vn-collect-list { display: grid; gap: 8px; }
-.vn-collect-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; width: 100%; min-height: 56px; padding: 12px 14px; border: 1px solid var(--vn-line-soft); border-radius: 16px; background: #fff; color: var(--vn-ink); font: 15px/1.35 var(--vn-font); text-align: left; cursor: pointer; }
+.vn-collect-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; width: 100%; min-height: 56px; padding: 12px 14px; border: 1px solid var(--vn-line-soft); border-radius: var(--vn-r); background: #fff; color: var(--vn-ink); font: 15px/1.35 var(--vn-font); text-align: left; cursor: pointer; }
 .vn-collect-row strong { display: block; font-weight: 750; }
 .vn-collect-row small { display: block; color: var(--vn-muted); font-size: 14px; }
 .vn-collect-row .vn-badge { white-space: normal; }
@@ -479,8 +479,8 @@ body.vnext:has(dialog[open]) { overflow: hidden; }
 .cmd-body h3 { margin: 0 0 2px; padding-right: 94px; font: 700 18px/1.25 var(--vn-font); letter-spacing: -.01em; overflow-wrap: anywhere; }
 .cmd-meta { margin: 0; padding-right: 94px; color: var(--vn-muted); font-size: 14px; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .cmd-meta .vn-client { color: var(--vn-ink); font-weight: 700; font-size: 14px; }
-.cmd-when .vn-thumb { width: 48px; height: 48px; margin-top: 8px; border-radius: 12px; object-fit: cover; }
-.vnext .detail-photo { float: right; width: 72px; height: 72px; margin: 0 0 12px 12px; border-radius: 12px; object-fit: cover; }
+.cmd-when .vn-thumb { width: 48px; height: 48px; margin-top: 8px; border-radius: var(--vn-r-sm); object-fit: cover; }
+.vnext .detail-photo { float: right; width: 72px; height: 72px; margin: 0 0 12px 12px; border-radius: var(--vn-r-sm); object-fit: cover; }
 .vn-order.comanda .vn-card-foot { margin-top: 12px; padding: 0; border: 0; justify-content: flex-end; }
 .vn-order.comanda .vn-card-foot > .vn-badge:first-child { margin-right: auto; }
 .vn-order.comanda .vn-note { margin-top: 10px; }
@@ -489,10 +489,10 @@ body.vnext:has(dialog[open]) { overflow: hidden; }
 .vn-order.comanda.is-compact h3 { font-size: 16px; }
 
 /* O carimbo do dinheiro: cheio = conferido; tracejado = falta. Mesmo formato em todo o app. */
-.vn-stamp { position: absolute; top: 12px; right: 12px; display: inline-block; box-sizing: border-box; width: 86px; padding: 5px 8px 6px; border-radius: 10px; text-align: center; white-space: normal; transform: rotate(-5deg); line-height: 1.05; }
+.vn-stamp { position: absolute; top: 12px; right: 12px; display: inline-block; box-sizing: border-box; width: 86px; padding: 5px 8px 6px; border-radius: var(--vn-r-sm); text-align: center; white-space: normal; transform: rotate(-5deg); line-height: 1.05; }
 .vn-stamp b { display: inline-block; width: 100%; font: 700 16px/1 var(--vn-title); letter-spacing: -.02em; }
 .vn-stamp small { display: inline-block; width: 100%; margin-top: 2px; font: 700 12px/1.1 var(--vn-font); }
-.vn-stamp.is-ok, .vn-badge.green.vn-stamp { border: 2px solid var(--vn-green); background: var(--vn-mint); color: var(--vn-green); box-shadow: inset 0 0 0 2px #fff, inset 0 0 0 3px #1e6b4766; border-radius: 10px; }
+.vn-stamp.is-ok, .vn-badge.green.vn-stamp { border: 2px solid var(--vn-green); background: var(--vn-mint); color: var(--vn-green); box-shadow: inset 0 0 0 2px #fff, inset 0 0 0 3px #1e6b4766; border-radius: var(--vn-r-sm); }
 .vn-stamp.is-due { border: 2px dashed #c98a12; background: #fffaf0; color: var(--vn-amber); transform: rotate(-3deg); }
 .vn-stamp.is-check { border: 2px dashed #c98a12; background: var(--vn-vanilla); color: var(--vn-amber); transform: rotate(-3deg); }
 .vn-order.comanda.is-delivered .vn-stamp, .vn-order.comanda.is-compact .vn-stamp { transform: none; }
@@ -504,7 +504,7 @@ body.vnext:has(dialog[open]) { overflow: hidden; }
 
 /* ---- Fase 3 da direção Comanda (16/10): ficha do pedido e WhatsApp ---- */
 /* WhatsApp: verde só aqui, sempre com o ícone e o verbo do momento. */
-.vn-zap { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 0 18px; border: 0; border-radius: 999px; background: var(--vn-zap); color: #fff; font: 700 15px var(--vn-font); text-decoration: none; }
+.vn-zap { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 0 18px; border: 0; border-radius: var(--vn-pill); background: var(--vn-zap); color: #fff; font: 700 15px var(--vn-font); text-decoration: none; }
 .vn-zap:hover { background: #0f7a40; }
 .vn-zap .vn-icon { width: 20px; height: 20px; }
 .vnext .detail-actions .vn-zap { flex: 1 1 100%; }
@@ -570,7 +570,7 @@ body.vnext:has(dialog[open]) { overflow: hidden; }
 .vn-sr { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 .vn-stamp { font-variant-numeric: tabular-nums; }
 .vn-stamp.is-due b, .vn-stamp.is-check b { white-space: nowrap; }
-.vn-stamp.is-mini { position: static; display: inline-flex; align-items: center; width: auto; min-width: 0; padding: 3px 9px; border-radius: 8px; transform: none; flex: none; }
+.vn-stamp.is-mini { position: static; display: inline-flex; align-items: center; width: auto; min-width: 0; padding: 3px 9px; border-radius: var(--vn-r-sm); transform: none; flex: none; }
 .vn-stamp.is-mini b { width: auto; font-size: 13px; line-height: 1.2; white-space: nowrap; }
 .vn-order.comanda.is-compact .vn-stamp.is-mini { position: absolute; top: 10px; right: 12px; }
 .vn-order.comanda.is-compact h3, .vn-order.comanda.is-compact .cmd-meta { padding-right: 104px; }
@@ -589,7 +589,7 @@ body.vnext:has(dialog[open]) { overflow: hidden; }
 .vnext .detail-dialog .detail-mode .vn-icon { width: 18px; height: 18px; }
 .vnext .detail-dialog .detail-bar .vn-badge { background: #ffffff26; color: #fff; box-shadow: none; }
 .vnext .detail-dialog .detail-tools { display: flex; align-items: center; gap: 6px; margin-left: auto; }
-.vnext .detail-dialog .detail-edit { min-height: 44px; padding: 0 16px; border: 0; border-radius: 999px; background: #ffffff1f; color: #fff; font: 700 14px var(--vn-font); cursor: pointer; }
+.vnext .detail-dialog .detail-edit { min-height: 44px; padding: 0 16px; border: 0; border-radius: var(--vn-pill); background: #ffffff1f; color: #fff; font: 700 14px var(--vn-font); cursor: pointer; }
 .vnext .detail-dialog .detail-edit:hover { background: #ffffff33; }
 .vnext .detail-dialog .detail-head .close-dialog { width: 44px; height: 44px; min-width: 44px; min-height: 44px; border-radius: 50%; }
 .vnext .detail-dialog .detail-when { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 10px; margin: 14px 0 0; color: #f0dbe2; font: 600 15px var(--vn-font); }
@@ -604,7 +604,7 @@ body.vnext:has(dialog[open]) { overflow: hidden; }
 .vnext .detail-dialog .money-stub > .vn-stamp, .vnext .detail-dialog .money-stub > .stamp { position: absolute; top: 14px; right: 14px; }
 .vnext .detail-dialog .money-stub > .vn-stamp { width: max-content; min-width: 100px; max-width: 170px; padding: 6px 12px 7px; }
 .vnext .detail-dialog .money-stub > .vn-stamp b { font-size: 18px; }
-.vnext .detail-dialog .money-stub > .stamp { display: flex; flex-direction: column; align-items: center; padding: 6px 12px; border: 2px solid var(--vn-green); border-radius: 10px; background: var(--vn-mint); color: var(--vn-green); font: 700 17px/1 var(--vn-title); text-transform: uppercase; transform: rotate(-4deg); box-shadow: inset 0 0 0 2px #fff, inset 0 0 0 3px #1e6b4766; }
+.vnext .detail-dialog .money-stub > .stamp { display: flex; flex-direction: column; align-items: center; padding: 6px 12px; border: 2px solid var(--vn-green); border-radius: var(--vn-r-sm); background: var(--vn-mint); color: var(--vn-green); font: 700 17px/1 var(--vn-title); text-transform: uppercase; transform: rotate(-4deg); box-shadow: inset 0 0 0 2px #fff, inset 0 0 0 3px #1e6b4766; }
 .vnext .detail-dialog .money-stub > .stamp small { margin-top: 3px; font: 700 12px var(--vn-font); }
 @media (prefers-reduced-motion: no-preference) { .vnext .detail-dialog .money-stub > .stamp { animation: vn-stamp-in .42s cubic-bezier(.2, .9, .2, 1.2) both; } }
 .vnext .detail-dialog .ledger { display: grid; margin: 28px 0 0; }
@@ -648,7 +648,7 @@ body.vnext:has(dialog[open]) { overflow: hidden; }
 .vnext #view-today .vn-weekbar .week-range { color: var(--vn-muted); font: 600 13px var(--vn-font); }
 .vnext #view-today .vn-weekbar .week-step { width: 44px; height: 40px; min-height: 40px; }
 .vnext #view-today .vn-weekbar .vn-week { gap: 4px; margin: 4px 0 0; }
-.vnext #view-today .vn-weekbar .vn-day { min-height: 64px; padding: 6px 0 8px; gap: 1px; border: 0; border-radius: 14px; background: transparent; box-shadow: none; }
+.vnext #view-today .vn-weekbar .vn-day { min-height: 64px; padding: 6px 0 8px; gap: 1px; border: 0; border-radius: var(--vn-r-ctl); background: transparent; box-shadow: none; }
 .vnext #view-today .vn-weekbar .vn-day .day-name { color: var(--vn-muted); font: 600 12px var(--vn-font); }
 .vnext #view-today .vn-weekbar .vn-day .day-number { font: 700 21px/1.1 var(--vn-title); }
 .vnext #view-today .vn-weekbar .day-load { display: flex; gap: 3px; min-height: 6px; align-items: center; }
@@ -669,17 +669,17 @@ body.vnext:has(dialog[open]) { overflow: hidden; }
 /* Pedem sua atenção */
 .vn-attention { margin: 12px 0 0; border-radius: var(--vn-r); background: #fff; box-shadow: var(--vn-shadow); overflow: hidden; }
 .vn-attention > h2 { display: flex; align-items: center; gap: 8px; margin: 0; padding: 14px 16px 10px; font: 700 17px var(--vn-title); }
-.vn-attention .vn-count, .vn-day-head .vn-count { display: inline-grid; place-items: center; min-width: 24px; height: 24px; padding: 0 7px; border-radius: 999px; background: var(--vn-berry); color: #fff; font: 700 12px var(--vn-font); }
+.vn-attention .vn-count, .vn-day-head .vn-count { display: inline-grid; place-items: center; min-width: 24px; height: 24px; padding: 0 7px; border-radius: var(--vn-pill); background: var(--vn-berry); color: #fff; font: 700 12px var(--vn-font); }
 .vn-att-list { display: grid; }
 .vn-att-row { display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 12px 14px 12px 16px; border-top: 1px solid var(--vn-line-soft); }
-.vn-att-glyph { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 10px; background: var(--vn-vanilla); color: var(--vn-amber); }
+.vn-att-glyph { display: grid; place-items: center; width: 30px; height: 30px; border-radius: var(--vn-r-sm); background: var(--vn-vanilla); color: var(--vn-amber); }
 .vn-att-glyph .vn-icon { width: 18px; height: 18px; }
 .vn-att-row.is-link .vn-att-glyph { background: var(--vn-rose); color: var(--vn-berry); }
 .vn-att-row.is-next .vn-att-glyph { background: var(--vn-soft); color: var(--vn-wine); }
 .vn-att-text { min-width: 0; }
 .vn-att-text h3 { margin: 0; font: 700 15px/1.3 var(--vn-font); letter-spacing: 0; color: var(--vn-ink); }
 .vn-att-text p { margin: 2px 0 0; color: var(--vn-muted); font-size: 14px; line-height: 1.35; }
-.vnext .vn-att-row .att-btn { min-height: 44px; padding: 0 16px; border-radius: 999px; font: 700 14px var(--vn-font); white-space: nowrap; }
+.vnext .vn-att-row .att-btn { min-height: 44px; padding: 0 16px; border-radius: var(--vn-pill); font: 700 14px var(--vn-font); white-space: nowrap; }
 .vnext .vn-att-row .button.att-btn { border: 1px solid #f0dbe2; background: var(--vn-soft); color: var(--vn-wine); box-shadow: none; }
 .vnext .vn-att-row .button.att-btn:hover { background: var(--vn-rose); }
 .vn-att-more { border-top: 1px solid var(--vn-line-soft); }
@@ -693,10 +693,10 @@ body.vnext:has(dialog[open]) { overflow: hidden; }
 .vn-day-head h2 { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0; font: 700 22px var(--vn-title); letter-spacing: -.02em; }
 .vn-day-head p { margin: 2px 0 0; color: var(--vn-muted); font-size: 14px; }
 .vn-day-progress { display: grid; justify-items: end; gap: 4px; flex: none; color: var(--vn-muted); font: 600 12px var(--vn-font); }
-.vn-day-progress progress { width: 72px; height: 6px; appearance: none; border: 0; border-radius: 99px; background: var(--vn-line); overflow: hidden; }
-.vn-day-progress progress::-webkit-progress-bar { background: var(--vn-line); border-radius: 99px; }
-.vn-day-progress progress::-webkit-progress-value { background: var(--vn-green); border-radius: 99px; }
-.vn-day-progress progress::-moz-progress-bar { background: var(--vn-green); border-radius: 99px; }
+.vn-day-progress progress { width: 72px; height: 6px; appearance: none; border: 0; border-radius: var(--vn-pill); background: var(--vn-line); overflow: hidden; }
+.vn-day-progress progress::-webkit-progress-bar { background: var(--vn-line); border-radius: var(--vn-pill); }
+.vn-day-progress progress::-webkit-progress-value { background: var(--vn-green); border-radius: var(--vn-pill); }
+.vn-day-progress progress::-moz-progress-bar { background: var(--vn-green); border-radius: var(--vn-pill); }
 .vn-day-links { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; margin-top: 8px; }
 .vn-day-links .text-link { min-height: 44px; }
 .vnext #view-today .onboarding { margin-top: 22px; }
@@ -707,7 +707,7 @@ body.vnext:has(dialog[open]) { overflow: hidden; }
 .vn-lines { display: grid; padding: 0 14px; border-radius: var(--vn-r); background: #fff; box-shadow: var(--vn-shadow); }
 .vn-line { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 10px; align-items: center; width: 100%; min-height: 58px; padding: 8px 0; border: 0; border-bottom: 1px solid var(--vn-line-soft); background: none; color: var(--vn-ink); text-align: left; font: inherit; cursor: pointer; }
 .vn-line:last-child { border-bottom: 0; }
-.vn-line:focus-visible { outline: 3px solid var(--vn-green); outline-offset: 2px; border-radius: 8px; }
+.vn-line:focus-visible { outline: 3px solid var(--vn-green); outline-offset: 2px; border-radius: var(--vn-r-sm); }
 .vn-line-time { font: 700 17px/1 var(--vn-title); text-align: right; font-variant-numeric: tabular-nums; }
 .vn-line-main { display: grid; min-width: 0; }
 .vn-line-main b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 700; font-size: 15px; }
@@ -719,7 +719,7 @@ body.vnext:has(dialog[open]) { overflow: hidden; }
 .vnext #view-today .vn-attention { margin-top: 22px; scroll-margin-top: 150px; }
 .vnext #view-today #attention-title { scroll-margin-top: 150px; }
 .vnext #view-today .today-summary { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; }
-.vn-att-jump { display: inline-flex; align-items: center; min-height: 32px; padding: 0 12px; border: 1px solid #f0dbe2; border-radius: 999px; background: var(--vn-soft); color: var(--vn-wine); font: 700 13px var(--vn-font); cursor: pointer; }
+.vn-att-jump { display: inline-flex; align-items: center; min-height: 32px; padding: 0 12px; border: 1px solid #f0dbe2; border-radius: var(--vn-pill); background: var(--vn-soft); color: var(--vn-wine); font: 700 13px var(--vn-font); cursor: pointer; }
 .vn-att-jump:hover { background: var(--vn-rose); }
 @media (max-width: 760px) {
   .vnext #view-today .vn-heading { gap: 10px; margin-bottom: 8px; }

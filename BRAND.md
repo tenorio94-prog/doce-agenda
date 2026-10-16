@@ -57,7 +57,7 @@ Ambas SIL OFL 1.1, copiadas do `@fontsource` pelo build para `/fonts/vnext/`. Ne
 
 ## Forma
 
-Raio 18 nos cartões, 14 nos controles; pílula só em botões e rótulos. Uma sombra (`--vn-shadow`). Movimento: um único momento, o carimbo batendo quando ela confere; o resto só responde ao toque. Respeitar `prefers-reduced-motion`.
+Raios só pelos tokens: `--vn-r` 18 (cartões), `--vn-r-ctl` 14 (controles), `--vn-r-sm` 10 (selos e miniaturas), `--vn-r-dialog` 24 (janelas) e `--vn-pill` (botões e rótulos). Letras na escala `--vn-t12` a `--vn-t40` (12 · 14 · 16 · 20 · 28 · 40) nas telas novas. Uma sombra (`--vn-shadow`). Movimento: um único momento, o carimbo batendo quando ela confere; o resto só responde ao toque. Respeitar `prefers-reduced-motion`.
 
 ## Regras
 
