@@ -266,3 +266,34 @@ body.vnext { background: var(--vn-canvas); }
 .vnext #view-orders .empty-state { border: 1px dashed #d9bcc5; border-radius: var(--vn-r); background: #fff9; font-family: var(--vn-font); }
 .vnext #view-orders .empty-state .button-primary { background: var(--vn-berry); border-color: var(--vn-berry); border-radius: 999px; }
 .vnext .vn-order-list.orders-full-list { margin-top: 6px; }
+
+/* ---- Etapa 4: Meu mês (números do servidor; só a apresentação muda) ---- */
+.vnext #view-month { font-family: var(--vn-font); color: var(--vn-ink); }
+.vnext #view-month h1, .vnext #view-month h2 { font-family: var(--vn-title); letter-spacing: -.02em; color: var(--vn-ink); }
+.vn-month-nav { display: flex; align-items: center; justify-content: center; gap: 18px; margin: 0 0 22px; }
+.vnext #view-month .month-range { font: 600 22px var(--vn-title); color: var(--vn-ink); text-transform: none; }
+.vnext #view-month .month-range::first-letter { text-transform: uppercase; }
+.vnext #view-month .vn-month-nav .icon-button { width: 44px; height: 44px; border: 0; border-radius: 50%; background: transparent; color: var(--vn-muted); }
+.vnext #view-month .vn-month-nav .icon-button:hover:not(:disabled) { background: var(--vn-soft); }
+.vn-month-grid { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 24px; align-items: start; }
+.vnext #view-month .vn-month-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr)); gap: 14px; }
+.vnext #view-month .vn-stat { display: flex; flex-direction: column; gap: 8px; padding: 20px; border: 1px solid var(--vn-line-soft); border-radius: var(--vn-r); background: #fff; box-shadow: var(--vn-shadow); }
+.vnext #view-month .vn-stat .vn-eyebrow { display: flex; align-items: center; gap: 6px; }
+.vnext #view-month .vn-stat .vn-eyebrow .vn-icon { width: 18px; height: 18px; }
+.vnext #view-month .vn-stat .stat-value { font: 600 28px/1.1 var(--vn-title); color: var(--vn-ink); }
+.vnext #view-month .vn-stat.is-wine { background: var(--vn-wine); border-color: var(--vn-wine); }
+.vnext #view-month .vn-stat.is-wine .vn-eyebrow, .vnext #view-month .vn-stat.is-wine .vn-stat-note { color: #f4cbd5; }
+.vnext #view-month .vn-stat.is-wine .stat-value { color: #fff; }
+.vnext #view-month .vn-stat.is-green .vn-eyebrow, .vnext #view-month .vn-stat.is-green .stat-value { color: var(--vn-green); }
+.vnext #view-month .vn-stat .vn-badge { align-self: flex-start; }
+.vn-stat-note { color: var(--vn-muted); font-size: 13px; }
+.vnext #view-month .month-details { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-top: 18px; }
+.vnext #view-month .month-details .surface { border: 1px solid var(--vn-line-soft); border-radius: var(--vn-r); background: #fff; box-shadow: var(--vn-shadow); }
+.vnext #view-month .month-details h2 { font-size: 19px; }
+.vnext #view-month .month-ranking strong, .vnext #view-month .month-lead-value { color: var(--vn-berry); font-family: var(--vn-title); }
+.vnext #view-month .month-note { color: var(--vn-muted); font-size: 13px; }
+.vnext #view-month .empty-state { border: 1px dashed #d9bcc5; border-radius: var(--vn-r); background: #fff9; }
+.vnext #view-month .vn-month-note h2 { margin: 12px 0 10px; color: #fff; font-size: 26px; line-height: 1.15; }
+.vn-month-note p { color: #e4bdc9; font-size: 14px; margin: 0 0 10px; }
+@media (max-width: 1000px) { .vn-month-grid { grid-template-columns: minmax(0, 1fr); } .vnext #view-month .vn-month-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 380px) { .vnext #view-month .vn-stat { padding: 16px; } .vnext #view-month .vn-stat .stat-value { font-size: 22px; } }
