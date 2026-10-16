@@ -57,7 +57,7 @@ function applyTheme() {
 const img = (key, alt = '', eager = false, sizes = '(max-width: 600px) 50vw, 320px') => `<img class="ph" src="${esc(photoUrl(key))}" ${photoAttrs(key, key.includes('bastidores-confeitaria') ? '(max-width: 960px) 100vw, 960px' : sizes)} alt="${esc(alt)}" ${eager ? 'fetchpriority="high"' : 'loading="lazy"'} decoding="async">`;
 const mono = (letter) => `<div class="mono"><span>${esc(letter)}</span></div>`;
 const productPhoto = (p, alt = '', sizes) => (p.photo ? img(p.photo, alt, false, sizes) : mono(p.name[0]));
-const logoHtml = () => (config.logo ? img(config.logo, `Logo de ${config.displayName}`, true) : `<div class="wordmark" aria-hidden="true">${esc(initials(config.displayName))}</div>`);
+const logoHtml = () => (config.logo ? img(config.logo, `Logo de ${config.displayName}`, true, '112px') : `<div class="wordmark" aria-hidden="true">${esc(initials(config.displayName))}</div>`);
 // Foto que não carrega (apagada ou sem rede) vira o monograma, sem ícone quebrado.
 document.addEventListener('error', (event) => {
   const el = event.target;

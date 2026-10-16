@@ -21,6 +21,8 @@ export const DEMO_COVER_PHOTO = 'exemplo/bastidores-confeitaria-960.webp';
 const DEMO_ORDER_ALIASES = new Map([
   ['DEMO-04|Bolo de cenoura', 'Bolo de cenoura'],
   ['DEMO-H5|Bolo de cenoura', 'Bolo de cenoura'],
+  ['DEMO-05|Bolo de pote (10 un.)', 'Bolo de pote'],
+  ['DEMO-H3|Bolo de pote (10 un.)', 'Bolo de pote'],
   ['DEMO-09|Docinhos sortidos (50 un.)', 'Docinhos sortidos'],
   ['DEMO-11|Kit festa (bolo + 50 doces)', 'Kit festa'],
 ]);

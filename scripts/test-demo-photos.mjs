@@ -38,7 +38,8 @@ try {
     const agendaCLS = await page.evaluate(() => window.photoCLS);
     assert.match(await page.title(), /Doce Agenda/);
     const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('doce-agenda.demo.v2')));
-    assert.equal(saved.orderPage.products.filter((p) => p.photo?.endsWith('.webp')).length, 12);
+    assert.equal(saved.orderPage.products.filter((p) => p.photo?.endsWith('.webp')).length, 16);
+    assert.equal(saved.orderPage.logo, 'exemplo/logo-doces-da-lu-960.webp');
     await images(page, '#view-today .vn-thumb');
     const pistache = page.locator('[data-open-order="DEMO-07"]').first();
     assert.match(await pistache.locator('img').getAttribute('src'), /bolo-pistache/);
@@ -62,7 +63,9 @@ try {
     assert.ok(frame, 'preview opened');
     await frame.waitForURL(/\/encomenda\//);
     await frame.locator('.card').first().waitFor();
-    await images(frame, '.card img, .cover img');
+    await images(frame, '.card img, .cover img, .logo img');
+    assert.equal(await frame.locator('.card.is-text').count(), 0, 'every demo product has its own photo');
+    assert.match(await frame.locator('.logo img').getAttribute('src'), /logo-doces-da-lu-960\.webp$/);
     for (const product of saved.orderPage.products.filter((p) => p.photo?.endsWith('.webp'))) {
       const card = frame.locator('.card', { has: frame.locator('h3', { hasText: product.name }) }).first();
       assert.ok((await card.locator('img').getAttribute('src')).endsWith(product.photo.slice(8)), product.name);
@@ -70,6 +73,16 @@ try {
     await overflow(frame);
     await frame.evaluate(() => scrollTo(0, 0));
     await page.screenshot({ path: path.join(output, `vitrine-${width}.png`), fullPage: false });
+    for (const name of ['Bolo de pote', 'Beijinho (cento)', 'Torta de limão', 'Pudim de leite']) {
+      const card = frame.locator('.card', { has: frame.getByRole('heading', { name, exact: true }) });
+      await card.click();
+      await frame.locator('#product-sheet[open]').waitFor();
+      assert.equal(await frame.locator('#sheet-title').innerText(), name);
+      await images(frame, '#sheet-photo img');
+      if (width === 360) await page.screenshot({ path: path.join(output, `produto-${name.split(' ')[0].toLowerCase()}-${width}.png`) });
+      await page.keyboard.press('Escape');
+      await frame.waitForFunction(() => !document.querySelector('#product-sheet').open);
+    }
     await frame.locator('.card').filter({ hasText: 'Bolo de pistache' }).click();
     await frame.locator('#product-sheet[open]').waitFor();
     await images(frame, '#product-sheet img');
@@ -102,14 +115,16 @@ try {
       page.once('dialog', (dialog) => dialog.accept());
       await page.locator('#demo-reset').click();
       await page.waitForFunction(() => JSON.parse(localStorage.getItem('doce-agenda.demo.v2'))?.orderPage.displayName === 'Doces da Lu');
+      assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('doce-agenda.demo.v2')).orderPage.logo), 'exemplo/logo-doces-da-lu-960.webp');
     }
     await page.goto(origin, { waitUntil: 'networkidle' });
     await overflow(page);
     assert.ok(await page.locator('main').innerText());
-    results.push({ width, agenda: 'pass', detail: 'pass', catalogPhotos: 12, previewJourney: 'pass', persistence: 'pass', landing: 'pass', agendaCLS });
+    results.push({ width, agenda: 'pass', detail: 'pass', catalogPhotos: 16, logo: 'pass', additionalProductSheets: 4, previewJourney: 'pass', persistence: 'pass', landing: 'pass', agendaCLS });
     await context.close();
   }
   const manifest = JSON.parse(await readFile('assets/demo-fotografias/manifest.json', 'utf8'));
+  let assetResponses = 0;
   const request = await browser.newContext();
   for (const item of manifest.filter((x) => x.application !== 'reserva-editorial-ficticia')) {
     for (const variant of item.variants) {
@@ -117,6 +132,7 @@ try {
       assert.equal(response.status(), 200, variant.file);
       assert.match(response.headers()['content-type'], /image\/webp/);
       assert.equal((await response.body()).length, variant.bytes);
+      assetResponses++;
     }
   }
   await request.close();
@@ -126,6 +142,7 @@ try {
   assert.equal(demoOrderPhoto(order, [], false), '');
   assert.equal(demoOrderPhoto(order, real, false), real[0].photo);
   assert.deepEqual(errors, []);
-  await writeFile(path.join(output, 'results.json'), JSON.stringify({ origin, results, assetResponses: 39, errors, accountIsolation: 'fixture only; no real account accessed' }, null, 2));
-  console.log(JSON.stringify({ origin, results, assetResponses: 39, errors }, null, 2));
+  assert.equal(assetResponses, 54);
+  await writeFile(path.join(output, 'results.json'), JSON.stringify({ origin, results, assetResponses, errors, accountIsolation: 'fixture only; no real account accessed' }, null, 2));
+  console.log(JSON.stringify({ origin, results, assetResponses, errors }, null, 2));
 } finally { await browser.close(); server?.close(); }

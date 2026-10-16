@@ -55,13 +55,13 @@ export function demoSeedState(now = new Date()) {
     active: false, slug: 'doces-da-lu', displayName: 'Doces da Lu', whatsapp: '',
     welcome: 'Oi! Que bom te ver por aqui. Escolha o doce e a data, eu confirmo tudo pelo WhatsApp.',
     // Fotos de exemplo são servidas junto ao site; preços continuam fictícios.
-    style: 'atelie', color: '#b8325a', instagram: '', logo: 'exemplo/logo-lu.svg', cover: DEMO_COVER_PHOTO, share: '',
+    style: 'atelie', color: '#b8325a', instagram: '', logo: 'exemplo/logo-doces-da-lu-960.webp', cover: DEMO_COVER_PHOTO, share: '',
     products: [
       ...DEMO_PHOTO_CATALOG,
-      { name: 'Bolo de pote', description: 'Mínimo de 10 unidades.', category: 'Bolos', priceFromCents: 1400 },
-      { name: 'Beijinho (cento)', description: 'Coco fresco ralado, com ou sem cravo.', category: 'Docinhos', priceFromCents: 16000, photo: 'exemplo/beijinho.svg' },
-      { name: 'Torta de limão', description: 'Massa amanteigada e merengue maçaricado.', category: 'Tortas', priceFromCents: 9000, photo: 'exemplo/torta-de-limao.svg' },
-      { name: 'Pudim de leite', description: 'Calda de caramelo. Forma de 22 cm.', category: 'Tortas', priceFromCents: 7000, photo: 'exemplo/pudim.svg' },
+      { name: 'Bolo de pote', description: 'Mínimo de 10 unidades.', category: 'Bolos', priceFromCents: 1400, photo: 'exemplo/bolo-de-pote-960.webp' },
+      { name: 'Beijinho (cento)', description: 'Coco fresco ralado, com ou sem cravo.', category: 'Docinhos', priceFromCents: 16000, photo: 'exemplo/beijinho-960.webp' },
+      { name: 'Torta de limão', description: 'Massa amanteigada e merengue maçaricado.', category: 'Tortas', priceFromCents: 9000, photo: 'exemplo/torta-de-limao-960.webp' },
+      { name: 'Pudim de leite', description: 'Calda de caramelo. Forma de 22 cm.', category: 'Tortas', priceFromCents: 7000, photo: 'exemplo/pudim-de-leite-960.webp' },
     ],
   };
   for (const [id, offset, time, client, product, total, status, payments, notice, extra = {}] of ORDERS) {

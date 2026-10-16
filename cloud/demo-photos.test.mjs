@@ -15,10 +15,16 @@ test('demo catalog uses the requested bundled WebP set and keeps featured items 
   assert.equal(DEMO_PHOTO_CATALOG.filter((product) => product.featured).length, 3);
   const seed = demoSeedState(new Date(2026, 9, 14, 9));
   assert.equal(seed.orderPage.products.filter((product) => product.featured).length, 3);
+  assert.equal(seed.orderPage.products.length, 16);
+  assert.equal(seed.orderPage.logo, 'exemplo/logo-doces-da-lu-960.webp');
+  assert.ok(seed.orderPage.products.every((product) => product.photo?.endsWith('-960.webp')));
+  assert.deepEqual(seed.orderPage.products.slice(-4).map((product) => product.photo), [
+    'exemplo/bolo-de-pote-960.webp', 'exemplo/beijinho-960.webp',
+    'exemplo/torta-de-limao-960.webp', 'exemplo/pudim-de-leite-960.webp',
+  ]);
   for (const name of ['Beijinho (cento)', 'Torta de limão', 'Pudim de leite']) {
     assert.ok(seed.orderPage.products.some((product) => product.name === name), `${name} remains in the catalog`);
   }
-  assert.ok(seed.orderPage.products.find((product) => product.name === 'Bolo de pote')?.photo === undefined);
 });
 
 test('photo resolution prefers exact product names and applies only verified demo aliases', () => {
@@ -34,15 +40,20 @@ test('photo resolution prefers exact product names and applies only verified dem
   assert.equal(photo('DEMO-H5', 'Bolo de cenoura'), 'exemplo/bolo-cenoura-chocolate-960.webp');
   assert.equal(photo('DEMO-09', 'Docinhos sortidos (50 un.)'), 'exemplo/caixa-docinhos-960.webp');
   assert.equal(photo('DEMO-11', 'Kit festa (bolo + 50 doces)'), 'exemplo/kit-festa-960.webp');
+  assert.equal(photo('DEMO-05', 'Bolo de pote (10 un.)'), 'exemplo/bolo-de-pote-960.webp');
+  assert.equal(photo('DEMO-H3', 'Bolo de pote (10 un.)'), 'exemplo/bolo-de-pote-960.webp');
 
   for (const [id, name] of [
     ['DEMO-01', 'Bolo de chocolate (1,5 kg)'], ['DEMO-10', 'Bolo de chocolate 3 andares'],
-    ['DEMO-05', 'Bolo de pote (10 un.)'], ['DEMO-09', 'Docinhos sortidos (50 un.)'],
+    ['DEMO-05', 'Bolo de pote (10 un.)'], ['DEMO-H3', 'Bolo de pote (10 un.)'], ['DEMO-09', 'Docinhos sortidos (50 un.)'],
   ]) assert.equal(photo(id, name, false), '', `${id} must not get a demo-only association`);
   assert.equal(photo('DEMO-10', 'Bolo de chocolate 3 andares'), '');
   assert.equal(demoOrderPhoto(order('real-123', 'Bolo de pistache'), products, false), 'exemplo/bolo-pistache-960.webp', 'exact catalog match works outside demo');
   assert.equal(demoOrderPhoto(order('DEMO-04', 'Bolo de cenoura editado'), products, true), '');
   assert.equal(demoOrderPhoto(order('DEMO-04', 'Bolo de cenoura'), products.filter((p) => p.name !== 'Bolo de cenoura'), true), '', 'removed target disables alias');
+  assert.equal(demoOrderPhoto(order('DEMO-05', 'Bolo de pote (10 un.)'), products.map((p) => p.name === 'Bolo de pote' ? { ...p, name: 'Bolo de pote gourmet' } : p), true), '', 'renamed target disables alias');
+  assert.equal(demoOrderPhoto(order('DEMO-05', 'Bolo de pote (10 un.)'), products.map((p) => p.name === 'Bolo de pote' ? { ...p, photo: '' } : p), true), '', 'removed photo disables alias');
+  assert.equal(demoOrderPhoto(order('DEMO-05', 'Bolo de pote (10 un.)'), products.map((p) => p.name === 'Bolo de pote' ? { ...p, photo: 'exemplo/outro-bolo-960.webp' } : p), true), 'exemplo/outro-bolo-960.webp', 'alias uses the current target photo');
 });
 
 test('WebP catalog photos survive orderPage save, export and old backup import', () => {

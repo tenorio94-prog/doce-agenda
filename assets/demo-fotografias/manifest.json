@@ -592,5 +592,170 @@
         "bytes": 102426
       }
     ]
+  },
+  {
+    "id": 19,
+    "slug": "bolo-de-pote",
+    "generator": "image_gen built-in",
+    "generation": "01375d1f-55c6-4974-83ac-46c426780793",
+    "original": "assets/demo-fotografias/originais/bolo-de-pote.png",
+    "dimensions": [
+      1254,
+      1254
+    ],
+    "sha256": "ce07425f466250496135838f2d6a48e6b8e56acde47683ad0b87a01e340e4b2a",
+    "application": "catalogo-demo",
+    "variants": [
+      {
+        "file": "public/encomenda/exemplos/bolo-de-pote-160.webp",
+        "width": 160,
+        "height": 160,
+        "bytes": 7858
+      },
+      {
+        "file": "public/encomenda/exemplos/bolo-de-pote-480.webp",
+        "width": 480,
+        "height": 480,
+        "bytes": 44972
+      },
+      {
+        "file": "public/encomenda/exemplos/bolo-de-pote-960.webp",
+        "width": 960,
+        "height": 960,
+        "bytes": 128294
+      }
+    ]
+  },
+  {
+    "id": 20,
+    "slug": "beijinho",
+    "generator": "image_gen built-in",
+    "generation": "9f669d1f-e2d2-45ec-acfc-4d1511579ea6",
+    "original": "assets/demo-fotografias/originais/beijinho.png",
+    "dimensions": [
+      1254,
+      1254
+    ],
+    "sha256": "12f541d1e1086ef59f6f84c9b0d85990ffa5ffda858920d6a62b698d5fba1bb5",
+    "application": "catalogo-demo",
+    "variants": [
+      {
+        "file": "public/encomenda/exemplos/beijinho-160.webp",
+        "width": 160,
+        "height": 160,
+        "bytes": 6564
+      },
+      {
+        "file": "public/encomenda/exemplos/beijinho-480.webp",
+        "width": 480,
+        "height": 480,
+        "bytes": 37708
+      },
+      {
+        "file": "public/encomenda/exemplos/beijinho-960.webp",
+        "width": 960,
+        "height": 960,
+        "bytes": 105002
+      }
+    ]
+  },
+  {
+    "id": 21,
+    "slug": "torta-de-limao",
+    "generator": "image_gen built-in",
+    "generation": "312b656c-caef-4a11-93f2-b6c91fb6915b",
+    "original": "assets/demo-fotografias/originais/torta-de-limao.png",
+    "dimensions": [
+      1254,
+      1254
+    ],
+    "sha256": "91450139e1d2f8a5e0a8a79ee362d1480a09474cef5b6340e095faca9cfb71c2",
+    "application": "catalogo-demo",
+    "variants": [
+      {
+        "file": "public/encomenda/exemplos/torta-de-limao-160.webp",
+        "width": 160,
+        "height": 160,
+        "bytes": 8534
+      },
+      {
+        "file": "public/encomenda/exemplos/torta-de-limao-480.webp",
+        "width": 480,
+        "height": 480,
+        "bytes": 55694
+      },
+      {
+        "file": "public/encomenda/exemplos/torta-de-limao-960.webp",
+        "width": 960,
+        "height": 960,
+        "bytes": 166992
+      }
+    ]
+  },
+  {
+    "id": 22,
+    "slug": "pudim-de-leite",
+    "generator": "image_gen built-in",
+    "generation": "3dc383ac-0fda-4d6a-baf5-82f783dcee4a",
+    "original": "assets/demo-fotografias/originais/pudim-de-leite.png",
+    "dimensions": [
+      1254,
+      1254
+    ],
+    "sha256": "5b69b8ebd9d2117bd4d1efb6dc074e60cb0cec0502a197c3d8c51b416e4d022e",
+    "application": "catalogo-demo",
+    "variants": [
+      {
+        "file": "public/encomenda/exemplos/pudim-de-leite-160.webp",
+        "width": 160,
+        "height": 160,
+        "bytes": 7370
+      },
+      {
+        "file": "public/encomenda/exemplos/pudim-de-leite-480.webp",
+        "width": 480,
+        "height": 480,
+        "bytes": 45062
+      },
+      {
+        "file": "public/encomenda/exemplos/pudim-de-leite-960.webp",
+        "width": 960,
+        "height": 960,
+        "bytes": 130650
+      }
+    ]
+  },
+  {
+    "id": 23,
+    "slug": "logo-doces-da-lu",
+    "generator": "image_gen built-in",
+    "generation": "a79f09c6-c083-4e60-8c2d-849a39743438",
+    "original": "assets/demo-fotografias/originais/logo-doces-da-lu.png",
+    "dimensions": [
+      1254,
+      1254
+    ],
+    "sha256": "29f03068fce89348c933efcccfe1b87666c9a8ee9844cb8c9e19e508bd8744d8",
+    "application": "logo-demo",
+    "variants": [
+      {
+        "file": "public/encomenda/exemplos/logo-doces-da-lu-160.webp",
+        "width": 160,
+        "height": 160,
+        "bytes": 3084
+      },
+      {
+        "file": "public/encomenda/exemplos/logo-doces-da-lu-480.webp",
+        "width": 480,
+        "height": 480,
+        "bytes": 11564
+      },
+      {
+        "file": "public/encomenda/exemplos/logo-doces-da-lu-960.webp",
+        "width": 960,
+        "height": 960,
+        "bytes": 25704
+      }
+    ]
   }
 ]
