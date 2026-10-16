@@ -290,16 +290,6 @@ function emptyState(title, message, button = true) {
   return `<div class="empty-state"><h3>${esc(title)}</h3><p>${esc(message)}</p>${button ? `<button class="button button-primary" type="button" data-action="new-order">Criar primeiro pedido</button>` : ""}</div>`;
 }
 
-function nextActionMarkup() {
-  const actions = state.orders.filter((order) => !sampleOrder(order) && !isFinished(order) && order.nextAction).sort((a, b) => timeValue(a.nextAt) - timeValue(b.nextAt));
-  if (!actions.length) {
-    return '';
-  }
-  const order = actions[0];
-  const when = order.nextAt ? dateTimeLabel(order.nextAt) : "Sem prazo definido";
-  return `<section class="next-action-card mini-card surface"><div class="section-head"><h2>Próxima ação</h2></div><div class="next-action-copy"><strong>${esc(order.nextAction)}</strong>${esc(order.client)} · ${esc(when)}</div><button class="text-link mini-link" type="button" data-open-order="${esc(order.id)}" aria-label="Ver pedido de ${esc(order.client)}">Ver pedido</button></section>`;
-}
-
 // New orders from the link: one opens straight into the review; several go to the Novos list.
 function requestBanner() {
   const pending = sortOrders(state.orders.filter((order) => order.status === "Solicitação"));
@@ -327,24 +317,52 @@ function upcomingMarkup(orders) {
     const key = localDateKey(parseDate(order.dueAt));
     groups.set(key, [...(groups.get(key) || []), order]);
   });
-  return `<section class="coming-soon"><div class="section-head"><h2>Próximos dias</h2><button class="text-link" type="button" data-view="orders">Ver todos os pedidos</button></div>
-    ${[...groups].map(([key, list]) => `<div class="upcoming-day"><h3 class="upcoming-label">${key === tomorrow ? "Amanhã" : esc(capitalize(calendarDateLabel(key, { weekday: "long", day: "numeric", month: "short" }).replace(".", "")))}</h3><div class="vn-order-list">${list.map((order) => agendaCardMarkup(order, { compact: true })).join("")}</div></div>`).join("")}</section>`;
+  const label = (key) => {
+    const name = capitalize(calendarDateLabel(key, { weekday: "long", day: "numeric", month: "short" }).replace(".", ""));
+    const full = availabilityFor(key).full;
+    return `${key === tomorrow ? `Amanhã, ${name.charAt(0).toLocaleLowerCase("pt-BR")}${name.slice(1)}` : name}${full ? " (lotado)" : ""}`;
+  };
+  return `<section class="coming-soon vn-coming"><div class="vn-section-row"><h2>Próximos dias</h2><button class="text-link" type="button" data-view="orders">Todos os pedidos</button></div>
+    ${[...groups].map(([key, list]) => `<div class="upcoming-day"><h3 class="upcoming-label">${esc(label(key))}</h3><div class="vn-lines">${list.map((order) => agendaLineMarkup(order)).join("")}</div></div>`).join("")}</section>`;
+}
+// Linha baixa de pedido (Próximos dias): hora, produto, cliente e o carimbo pequeno. A linha inteira abre a ficha.
+function agendaLineMarkup(order) {
+  const mode = (order.mode || "Retirada").toLowerCase();
+  return `<button class="vn-line" type="button" data-open-order="${esc(order.id)}"><span class="vn-line-time">${esc(shortTime(order.dueAt) || "—")}</span><span class="vn-line-main"><b>${esc(order.product || "Produto sem descrição")}</b><small>${esc(clientName(order) || "Cliente sem nome")}, ${esc(mode)}</small></span>${moneyStamp(order, informedFor(order.id), { compact: true }).html}</button>`;
 }
 
-// "Falta cobrar": sinal que não chegou, Pix informado sem conferir e pedido entregue com saldo. Só mostra; nada é registrado.
-function toCollectMarkup() {
-  const reasonFor = (order) => {
-    if (needsDeposit(order)) return "Falta o sinal";
-    if (informedFor(order.id) > 0) return `Pix de ${money(informedFor(order.id))} informado, falta conferir`;
-    const balance = balanceFor(order);
-    if (order.status === "Entregue" && balance > 0) return `Entregue, falta receber ${money(balance)}`;
-    return "";
-  };
-  const list = sortOrders(state.orders.filter((order) => !sampleOrder(order) && !isCancelled(order) && reasonFor(order)));
-  if (!list.length) return "";
-  return `<section class="vn-collect" aria-labelledby="collect-title"><div class="vn-section-row"><h2 id="collect-title">Falta cobrar <span class="vn-count">${list.length}</span></h2></div>
-    <div class="vn-collect-list">${list.slice(0, 5).map((order) => `<button class="vn-collect-row" type="button" data-open-order="${esc(order.id)}"><span class="vn-grow"><strong>${esc(clientName(order) || "Cliente sem nome")}</strong><small>${esc(order.product || "Produto sem descrição")}${order.dueAt ? `, ${esc(dateLabel(order.dueAt, { day: "numeric", month: "short" }).replace(".", ""))}` : ""}</small></span>${moneyStamp(order, informedFor(order.id), { compact: true }).html || `<span class="vn-badge amber">${esc(reasonFor(order))}</span>`}</button>`).join("")}</div>
-    ${list.length > 5 ? `<button class="text-link" type="button" data-view="orders">Ver todos em Pedidos</button>` : ""}</section>`;
+// "Pedem sua atenção": tudo o que pede decisão ou cobrança, numa lista só, na ordem de urgência.
+// Só mostra e leva à ficha; nada é registrado daqui.
+function attentionItems() {
+  const own = state.orders.filter((order) => !sampleOrder(order) && !isCancelled(order));
+  const short = (order) => order.dueAt ? dateLabel(order.dueAt, { weekday: "short", day: "numeric", month: "short" }).replace(/\./g, "") : "";
+  const items = [];
+  const requests = sortOrders(own.filter((order) => order.status === "Solicitação"));
+  if (requests.length === 1) {
+    const order = requests[0], when = short(order);
+    items.push({ kind: "link", cls: "request-banner", title: "Pedido novo pelo link", text: `${clientName(order) || "Uma cliente"} quer ${order.product || "uma encomenda"}${when ? ` para ${when}` : ""}. Ainda não ocupa vaga: você decide se aceita.`, action: `<button class="button att-btn" type="button" data-action="review-request" data-id="${esc(order.id)}">Revisar</button>` });
+  } else if (requests.length > 1) {
+    const names = [...new Set(requests.map((order) => clientName(order)).filter(Boolean))];
+    const others = requests.length - Math.min(names.length, 2);
+    const who = names.slice(0, 2).join(", ") + (others > 0 ? ` e mais ${others}` : "");
+    items.push({ kind: "link", cls: "request-banner", title: `${requests.length} pedidos novos pelo link`, text: `${who ? `${who}. ` : ""}Ainda não ocupam vaga: você decide quais aceitar.`, action: '<button class="button att-btn" type="button" data-action="show-requests">Revisar</button>' });
+  }
+  const open = (order, label) => `<button class="vn-btn secondary small att-btn" type="button" data-open-order="${esc(order.id)}">${label}</button>`;
+  sortOrders(own.filter((order) => isCommitted(order) && informedFor(order.id) > 0)).forEach((order) => items.push({ kind: "pix", title: `${clientName(order) || "A cliente"} informou um Pix de ${money(informedFor(order.id))}`, text: `${order.product || "Pedido"}${short(order) ? `, ${short(order)}` : ""}. Confira no banco antes de marcar.`, action: open(order, "Conferir") }));
+  sortOrders(own.filter((order) => order.status === "Entregue" && balanceFor(order) > 0)).forEach((order) => items.push({ kind: "money", title: `${clientName(order) || "A cliente"} ainda deve ${money(balanceFor(order))}`, text: `${order.product || "Pedido"}, entregue${short(order) ? ` ${short(order)}` : ""}.`, action: open(order, "Cobrar") }));
+  sortOrders(own.filter((order) => needsDeposit(order) && !informedFor(order.id))).forEach((order) => { const deposit = suggestedDepositCents(order) / 100; items.push({ kind: "money", title: `${clientName(order) || "A cliente"} ainda não pagou o sinal`, text: `${order.product || "Pedido"}${short(order) ? `, ${short(order)}` : ""}.${deposit ? ` Sugerido: ${money(deposit)}.` : ""}`, action: open(order, "Cobrar") }); });
+  own.filter((order) => !isFinished(order) && order.nextAction && order.status !== "Solicitação").sort((a, b) => timeValue(a.nextAt) - timeValue(b.nextAt)).forEach((order) => items.push({ kind: "next", title: `${clientName(order) || "Pedido"}: ${order.nextAction.charAt(0).toLocaleLowerCase("pt-BR")}${order.nextAction.slice(1)}`, text: `${order.product || "Pedido"}${order.nextAt ? `, até ${dateTimeLabel(order.nextAt)}` : ", sem prazo definido"}.`, action: open(order, "Ver") }));
+  return items;
+}
+function attentionMarkup() {
+  const items = attentionItems();
+  if (!items.length) return "";
+  const glyph = { link: "link", pix: "pix", money: "wallet", next: "clock" };
+  const row = (item) => `<div class="vn-att-row is-${item.kind}${item.cls ? ` ${item.cls}` : ""}"><span class="vn-att-glyph">${icon(glyph[item.kind])}</span><div class="vn-att-text"><h3>${esc(item.title)}</h3><p>${esc(item.text)}</p></div>${item.action}</div>`;
+  const first = items.slice(0, 3), rest = items.slice(3);
+  return `<section class="vn-attention" aria-labelledby="attention-title"><h2 id="attention-title">Pedem sua atenção <span class="vn-count">${items.length}</span></h2>
+    <div class="vn-att-list">${first.map(row).join("")}</div>
+    ${rest.length ? `<details class="vn-att-more"><summary>Ver mais ${rest.length}</summary><div class="vn-att-list">${rest.map(row).join("")}</div></details>` : ""}</section>`;
 }
 
 const scheduledOn = (key) => sortOrders(state.orders.filter((order) => order.status !== 'Solicitação' && !sampleOrder(order) && !isCancelled(order) && order.dueAt && localDateKey(parseDate(order.dueAt) || new Date(0)) === key));
@@ -448,10 +466,7 @@ function inboxCardMarkup(order, options) {
 
 // Agenda = today plus the week picker: the selected day starts on today and the list shows that day.
 function agendaWeekMarkup(upcomingCount) {
-  const monday = mondayFor(new Date());
-  const days = Array.from({ length: 7 }, (_, index) => {
-    const date = new Date(monday); date.setDate(monday.getDate() + index); return date;
-  });
+  const days = weekDates();
   const todayKey = localDateKey(new Date());
   if (!days.some((day) => localDateKey(day) === state.selectedDay)) state.selectedDay = days.some((day) => localDateKey(day) === todayKey) ? todayKey : localDateKey(days[0]);
   const selected = days.find((day) => localDateKey(day) === state.selectedDay) || days[0];
@@ -460,31 +475,33 @@ function agendaWeekMarkup(upcomingCount) {
   const scheduled = scheduledOn(selectedKey);
   const availability = availabilityFor(selectedKey);
   const done = scheduled.filter((order) => ["Pronto", "Entregue"].includes(order.status)).length;
-  const dayTitle = capitalize(new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "numeric", month: "short" }).format(selected).replace(".", ""));
-  const limitText = availability.closed ? "dia fechado" : Number.isInteger(availability.limit) ? `limite de ${availability.limit} por dia` : "sem limite por dia definido";
-  const dayBadge = availability.closed ? '<span class="vn-badge muted">Fechado</span>' : availability.full ? '<span class="vn-badge red">Dia lotado</span>' : '<span class="vn-badge outline">Há espaço</span>';
+  const dayTitle = isToday ? "Hoje" : capitalize(new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "numeric", month: "short" }).format(selected).replace(".", ""));
+  const dayBadge = availability.closed ? '<span class="vn-badge muted">Fechado</span>' : availability.full ? '<span class="vn-badge red">Dia lotado</span>' : "";
+  const limitText = availability.closed ? "Dia fechado" : Number.isInteger(availability.limit) ? `${scheduled.length} de ${availability.limit} ${availability.limit === 1 ? "vaga ocupada" : "vagas ocupadas"}` : `${scheduled.length} ${scheduled.length === 1 ? "encomenda" : "encomendas"}, sem limite definido`;
   const empty = isToday
     ? `<div class="vn-empty">${icon("cake")}<h3>Nenhuma encomenda para hoje</h3><p>${upcomingCount ? "As próximas estão logo abaixo." : "Pedidos sem data aparecem em Pedidos."}</p><button class="vn-btn secondary" type="button" data-action="new-order">${icon("plus")} Anotar encomenda</button></div>`
     : `<div class="vn-empty">${icon("cake")}<h3>Dia livre de pedidos marcados</h3><p>Pedidos sem data continuam em Pedidos.</p></div>`;
   return `<section class="today-agenda agenda-week" aria-labelledby="today-list-title">
-    <div class="vn-daily"><div class="vn-row"><span class="vn-summary-icon">${icon("cake")}</span><div class="vn-grow"><h2>${esc(dayTitle)}</h2><p>${scheduled.length} ${scheduled.length === 1 ? "encomenda" : "encomendas"} · ${esc(limitText)}</p></div>${dayBadge}</div>
-      ${scheduled.length ? `<div class="vn-row vn-progress-caption"><span>${icon("check")} Produção do dia</span><strong>${done} de ${scheduled.length} ${scheduled.length === 1 ? "pronta" : "prontas"}</strong></div><progress value="${done}" max="${scheduled.length}" aria-label="Produção do dia: ${done} de ${scheduled.length} prontas"></progress>` : ""}</div>
-    <div class="vn-section-row"><h2 id="today-list-title">${isToday ? "Encomendas de hoje" : "Encomendas do dia"} <span class="vn-count">${scheduled.length}</span></h2>${isToday ? '<span class="vn-muted">Por horário</span>' : '<button class="text-link" type="button" data-action="agenda-today">Voltar para hoje</button>'}</div>
+    <div class="vn-day-head"><div class="vn-grow"><h2 id="today-list-title">${esc(dayTitle)} ${dayBadge}</h2><p>${esc(limitText)}</p></div>${scheduled.length ? `<div class="vn-day-progress"><progress value="${done}" max="${scheduled.length}" aria-label="Produção do dia: ${done} de ${scheduled.length} prontas"></progress><span>${done} de ${scheduled.length} ${scheduled.length === 1 ? "pronta" : "prontas"}</span></div>` : ""}</div>
     ${scheduled.length ? `<div class="vn-order-list${state.agendaEnter ? " is-entering" : ""}">${scheduled.map((order) => agendaCardMarkup(order)).join("")}</div>` : empty}
-    <div class="vn-week-pick"><h3 class="vn-week-title">Ver outro dia da semana</h3>
-    ${weekControlsMarkup(weekRangeLabel(days))}
-    <div class="vn-week week-days" role="group" aria-label="Escolher dia da semana">${days.map((day) => {
-      const key = localDateKey(day);
-      const count = scheduledOn(key).length;
-      const dayAvailability = availabilityFor(key);
-      const classes = ["vn-day", "day-button", key === todayKey ? "is-today" : "", key === selectedKey ? "is-selected" : "", dayAvailability.closed ? "is-closed" : "", dayAvailability.full ? "is-full" : ""].filter(Boolean).join(" ");
-      const statusText = dayAvailability.closed ? "fechado" : dayAvailability.full ? "limite atingido" : Number.isInteger(dayAvailability.limit) ? `limite ${dayAvailability.limit}` : "limite não definido";
-      const load = dayAvailability.closed ? "—" : Number.isInteger(dayAvailability.limit) ? `${count}/${dayAvailability.limit}` : count || "—";
-      return `<button class="${classes}" data-select-day="${key}" type="button" aria-label="${key === todayKey ? "Hoje, " : ""}${esc(dateLabel(day, { weekday: "long", day: "numeric", month: "long" }))}, ${count} ${count === 1 ? "pedido" : "pedidos"}, ${statusText}" aria-pressed="${key === selectedKey}"><span class="day-name">${esc(capitalize(new Intl.DateTimeFormat("pt-BR", { weekday: "short" }).format(day).replace(".", "")))}</span><strong class="day-number">${day.getDate()}</strong><small class="day-count">${esc(String(load))}</small>${dayAvailability.closed ? `<em class="day-availability">Fechado</em>` : dayAvailability.full ? `<em class="day-availability">Lotado</em>` : key === todayKey ? '<em class="day-availability">Hoje</em>' : ""}</button>`;
-    }).join("")}</div>
-    </div>
-    <button class="text-link agenda-adjust" type="button" data-action="adjust-selected-date" data-date="${selectedKey}">Ajustar esta data</button>
+    <div class="vn-day-links">${isToday ? "" : '<button class="text-link" type="button" data-action="agenda-today">Voltar para hoje</button>'}<button class="text-link agenda-adjust" type="button" data-action="adjust-selected-date" data-date="${selectedKey}">Ajustar esta data</button></div>
   </section>`;
+}
+// A semana fica no topo da Agenda, acima do que ela controla. Pontinhos = vagas ocupadas (tijolo quando lota).
+function weekBarMarkup() {
+  const days = weekDates();
+  const todayKey = localDateKey(new Date());
+  if (!days.some((day) => localDateKey(day) === state.selectedDay)) state.selectedDay = days.some((day) => localDateKey(day) === todayKey) ? todayKey : localDateKey(days[0]);
+  return `<nav class="vn-weekbar" aria-label="Dias da semana">${weekControlsMarkup(weekRangeLabel(days))}<div class="vn-week week-days" role="group" aria-label="Escolher dia da semana">${days.map((day) => {
+    const key = localDateKey(day);
+    const count = scheduledOn(key).length;
+    const dayAvailability = availabilityFor(key);
+    const limit = Number.isInteger(dayAvailability.limit) ? dayAvailability.limit : 0;
+    const classes = ["vn-day", "day-button", key === todayKey ? "is-today" : "", key === state.selectedDay ? "is-selected" : "", dayAvailability.closed ? "is-closed" : "", dayAvailability.full ? "is-full" : ""].filter(Boolean).join(" ");
+    const statusText = dayAvailability.closed ? "fechado" : dayAvailability.full ? "lotado" : limit ? `${count} de ${limit} vagas` : "limite não definido";
+    const dots = dayAvailability.closed ? "" : limit && limit <= 6 ? Array.from({ length: limit }, (_, index) => `<i class="${index < count ? "on" : ""}"></i>`).join("") : count ? `<em>${count}</em>` : "";
+    return `<button class="${classes}" data-select-day="${key}" type="button" aria-label="${key === todayKey ? "Hoje, " : ""}${esc(dateLabel(day, { weekday: "long", day: "numeric", month: "long" }))}, ${count} ${count === 1 ? "pedido" : "pedidos"}, ${statusText}" aria-pressed="${key === state.selectedDay}"><span class="day-name">${esc(new Intl.DateTimeFormat("pt-BR", { weekday: "short" }).format(day).replace(".", ""))}</span><strong class="day-number">${day.getDate()}</strong><span class="day-load" aria-hidden="true">${dots}</span></button>`;
+  }).join("")}</div></nav>`;
 }
 
 // Lista da semana: o que precisa sair da cozinha, pelo dia da entrega. Marcar = o pedido fica Pronto.
@@ -541,37 +558,27 @@ function renderToday() {
   const focusSelector = focused?.dataset?.weekShift !== undefined ? `[data-week-shift="${CSS.escape(focused.dataset.weekShift)}"]` : focused?.dataset?.selectDay ? `[data-select-day="${CSS.escape(focused.dataset.selectDay)}"]` : focused?.dataset?.agendaMode ? `[data-agenda-mode="${CSS.escape(focused.dataset.agendaMode)}"]` : "";
   const weekMode = state.agendaMode === "week";
   const modeSwitch = `<div class="agenda-mode vn-segmented" role="group" aria-label="Como ver a agenda"><button type="button" data-agenda-mode="day" aria-pressed="${!weekMode}">Dia a dia</button><button type="button" data-agenda-mode="week" aria-pressed="${weekMode}">Lista da semana</button></div>`;
-  const shownMonth = capitalize(new Intl.DateTimeFormat("pt-BR", { month: "long", year: "numeric" }).format(parseDate(`${state.selectedDay || localDateKey(new Date())}T12:00`) || new Date()));
   panel.classList.add('today-redesign');
   const todays = todayOrders();
-  const committed = state.orders.filter((order) => !sampleOrder(order) && isCommitted(order));
-  const totalConfirmed = committed.reduce((sum, order) => sum + Number(order.total || 0), 0);
-  const balances = committed.map(balanceFor).filter((balance) => balance !== null);
-  const unknown = committed.length - balances.length;
-  const totalBalance = balances.reduce((sum, balance) => sum + Math.max(0, balance), 0);
   const upcoming = sortOrders(state.orders.filter((order) => order.status!=='Solicitação' && !sampleOrder(order) && !isFinished(order) && order.dueAt && (parseDate(order.dueAt)?.getTime() ?? 0) >= new Date(new Date().setHours(24, 0, 0, 0)).getTime())).slice(0, 5);
   const pendingChanges = state.orders.filter((order) => !sampleOrder(order) && !isFinished(order) && order.pendingChange);
   const sample = state.orders.find((order) => order.isSample || order.isDemo || order.sample);
   const firstUse = !state.orders.some((order) => !(order.isSample || order.isDemo || order.sample));
-  const nextAction = nextActionMarkup();
   const toDeliver = todays.filter((order) => !isFinished(order));
   const missingDeposit = toDeliver.filter(needsDeposit);
-  const todaySummary = toDeliver.length
-    ? `<strong>${toDeliver.length} para entregar</strong>${missingDeposit.length ? `, ${missingDeposit.length} sem sinal` : ""}`
-    : "Nada para entregar hoje";
-  const financeNote = unknown ? unknown + (unknown === 1 ? ' pedido sem pagamento conferido ainda.' : ' pedidos sem pagamento conferido ainda.') : '';
-  panel.innerHTML = `<header class="vn-heading"><div><span class="vn-date">${esc(capitalize(new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "numeric", month: "long" }).format(new Date())))}</span><h1 id="today-title" tabindex="-1">Sua agenda</h1><p class="today-summary">${todaySummary}</p></div><button class="vn-btn primary vn-heading-add" type="button" data-action="new-order">${icon("plus")} Nova encomenda</button></header>
-    ${onboardingMarkup()}${requestBanner()}${firstUse && !onboardingVisible() ? `<section class="welcome-panel"><h2>Cadastre seu primeiro pedido</h2><p>Comece com cliente, produto e valor. Complete os detalhes quando estiverem combinados.</p><div class="welcome-actions"><button class="button button-primary" type="button" data-action="new-order">Nova encomenda</button></div></section>` : ''}
+  const todayKey = localDateKey(new Date()), todayAvailability = availabilityFor(todayKey);
+  const headline = toDeliver.length ? `${toDeliver.length} ${toDeliver.length === 1 ? "entrega" : "entregas"} hoje` : "Nada para entregar hoje";
+  const summaryParts = [todayAvailability.closed ? "Hoje é dia fechado" : todayAvailability.full ? "Dia lotado" : "", missingDeposit.length ? `${missingDeposit.length} sem sinal` : ""].filter(Boolean);
+  const attentionCount = weekMode ? 0 : attentionItems().length;
+  panel.innerHTML = `<header class="vn-heading"><div><span class="vn-date">${esc(capitalize(new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "numeric", month: "long" }).format(new Date())))}</span><h1 id="today-title" tabindex="-1">${esc(headline)}</h1>${summaryParts.length || attentionCount ? `<p class="today-summary">${esc(summaryParts.join(", "))}${attentionCount ? `<button class="vn-att-jump" type="button" data-action="jump-attention">${attentionCount} ${attentionCount === 1 ? "pede" : "pedem"} sua atenção</button>` : ""}</p>` : ""}</div>${modeSwitch}</header>
+    ${firstUse && !onboardingVisible() ? `<section class="welcome-panel"><h2>Cadastre seu primeiro pedido</h2><p>Comece com cliente, produto e valor. Complete os detalhes quando estiverem combinados.</p><div class="welcome-actions"><button class="button button-primary" type="button" data-action="new-order">Nova encomenda</button></div></section>` : ''}
     ${sample && firstUse ? `<section class="sample-card" aria-label="Pedido de exemplo">${rowMarkup(sample)}<p>Toque para ver como fica um pedido completo. O exemplo não entra na sua agenda.</p></section>` : sample ? `<details class="sample-examples"><summary>Exemplo fictício — não entra na sua agenda</summary><div class="sample-example-list">${state.orders.filter(sampleOrder).map((order) => `<button class="text-link" type="button" data-open-order="${esc(order.id)}">Ver exemplo: ${esc(clientName(order) || order.product || "pedido")}</button>`).join("")}</div></details>` : ''}
-    <div class="vn-agenda-grid"><div class="vn-schedule"><div class="vn-section-row vn-month-row"><h2 class="agenda-week-title">${esc(shownMonth)}</h2>${modeSwitch}</div>${weekMode ? productionMarkup() : agendaWeekMarkup(upcoming.length)}${weekMode ? "" : toCollectMarkup()}${nextAction}
+    ${weekMode ? "" : weekBarMarkup()}
+    <div class="vn-agenda-grid"><div class="vn-schedule">${weekMode ? productionMarkup() : `${agendaWeekMarkup(upcoming.length)}${attentionMarkup()}`}
+    ${onboardingMarkup()}
     ${pendingChanges.length ? `<section class="pending-card surface"><div class="section-head"><h2>Alterações para revisar</h2><span class="pending-count">${pendingChanges.length}</span></div><div class="pending-list">${pendingChanges.slice(0, 3).map((order) => `<button class="pending-row" type="button" data-open-order="${esc(order.id)}"><span><strong>${esc(order.client)}</strong><small>${esc(order.product)}</small></span><span class="pending-chevron" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></span><span class="pending-banner"><strong>Pedido de mudança:</strong> ${esc(order.pendingChange)}</span></button>`).join("")}</div></section>` : ""}
     ${weekMode ? "" : upcomingMarkup(upcoming)}
-    </div><aside class="vn-aside">${state.orders.some((order) => !sampleOrder(order)) ? `<section class="finance-summary vn-wine-panel" aria-labelledby="finance-title"><span class="vn-eyebrow">Seu ateliê em números</span><h2 id="finance-title">Resumo financeiro</h2><div class="stats-grid">
-      <article class="stat-card"><div class="stat-top">Em andamento</div><div class="stat-value">${state.orders.filter((order) => !sampleOrder(order) && !isFinished(order)).length}</div><div class="stat-note">pedidos ainda não encerrados</div></article>
-      <article class="stat-card"><div class="stat-top">Valor dos pedidos confirmados</div><div class="stat-value">${esc(money(totalConfirmed))}</div><div class="stat-note">Soma dos pedidos confirmados. Ainda não é dinheiro recebido.</div></article>
-      <article class="stat-card"><div class="stat-top">Saldo a receber</div><div class="stat-value ${!balances.length && committed.length ? 'is-unknown' : ''}">${balances.length || !committed.length ? esc(money(totalBalance)) : "Ainda não conferido"}</div><div class="stat-note">Conta só pagamentos que você conferiu.</div></article>
-    </div>${financeNote ? `<p class="finance-note">${esc(financeNote)}</p>` : ''}<details class="finance-how"><summary>Como calculamos?</summary><p>O valor dos pedidos confirmados soma os pedidos confirmados, em produção, prontos e entregues. Cancelados e orçamentos ficam de fora.</p><p>O saldo de cada pedido é o valor total menos os pagamentos que você conferiu. Pagamentos só informados não entram na conta.</p><p>Se um pedido recebeu mais do que o combinado, o excedente não reduz o saldo de outros pedidos.</p></details></section>` : ''}
-    ${storageNoteMarkup()}</aside></div>`;
+    </div><aside class="vn-aside">${storageNoteMarkup()}</aside></div>`;
   state.agendaEnter = false;
   panel.hidden = state.activeView !== "today";
   if (focusSelector) panel.querySelector(focusSelector)?.focus({ preventScroll: true });
@@ -1364,6 +1371,7 @@ function handleClick(event) {
     case 'reset-demo':
       if (window.DoceStore?.resetDemo && window.confirm('Recomeçar a demonstração? Os pedidos de exemplo voltam ao início e o que você mudou aqui é apagado.')) { window.DoceStore.resetDemo(); try { localStorage.removeItem(onboardingKey()); } catch { /* sem armazenamento */ } location.reload(); }
       break;
+    case 'jump-attention': $("#attention-title")?.scrollIntoView({ block: "start", behavior: reducedMotion() ? "auto" : "smooth" }); break;
     case 'agenda-today': state.weekOffset=0;state.selectedDay=localDateKey(new Date());state.agendaEnter=true;renderToday();break;
     case 'advance-order': action.disabled=true;advanceOrder(id,action.dataset.status);break;
     case 'toggle-produced': { const order = orderById(id); if (!order || order.status === 'Entregue') break; action.disabled = true; advanceOrder(id, order.status === 'Pronto' ? 'Em produção' : 'Pronto'); break; }

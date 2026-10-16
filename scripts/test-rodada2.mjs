@@ -18,6 +18,17 @@ try {
     await page.goto(`${server.origin}/demo/`);
     await page.locator('#today-title').waitFor();
 
+    // Etapa 3: a Agenda responde "o que faço hoje?": semana acima da lista, primeiro pedido sem rolar,
+    // cobranças e decisões numa lista só, nenhum resumo financeiro na Agenda.
+    const week = await page.locator('#view-today .vn-weekbar').boundingBox();
+    const list = await page.locator('#view-today #today-list-title').boundingBox();
+    assert.ok(week && list && week.y < list.y, 'a semana fica acima da lista do dia');
+    const firstOrder = await page.locator('#view-today .today-agenda .vn-order').first().boundingBox();
+    if (height >= 800) assert.ok(firstOrder.y + 60 < height, `primeiro pedido fora da primeira tela (${Math.round(firstOrder.y)})`);
+    assert.equal(await page.locator('#view-today .finance-summary').count(), 0, 'resumo financeiro saiu da Agenda');
+    assert.match(await page.locator('#view-today .vn-attention').innerText(), /Pedem sua atenção[\s\S]*Pedido novo pelo link/);
+    check(`${width}px: Agenda com a semana no topo e o dia na primeira tela`);
+
     // Etapa 0: Pedidos mostra o dia de cada pedido e começa pelo que está em aberto.
     await page.locator('[data-view="orders"]:visible').first().click();
     const cards = page.locator('#view-orders .vn-order');
