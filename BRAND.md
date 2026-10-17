@@ -54,6 +54,7 @@ Ambas SIL OFL 1.1, copiadas do `@fontsource` pelo build para `/fonts/vnext/`. Ne
 - **Canhoto do dinheiro** (`.money-stub` na ficha): picote no topo, uma linha por fato (total combinado, informado pela cliente "não conta ainda", conferido por você, sinal sugerido, saldo) e a ação logo abaixo ("Conferi os R$ 60,00", WhatsApp de cobrança, Pix, registrar).
 - **Semana no topo** (`.vn-weekbar`): sete dias com pontinhos de vagas (tijolo quando lota), grudada ao rolar; o dia escolhido em vinho.
 - **Pedem sua atenção** (`.vn-attention`): uma lista só para pedido do link, Pix a conferir, saldos, sinais e próximas ações; três à vista, o resto em "Ver mais".
+- **Tempo dá peso** (rodada 5): botão de etapa cheio só quando a ação é para agora (hoje, amanhã, atrasado, sem data, decisão); dias mais distantes usam o mesmo verbo em `.vn-btn.secondary`. Encerrados em Pedidos são linhas (`.vn-line.is-history`, dia e mês no lugar da hora); entregue com saldo continua cartão.
 - **Linha baixa** (`.vn-line`): hora, produto, cliente e carimbo pequeno; usada em Próximos dias e na ficha da cliente. Pedidos agrupa cartões por dia (`.vn-date-head`).
 - **Rótulo** (`.vn-badge`): etapa só quando não há botão; `red` para "Atrasado"/"Dia lotado"; `outline` para estados neutros.
 - **WhatsApp** (`.vn-zap`): verbo do momento ("Pedir o sinal de R$ 54", "Mandar o orçamento", "Avisar que está pronto", "Cobrar R$ X"); nunca envia sozinho. Na demonstração aparece igual, mas abre uma janela com a mensagem que seria escrita, sem abrir o WhatsApp (telefones inventados).
