@@ -1464,10 +1464,11 @@ async function submitPayment(event) {
   event.preventDefault();
   const form = event.currentTarget;
   const errorBox = $("#payment-form-error"); errorBox.hidden = true;
-  if (!form.reportValidity()) return;
+  clearFieldErrors(form);
   const data = new FormData(form);
-  const amount = Number(data.get("amount"));
-  if (!Number.isFinite(amount) || amount < 0) return setFormError("#payment-form-error", "Informe um valor igual ou maior que zero.");
+  const rawAmount = String(data.get("amount") ?? "").trim();
+  const amount = Number(rawAmount);
+  if (!rawAmount || !Number.isFinite(amount) || amount < 0) return setFieldError(form, "amount", "Escreva o valor recebido, como 60 ou 60,50.");
   const button = $("#save-payment-button"); button.disabled = true; button.textContent = "Salvando…";
   try {
     await apiRequest(`/orders/${encodeURIComponent(state.paymentOrderId)}/payments`, {
@@ -1476,7 +1477,8 @@ async function submitPayment(event) {
     $("#payment-dialog").close();
     await loadState({ silent: true });
     showOrderDetail(state.detailOrderId);
-    showToast("Pagamento registrado.");
+    // O aviso repete a regra do dinheiro no momento em que ela importa.
+    showToast(String(data.get("status")) === "Conferido" ? `${money(amount)} conferido. Já conta como recebido.` : `${money(amount)} anotado. Só conta como recebido depois que você conferir.`);
   } catch (error) {
     setFormError("#payment-form-error", error.message || "Não foi possível registrar o pagamento.");
   } finally {

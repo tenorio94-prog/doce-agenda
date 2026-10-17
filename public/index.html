@@ -104,7 +104,7 @@
         <div class="form-error" id="payment-form-error" role="alert" hidden></div>
         <div class="payment-context" id="payment-context" aria-live="polite"></div>
         <label class="field"><span>Valor recebido (R$) <i>*</i></span><input name="amount" type="number" min="0" step="0.01" inputmode="decimal" required placeholder="0,00"><small>Deixe R$ 0 se ainda não recebeu nada.</small></label>
-        <label class="field"><span>Já viu o dinheiro na conta?</span><select name="status"><option value="Informado">Ainda não, a cliente avisou</option><option value="Conferido">Sim, conferi</option></select><small>Só o que você conferiu conta como recebido.</small></label>
+        <fieldset class="field status-choice payment-check"><legend class="field-label">Já viu o dinheiro na conta?</legend><div class="status-options"><label class="status-option"><input type="radio" name="status" value="Informado" checked><span class="status-option-title">Ainda não, a cliente avisou</span><span class="status-option-note">Não conta como recebido</span></label><label class="status-option"><input type="radio" name="status" value="Conferido"><span class="status-option-title">Sim, conferi</span><span class="status-option-note">Conta como recebido</span></label></div></fieldset>
         <label class="field"><span>Observação</span><input name="note" maxlength="300" placeholder="Ex.: sinal via Pix"></label>
         <div class="dialog-actions"><button class="button button-quiet" type="button" data-close="payment-dialog">Cancelar</button><button class="button button-primary" id="save-payment-button" type="submit">Salvar pagamento</button></div>
       </form>

@@ -915,6 +915,7 @@ wa-input[aria-invalid="true"]::part(input-wrapper), wa-textarea[aria-invalid="tr
 .status-choice[aria-invalid="true"] .status-option { border-color: var(--error); }
 .status-choice .field-error { display: block; margin-top: 8px; }
 .due-note.is-warning { color: var(--vn-red); font-weight: 650; }
+#payment-form .status-choice > legend { font-size: var(--fs-xl); }
 /* Em 320 px os campos do Web Awesome tinham largura mínima própria e passavam da janela. */
 #order-form :is(.field, wa-input, wa-textarea, wa-select, wa-checkbox) { min-width: 0; }
 /* Em 320 px "Cancelar" + "Salvar encomenda" não cabem lado a lado; o X do topo já fecha a janela. */

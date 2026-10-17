@@ -251,7 +251,7 @@ try {
   await page.locator('#detail-content [data-action="add-payment"]').click();
   await page.locator("#payment-context").getByText("Marina • cliente fictícia").waitFor();
   await page.locator('#payment-dialog [name="amount"]').fill("10");
-  await page.locator('#payment-dialog [name="status"]').selectOption("Informado");
+  await page.locator('#payment-dialog input[name="status"][value="Informado"]').check();
   await page.locator('#payment-dialog [name="note"]').fill("Pagamento fictício informado");
   await page.locator("#save-payment-button").click(); await page.locator("#toast").getByText("Pagamento registrado.").waitFor();
   assert.match(await page.locator("#detail-content").innerText(), /Ainda não conferido/, "An Informado receipt must not make the balance known.");

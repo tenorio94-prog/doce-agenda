@@ -67,11 +67,19 @@ try {
   }
   // The same real payment form transitions zero -> partial -> full without changing old entries.
   await page.locator('#view-orders [data-open-order="zero"]').click();
+  // Rodada 6: "Já viu o dinheiro na conta?" com as duas respostas à vista; "Ainda não" vem marcado (nunca infla o recebido).
+  await page.locator('#detail-content [data-action="add-payment"]').click();
+  assert.equal(await page.locator('#payment-dialog input[name=status][value=Informado]').isChecked(), true, 'Informado is the safe default');
+  assert.equal(await page.locator('#payment-dialog .payment-check').isVisible(), true);
+  await page.locator('#save-payment-button').click();
+  assert.match(await page.locator('#payment-form .field-error').innerText(), /valor recebido/, 'Empty amount gets an inline error, not the browser bubble');
+  await page.locator('#payment-dialog [data-close="payment-dialog"]').first().click();
   for (const [amount, stamp, balance] of [['50', 'SINAL PAGO', '100,00'], ['100', 'PAGO', '0,00']]) {
     await page.locator('#detail-content [data-action="add-payment"]').click();
     await page.locator('#payment-dialog [name=amount]').fill(amount);
-    await page.locator('#payment-dialog [name=status]').selectOption('Conferido');
+    await page.locator('#payment-dialog input[name=status][value=Conferido]').check();
     await page.locator('#save-payment-button').click();await page.waitForFunction(() => !document.querySelector('#payment-dialog').open);
+    assert.match(await page.locator('#toast').innerText(), /conferido\. Já conta como recebido\./, 'Toast restates the money rule');
     // A ficha se redesenha logo depois de a janela fechar; esperar o carimbo novo evita ler o anterior (falha intermitente vista na rodada 5).
     await page.waitForFunction((text) => document.querySelector('#detail-content .deposit-card .stamp > span')?.innerText === text, stamp, { timeout: 5000 }).catch(() => {});
     assert.equal(await page.locator('#detail-content .deposit-card .stamp > span').innerText(), stamp);
