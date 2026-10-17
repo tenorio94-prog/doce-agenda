@@ -1852,3 +1852,24 @@ body.vnext { font-variant-numeric: tabular-nums; -webkit-tap-highlight-color: tr
   .vn-order.comanda .vn-card-foot .vn-stamp:not(.is-mini) { min-width: 0; padding-inline: 4px; }
   .vn-order.comanda .vn-card-foot .vn-btn { padding-inline: 12px; }
 }
+
+/* ---- Rodada 5 (17/10): tempo dá peso ---- */
+/* Encerrados: uma linha por pedido, com a data no lugar da hora. Só o que ainda pede algo continua cartão. */
+.vn-list-divider span { margin-left: 4px; color: var(--vn-muted); font-weight: 600; }
+.vn-closed-group { gap: 10px; }
+.vn-closed-group .vn-list-divider { margin-bottom: 2px; }
+.vn-line.is-history { grid-template-columns: 40px minmax(0, 1fr) auto; }
+.vn-line-date { display: grid; justify-items: center; gap: 1px; text-align: center; }
+.vn-line-date b { font: 700 18px/1 var(--vn-title); }
+.vn-line-date small { color: var(--vn-muted); font: 600 12px/1.1 var(--vn-font); }
+.vn-line.is-history.is-cancelled .vn-line-main b { color: var(--vn-muted); text-decoration: line-through; text-decoration-thickness: 1px; }
+.vn-history-more > summary { display: flex; align-items: center; justify-content: center; min-height: 44px; margin-top: 2px; color: var(--vn-berry); font: 700 14px var(--vn-font); cursor: pointer; list-style: none; }
+.vn-history-more > summary::-webkit-details-marker { display: none; }
+.vn-history-more[open] > summary { display: none; }
+.vn-history-more > summary:focus-visible { outline: 3px solid var(--vn-green); outline-offset: 2px; border-radius: var(--vn-pill); }
+/* Botão de etapa para dias mais distantes: o mesmo verbo, sem disputar com o que é para agora. */
+.vn-order.comanda .vn-card-foot .vn-btn.secondary { box-shadow: none; }
+.vn-line-origin { display: inline-flex; align-items: center; gap: 4px; }
+.vn-line-origin .vn-icon { width: 14px; height: 14px; }
+/* No histórico o nome do produto é o que identifica o pedido: quebra em até duas linhas em vez de cortar. */
+.vn-line.is-history .vn-line-main b { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; white-space: normal; line-height: 1.25; }

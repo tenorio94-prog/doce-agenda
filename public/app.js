@@ -116,6 +116,17 @@ function nextStepButton(order, extraClass = "") {
   if (order.status === "Solicitação") return `<button class="${cls}" type="button" data-action="review-request" data-id="${id}">Revisar pedido</button>`;
   return "";
 }
+// Rodada 5: o botão de etapa só fica cheio (framboesa) quando a ação é para agora: hoje, amanhã,
+// atrasado, sem data, ou uma decisão (orçamento, solicitação). Dias mais distantes mostram o mesmo
+// botão, mais calmo, para que os cheios na tela digam "isto é agora".
+const DECISION_STATUSES = ["Orçamento", "Aguardando confirmação", "Solicitação"];
+function actionIsDue(order) {
+  if (DECISION_STATUSES.includes(order.status)) return true;
+  const date = parseDate(order.dueAt);
+  if (!date) return true;
+  const now = new Date();
+  return date.getTime() < new Date(now.getFullYear(), now.getMonth(), now.getDate() + 2).getTime();
+}
 const timeValue = (value) => parseDate(value)?.getTime() ?? Number.MAX_SAFE_INTEGER;
 // Lista de Pedidos: o que ainda está em aberto vem primeiro, do mais próximo ao mais distante;
 // entregues, cancelados e recusados depois, do mais recente ao mais antigo.
@@ -436,7 +447,7 @@ function agendaCardMarkup(order, options = {}) {
   const stamp = moneyStamp(order, informed, { compact: options.compact });
   const classes = ["vn-order", "comanda", stamp.cls, isLate(order) ? "is-late" : "", options.compact ? "is-compact" : "", options.list ? "is-list" : "", order.status === "Entregue" ? "is-delivered" : "", isCancelled(order) ? "is-cancelled" : "", String(order.id) === String(state.justAdvanced) ? "is-advanced" : ""].filter(Boolean).join(" ");
   const mode = order.mode || "Retirada";
-  const step = options.compact ? "" : nextStepButton(order, "vn-btn primary small");
+  const step = options.compact ? "" : nextStepButton(order, `vn-btn ${actionIsDue(order) ? "primary" : "secondary"} small`);
   const day = date && options.withDate ? `<span class="vn-day-label">${esc(listDayLabel(order.dueAt))}</span>` : "";
   const when = `<div class="cmd-when">${day}<b class="vn-time">${date ? esc(shortTime(order.dueAt)) : "—"}</b><small>${icon(mode === "Entrega" ? "delivery" : "bag")}${esc(mode.toLowerCase())}</small>${isLate(order) && !options.compact ? `<span class="cmd-late">Atrasado</span>` : ""}</div>`;
   // A foto fica presa no canto do texto, como numa comanda: a coluna da hora não fica mais alta que o pedido.
@@ -616,18 +627,39 @@ function listDayHeading(key) {
   const prefix = key === at(0) ? "Hoje, " : key === at(1) ? "Amanhã, " : key === at(-1) ? "Ontem, " : "";
   return capitalize(`${prefix}${weekday} ${dayMonth}`);
 }
+// Rodada 5: o histórico vira uma linha por pedido, com a data no lugar da hora. Cartão grande
+// fica para o que ainda pede algo; entregue com saldo continua cartão, porque o dinheiro não fechou.
+const owesAfterDelivery = (order) => order.status === "Entregue" && balanceFor(order) > 0;
+const HISTORY_VISIBLE = 8;
+function historyLineMarkup(order) {
+  const date = parseDate(order.dueAt);
+  const day = date ? String(date.getDate()) : "—";
+  const month = date ? new Intl.DateTimeFormat("pt-BR", { month: "short", ...(date.getFullYear() !== new Date().getFullYear() ? { year: "2-digit" } : {}) }).format(date).replace(/\./g, "").replace(" de ", " ") : "";
+  const sub = `${clientName(order) || "Cliente sem nome"}, ${order.status.toLocaleLowerCase("pt-BR")}`;
+  const stamp = moneyStamp(order, informedFor(order.id), { compact: true }).html;
+  return `<button class="vn-line is-history${isCancelled(order) ? " is-cancelled" : ""}" type="button" data-open-order="${esc(order.id)}" aria-label="${esc(`${order.product || "Pedido"}, ${sub}, ${date ? listDayLabel(order.dueAt) : "sem data"}`)}"><span class="vn-line-time vn-line-date"><b>${esc(day)}</b><small>${esc(month)}</small></span><span class="vn-line-main"><b>${esc(order.product || "Produto sem descrição")}</b><small>${esc(sub)}</small>${order.origin === "link" ? `<small class="vn-line-origin">${icon("link")}Recebido pelo link</small>` : ""}</span><span class="vn-line-side"><b>${esc(orderTotalLabel(order))}</b>${stamp}</span></button>`;
+}
+function historyMarkup(finished, { expanded = false } = {}) {
+  const owing = finished.filter(owesAfterDelivery), done = finished.filter((order) => !owesAfterDelivery(order));
+  const shown = expanded ? done : done.slice(0, HISTORY_VISIBLE), rest = expanded ? [] : done.slice(HISTORY_VISIBLE);
+  const owingHead = (order) => `<h3 class="vn-date-head">${esc(listDayHeading(order.dueAt ? localDateKey(parseDate(order.dueAt)) : ""))}<span>falta receber</span></h3>`;
+  return `${owing.map((order) => `<div class="vn-history-owing">${owingHead(order)}<div class="vn-order-list">${agendaCardMarkup(order, { list: true })}</div></div>`).join("")}
+    ${done.length ? `<div class="vn-lines vn-history">${shown.map(historyLineMarkup).join("")}</div>` : ""}
+    ${rest.length ? `<details class="vn-history-more"><summary>Ver mais ${rest.length} ${rest.length === 1 ? "pedido encerrado" : "pedidos encerrados"}</summary><div class="vn-lines vn-history">${rest.map(historyLineMarkup).join("")}</div></details>` : ""}`;
+}
 function ordersByDayMarkup(orders) {
   const groups = [];
-  let finishedStarted = false;
-  orders.forEach((order) => {
+  const open = orders.filter((order) => !isFinished(order)), finished = orders.filter(isFinished);
+  open.forEach((order) => {
     const key = order.dueAt ? localDateKey(parseDate(order.dueAt)) : "";
-    const finished = isFinished(order);
     const last = groups[groups.length - 1];
-    if (last && last.key === key && last.finished === finished) { last.list.push(order); return; }
-    groups.push({ key, finished, list: [order], divider: finished && !finishedStarted && groups.length > 0 });
-    if (finished) finishedStarted = true;
+    if (last && last.key === key) { last.list.push(order); return; }
+    groups.push({ key, list: [order] });
   });
-  return `<div class="orders-full-list vn-orders-by-day">${groups.map((group) => `${group.divider ? '<h2 class="vn-list-divider">Encerrados</h2>' : ""}<section class="vn-day-group"><h3 class="vn-date-head">${esc(listDayHeading(group.key))}<span>${group.list.length} ${group.list.length === 1 ? "pedido" : "pedidos"}${group.key && !group.finished && availabilityFor(group.key).full ? ", lotado" : ""}</span></h3><div class="vn-order-list">${group.list.map((order) => agendaCardMarkup(order, { list: true })).join("")}</div></section>`).join("")}</div>`;
+  // Com busca ou filtro só de encerrados, nada fica escondido atrás de "Ver mais".
+  const expanded = !!state.search.trim() || !open.length;
+  return `<div class="orders-full-list vn-orders-by-day">${groups.map((group) => `<section class="vn-day-group"><h3 class="vn-date-head">${esc(listDayHeading(group.key))}<span>${group.list.length} ${group.list.length === 1 ? "pedido" : "pedidos"}${group.key && availabilityFor(group.key).full ? ", lotado" : ""}</span></h3><div class="vn-order-list">${group.list.map((order) => agendaCardMarkup(order, { list: true })).join("")}</div></section>`).join("")}
+    ${finished.length ? `<section class="vn-day-group vn-closed-group" aria-labelledby="closed-title">${open.length ? `<h2 class="vn-list-divider" id="closed-title">Encerrados <span>${finished.length}</span></h2>` : `<h2 class="visually-hidden" id="closed-title">Encerrados</h2>`}${historyMarkup(finished, { expanded })}</section>` : ""}</div>`;
 }
 function renderOrders() {
   const panel = $("#view-orders");

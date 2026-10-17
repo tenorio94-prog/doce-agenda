@@ -35,12 +35,28 @@ try {
     await cards.first().waitFor();
     // Etapa 4: a lista é agrupada por dia; cada grupo diz o dia.
     const labels = await page.locator('#view-orders .vn-date-head').allInnerTexts();
-    assert.ok(labels.length >= 8, `grupos por dia (${labels.length})`);
+    // Rodada 5: dias com pedido em aberto (5 na demo) + o entregue que ainda deve; o histórico vira lista de linhas.
+    assert.ok(labels.length >= 6, `grupos por dia (${labels.length})`);
     assert.ok(labels.every((label) => /\d/.test(label) || /Sem data/.test(label)), `cabeçalho de dia vazio: ${labels.join('|')}`);
     assert.match(labels[0], /^Hoje, /);
     const firstText = await cards.first().innerText();
     assert.doesNotMatch(firstText, /Entregue/, 'a lista começa pelos pedidos em aberto');
     check(`${width}px: Pedidos com dia e em aberto primeiro`);
+
+    // Rodada 5: encerrados sem pendência viram uma linha cada (data no lugar da hora); o que ainda deve continua cartão.
+    const history = page.locator('#view-orders .vn-history .vn-line.is-history');
+    assert.ok(await history.count() >= 8, `histórico em linhas (${await history.count()})`);
+    assert.equal(await page.locator('#view-orders .vn-closed-group .vn-order', { hasText: 'Roberta' }).count(), 1, 'entregue com saldo continua cartão');
+    const lineBox = await history.first().boundingBox();
+    assert.ok(lineBox.height <= 80, `linha do histórico alta demais (${Math.round(lineBox.height)})`);
+    // Botão cheio só para o que é para agora (hoje, amanhã, decisões); dias mais distantes, o mesmo verbo mais calmo.
+    const saturday = page.locator('#view-orders .vn-order', { hasText: 'Sônia' }).first();
+    assert.equal(await saturday.locator('.vn-btn.secondary[data-action="advance-order"]').count(), 1, 'sábado com botão calmo');
+    const todayCard = page.locator('#view-orders .vn-order', { hasText: 'Marcos' }).first();
+    assert.equal(await todayCard.locator('.vn-btn.primary[data-action="advance-order"]').count(), 1, 'hoje com botão cheio');
+    const decision = page.locator('#view-orders .vn-order', { hasText: 'Renata' }).first();
+    assert.equal(await decision.locator('.vn-btn.primary[data-action="confirm-order"]').count(), 1, 'decisão continua cheia');
+    check(`${width}px: histórico em linhas e peso do botão pelo tempo`);
 
     // Etapa 1: entregue com saldo nunca fica verde; o carimbo diz quanto falta.
     const roberta = page.locator('#view-orders .vn-order', { hasText: 'Roberta' }).first();
