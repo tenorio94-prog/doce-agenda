@@ -984,7 +984,7 @@ function detailMarkup(order) {
   return `<div class="detail-shell${order.status === "Solicitação" ? " is-request" : ""}">
     <div class="detail-topline detail-head">
       <div class="detail-bar"><span class="detail-mode">${icon(mode === "Entrega" ? "delivery" : "bag")}${esc(mode)}</span><span class="detail-tools">${canEdit ? `<button class="detail-edit" data-action="edit-order" data-id="${esc(order.id)}" type="button">Editar</button>` : ""}<button class="icon-button close-dialog" type="button" data-close="detail-dialog" aria-label="Fechar detalhes"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></span></div>
-      <p class="detail-when">${date ? `<b>${esc(shortTime(order.dueAt))}</b>` : ""}<span>${esc(dayLabel)}</span>${statusBadge(order.status)}</p>
+      <p class="detail-when">${date ? `<b>${esc(shortTime(order.dueAt))}</b>` : ""}<span>${esc(dayLabel)}</span>${statusBadge(order.status)}${isLate(order) ? '<span class="vn-badge red detail-late">Atrasado</span>' : ""}</p>
       <h2 class="detail-client" id="detail-title" tabindex="-1">${esc(order.product || "Produto sem descrição")}</h2>
       <p class="detail-product">para ${esc(clientName(order) || "cliente sem nome")}</p>
     </div>

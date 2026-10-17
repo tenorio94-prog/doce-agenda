@@ -1880,3 +1880,9 @@ body.vnext { font-variant-numeric: tabular-nums; -webkit-tap-highlight-color: tr
   .vnext #view-today .vn-aside .vn-att-row, .vnext #view-today .vn-aside .vn-att-row.request-banner { grid-template-columns: 30px minmax(0, 1fr); align-items: start; row-gap: 8px; }
   .vnext #view-today .vn-aside .vn-att-row .att-btn { grid-column: 2; justify-self: start; }
 }
+/* A ficha também diz "Atrasado" quando o cartão diz (antes só o cartão avisava). */
+.vnext .detail-dialog .detail-when .vn-badge.detail-late { background: var(--vn-red-soft); color: var(--vn-red); }
+/* Clientes: a situação de cada ficha era um selo framboesa em todas as linhas (cor da marca usada como estado,
+   repetida até virar ruído). Agora é texto de apoio; "faz tempo que não pede" ganha só peso, sem cor nova. */
+.vnext #view-clients .client-status { justify-self: start; padding: 0; border-radius: 0; background: none; color: var(--vn-muted); font: 600 13px/1.3 var(--vn-font); text-align: left; }
+.vnext #view-clients .client-row.is-away .client-status { color: var(--vn-ink); font-weight: 700; }
