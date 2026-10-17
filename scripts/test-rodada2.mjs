@@ -119,6 +119,38 @@ try {
     assert.deepEqual(errors, []);
     await context.close();
   }
+
+  // Rodada 5: entregue que ainda deve nunca vira linha discreta do histórico, inclusive quando
+  // nada foi conferido (saldo indefinido) ou só há Pix informado. Quitado e sem valor viram linha.
+  {
+    const day = (offset) => { const d = new Date(); d.setDate(d.getDate() + offset); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}T15:00`; };
+    const order = (id, extra) => ({ id, client: `QA ${id}`, product: `Teste ${id}`, total: 100, status: 'Entregue', mode: 'Retirada', dueAt: day(-3), history: [], createdAt: '2026-10-01T12:00:00.000Z', ...extra });
+    const fixture = { version: 1, orders: [
+      // Um pedido em aberto, para o histórico ficar recolhido com "Ver mais" como no uso normal.
+      order('aberto', { status: 'Confirmado', dueAt: day(1) }),
+      order('sem-pagamento'), order('so-informado'), order('parcial'), order('quitado'), order('sem-valor', { total: 0, totalKnown: false }),
+      ...Array.from({ length: 9 }, (_, i) => order(`antigo-${i}`, { dueAt: day(-10 - i) })),
+    ], payments: [
+      ['so-informado', 100, 'Informado'], ['parcial', 40, 'Conferido'], ['quitado', 100, 'Conferido'],
+      ...Array.from({ length: 9 }, (_, i) => [`antigo-${i}`, 100, 'Conferido']),
+    ].map(([orderId, amount, status], i) => ({ id: `p-${i}`, orderId, amount, status, createdAt: '2026-10-02T12:00:00.000Z' })) };
+    const context = await browser.newContext({ viewport: { width: 360, height: 800 }, locale: 'pt-BR', timezoneId: 'America/Sao_Paulo', reducedMotion: 'reduce', serviceWorkers: 'block' });
+    await context.route('**/*', (route) => new URL(route.request().url()).origin === server.origin ? route.continue() : route.abort());
+    await context.addInitScript((seed) => { localStorage.setItem('doce-agenda.onboarding.demo.v1', JSON.stringify({ dismissed: true, done: [] })); if (!localStorage.getItem('doce-agenda.demo.v2')) localStorage.setItem('doce-agenda.demo.v2', JSON.stringify(seed)); }, fixture);
+    const page = await context.newPage();
+    await page.goto(`${server.origin}/demo/`);
+    await page.locator('#today-title').waitFor();
+    await page.locator('[data-view="orders"]:visible').first().click();
+    await page.locator('#view-orders .vn-closed-group').waitFor();
+    for (const id of ['sem-pagamento', 'so-informado', 'parcial']) {
+      assert.equal(await page.locator(`#view-orders .vn-closed-group .vn-order[data-open-order="${id}"]:visible`).count(), 1, `${id}: entregue que deve fica como cartão à vista`);
+    }
+    for (const id of ['quitado', 'sem-valor']) {
+      assert.equal(await page.locator(`#view-orders .vn-line.is-history[data-open-order="${id}"]`).count(), 1, `${id}: vira linha do histórico`);
+    }
+    await context.close();
+    check('360px: entregue sem conferido ou com saldo nunca fica escondido no histórico');
+  }
 } finally {
   await browser.close();
   server.close();

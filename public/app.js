@@ -634,7 +634,13 @@ function listDayHeading(key) {
 }
 // Rodada 5: o histórico vira uma linha por pedido, com a data no lugar da hora. Cartão grande
 // fica para o que ainda pede algo; entregue com saldo continua cartão, porque o dinheiro não fechou.
-const owesAfterDelivery = (order) => order.status === "Entregue" && balanceFor(order) > 0;
+// Sem nenhum pagamento conferido, balanceFor dá null (não zero): entregue sem conferido também ainda deve.
+// Só vira linha discreta o que tem valor desconhecido/zero ou saldo conferido zerado.
+const owesAfterDelivery = (order) => {
+  if (order.status !== "Entregue" || order.totalKnown === false || !(Number(order.total) > 0)) return false;
+  const balance = balanceFor(order);
+  return balance === null || balance > 0;
+};
 const HISTORY_VISIBLE = 8;
 function historyLineMarkup(order) {
   const date = parseDate(order.dueAt);

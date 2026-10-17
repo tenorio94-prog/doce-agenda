@@ -22,7 +22,7 @@ A direção Comanda inteira: hora como eixo, carimbo que diz quanto, canhoto da 
 ## 3. O que mudei
 
 1. **Encerrados viram linhas** (`historyLineMarkup`). Dia e mês grandes no lugar da hora (no histórico, *quando* importa mais que *a que horas*), produto, cliente e situação, total e o carimbo pequeno. Oito à vista, o resto em "Ver mais N pedidos encerrados"; com busca ou com o filtro Entregues/Cancelados, tudo aparece. Cancelado fica riscado e cinza. "Recebido pelo link" continua visível (era requisito da caixa de entrada).
-2. **Entregue que ainda deve continua cartão**, com o dia no cabeçalho e "falta receber". O pedido acabou, o dinheiro não; ele não pode virar uma linha discreta.
+2. **Entregue que ainda deve continua cartão**, com o dia no cabeçalho e "falta receber". O pedido acabou, o dinheiro não; ele não pode virar uma linha discreta. Vale também quando nada foi conferido ainda ou só há Pix informado: aí o saldo é indefinido (`null`), não zero. A primeira versão tratava esse caso como quitado; Lucas encontrou antes de publicar, e um teste agora cobre os cinco casos (sem pagamento, só informado, parcial, quitado, sem valor).
 3. **O peso do botão segue o tempo** (`actionIsDue`). Cheio quando a ação é para agora: hoje, amanhã, atrasado, sem data ou decisão (confirmar orçamento, revisar pedido do link). Dias mais distantes mostram o mesmo verbo em botão calmo (o secundário que já existia). O botão continua lá e funciona igual; só deixa de disputar atenção.
 4. **No computador (≥ 1001 px), "Pedem sua atenção" vai para a coluna ao lado do dia** (340 px, botão abaixo do texto) e o atalho "6 pedem sua atenção" do topo sai, porque a lista já está à vista. No celular nada muda.
 5. **"Atrasado" também na ficha**, em tijolo, ao lado da situação.
@@ -65,6 +65,7 @@ Commits na `main` (código): `feat(pedidos)`, `feat(agenda)`, `fix(ui)` e `test(
 ## 8. Oportunidades que continuam
 
 - **Linguagem do atraso:** separar "passou da hora e ainda não está pronto" (problema da cozinha) de "está pronto e a cliente ainda não retirou" (lembrete). Decisão de produto.
+- **Entregue sem nada conferido** não tem carimbo nem entra em "Pedem sua atenção", que só olham saldo conferido maior que zero. Isso já era assim antes desta rodada; agora o pedido ao menos fica como cartão sob "falta receber". Mostrar "Falta R$ X, já entregue" e incluí-lo na lista de cobrança mexe em como o dinheiro aparece, então fica para uma decisão.
 - **Histórico longo de verdade:** uma conta real com 300 entregues vai precisar agrupar por mês ou buscar melhor. A linha e o "Ver mais" aguentam bem algumas dezenas.
 - **Cartão no computador:** em 1280 px o cartão aberto tem ~600 px de largura com o miolo vazio entre o carimbo e o botão. Dá para usar melhor, mas o público está no celular.
 - **CSS em camadas:** `vnext.css` agora tem seções de cinco rodadas no fim do arquivo. Vale uma rodada própria de consolidação, com `npm run screens` antes/depois. Não misturei com esta.
