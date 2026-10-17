@@ -42,7 +42,7 @@ async function clear(directory) {
 await clear(output);
 const copy = (from, to = from) => cp(path.join(source, from), path.join(output, to), { recursive: true, errorOnExist: true });
 
-for (const name of ['browser-store.js', 'data-client.js', 'favicon.svg', 'logo.svg', 'tokens.css', 'style.css', 'manifest.webmanifest']) await copy(name);
+for (const name of ['browser-store.js', 'data-client.js', 'favicon.svg', 'logo.svg', 'tokens.css', 'manifest.webmanifest']) await copy(name);
 for (const name of ['fonts', 'icons', 'encomenda', 'privacidade']) await copy(name);
 await copy('landing/index.html', 'index.html');
 await cp(path.join(source, 'landing'), path.join(output, 'landing'), {
