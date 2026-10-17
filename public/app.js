@@ -438,20 +438,25 @@ function agendaCardMarkup(order, options = {}) {
   const mode = order.mode || "Retirada";
   const step = options.compact ? "" : nextStepButton(order, "vn-btn primary small");
   const day = date && options.withDate ? `<span class="vn-day-label">${esc(listDayLabel(order.dueAt))}</span>` : "";
-  const when = `<div class="cmd-when">${day}<b class="vn-time">${date ? esc(shortTime(order.dueAt)) : "—"}</b><small>${icon(mode === "Entrega" ? "delivery" : "bag")}${esc(mode.toLowerCase())}</small>${photo && !options.compact ? `<img class="vn-thumb" src="${esc(photoUrl(photo))}" ${photoAttrs(photo, '48px')} alt="" loading="lazy" decoding="async">` : ""}</div>`;
+  const when = `<div class="cmd-when">${day}<b class="vn-time">${date ? esc(shortTime(order.dueAt)) : "—"}</b><small>${icon(mode === "Entrega" ? "delivery" : "bag")}${esc(mode.toLowerCase())}</small>${isLate(order) && !options.compact ? `<span class="cmd-late">Atrasado</span>` : ""}</div>`;
+  // A foto fica presa no canto do texto, como numa comanda: a coluna da hora não fica mais alta que o pedido.
+  const thumb = photo && !options.compact ? `<img class="vn-thumb cmd-photo" src="${esc(photoUrl(photo))}" ${photoAttrs(photo, '56px')} alt="" loading="lazy" decoding="async">` : "";
   // A etapa já está no verbo do botão; o rótulo só aparece quando não há botão (entregue, cancelado, lista compacta).
-  const stage = isLate(order) ? '<span class="vn-badge red">Atrasado</span>' : step ? "" : statusBadge(order.status);
+  // Atrasado fica junto da hora (que já fica tijolo); o rodapé guarda só dinheiro e ação.
+  const stage = isLate(order) || step ? "" : statusBadge(order.status);
+  // Rodada 4: o carimbo desce para o rodapé, ao lado da ação (dinheiro e próximo passo juntos, como no canhoto da ficha);
+  // o produto ganha a largura toda. Na versão compacta ele continua no canto.
   return `<article class="${classes}" data-open-order="${esc(order.id)}">
     ${when}
     <div class="cmd-body">
-      ${stamp.html}
-      <h3><button class="vn-open" type="button" aria-label="Abrir pedido de ${esc(clientName(order) || "cliente sem nome")}: ${esc(order.product || "produto sem descrição")}">${esc(order.product || "Produto sem descrição")}</button></h3>
-      <p class="cmd-meta"><span class="vn-client">${esc(clientName(order) || "Cliente sem nome")}</span>${detail && !options.compact ? `, ${esc(detail)}` : ""}</p>
+      ${options.compact ? stamp.html : thumb}
+      <div class="cmd-head"><h3><button class="vn-open" type="button" aria-label="Abrir pedido de ${esc(clientName(order) || "cliente sem nome")}: ${esc(order.product || "produto sem descrição")}">${esc(order.product || "Produto sem descrição")}</button></h3>
+      <p class="cmd-meta"><span class="vn-client">${esc(clientName(order) || "Cliente sem nome")}</span>${detail && !options.compact ? `, ${esc(detail)}` : ""}</p></div>
       ${!options.compact ? originMarkup(order) : ""}
       ${!options.compact && order.status === "Solicitação" ? dateCapacityMarkup(order) : ""}
       ${!options.compact && order.status === "Recusado" && order.refusalReason ? `<div class="vn-note">${icon("info")}<span>Recusado: ${esc(order.refusalReason)}</span></div>` : ""}
-      ${options.compact ? "" : `<div class="vn-row vn-card-foot">${stage}${step || `<strong class="vn-total">${esc(orderTotalLabel(order))}</strong>`}</div>`}
     </div>
+    ${options.compact ? "" : `<div class="vn-row vn-card-foot"><span class="cmd-money">${stamp.html}${stage}</span>${step || `<strong class="vn-total">${esc(orderTotalLabel(order))}</strong>`}</div>`}
   </article>`;
 }
 // Caixa de entrada (Pedidos → Novos): mantém valor e ocupação da data em destaque para decidir.
@@ -572,7 +577,9 @@ function renderToday() {
   const missingDeposit = toDeliver.filter(needsDeposit);
   const todayKey = localDateKey(new Date()), todayAvailability = availabilityFor(todayKey);
   const headline = toDeliver.length ? `${toDeliver.length} ${toDeliver.length === 1 ? "entrega" : "entregas"} hoje` : "Nada para entregar hoje";
-  const summaryParts = [todayAvailability.closed ? "Hoje é dia fechado" : todayAvailability.full ? "Dia lotado" : "", missingDeposit.length ? `${missingDeposit.length} sem sinal` : ""].filter(Boolean);
+  // Com hoje escolhido na semana, "Dia lotado"/"Fechado" já aparece no cabeçalho do dia logo abaixo: não repetir.
+  const dayHeadShowsToday = !weekMode && state.selectedDay === todayKey;
+  const summaryParts = [dayHeadShowsToday ? "" : todayAvailability.closed ? "Hoje é dia fechado" : todayAvailability.full ? "Dia lotado" : "",missingDeposit.length ? `${missingDeposit.length} sem sinal` : ""].filter(Boolean);
   const attentionCount = weekMode ? 0 : attentionItems().length;
   panel.innerHTML = `<header class="vn-heading"><div><span class="vn-date">${esc(capitalize(new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "numeric", month: "long" }).format(new Date())))}</span><h1 id="today-title" tabindex="-1">${esc(headline)}</h1>${summaryParts.length || attentionCount ? `<p class="today-summary">${esc(summaryParts.join(", "))}${attentionCount ? `<button class="vn-att-jump" type="button" data-action="jump-attention">${attentionCount} ${attentionCount === 1 ? "pede" : "pedem"} sua atenção</button>` : ""}</p>` : ""}</div>${modeSwitch}</header>
     ${firstUse && !onboardingVisible() ? `<section class="welcome-panel"><h2>Cadastre seu primeiro pedido</h2><p>Comece com cliente, produto e valor. Complete os detalhes quando estiverem combinados.</p><div class="welcome-actions"><button class="button button-primary" type="button" data-action="new-order">Nova encomenda</button></div></section>` : ''}

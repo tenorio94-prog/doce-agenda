@@ -1497,8 +1497,8 @@ body.vnext { font-variant-numeric: tabular-nums; -webkit-tap-highlight-color: tr
 .cmd-when small .vn-icon { width: 14px; height: 14px; }
 .cmd-when .vn-day-label { color: var(--vn-muted); font: 650 12px/1.2 var(--vn-font); }
 .cmd-body { min-width: 0; }
-.cmd-body h3 { margin: 0 0 2px; padding-right: 94px; font: 700 18px/1.25 var(--vn-font); letter-spacing: -.01em; overflow-wrap: anywhere; }
-.cmd-meta { margin: 0; padding-right: 94px; color: var(--vn-muted); font-size: 14px; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.cmd-body h3 { margin: 0 0 2px; font: 700 18px/1.25 var(--vn-font); letter-spacing: -.01em; overflow-wrap: anywhere; }
+.cmd-meta { margin: 0; color: var(--vn-muted); font-size: 14px; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .cmd-meta .vn-client { color: var(--vn-ink); font-weight: 700; font-size: 14px; }
 .cmd-when .vn-thumb { width: 48px; height: 48px; margin-top: 8px; border-radius: var(--vn-r-sm); object-fit: cover; }
 .vnext .detail-photo { float: right; width: 72px; height: 72px; margin: 0 0 12px 12px; border-radius: var(--vn-r-sm); object-fit: cover; }
@@ -1521,7 +1521,7 @@ body.vnext { font-variant-numeric: tabular-nums; -webkit-tap-highlight-color: tr
 .vn-order.comanda.is-compact .vn-stamp small { display: none; }
 @media (prefers-reduced-motion: no-preference) { .vn-order.comanda.is-advanced .vn-stamp.is-ok { animation: vn-stamp-in .42s cubic-bezier(.2, .9, .2, 1.2) both; } }
 @keyframes vn-stamp-in { from { transform: rotate(-5deg) scale(1.6); opacity: 0; } }
-@media (max-width: 380px) { .vn-order.comanda { grid-template-columns: 54px minmax(0, 1fr); gap: 0 10px; } .cmd-when .vn-time { font-size: 21px; } .cmd-body h3, .cmd-meta { padding-right: 82px; } }
+@media (max-width: 380px) { .vn-order.comanda { grid-template-columns: 54px minmax(0, 1fr); gap: 0 10px; } .cmd-when .vn-time { font-size: 21px; } }
 
 /* ---- Fase 3 da direção Comanda (16/10): ficha do pedido e WhatsApp ---- */
 /* WhatsApp: verde só aqui, sempre com o ícone e o verbo do momento. */
@@ -1754,9 +1754,6 @@ body.vnext { font-variant-numeric: tabular-nums; -webkit-tap-highlight-color: tr
 .vnext #view-today .vn-att-row.request-banner { grid-template-columns: 30px minmax(0, 1fr) auto; align-items: center; }
 .vnext #view-today .vn-att-row.request-banner .button { grid-column: auto; grid-row: auto; }
 @media (max-width: 380px) { .vnext #view-today .vn-att-row.request-banner { grid-template-columns: minmax(0, 1fr) auto; } }
-.vn-order.comanda:is(.is-check, .is-due) .cmd-body h3, .vn-order.comanda:is(.is-check, .is-due) .cmd-meta { padding-right: 136px; }
-.vn-order.comanda.is-ok .cmd-body h3, .vn-order.comanda.is-ok .cmd-meta { padding-right: 104px; }
-@media (max-width: 380px) { .vn-order.comanda:is(.is-check, .is-due) .cmd-body h3, .vn-order.comanda:is(.is-check, .is-due) .cmd-meta { padding-right: 112px; } }
 
 /* ---- Rodada 2, etapa 4: Pedidos por dia ---- */
 .vn-orders-by-day { display: grid; gap: 4px; }
@@ -1777,7 +1774,6 @@ body.vnext { font-variant-numeric: tabular-nums; -webkit-tap-highlight-color: tr
 .vnext .client-tiles > div { padding: 10px; min-width: 0; }
 .vnext .client-tiles b { font-size: 15px; text-overflow: clip; }
 .vnext .client-tiles > div:nth-child(2) b { overflow: visible; }
-.vn-order.comanda.is-ok .cmd-body h3, .vn-order.comanda.is-ok .cmd-meta { padding-right: 112px; }
 
 /* ---- Rodada 2, etapa 6: demonstração ---- */
 /* O conteúdo ocupa a tela desde o início: o rodapé não sobe e desce enquanto a agenda monta (CLS). */
@@ -1824,3 +1820,35 @@ body.vnext { font-variant-numeric: tabular-nums; -webkit-tap-highlight-color: tr
 .vnext .onboarding-skip { min-width: 44px; min-height: 44px; }
 .vnext .color-picker { width: 44px; height: 44px; }
 .vnext wa-button[data-due-shortcut]::part(base) { min-height: 44px; }
+
+/* ---- Rodada 4 (16/10): o carimbo desce para o rodapé do cartão ---- */
+/* Dinheiro e próximo passo na mesma linha, como no canhoto da ficha; produto e cliente usam a largura toda. */
+.vn-order.comanda > .vn-card-foot { grid-column: 2; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; }
+.vn-order.comanda .cmd-money { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; min-width: 0; margin-right: auto; }
+.vn-order.comanda .cmd-money:empty { display: none; }
+.vn-order.comanda .vn-card-foot .vn-stamp { position: static; }
+.vn-order.comanda .vn-card-foot > :last-child { margin-left: auto; }
+/* No celular a coluna do texto é estreita demais para carimbo + botão: o rodapé usa o cartão inteiro. */
+@media (max-width: 560px) { .vn-order.comanda > .vn-card-foot { grid-column: 1 / -1; } }
+/* Com foto: ela fica à direita do produto e da cliente, sem deixar a coluna da hora mais alta que o pedido. */
+.cmd-body:has(> .cmd-photo) { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 12px; align-items: start; }
+.cmd-body:has(> .cmd-photo) > * { grid-column: 1 / -1; }
+.cmd-body:has(> .cmd-photo) > .cmd-head { grid-column: 1; grid-row: 1; }
+.vn-order.comanda .cmd-body > .cmd-photo { grid-column: 2; grid-row: 1; width: 56px; height: 56px; margin-top: 2px; border-radius: var(--vn-r-sm); object-fit: cover; }
+.vn-order.comanda.is-list .cmd-body > .cmd-photo { width: 48px; height: 48px; }
+
+/* Rodada 4: a ficha herdava do Glacê um recuo de 150 px que quebrava "Quinta-feira, 15 / out" no celular. */
+.vnext .detail-dialog .detail-when { padding-right: 0; min-height: 0; }
+/* Rodada 4: na demonstração, o aviso ocupava 157 px da primeira tela no celular; agora cabe em duas linhas. */
+@media (max-width: 560px) {
+  .vnext .demo-bar { padding: 8px 14px 4px; gap: 0 12px; }
+  .vnext .demo-bar-actions { gap: 0 12px; }
+  .vnext .demo-bar-link, .vnext .demo-bar-cta { font-size: 13px; }
+}
+.cmd-when .cmd-late { margin-top: 2px; color: var(--vn-red); font: 700 12px/1.2 var(--vn-font); white-space: nowrap; }
+/* Em 320 px, carimbo e botão ainda cabem lado a lado com um pouco menos de folga. */
+@media (max-width: 359px) {
+  .vn-order.comanda > .vn-card-foot { column-gap: 8px; }
+  .vn-order.comanda .vn-card-foot .vn-stamp:not(.is-mini) { min-width: 0; padding-inline: 4px; }
+  .vn-order.comanda .vn-card-foot .vn-btn { padding-inline: 12px; }
+}

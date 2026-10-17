@@ -49,7 +49,7 @@ Ambas SIL OFL 1.1, copiadas do `@fontsource` pelo build para `/fonts/vnext/`. Ne
 
 ## Peças
 
-- **Cartão Comanda** (`.vn-order.comanda`): coluna da hora (com sacola para retirada, caminhão para entrega), produto como título-botão (`.vn-open`), cliente e detalhe numa linha, carimbo no canto, filete lateral com a cor do dinheiro (tijolo se atrasado), um botão.
+- **Cartão Comanda** (`.vn-order.comanda`): coluna da hora (com sacola para retirada, caminhão para entrega, "Atrasado" em tijolo logo abaixo), produto como título-botão (`.vn-open`) com a largura toda, cliente e detalhe abaixo, foto pequena no canto do texto quando houver, filete lateral com a cor do dinheiro (tijolo se atrasado). **Rodapé = dinheiro + ação** (rodada 4): carimbo à esquerda, um botão à direita; no celular o rodapé usa o cartão inteiro. Na versão compacta o carimbo pequeno continua no canto.
 - **Carimbo** (`.vn-stamp`, `moneyStamp()` em `app.js`): diz quanto. `is-ok` (cheio, pistache: "Sinal conferido", "Total conferido"), `is-due` (tracejado caramelo: "R$ 28,50 falta o sinal", "Falta R$ 55 já entregue"), `is-check` (tracejado: "Pix R$ 60 falta conferir"). Pequeno (`is-mini`) nas linhas: "Com sinal", "Pago", "Sem sinal", "Pix a conferir", "Falta R$ 55". Entregue com saldo nunca é verde. Na ficha, o carimbo grande "SINAL PAGO / PAGO" com a data.
 - **Canhoto do dinheiro** (`.money-stub` na ficha): picote no topo, uma linha por fato (total combinado, informado pela cliente "não conta ainda", conferido por você, sinal sugerido, saldo) e a ação logo abaixo ("Conferi os R$ 60,00", WhatsApp de cobrança, Pix, registrar).
 - **Semana no topo** (`.vn-weekbar`): sete dias com pontinhos de vagas (tijolo quando lota), grudada ao rolar; o dia escolhido em vinho.
