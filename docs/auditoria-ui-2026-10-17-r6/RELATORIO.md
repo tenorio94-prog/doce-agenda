@@ -76,6 +76,8 @@ Nas capturas o campo de data aparece como `10/17/2026` porque o navegador de tes
 
 ## 7. Estado
 
+Revisão antes da publicação: encontrado conflito de `name="status"` entre rádios ocultos/desabilitados e o seletor de edição. Editar um Confirmado podia gravar Orçamento; editar Pronto podia bloquear o salvamento. A correção mantém o nome apenas no controle ativo. O teste reproduziu a mudança indevida antes do ajuste e passou depois; agora verifica a situação persistida de Confirmado, Pronto e Entregue, em 320/360/1280 (33 casos no formulário).
+
 Quatro commits na `main` local (autor Lucas, coautor Claude):
 
 1. `feat(pedido)`: "Já está combinado?", vaga da data, botão, aviso, erros, 320 px.

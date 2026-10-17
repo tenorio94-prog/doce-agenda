@@ -105,6 +105,7 @@ try {
     saved = (await state(page)).orders.find((o) => o.id === saved.id);
     assert.equal(saved.product, 'Torta de teste grande');
     assert.equal(saved.total, 150.5, 'valor não muda ao editar outro campo');
+    assert.equal(saved.status, 'Confirmado', 'editar os dados preserva a situação gravada');
     results.push({ width, case: 'editar' });
 
     // 3. Erros: confirmado sem data; data sem horário.
@@ -211,6 +212,37 @@ try {
     results.push({ width, case: 'aviso por cima da ficha' });
 
     assert.deepEqual(errors, []);
+    await context.close();
+  }
+  // O controle oculto não pode disputar name="status" com o seletor de edição.
+  for (const width of [320, 360, 1280]) {
+    const context = await browser.newContext({ viewport: { width, height: 900 }, locale: 'pt-BR', timezoneId: 'America/Sao_Paulo' });
+    await context.addInitScript(() => {
+      localStorage.setItem('doce-agenda.onboarding.demo.v1', JSON.stringify({ dismissed: true, done: [] }));
+      localStorage.setItem('doce-agenda.demo.v2', JSON.stringify({ version: 1, orders: ['Pronto', 'Entregue'].map((status, i) => ({
+        id: `qa-edit-${i}`, client: `QA fictícia ${i}`, product: 'Doce de teste', status, total: 100, mode: 'Retirada',
+        dueAt: '2026-10-15T15:00', createdAt: '2026-10-12T12:00:00.000Z', history: [],
+      })), payments: [] }));
+    });
+    const page = await context.newPage();
+    await page.goto(`${origin}/demo/`);
+    await page.locator('#view-today h1').waitFor();
+    for (const [i, status] of ['Pronto', 'Entregue'].entries()) {
+      await page.locator('[data-view="orders"]:visible').first().click();
+      await page.locator(`#view-orders [data-open-order="qa-edit-${i}"]`).first().click();
+      await page.locator('#detail-dialog[open] [data-action="edit-order"]').click();
+      await page.locator('#order-dialog[open]').waitFor();
+      assert.equal(await field(page, 'status'), status);
+      assert.deepEqual(await page.locator('#order-form').evaluate(f => new FormData(f).getAll('status')), [status], 'uma única situação enviada');
+      await page.locator('wa-input[name="product"] input').fill(`Doce editado ${i}`);
+      await save(page);
+      assert.equal(await dialogOpen(page), false);
+      const edited = (await state(page)).orders.find(o => o.id === `qa-edit-${i}`);
+      assert.equal(edited.status, status, 'editar produto preserva a situação persistida');
+      assert.equal(edited.product, `Doce editado ${i}`);
+      await page.keyboard.press('Escape');
+      results.push({ width, case: `editar preserva ${status}` });
+    }
     await context.close();
   }
   console.log(JSON.stringify({ passed: results.length, results }));

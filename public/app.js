@@ -905,7 +905,11 @@ function useStatusChoice(on) {
   const form = $("#order-form");
   $("#status-choice").hidden = !on;
   $("#status-select-field").hidden = on;
-  $$("#status-choice input", form).forEach((radio) => { radio.disabled = !on; radio.checked = false; });
+  $$("#status-choice input", form).forEach((radio) => {
+    radio.disabled = !on;
+    radio.checked = false;
+    if (on) radio.setAttribute("name", "status"); else radio.removeAttribute("name");
+  });
   if (on) $("#order-status").removeAttribute("name"); else $("#order-status").setAttribute("name", "status");
 }
 const formStatus = () => $("#order-form").elements.namedItem("status")?.value || "";
