@@ -1472,7 +1472,11 @@ async function submitOrder(event) {
     if (["DATE_CLOSED", "DAILY_LIMIT", "NOTICE"].includes(error.code) && form.dataset.review!=='true') {
       $("#capacity-override-box").hidden = false;
       const explanation = error.code === "DATE_CLOSED" ? "A data está fechada para novos pedidos." : error.code === "DAILY_LIMIT" ? "O limite de pedidos desta data foi atingido." : "Este pedido não atende à antecedência mínima definida.";
-      return setFormError("#order-form-error", `${explanation} Se decidiu abrir uma exceção, registre o motivo abaixo e salve novamente.`);
+      setFormError("#order-form-error", `${explanation} Se decidiu abrir uma exceção, registre o motivo abaixo e salve novamente.`);
+      // O aviso fica no topo da janela; no celular ela está no fim do formulário. Levar o foco ao motivo mostra o aviso.
+      $("#order-form-error").scrollIntoView({ block: "start" });
+      form.elements.namedItem("overrideReason").focus({ preventScroll: true });
+      return;
     }
     setFormError("#order-form-error", error.message || "Não foi possível salvar o pedido.");
   } finally {

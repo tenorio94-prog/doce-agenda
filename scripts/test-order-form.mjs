@@ -149,6 +149,7 @@ try {
     assert.equal(await page.locator('#due-note').evaluate((n) => n.classList.contains('is-warning')), true);
     await save(page);
     assert.equal(await page.locator('#capacity-override-box').isVisible(), true, 'avisa a lotação');
+    assert.equal(await page.evaluate(() => document.activeElement?.getAttribute('name')), 'overrideReason', 'leva o foco ao motivo, onde o aviso está à vista');
     await save(page);
     assert.match(await page.locator('#order-form-error').innerText(), /4 caracteres/);
     await page.locator('wa-textarea[name="overrideReason"] textarea').fill('Combinei outro horário');
