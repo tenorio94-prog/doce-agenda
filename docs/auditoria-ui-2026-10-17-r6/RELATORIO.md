@@ -85,7 +85,7 @@ Quatro commits na `main` local (autor Lucas, coautor Claude):
 3. `fix(ui)`: aviso por cima da ficha, "Desfazer" funcionando.
 4. `fix(pedido)`: aviso de dia lotado à vista ao salvar no celular.
 
-Mais este relatório e a atualização do `context.md`. Arquivos: `public/index.html`, `public/app.js`, `public/ui/vnext.css` e os testes. **Não enviados ao GitHub nem publicados**: a sessão não tinha as credenciais do GitHub nem da Cloudflare. Os comandos estão no `context.md`.
+Mais este relatório e a atualização do `context.md`. Publicação concluída em 17/10: os cinco commits originais mais a correção `55b45d7` estão na `main` do GitHub. Cloudflare `fca5aebe-d2f7-4717-aee1-0f4346194ea0`, tráfego 100%. Check final no Windows passou (64 regras + 12 suítes); no `lucast.app`, sem interceptação, formulário 33/33, pagamentos 10/10 e rotas 5/5; cinco arquivos publicados idênticos ao build. Detalhes e limites em `context.md`.
 
 ## 8. Oportunidades que continuam
 
