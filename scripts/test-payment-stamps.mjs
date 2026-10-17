@@ -72,6 +72,8 @@ try {
     await page.locator('#payment-dialog [name=amount]').fill(amount);
     await page.locator('#payment-dialog [name=status]').selectOption('Conferido');
     await page.locator('#save-payment-button').click();await page.waitForFunction(() => !document.querySelector('#payment-dialog').open);
+    // A ficha se redesenha logo depois de a janela fechar; esperar o carimbo novo evita ler o anterior (falha intermitente vista na rodada 5).
+    await page.waitForFunction((text) => document.querySelector('#detail-content .deposit-card .stamp > span')?.innerText === text, stamp, { timeout: 5000 }).catch(() => {});
     assert.equal(await page.locator('#detail-content .deposit-card .stamp > span').innerText(), stamp);
     assert.match(await page.locator('#detail-content .deposit-card').innerText(), new RegExp(`Saldo a receber\\s*R\\$\\s*${balance}`));
     results.push({case: `zero + ${amount}`, stamp, balance, passed: true});
