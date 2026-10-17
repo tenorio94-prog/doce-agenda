@@ -877,6 +877,56 @@ function populateStatusOptions() {
   $("#order-status").innerHTML = ORDER_STATUSES.filter(s=>!['Solicitação','Recusado'].includes(s)).map((status) => `<wa-option value="${esc(status)}">${esc(status)}</wa-option>`).join("");
 }
 
+// Rodada 6: ao criar, confirmar um orçamento ou aceitar uma solicitação, a situação é a pergunta que a
+// confeiteira faz ("já está combinado?"), em duas opções sem resposta pronta. Ao editar um pedido existente
+// continua o seletor completo, que é por onde ela cancela ou volta uma etapa. Só um dos dois tem name="status".
+function useStatusChoice(on) {
+  const form = $("#order-form");
+  $("#status-choice").hidden = !on;
+  $("#status-select-field").hidden = on;
+  $$("#status-choice input", form).forEach((radio) => { radio.disabled = !on; radio.checked = false; });
+  if (on) $("#order-status").removeAttribute("name"); else $("#order-status").setAttribute("name", "status");
+}
+const formStatus = () => $("#order-form").elements.namedItem("status")?.value || "";
+function setFormStatus(value) {
+  const field = $("#order-form").elements.namedItem("status");
+  if (field) field.value = value;
+}
+// Botão de salvar diz o que vai acontecer: "Confirmar pedido" ou "Salvar orçamento".
+function saveOrderLabel() {
+  const form = $("#order-form");
+  if (form.dataset.review) return "Aceitar solicitação";
+  if (form.dataset.confirming) return "Confirmar pedido";
+  if (form.dataset.id) return "Salvar alterações";
+  const status = formStatus();
+  return status === "Confirmado" ? "Confirmar pedido" : status === "Orçamento" ? "Salvar orçamento" : "Salvar encomenda";
+}
+// A vaga da data aparece enquanto ela escolhe, antes de salvar: a mesma conta da Agenda (só confirmados).
+function updateDueNote() {
+  const form = $("#order-form");
+  const note = $("#due-note");
+  if (!note) return;
+  const dateKey = form.elements.namedItem("dueDate").value;
+  const confirming = isCommitted({ status: formStatus() });
+  let text = confirming ? "Pedido confirmado precisa de data e horário." : "Pode ficar em branco enquanto é orçamento.";
+  let warn = false;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) {
+    const availability = availabilityFor(dateKey);
+    const editing = form.dataset.id ? orderById(form.dataset.id) : null;
+    const self = editing && committedForCapacity(editing) && editing.dueAt?.slice(0, 10) === dateKey ? 1 : 0;
+    const count = availability.count - self;
+    const day = capitalize(calendarDateLabel(dateKey, { weekday: "long", day: "numeric", month: "long" }));
+    if (availability.closed) { text = `${day} é dia fechado.`; warn = true; }
+    else if (Number.isInteger(availability.limit)) {
+      warn = count >= availability.limit;
+      text = `${day}: ${count} de ${availability.limit} ${availability.limit === 1 ? "vaga ocupada" : "vagas ocupadas"}${warn ? ", dia lotado" : ""}.`;
+    } else text = `${day}: ${count ? `${count} ${count === 1 ? "pedido confirmado" : "pedidos confirmados"}` : "nenhum pedido confirmado ainda"}.`;
+    if (warn) text += confirming ? " Para confirmar, você vai anotar o motivo da exceção." : " Orçamento não ocupa vaga.";
+  }
+  note.textContent = text;
+  note.classList.toggle("is-warning", warn);
+}
+
 function openOrderForm(order = null) {
   populateStatusOptions();
   const form = $("#order-form");
@@ -887,13 +937,13 @@ function openOrderForm(order = null) {
   $("#cake-order-fields").innerHTML = cakeFormMarkup(order);
   form.dataset.id = order ? String(order.id) : "";
   form.dataset.review = order?.status==='Solicitação' ? 'true' : '';
-  if(form.dataset.review) $("#order-status").innerHTML='<wa-option value="Orçamento">Orçamento</wa-option><wa-option value="Confirmado">Confirmado</wa-option>';
+  delete form.dataset.confirming;
+  useStatusChoice(!order || !!form.dataset.review);
   $("#order-dialog-title").textContent = order ? "Editar encomenda" : "Nova encomenda";
-  $("#save-order-button").textContent = order ? "Salvar alterações" : "Salvar encomenda";
   const formValues = {
     client: order?.client || "", product: order?.product || "", details: order?.details || "", dueAt: dateTimeInput(order?.dueAt),
     mode: order?.mode || "Retirada", location: order?.location || "", total: order && order.totalKnown !== false ? moneyInput(order.total) : "",
-    status: order?.status==='Solicitação' ? 'Orçamento' : order?.status || "Orçamento", nextAction: order?.nextAction || "", nextAt: dateTimeInput(order?.nextAt),
+    status: order?.status==='Solicitação' ? 'Orçamento' : order?.status || "", nextAction: order?.nextAction || "", nextAt: dateTimeInput(order?.nextAt),
     pendingChange: order?.pendingChange || "", contact: order?.contact || "",
   };
   Object.entries(formValues).forEach(([key, value]) => {
@@ -909,13 +959,13 @@ function openOrderForm(order = null) {
   $("#cake-order-fields").hidden = !cakeToggle.checked;
   $$(".optional-fields", form).forEach((section) => { section.open = !!order && [...section.querySelectorAll("input, textarea, select, wa-input, wa-textarea, wa-select")].some((field) => field.value && field.value !== "Retirada"); });
   syncDateRequirement();
-  if(form.dataset.review) {$("#order-dialog-title").textContent='Editar e aceitar solicitação';$("#save-order-button").textContent='Aceitar solicitação';}
+  if(form.dataset.review) $("#order-dialog-title").textContent='Editar e aceitar solicitação';
   $("#order-dialog").showModal();
   setTimeout(() => form.elements.namedItem("client").focus(), 0);
 }
 
 function syncDateRequirement() {
-  const confirmed = isCommitted({ status: $("#order-status").value });
+  const confirmed = isCommitted({ status: formStatus() });
   ["dueDate", "dueTime"].forEach((name) => {
     const field = $("#order-form").elements.namedItem(name);
     field.required = confirmed;
@@ -924,6 +974,8 @@ function syncDateRequirement() {
     field.updateComplete?.then(() => field.updateValidity?.());
 
   });
+  updateDueNote();
+  $("#save-order-button").textContent = saveOrderLabel();
 }
 
 function formatWhenHistory(value) {
@@ -1250,10 +1302,11 @@ async function saveOrderTemplate(event, form = event.target) {
 // Opens the edit form already set to Confirmado; the form keeps the date, capacity and cake checks.
 function openConfirmForm(order) {
   openOrderForm(order);
-  $("#order-status").value = "Confirmado";
+  $("#order-form").dataset.confirming = "true";
+  useStatusChoice(true);
+  setFormStatus("Confirmado");
   syncDateRequirement();
   $("#order-dialog-title").textContent = "Confirmar pedido";
-  $("#save-order-button").textContent = "Confirmar pedido";
 }
 
 // Moves a confirmed order one stage forward, with undo for a mistaken tap.
@@ -1305,13 +1358,45 @@ function clearFieldErrors(form) {
   $$("[aria-invalid]", form).forEach((field) => { field.removeAttribute("aria-invalid"); field.removeAttribute("aria-describedby"); });
 }
 function setFieldError(form, name, message) {
-  const field = form.elements.namedItem(name);
+  const named = form.elements.namedItem(name);
+  // Um grupo de opções (RadioNodeList) marca o grupo e põe o foco na primeira opção.
+  const group = typeof RadioNodeList !== "undefined" && named instanceof RadioNodeList;
+  const field = group ? named[0].closest("fieldset") : named;
   const note = document.createElement("small");
   note.className = "field-error"; note.id = `${form.id}-${name}-error`; note.textContent = message;
   field.setAttribute("aria-invalid", "true"); field.setAttribute("aria-describedby", note.id);
   field.closest(".field").append(note);
   setFormError(`#${form.id}-error`, message);
-  field.focus();
+  (group ? named[0] : field).focus();
+}
+// Erros do formulário de encomenda ao lado do campo, em português do app, no lugar do balão do navegador.
+const ORDER_FIELD_MESSAGES = [
+  ["client", "Escreva quem pediu."],
+  ["product", "Escreva o que ela pediu."],
+  ["status", "Diga se já está combinado ou se ainda é orçamento."],
+  ["dueDate", "Pedido confirmado precisa de data."],
+  ["dueTime", "Pedido confirmado precisa de horário."],
+];
+function reportOrderFormErrors(form) {
+  for (const [name, message] of ORDER_FIELD_MESSAGES) {
+    const field = form.elements.namedItem(name);
+    if (!field) continue;
+    const valid = typeof RadioNodeList !== "undefined" && field instanceof RadioNodeList
+      ? field.value !== "" || [...field].every((radio) => radio.disabled)
+      : field.checkValidity?.() ?? true;
+    if (!valid) { setFieldError(form, name, message); return false; }
+  }
+  return form.checkValidity() || form.reportValidity();
+}
+
+// O aviso diz onde o pedido foi parar: na agenda (com o dia) ou em Pedidos, em Novos.
+function savedOrderMessage(order, created) {
+  if (!order) return "Encomenda salva.";
+  if (!created) return "Alterações salvas.";
+  const name = order.client.split(/\s+/)[0];
+  if (isCommitted(order) && order.dueAt) return `${name} está na agenda: ${listDayLabel(order.dueAt)}, ${shortTime(order.dueAt)}.`;
+  if (DECISION_STATUSES.includes(order.status)) return `Orçamento de ${name} salvo em Pedidos, em Novos.`;
+  return "Encomenda salva.";
 }
 
 async function submitOrder(event) {
@@ -1323,7 +1408,7 @@ async function submitOrder(event) {
   const dueDate = form.elements.namedItem("dueDate").value;
   const dueTime = form.elements.namedItem("dueTime").value;
   form.elements.namedItem("dueAt").value = dueDate && dueTime ? `${dueDate}T${dueTime}` : "";
-  if (!form.reportValidity()) return;
+  if (!reportOrderFormErrors(form)) return;
   if (dueDate && !dueTime) return setFieldError(form, "dueTime", "Informe também o horário.");
   if (dueTime && !dueDate) return setFieldError(form, "dueDate", "Informe também a data.");
   const formData = new FormData(form);
@@ -1361,7 +1446,7 @@ async function submitOrder(event) {
     await loadState({ silent: true });
     const savedOrder = orderById(id || saved?.id || saved?.order?.id);
     if (savedOrder) $$(".order-row").filter((row) => row.dataset.openOrder === savedOrder.id).forEach((row) => row.classList.add("is-fresh"));
-    showToast("Encomenda salva.", savedOrder && { label: "Copiar resumo", run: () => copyText(makeWhatsAppSummary(savedOrder)).then(() => showToast("Resumo copiado para enviar no WhatsApp.")).catch((error) => showToast(error.message)) });
+    showToast(savedOrderMessage(savedOrder, !id || reviewing), savedOrder && { label: "Copiar resumo", run: () => copyText(makeWhatsAppSummary(savedOrder)).then(() => showToast("Resumo copiado para enviar no WhatsApp.")).catch((error) => showToast(error.message)) });
   } catch (error) {
     if (["DATE_CLOSED", "DAILY_LIMIT", "NOTICE"].includes(error.code) && form.dataset.review!=='true') {
       $("#capacity-override-box").hidden = false;
@@ -1371,7 +1456,7 @@ async function submitOrder(event) {
     setFormError("#order-form-error", error.message || "Não foi possível salvar o pedido.");
   } finally {
     saveButton.disabled = false;
-    saveButton.textContent = form.dataset.id ? "Salvar alterações" : "Salvar encomenda";
+    saveButton.textContent = saveOrderLabel();
   }
 }
 
@@ -1560,6 +1645,15 @@ function attachEvents() {
   $("#restore-file").addEventListener("change", (event) => inspectRestoreFile(event.target.files?.[0]));
   $("#restore-confirm").addEventListener("click", restoreBackup);
   $("#order-status").addEventListener("change", syncDateRequirement);
+  $("#status-choice").addEventListener("change", () => {
+    // A resposta resolve o erro deste grupo: some o aviso ao lado e o do topo.
+    if ($("#status-choice").hasAttribute("aria-invalid")) $("#order-form-error").hidden = true;
+    $("#status-choice").removeAttribute("aria-invalid");
+    $("#status-choice").removeAttribute("aria-describedby");
+    $("#status-choice .field-error")?.remove();
+    syncDateRequirement();
+  });
+  ["input", "change"].forEach((type) => $("#order-form").addEventListener(type, (event) => { if (event.target.name === "dueDate") updateDueNote(); }));
   $("#order-form").addEventListener("click", (event) => {
     const shortcut = event.target.closest("[data-due-shortcut]");
     if (!shortcut) return;

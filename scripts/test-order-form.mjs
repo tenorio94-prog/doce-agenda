@@ -1,6 +1,6 @@
 // Formulário de encomenda (campos Web Awesome): node scripts/build-cloudflare.mjs && node scripts/test-order-form.mjs [pasta-de-capturas]
 // Roda na demonstração (dados só no navegador do teste): criar, editar, erros de data, bolo,
-// exceção de dia lotado, aceitar solicitação do link e confirmar orçamento.
+// exceção de dia lotado, aceitar solicitação do link, confirmar orçamento e orçamento novo (rodada 6).
 import assert from 'node:assert/strict';
 import { mkdir } from 'node:fs/promises';
 import path from 'node:path';
@@ -17,6 +17,12 @@ const state = (page) => page.evaluate(async () => (await window.DoceStore.fetch(
 const dialogOpen = (page) => page.evaluate(() => document.querySelector('#order-dialog').open);
 const field = (page, name) => page.evaluate((n) => document.querySelector('#order-form').elements.namedItem(n).value, name);
 async function pick(page, name, value) {
+  // Rodada 6: ao criar, a situação é uma escolha de duas opções ("Já está combinado?").
+  if (name === 'status' && await page.locator('#status-choice').isVisible()) {
+    await page.locator(`#status-choice input[value="${value}"]`).check();
+    await page.waitForTimeout(150);
+    return;
+  }
   await page.locator(`#order-form wa-select[name="${name}"]`).click();
   await page.locator(`#order-form wa-select[name="${name}"] wa-option[value="${value}"]`).click();
   await page.waitForTimeout(150);
@@ -33,7 +39,7 @@ async function save(page) {
 const localKey = (page, plus) => page.evaluate((d) => { const t = new Date(); t.setDate(t.getDate() + d); return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`; }, plus);
 
 try {
-  for (const [width, height] of [[360, 800], [1280, 900]]) {
+  for (const [width, height] of [[320, 640], [360, 800], [1280, 900]]) {
     const context = await browser.newContext({ viewport: { width, height }, locale: 'pt-BR', timezoneId: 'America/Sao_Paulo' });
     const page = await context.newPage();
     const errors = [];
@@ -45,7 +51,11 @@ try {
     // 1. Criar: todos os tipos de campo chegam ao pedido salvo.
     await openNew(page);
     assert.equal(await page.locator('#order-dialog-title').innerText(), 'Nova encomenda');
+    assert.equal(await page.locator('#status-choice').isVisible(), true, 'pergunta "Já está combinado?" ao criar');
+    assert.equal(await page.locator('#status-select-field').isHidden(), true, 'sem o seletor de 7 situações ao criar');
+    assert.equal(await field(page, 'status'), '', 'nenhuma situação marcada de antemão');
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), `sem rolagem lateral em ${width}px`);
+    assert.ok(await page.evaluate(() => { const d = document.querySelector('#order-dialog'); return d.scrollWidth <= d.clientWidth; }), `nada passa da janela em ${width}px`);
     if (shots) await page.screenshot({ path: path.join(shots, `form-${width}.png`) });
     await page.locator('wa-input[name="client"] input').fill('Cliente Teste');
     await page.locator('wa-input[name="product"] input').fill('Torta de teste');
@@ -57,9 +67,15 @@ try {
     await page.locator('wa-input[name="dueTime"] input').fill('14:30');
     await pick(page, 'mode', 'Entrega');
     await page.locator('wa-input[name="total"] input').fill('150,50');
+    await save(page);
+    assert.equal(await dialogOpen(page), true, 'sem dizer se está combinado, não salva');
+    assert.match(await page.locator('#status-choice .field-error').innerText(), /combinado/, 'erro ao lado da escolha, em português');
     await pick(page, 'status', 'Confirmado');
+    assert.equal(await page.locator('#order-form-error').isHidden(), true, 'escolher apaga o erro do topo');
+    assert.equal(await page.locator('#save-order-button').innerText(), 'Confirmar pedido', 'o botão diz o que vai acontecer');
     await save(page);
     assert.equal(await dialogOpen(page), false, 'salvar fecha o formulário');
+    assert.match(await page.locator('#toast').innerText(), /^Cliente está na agenda: .+, 14h30\./, 'o aviso diz quando o pedido entrou na agenda');
     let saved = (await state(page)).orders.find((o) => o.client === 'Cliente Teste');
     assert.ok(saved, 'pedido criado');
     assert.equal(saved.product, 'Torta de teste');
@@ -82,8 +98,10 @@ try {
     assert.equal(await field(page, 'status'), 'Confirmado');
     assert.equal(await field(page, 'dueDate'), tomorrow);
     assert.equal(await field(page, 'dueTime'), '14:30');
+    assert.equal(await page.locator('#status-select-field').isVisible(), true, 'editar mantém o seletor completo (é por onde se cancela)');
     await page.locator('wa-input[name="product"] input').fill('Torta de teste grande');
     await save(page);
+    assert.match(await page.locator('#toast').innerText(), /^Alterações salvas\./);
     saved = (await state(page)).orders.find((o) => o.id === saved.id);
     assert.equal(saved.product, 'Torta de teste grande');
     assert.equal(saved.total, 150.5, 'valor não muda ao editar outro campo');
@@ -97,6 +115,7 @@ try {
     await save(page);
     assert.equal(await dialogOpen(page), true, 'confirmado sem data não salva');
     assert.equal(await page.locator('#order-form').evaluate((f) => f.checkValidity()), false, 'data e horário viram obrigatórios ao confirmar');
+    assert.match(await page.locator('#order-form .field-error').first().innerText(), /data/, 'pede a data ao lado do campo, sem o balão do navegador');
     await pick(page, 'status', 'Orçamento');
     assert.equal(await page.locator('#order-form').evaluate((f) => f.checkValidity()), true, 'orçamento pode ficar sem data');
     await page.locator('[data-due-shortcut="0"]').click();
@@ -123,7 +142,11 @@ try {
     await page.locator('wa-input[name="product"] input').fill('Docinhos');
     await page.locator('[data-due-shortcut="0"]').click();
     await page.locator('wa-input[name="dueTime"] input').fill('20:00');
+    await pick(page, 'status', 'Orçamento');
+    assert.match(await page.locator('#due-note').innerText(), /3 de 3 vagas ocupadas, dia lotado\. Orçamento não ocupa vaga\./, 'a vaga da data aparece antes de salvar');
     await pick(page, 'status', 'Confirmado');
+    assert.match(await page.locator('#due-note').innerText(), /dia lotado\. Para confirmar, você vai anotar o motivo/);
+    assert.equal(await page.locator('#due-note').evaluate((n) => n.classList.contains('is-warning')), true);
     await save(page);
     assert.equal(await page.locator('#capacity-override-box').isVisible(), true, 'avisa a lotação');
     await save(page);
@@ -142,7 +165,8 @@ try {
     await page.locator('#detail-dialog[open] [data-action="edit-order"]').click();
     await page.locator('#order-dialog[open]').waitFor(); await page.waitForTimeout(200);
     assert.equal(await page.locator('#order-dialog-title').innerText(), 'Editar e aceitar solicitação');
-    assert.deepEqual(await page.locator('#order-status wa-option').evaluateAll((o) => o.map((x) => x.value)), ['Orçamento', 'Confirmado']);
+    assert.equal(await page.locator('#status-choice').isVisible(), true, 'aceitar usa a mesma escolha de duas opções');
+    assert.deepEqual(await page.locator('#status-choice input').evaluateAll((o) => o.map((x) => x.value)), ['Confirmado', 'Orçamento']);
     assert.equal(await field(page, 'status'), 'Orçamento');
     await save(page);
     assert.equal((await state(page)).orders.find((o) => o.id === request.id).status, 'Orçamento', 'solicitação aceita como orçamento');
@@ -159,8 +183,20 @@ try {
     assert.equal(await page.locator('#order-dialog-title').innerText(), 'Confirmar pedido');
     assert.equal(await field(page, 'status'), 'Confirmado');
     assert.equal(await page.locator('#save-order-button').innerText(), 'Confirmar pedido');
+    assert.equal(await page.locator('#status-choice').isVisible(), true, 'confirmar orçamento usa a escolha, já em Confirmado');
     await page.locator('#order-dialog [data-close="order-dialog"]').first().click();
     results.push({ width, case: 'confirmar orçamento' });
+
+    // 8. Orçamento novo diz para onde foi; em 320 px nada passa da janela.
+    await openNew(page);
+    await page.locator('wa-input[name="client"] input').fill('Lia Souza');
+    await page.locator('wa-input[name="product"] input').fill('Bolo de pote');
+    await pick(page, 'status', 'Orçamento');
+    assert.equal(await page.locator('#save-order-button').innerText(), 'Salvar orçamento');
+    await save(page);
+    assert.match(await page.locator('#toast').innerText(), /^Orçamento de Lia salvo em Pedidos, em Novos\./);
+    assert.equal((await state(page)).orders.find((o) => o.client === 'Lia Souza').status, 'Orçamento');
+    results.push({ width, case: 'orçamento diz onde ficou' });
 
     assert.deepEqual(errors, []);
     await context.close();

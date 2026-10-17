@@ -168,7 +168,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
   .search-wrap { flex-basis: 100%; }
   .week-controls { gap: 3px; }
   .week-range { min-width: 115px; }
-  .form-grid { grid-template-columns: 1fr; gap: 0; }
+  .form-grid { grid-template-columns: minmax(0, 1fr); gap: 0; }
   .field-wide { grid-column: auto; }
   .dialog form, .detail-shell, .restore-dialog { padding: 18px; }
   .detail-split { gap: 8px; }
@@ -337,7 +337,7 @@ details.settings-data-tools > div:last-child { margin-top: 12px; }
   .row-client, .row-product { display: -webkit-box; overflow: hidden; white-space: normal; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow-wrap: anywhere; }
   .row-client { line-height: 1.35; }
   .row-total { font-variant-numeric: lining-nums tabular-nums; }
-  .optional-fields-grid { grid-template-columns: 1fr; gap: 0; }
+  .optional-fields-grid { grid-template-columns: minmax(0, 1fr); gap: 0; }
   .cake-template-fields, .template-field fieldset { grid-template-columns: 1fr; }
   .closed-weekdays { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .cake-template-fields legend { grid-column: auto; }
@@ -900,6 +900,26 @@ wa-input[aria-invalid="true"]::part(input-wrapper), wa-textarea[aria-invalid="tr
 .order-actions { justify-content: stretch; }
 .optional-fields > summary { flex-wrap: wrap; row-gap: 2px; }
 .optional-fields > summary span { flex-basis: 100%; padding-left: 30px; }
+/* Rodada 6: "Já está combinado?" no lugar do seletor de situação ao criar; vaga da data enquanto escolhe. */
+.status-choice { min-width: 0; margin: 0 0 15px; padding: 0; border: 0; }
+.status-choice > legend { margin-bottom: 8px; padding: 0; color: var(--ink); font-family: var(--font-title); font-size: var(--fs-lg); font-weight: 600; }
+.status-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.status-option { position: relative; display: grid; align-content: start; gap: 4px; min-height: 72px; padding: 12px 12px 12px 14px; border: 1px solid var(--border-input); border-radius: var(--vn-r-ctl); background: #fff; cursor: pointer; }
+.field .status-option input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; padding: 0; opacity: 0; cursor: pointer; }
+.status-option-title { display: flex; align-items: center; gap: 8px; color: var(--ink); font-family: var(--font-title); font-size: var(--fs-base); font-weight: 600; line-height: 1.2; }
+.status-option-title::before { content: ""; flex: 0 0 auto; width: 18px; height: 18px; box-sizing: border-box; border: 2px solid var(--border-input); border-radius: 50%; background: #fff; }
+.status-option-note { padding-left: 26px; color: var(--muted); font-size: var(--fs-sm); font-weight: 400; line-height: 1.35; }
+.status-option:has(input:checked) { border-color: var(--vn-wine); box-shadow: inset 0 0 0 1px var(--vn-wine); background: var(--vn-soft); }
+.status-option:has(input:checked) .status-option-title::before { border: 5px solid var(--vn-wine); }
+.status-option:has(input:focus-visible) { outline: 3px solid var(--focus); outline-offset: 2px; }
+.status-choice[aria-invalid="true"] .status-option { border-color: var(--error); }
+.status-choice .field-error { display: block; margin-top: 8px; }
+.due-note.is-warning { color: var(--vn-red); font-weight: 650; }
+/* Em 320 px os campos do Web Awesome tinham largura mínima própria e passavam da janela. */
+#order-form :is(.field, wa-input, wa-textarea, wa-select, wa-checkbox) { min-width: 0; }
+/* Em 320 px "Cancelar" + "Salvar encomenda" não cabem lado a lado; o X do topo já fecha a janela. */
+@media (max-width: 340px) { .order-actions wa-button[data-close] { display: none; } }
+@media (max-width: 440px) { .status-options { grid-template-columns: minmax(0, 1fr); gap: 8px; } .status-option { min-height: 0; } }
 @media (max-width: 420px) {
   .order-actions wa-button::part(button) { min-height: 50px; padding-inline: 16px; font-size: var(--fs-base); }
 }

@@ -66,8 +66,9 @@
         <div class="form-grid">
           <div class="field field-wide"><wa-input name="client" label="Quem pediu?" autocomplete="name" required maxlength="120" placeholder="Nome da cliente" hint="Use só o necessário para identificar a encomenda."></wa-input></div>
           <div class="field field-wide"><wa-input name="product" label="O quê?" required maxlength="160" placeholder="Ex.: bolo de aniversário"></wa-input></div>
-          <div class="field field-wide"><wa-select name="status" id="order-status" label="Situação"></wa-select></div>
-          <div class="field field-wide due-field" role="group" aria-labelledby="due-label"><span class="field-label" id="due-label">Quando?</span><div class="date-shortcuts" role="group" aria-label="Atalhos de data"><wa-button size="s" appearance="outlined" pill type="button" data-due-shortcut="0">Hoje</wa-button><wa-button size="s" appearance="outlined" pill type="button" data-due-shortcut="1">Amanhã</wa-button></div><div class="due-inputs"><div class="field"><wa-input name="dueDate" type="date" label="Data"></wa-input></div><div class="field"><wa-input name="dueTime" type="time" label="Horário"></wa-input></div></div><input name="dueAt" type="hidden"><small class="field-hint">Você pode deixar em branco enquanto é orçamento.</small></div>
+          <fieldset class="field field-wide status-choice" id="status-choice"><legend class="field-label">Já está combinado?</legend><div class="status-options"><label class="status-option"><input type="radio" name="status" value="Confirmado" required><span class="status-option-title">Sim, confirmado</span><span class="status-option-note">Ocupa vaga na agenda</span></label><label class="status-option"><input type="radio" name="status" value="Orçamento"><span class="status-option-title">Ainda é orçamento</span><span class="status-option-note">Fica em Novos</span></label></div></fieldset>
+          <div class="field field-wide status-select-field" id="status-select-field" hidden><wa-select id="order-status" label="Situação"></wa-select></div>
+          <div class="field field-wide due-field" role="group" aria-labelledby="due-label"><span class="field-label" id="due-label">Quando?</span><div class="date-shortcuts" role="group" aria-label="Atalhos de data"><wa-button size="s" appearance="outlined" pill type="button" data-due-shortcut="0">Hoje</wa-button><wa-button size="s" appearance="outlined" pill type="button" data-due-shortcut="1">Amanhã</wa-button></div><div class="due-inputs"><div class="field"><wa-input name="dueDate" type="date" label="Data"></wa-input></div><div class="field"><wa-input name="dueTime" type="time" label="Horário"></wa-input></div></div><input name="dueAt" type="hidden"><small class="field-hint due-note" id="due-note" aria-live="polite">Pode ficar em branco enquanto é orçamento.</small></div>
           <div class="field"><wa-input name="total" label="Valor total" type="text" inputmode="decimal" autocomplete="off" maxlength="14" placeholder="0,00" hint="Se ainda não sabe, deixe em branco."><span slot="start" class="money-prefix">R$</span></wa-input></div>
           <details class="optional-fields">
             <summary>Mais detalhes <span>Combinado, retirada ou entrega, contato</span></summary>
@@ -84,7 +85,7 @@
             </div>
           </details>
         </div>
-        <p class="form-hint">Pedido confirmado precisa ter data e horário. Pagamentos são registrados separadamente.</p>
+        <p class="form-hint">Sinal e pagamentos você registra depois, na ficha do pedido.</p>
         <div class="dialog-actions order-actions"><wa-button appearance="outlined" pill type="button" data-close="order-dialog">Cancelar</wa-button><wa-button variant="brand" pill id="save-order-button" type="submit">Salvar encomenda</wa-button></div>
       </form>
     </dialog>
