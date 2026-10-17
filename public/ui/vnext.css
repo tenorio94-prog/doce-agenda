@@ -456,6 +456,8 @@ details.settings-data-tools > div:last-child { margin-top: 12px; }
 .connection-short { display: none; }
 .toast.has-action { display: flex; align-items: center; gap: 12px; padding: 6px 8px 6px 16px; text-align: left; font-size: var(--fs-sm); }
 .toast[hidden] { display: none; }
+/* Rodada 6: o aviso é um popover (camada de cima); desfaz o posicionamento padrão do navegador. */
+.toast[popover] { top: auto; right: auto; margin: 0; border: 0; overflow: visible; }
 .toast-action { flex: 0 0 auto; min-height: 44px; padding: 0 12px; border: 1px solid rgb(255 255 255 / 45%); border-radius: var(--r-xs); background: transparent; color: #fff; font: inherit; font-weight: 700; }
 .toast-action:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
 @media (max-width: 760px) {

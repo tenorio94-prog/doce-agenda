@@ -240,6 +240,21 @@ async function apiRequest(path, { method = "GET", body } = {}) {
   return response.status === 204 ? null : response.json().catch(() => null);
 }
 
+// O aviso fica na camada de cima (popover) para aparecer também com a ficha ou outra janela aberta:
+// antes, "Conferido", "Desfazer" e "Mensagem copiada" ficavam escondidos atrás da ficha.
+function hideToast() {
+  const toast = $("#toast");
+  if (toast.matches?.(":popover-open")) toast.hidePopover();
+  toast.hidden = true;
+}
+// Se a janela que hospeda o aviso fecha, ele volta para a página (ou para a janela de baixo) e continua à vista.
+document.addEventListener("close", (event) => {
+  const toast = $("#toast");
+  if (!toast || toast.hidden || !event.target.contains?.(toast)) return;
+  if (toast.matches?.(":popover-open")) toast.hidePopover();
+  ([...document.querySelectorAll("dialog[open]")].pop() || document.body).append(toast);
+  toast.showPopover?.();
+}, true);
 function showToast(message, action) {
   const toast = $("#toast");
   toast.textContent = message;
@@ -247,12 +262,18 @@ function showToast(message, action) {
   if (action) {
     const button = document.createElement("button");
     button.type = "button"; button.className = "toast-action"; button.textContent = action.label;
-    button.addEventListener("click", () => { toast.hidden = true; action.run(); });
+    button.addEventListener("click", () => { hideToast(); action.run(); });
     toast.append(" ", button);
   }
+  // Com uma janela aberta, o resto da página fica inerte (não recebe toque): o aviso passa a morar dentro
+  // da janela de cima, para o "Desfazer" funcionar. Mostrar de novo o leva para cima dessa janela.
+  if (toast.matches?.(":popover-open")) toast.hidePopover();
+  const host = [...document.querySelectorAll("dialog[open]")].pop() || document.body;
+  if (toast.parentElement !== host) host.append(toast);
   toast.hidden = false;
+  toast.showPopover?.();
   clearTimeout(state.toastTimer);
-  state.toastTimer = setTimeout(() => { toast.hidden = true; }, action ? 6000 : 2800);
+  state.toastTimer = setTimeout(hideToast, action ? 6000 : 2800);
 }
 
 // Sample orders saved by earlier versions carry the "fictício" suffix in the name; the tag already says it.

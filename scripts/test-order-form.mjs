@@ -198,6 +198,17 @@ try {
     assert.equal((await state(page)).orders.find((o) => o.client === 'Lia Souza').status, 'Orçamento');
     results.push({ width, case: 'orçamento diz onde ficou' });
 
+    // 9. Aviso com a ficha aberta: aparece por cima e o "Desfazer" funciona (antes ficava atrás da ficha, inerte).
+    await page.evaluate(() => { document.querySelector('#toast').hidden = true; document.querySelector('[data-open-order="DEMO-09"]').click(); });
+    await page.locator('#detail-dialog[open]').waitFor(); await page.waitForTimeout(200);
+    await page.locator('#detail-dialog button', { hasText: 'Começar a fazer' }).first().click();
+    await page.waitForFunction(() => /Em produção/.test(document.querySelector('#toast')?.innerText || ''));
+    assert.equal(await page.evaluate(() => { const t = document.querySelector('#toast'); const r = t.getBoundingClientRect(); const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2); return !!hit && t.contains(hit); }), true, 'aviso à vista por cima da ficha');
+    await page.locator('#toast .toast-action').click();
+    await page.waitForFunction(async () => (await (await window.DoceStore.fetch('/api/state')).json()).orders.find((o) => o.id === 'DEMO-09').status === 'Confirmado');
+    await page.evaluate(() => document.querySelectorAll('dialog[open]').forEach((d) => d.close()));
+    results.push({ width, case: 'aviso por cima da ficha' });
+
     assert.deepEqual(errors, []);
     await context.close();
   }
