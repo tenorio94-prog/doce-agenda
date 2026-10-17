@@ -27,6 +27,10 @@ try {
     if (height >= 800) assert.ok(firstOrder.y + 60 < height, `primeiro pedido fora da primeira tela (${Math.round(firstOrder.y)})`);
     assert.equal(await page.locator('#view-today .finance-summary').count(), 0, 'resumo financeiro saiu da Agenda');
     assert.match(await page.locator('#view-today .vn-attention').innerText(), /Pedem sua atenção[\s\S]*Pedido novo pelo link/);
+    // Rodada 5: no computador a lista fica na coluna ao lado do dia, já na primeira tela; no celular, logo abaixo do dia.
+    const where = width > 1000 ? '.vn-aside' : '.vn-schedule';
+    assert.equal(await page.locator(`#view-today ${where} .vn-attention`).count(), 1, `atenção em ${where}`);
+    if (width > 1000) assert.ok((await page.locator('#view-today .vn-attention').boundingBox()).y < height, 'atenção à vista no computador');
     check(`${width}px: Agenda com a semana no topo e o dia na primeira tela`);
 
     // Etapa 0: Pedidos mostra o dia de cada pedido e começa pelo que está em aberto.

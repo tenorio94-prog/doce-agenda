@@ -572,6 +572,8 @@ function productionMarkup() {
   </section>`;
 }
 
+const wideAgenda = window.matchMedia?.("(min-width: 1001px)");
+wideAgenda?.addEventListener?.("change", () => { if (state.activeView === "today") renderToday(); });
 function renderToday() {
   const panel = $("#view-today");
   const focused = document.activeElement;
@@ -591,16 +593,19 @@ function renderToday() {
   // Com hoje escolhido na semana, "Dia lotado"/"Fechado" já aparece no cabeçalho do dia logo abaixo: não repetir.
   const dayHeadShowsToday = !weekMode && state.selectedDay === todayKey;
   const summaryParts = [dayHeadShowsToday ? "" : todayAvailability.closed ? "Hoje é dia fechado" : todayAvailability.full ? "Dia lotado" : "",missingDeposit.length ? `${missingDeposit.length} sem sinal` : ""].filter(Boolean);
-  const attentionCount = weekMode ? 0 : attentionItems().length;
+  // Rodada 5: no computador, "Pedem sua atenção" fica na coluna ao lado do dia, à vista junto com os pedidos de hoje.
+  // No celular continua logo abaixo do dia. A ordem no HTML acompanha a ordem na tela nos dois casos.
+  const attentionBeside = wideAgenda?.matches === true;
+  const attentionCount = weekMode || attentionBeside ? 0 : attentionItems().length;
   panel.innerHTML = `<header class="vn-heading"><div><span class="vn-date">${esc(capitalize(new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "numeric", month: "long" }).format(new Date())))}</span><h1 id="today-title" tabindex="-1">${esc(headline)}</h1>${summaryParts.length || attentionCount ? `<p class="today-summary">${esc(summaryParts.join(", "))}${attentionCount ? `<button class="vn-att-jump" type="button" data-action="jump-attention">${attentionCount} ${attentionCount === 1 ? "pede" : "pedem"} sua atenção</button>` : ""}</p>` : ""}</div>${modeSwitch}</header>
     ${firstUse && !onboardingVisible() ? `<section class="welcome-panel"><h2>Cadastre seu primeiro pedido</h2><p>Comece com cliente, produto e valor. Complete os detalhes quando estiverem combinados.</p><div class="welcome-actions"><button class="button button-primary" type="button" data-action="new-order">Nova encomenda</button></div></section>` : ''}
     ${sample && firstUse ? `<section class="sample-card" aria-label="Pedido de exemplo">${rowMarkup(sample)}<p>Toque para ver como fica um pedido completo. O exemplo não entra na sua agenda.</p></section>` : sample ? `<details class="sample-examples"><summary>Exemplo fictício — não entra na sua agenda</summary><div class="sample-example-list">${state.orders.filter(sampleOrder).map((order) => `<button class="text-link" type="button" data-open-order="${esc(order.id)}">Ver exemplo: ${esc(clientName(order) || order.product || "pedido")}</button>`).join("")}</div></details>` : ''}
     ${weekMode ? "" : weekBarMarkup()}
-    <div class="vn-agenda-grid"><div class="vn-schedule">${weekMode ? productionMarkup() : `${agendaWeekMarkup(upcoming.length)}${attentionMarkup()}`}
+    <div class="vn-agenda-grid"><div class="vn-schedule">${weekMode ? productionMarkup() : `${agendaWeekMarkup(upcoming.length)}${attentionBeside ? "" : attentionMarkup()}`}
     ${onboardingMarkup()}
     ${pendingChanges.length ? `<section class="pending-card surface"><div class="section-head"><h2>Alterações para revisar</h2><span class="pending-count">${pendingChanges.length}</span></div><div class="pending-list">${pendingChanges.slice(0, 3).map((order) => `<button class="pending-row" type="button" data-open-order="${esc(order.id)}"><span><strong>${esc(order.client)}</strong><small>${esc(order.product)}</small></span><span class="pending-chevron" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></span><span class="pending-banner"><strong>Pedido de mudança:</strong> ${esc(order.pendingChange)}</span></button>`).join("")}</div></section>` : ""}
     ${weekMode ? "" : upcomingMarkup(upcoming)}
-    </div><aside class="vn-aside">${storageNoteMarkup()}</aside></div>`;
+    </div><aside class="vn-aside">${attentionBeside && !weekMode ? attentionMarkup() : ""}${storageNoteMarkup()}</aside></div>`;
   state.agendaEnter = false;
   panel.hidden = state.activeView !== "today";
   if (focusSelector) panel.querySelector(focusSelector)?.focus({ preventScroll: true });

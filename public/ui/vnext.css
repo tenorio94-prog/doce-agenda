@@ -1873,3 +1873,10 @@ body.vnext { font-variant-numeric: tabular-nums; -webkit-tap-highlight-color: tr
 .vn-line-origin .vn-icon { width: 14px; height: 14px; }
 /* No histórico o nome do produto é o que identifica o pedido: quebra em até duas linhas em vez de cortar. */
 .vn-line.is-history .vn-line-main b { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; white-space: normal; line-height: 1.25; }
+/* No computador, "Pedem sua atenção" ocupa a coluna ao lado do dia (antes só tinha o aviso da cópia de segurança). */
+@media (min-width: 1001px) {
+  .vn-agenda-grid { grid-template-columns: minmax(0, 1fr) 340px; }
+  .vnext #view-today .vn-aside .vn-attention { margin-top: 0; }
+  .vnext #view-today .vn-aside .vn-att-row, .vnext #view-today .vn-aside .vn-att-row.request-banner { grid-template-columns: 30px minmax(0, 1fr); align-items: start; row-gap: 8px; }
+  .vnext #view-today .vn-aside .vn-att-row .att-btn { grid-column: 2; justify-self: start; }
+}
