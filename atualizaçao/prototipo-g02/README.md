@@ -39,7 +39,18 @@ Playwright/Chromium do projeto; Browser plugin/skill não disponível nesta sess
 - `npm run check` passou: 64 regras, build e as 12 suítes de telas do projeto. O teste específico do protótipo também passou após esclarecer que somente a solicitação escolhida continua sem confirmação.
 - Inspeção visual comparou referência atual e protótipo: logo, fontes, cores semânticas, textos, CTAs e composição mobile/desktop. O protótipo deliberadamente omite fotos e demais seções da landing para isolar a mensagem e a decisão; os fontes atuais continuam intactos.
 
-Não verificados: Safari/iPhone, aparelho físico, compreensão com confeiteiras, impacto comercial, conta autenticada ou site publicado. Não houve auditoria completa de acessibilidade. Os três documentos da primeira rodada continuam não localizados; a dependência W1-03 permanece pendente antes de eventual implementação G03.
+Não verificados: Safari/iPhone, aparelho físico, compreensão com confeiteiras, impacto comercial ou conta autenticada. A validação posterior no site publicado está registrada abaixo. Não houve auditoria completa de acessibilidade. Os três documentos da primeira rodada continuam não localizados; a dependência W1-03 permanece pendente antes de eventual implementação G03.
+
+## Publicação conferida em 19/10/2026
+
+- Endereços: [A — Combinado](https://lucast.app/previa-g02/?variante=combinado) e [B — Disponibilidade](https://lucast.app/previa-g02/?variante=capacidade).
+- Código na `main`: `b1bddb6`. Cloudflare: `b52a64ec-5d24-46c2-874d-62dc06524a16`, confirmado ativo com 100% do tráfego. Este registro documental posterior não exige outra publicação.
+- `npm run check` repetido antes da publicação passou: 64 regras, build, 12 suítes. Comparação de hashes antes e depois do build automático do Wrangler: 127 arquivos anteriores idênticos; só os três assets da prévia e `_headers` adicionados.
+- No endereço real, sem interceptar arquivos: oito percursos A/B em 320/360/390/1280 e conteúdo/CTAs com JavaScript desligado passaram. Verificados: escolha, reinício, reload, teclado, troca de variante, links internos, cadastro simulado, fontes, ausência de rolagem lateral e isolamento de dados.
+- Cabeçalhos CSP e `X-Robots-Tag` conferidos no HTML e assets publicados; não afetam a landing, demo ou cadastro. Endereço sem barra redireciona preservando a variante. JS e CSS publicados comparados byte a byte com o build; HTML conferido por conteúdo e navegação, sem alegar igualdade binária. As cinco rotas existentes passaram em `scripts/test-cloudflare-routing.mjs` no `lucast.app`.
+- Uma tentativa inicial do teste leu `aria-current` enquanto a nova página ainda estava em `interactive`. Diagnóstico mostrou a variante correta em `complete`, sem erro de página; o teste passou ao aguardar a renderização. Nenhuma correção do produto ou segunda publicação foi necessária.
+- O Analytics já existente, injetado pela zona Cloudflare, foi bloqueado pela CSP da prévia. Aviso separado dos erros funcionais; nenhuma permissão foi afrouxada e o painel não foi alterado. Não houve chamada externa bem-sucedida ou gravação em conta/armazenamento nos percursos.
+- Evidências, capturas, tentativa inicial e diagnóstico em `data/publicacao-g02-2026-10-19/` (ignorado pelo Git). Mesmos limites de navegador/aparelho/pesquisa acima; nenhuma validação comercial.
 
 ## Preservação e volta
 
