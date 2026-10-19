@@ -97,7 +97,19 @@ await writeFile(path.join(output, 'agenda.html'), cloudHtml);
 await copyFile(path.join(output, 'app.js'), path.join(output, 'cloud-app.js'));
 await bundle('cloud/app-bootstrap.js', path.join(output, 'cloud-bootstrap.js'));
 
+// Growth preview: publish only its three public assets, isolated by route headers.
+await mkdir(path.join(output, 'previa-g02'), { recursive: true });
+for (const name of ['index.html', 'style.css', 'prototype.js']) {
+  await copyFile(path.join(source, 'previa-g02', name), path.join(output, 'previa-g02', name));
+}
+
 // Target the directory URL: /index.html triggers HTML canonicalization in Workers
 // and would redirect /p/<slug> to /encomenda/, losing the original bakery slug.
 await writeFile(path.join(output, '_redirects'), '/p/:slug /encomenda/ 200\n');
+await writeFile(path.join(output, '_headers'), [
+  '/previa-g02/*',
+  '  Content-Security-Policy: default-src \'none\'; script-src \'self\'; style-src \'self\'; font-src \'self\'; img-src \'self\'; connect-src \'none\'; form-action \'none\'; base-uri \'none\'; frame-ancestors \'none\'',
+  '  X-Robots-Tag: noindex, nofollow',
+  '',
+].join('\n'));
 console.log('Site pronto em deploy-cloud/public (não publica). Rota /p/<slug> preservada.');

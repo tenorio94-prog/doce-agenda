@@ -1,6 +1,6 @@
-# G02 — protótipo local das duas apresentações
+# G02 — prévia das duas apresentações
 
-19/10/2026. Lucas aprovou este protótipo local com “sim senhor”, após a proposta de duas apresentações e uma decisão fictícia. Posteriormente autorizou guardar esta etapa também no histórico do GitHub. Commit e push deste ponto de retorno estão autorizados; alterações no app publicado e deploy continuam sem autorização.
+19/10/2026. Lucas aprovou o protótipo local, depois seu registro no GitHub (`b55a9da`) e, por fim, pediu: “pode publicar no site também, quero ver na prática”. Essa publicação disponibiliza as duas opções em `/previa-g02/`, preservando a página inicial atual e sem implementar G03.
 
 ## Abrir
 
@@ -17,6 +17,8 @@ O terminal informa um endereço `http://127.0.0.1:<porta>`. O servidor aceita so
 - `/?variante=capacidade`: B — “Antes de aceitar outro bolo, veja se a data cabe.” (padrão)
 
 As variantes têm o mesmo cenário e os mesmos botões. A diferença proposta é a mensagem. O visual usa logo, fontes e cores Comanda; é um recorte para comparar mensagens, não uma substituição de toda a landing atual.
+
+Os três fontes canônicos ficam em `public/previa-g02/`. O build copia apenas HTML, CSS e JavaScript para `/previa-g02/`, com cabeçalhos restritos a essa rota: conexões/formulários bloqueados e indicação `noindex`. Documentos e servidor local não entram no pacote publicado. As variantes públicas usam `/previa-g02/?variante=combinado` e `/previa-g02/?variante=capacidade`; o cadastro continua simulado.
 
 ## Hipótese e cenário
 
@@ -41,6 +43,6 @@ Não verificados: Safari/iPhone, aparelho físico, compreensão com confeiteiras
 
 ## Preservação e volta
 
-Base: `main`, SHA `5715f7a19817b69483e1a08e0e8ab56181c304c4`. Fontes de produção não alterados. Snapshot do `context.md` e do diff preexistente em `data/prototipo-g02-2026-10-19/`; configurações, sessões e dados privados não foram copiados.
+Base local inicial: `main`, SHA `5715f7a19817b69483e1a08e0e8ab56181c304c4`. Ponto de retorno anterior à publicação: `b55a9dab88eca808bf723617b1e8901b685643fc`. Snapshot do `context.md` e do diff preexistente em `data/prototipo-g02-2026-10-19/`; configurações, sessões e dados privados não foram copiados.
 
-Para deixar de usar este experimento, basta fechar a prévia/encerrar o servidor. Não há dados ou publicação para reverter. O protótipo fica fora de `public/`, `cloud/` e `deploy-cloud/public`, sem inclusão no build publicado. Este registro no Git/GitHub preserva o protótipo e os documentos novos, sem incluir configurações locais, credenciais, dados privados ou capturas ignoradas. Qualquer implementação posterior e qualquer publicação dependem de autorização separada conforme o briefing.
+Para encerrar a prévia local, feche a página/encerre o servidor. Para retirar a rota pública, reverta o commit que inclui a prévia no build e republique; o registro `b55a9da` preserva o protótipo anterior. Não há pedidos ou dados de conta para restaurar. Git/GitHub preservam os fontes e documentos, sem configurações locais, credenciais, dados privados ou capturas ignoradas. Novas funcionalidades e mudanças na página inicial dependem de autorização própria.

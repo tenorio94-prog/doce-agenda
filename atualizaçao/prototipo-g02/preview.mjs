@@ -6,12 +6,13 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
+const source = path.resolve(here, '../../public/previa-g02');
 const built = path.resolve(here, '../../deploy-cloud/public');
 const files = new Map([
-  ['/', [here, 'index.html', 'text/html; charset=utf-8']],
-  ['/index.html', [here, 'index.html', 'text/html; charset=utf-8']],
-  ['/style.css', [here, 'style.css', 'text/css; charset=utf-8']],
-  ['/prototype.js', [here, 'prototype.js', 'text/javascript; charset=utf-8']],
+  ['/', [source, 'index.html', 'text/html; charset=utf-8']],
+  ['/index.html', [source, 'index.html', 'text/html; charset=utf-8']],
+  ['/style.css', [source, 'style.css', 'text/css; charset=utf-8']],
+  ['/prototype.js', [source, 'prototype.js', 'text/javascript; charset=utf-8']],
   ['/tokens.css', [built, 'tokens.css', 'text/css; charset=utf-8']],
   ['/logo.svg', [built, 'logo.svg', 'image/svg+xml']],
   ...['bricolage-600.woff2', 'bricolage-700.woff2', 'plus-jakarta-sans.woff2'].map((name) =>
