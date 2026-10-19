@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f1f2">
+  <title>Doce Agenda — veja uma decisão na prática</title>
+  <link rel="stylesheet" href="/tokens.css">
+  <link rel="stylesheet" href="style.css">
+  <script defer src="prototype.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#topo" aria-label="Doce Agenda, início">
+      <img src="/logo.svg" alt="Doce Agenda" width="150" height="40">
+    </a>
+    <p class="local-note">Protótipo local · Exemplos fictícios</p>
+  </header>
+
+  <main id="topo" class="page-shell">
+    <section class="intro" aria-label="Apresentação do Doce Agenda">
+      <div class="intro-copy">
+        <div class="variant variant-combinado" data-variant="combinado">
+          <h1 id="intro-title">O pedido chega pelo WhatsApp. Guarde o combinado na sua agenda.</h1>
+          <p class="lead">Anote data, horário e detalhes de cada encomenda. Consulte sua semana e os pagamentos que você conferiu.</p>
+        </div>
+        <div class="variant variant-capacidade" data-variant="capacidade">
+          <h1>Antes de aceitar outro bolo, veja se a data cabe.</h1>
+          <p class="lead">Consulte os pedidos e o limite do dia antes de combinar a próxima entrega.</p>
+        </div>
+
+        <nav class="variant-switch" aria-label="Escolha uma apresentação">
+          <a href="?variante=combinado#topo" data-variant-link="combinado">A · Combinado</a>
+          <a href="?variante=capacidade#topo" data-variant-link="capacidade">B · Disponibilidade</a>
+        </nav>
+        <div class="intro-actions">
+          <a class="button button-primary" href="#exemplo">Ver um pedido na prática</a>
+          <a class="text-link" href="#criar-conta">Criar minha agenda</a>
+        </div>
+      </div>
+
+      <aside class="week-card" aria-label="Resumo fictício da semana">
+        <div class="week-heading">
+          <div>
+            <p class="eyebrow">Agenda da semana</p>
+            <h2>24 a 25 de outubro</h2>
+          </div>
+          <span class="week-tag">2 dias</span>
+        </div>
+        <div class="day-row">
+          <span class="date-mark">SÁB<br><strong>24</strong></span>
+          <div class="day-info"><strong>Sábado</strong><span>2 pedidos · limite 2</span></div>
+          <span class="state-full">Dia lotado</span>
+        </div>
+        <div class="day-row">
+          <span class="date-mark">DOM<br><strong>25</strong></span>
+          <div class="day-info"><strong>Domingo</strong><span>1 pedido · limite 2</span></div>
+          <span class="state-open">1 vaga</span>
+        </div>
+        <p class="week-footnote">Uma solicitação ainda precisa da sua revisão.</p>
+      </aside>
+    </section>
+
+    <section id="exemplo" class="example-section" aria-labelledby="example-title">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Exemplo fictício · sábado, 24/10/2026</p>
+          <h2 id="example-title">Uma data cheia. Uma alternativa para combinar.</h2>
+        </div>
+        <a class="exit-link" href="#topo">Sair do exemplo</a>
+      </div>
+
+      <div class="decision-layout">
+        <article class="order-card" aria-label="Solicitação fictícia para revisar">
+          <div class="order-topline"><span class="request-label">Solicitação recebida</span><span class="review-state">Para revisar</span></div>
+          <h3>Bolo de chocolate</h3>
+          <p class="order-detail">Entrega desejada: sábado, 24/10</p>
+          <p class="order-detail">Horário e detalhes serão combinados com a cliente.</p>
+          <div class="capacity-box">
+            <div><span class="capacity-label">Sábado, 24/10</span><strong>2 de 2 pedidos</strong></div>
+            <span class="capacity-status">Dia lotado</span>
+          </div>
+          <p class="request-note">Esta solicitação aguarda sua revisão e não ocupa uma vaga.</p>
+          <p class="manual-note">No app, você pode abrir uma exceção manual e informar o motivo. Neste exemplo, vamos escolher outra data.</p>
+          <button class="button button-primary choose-button" id="choose-sunday" type="button">Escolher domingo, 25/10</button>
+        </article>
+
+        <aside class="result-card" aria-labelledby="result-title">
+          <p class="eyebrow">O que acontece com a escolha</p>
+          <h3 id="result-title" tabindex="-1">A solicitação continua para revisar</h3>
+          <p id="result-copy" class="result-copy">O sábado segue com 2 de 2 pedidos. A solicitação ainda não foi confirmada e não reserva vaga.</p>
+          <div class="capacity-box capacity-box-small">
+            <div><span class="capacity-label">Domingo, 25/10</span><strong>1 de 2 pedidos</strong></div>
+            <span class="state-open">1 vaga</span>
+          </div>
+          <p id="live-status" class="live-status" aria-live="polite" aria-atomic="true"></p>
+          <button class="button button-quiet" id="reset-example" type="button">Reiniciar exemplo</button>
+        </aside>
+      </div>
+    </section>
+
+    <section id="criar-conta" class="account-note" aria-labelledby="account-title">
+      <div>
+        <p class="eyebrow">Próximo passo</p>
+        <h2 id="account-title">Criar minha agenda</h2>
+        <p>Na versão real, este caminho abre o cadastro. Neste protótipo, nenhuma conta é criada.</p>
+      </div>
+      <a class="text-link" href="#exemplo">Voltar ao exemplo</a>
+    </section>
+    <noscript><p class="noscript-note">A escolha de data precisa de JavaScript; as duas apresentações e o exemplo continuam disponíveis nesta página.</p></noscript>
+  </main>
+
+  <footer class="footer"><span>Exemplo para comparar mensagens. O site atual permanece igual.</span></footer>
+</body>
+</html>
