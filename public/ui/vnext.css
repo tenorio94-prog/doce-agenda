@@ -1999,3 +1999,7 @@ body.vnext { font-variant-numeric: tabular-nums; -webkit-tap-highlight-color: tr
   .vnext .link-wizard .dialog-actions .button-primary { grid-column: 1 / -1; order: -1; }
   .vnext .link-wizard .dialog-actions .button-quiet:first-child:nth-last-child(2) { grid-column: 1 / -1; }
 }
+/* Soma da etapa ao lado da contagem em Pedidos: âmbar = a receber, verde = tudo conferido. */
+.vnext #view-orders .order-money { font-weight: 700; color: var(--vn-ink); }
+.vnext #view-orders .order-money.is-due { color: var(--vn-amber); }
+.vnext #view-orders .order-money.is-in { color: var(--vn-green); }
