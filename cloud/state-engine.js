@@ -251,6 +251,30 @@ function normalizeState(value) {
   return state;
 }
 
+// Gravação feita sobre uma versão antiga (outra aba, ou um pedido novo que chegou pelo link): a ação é
+// reaplicada sobre o estado mais novo quando o que ela altera não mudou desde que o app carregou.
+// `base.order` é o carimbo do pedido visto pelo app; `base.section`, o JSON do ajuste visto. Pedido novo
+// sempre pode (a capacidade é conferida de novo); importação e anonimização, nunca.
+const SECTION_ROUTES = { '/api/availability': 'availability', '/api/order-template': 'orderTemplate', '/api/order-page': 'orderPage', '/api/pix': 'pix' };
+export const orderStamp = order => (order && (order.updatedAt || order.createdAt)) || '';
+export function canRebaseWrite(state, path, method, base = {}) {
+  method = String(method || '').toUpperCase();
+  if (path === '/api/orders' && method === 'POST') return true;
+  let current;
+  try { current = normalizeState(state); } catch { return false; }
+  const section = SECTION_ROUTES[path];
+  if (section) return method === 'PUT' && typeof base.section === 'string' && base.section === JSON.stringify(current[section]);
+  const orderMatch = path.match(/^\/api\/orders\/([^/]+)(?:\/(?:payments|accept|refuse))?$/);
+  const paymentMatch = path.match(/^\/api\/payments\/([^/]+)$/);
+  let order;
+  if (orderMatch) order = current.orders.find(item => item.id === decodeURIComponent(orderMatch[1]));
+  else if (paymentMatch) {
+    const payment = current.payments.find(item => item.id === decodeURIComponent(paymentMatch[1]));
+    order = payment && current.orders.find(item => item.id === payment.orderId);
+  }
+  return !!order && typeof base.order === 'string' && base.order !== '' && base.order === orderStamp(order);
+}
+
 function response(body, status = 200, state, mutated = false) {
   return { state, body, status, mutated };
 }

@@ -1780,6 +1780,18 @@ body.vnext { font-variant-numeric: tabular-nums; -webkit-tap-highlight-color: tr
 .vn-coming .vn-section-row h2 { font: 700 20px var(--vn-title); margin: 0; }
 .vnext #view-today .vn-coming .upcoming-label { margin: 14px 0 4px; color: var(--vn-muted); font: 700 14px var(--vn-font); }
 .vn-lines { display: grid; padding: 0 14px; border-radius: var(--vn-r); background: #fff; box-shadow: var(--vn-shadow); }
+/* Lembrete da véspera: mesma lista branca de Próximos dias, com o botão de contorno ao lado de cada cliente. */
+.vn-reminders { margin-top: 26px; }
+.vn-reminders .vn-section-row { margin-bottom: 4px; }
+.vn-reminders .vn-section-row h2 { font: 700 20px var(--vn-title); margin: 0; }
+.vn-reminders-hint { margin: 0 0 10px; color: var(--vn-muted); font-size: 14px; }
+.vn-remind-list { display: grid; margin: 0; padding: 0 14px; list-style: none; border-radius: var(--vn-r); background: #fff; box-shadow: var(--vn-shadow); }
+.vn-remind { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 58px; padding: 8px 0; border-bottom: 1px solid var(--vn-line-soft); }
+.vn-remind:last-child { border-bottom: 0; }
+.vn-remind-text { display: grid; min-width: 0; }
+.vn-remind-text b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 15px; }
+.vn-remind-text small { color: var(--vn-muted); font-size: 13px; }
+.vn-remind .vn-btn { flex: none; min-height: 44px; text-decoration: none; }
 .vn-line { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 10px; align-items: center; width: 100%; min-height: 58px; padding: 8px 0; border: 0; border-bottom: 1px solid var(--vn-line-soft); background: none; color: var(--vn-ink); text-align: left; font: inherit; cursor: pointer; }
 .vn-line:last-child { border-bottom: 0; }
 .vn-line:focus-visible { outline: 3px solid var(--vn-green); outline-offset: 2px; border-radius: var(--vn-r-sm); }
@@ -1959,3 +1971,31 @@ body.vnext { font-variant-numeric: tabular-nums; -webkit-tap-highlight-color: tr
 .vnext[data-active-view="today"] .header-add:hover { background: var(--vn-rose); }
 .vnext[data-active-view="today"] .nav-new-order { background: transparent; color: var(--vn-berry); }
 .vnext[data-active-view="today"] .nav-new-order .nav-icon { background: #fff; border: 1.5px solid var(--vn-berry); color: var(--vn-berry); box-shadow: none; }
+/* Link no ar em 3 passos: janela curta, mesma linguagem da janela de exemplo do WhatsApp. */
+.vnext .link-wizard { width: min(480px, calc(100% - 26px)); border-radius: var(--vn-r-dialog); background: var(--vn-canvas); color: var(--vn-ink); font-family: var(--vn-font); }
+.vnext .link-wizard .dialog-heading h2 { margin: 0; font: 700 22px/1.2 var(--vn-title); color: inherit; }
+.vnext .link-wizard .lw-step { margin: 0 0 2px; font-size: 13px; font-weight: 700; opacity: .85; }
+.vnext .link-wizard .lw-body { display: grid; gap: 14px; margin-top: 16px; }
+.vnext .link-wizard .field { display: grid; gap: 6px; margin: 0; }
+.vnext .link-wizard .field > span { font-weight: 700; font-size: 15px; }
+.vnext .link-wizard .field small { color: var(--vn-muted); font-size: 13px; font-weight: 400; }
+.vnext .link-wizard input { width: 100%; min-height: 48px; padding: 10px 12px; border: 1px solid var(--border-input); border-radius: var(--r-m); background: #fff; font: inherit; color: var(--vn-ink); }
+.vnext .link-wizard .slug-field { display: flex; align-items: center; min-width: 0; border: 1px solid var(--border-input); border-radius: var(--r-m); background: #fff; overflow: hidden; }
+.vnext .link-wizard .slug-field .slug-prefix { padding-left: 12px; color: var(--vn-muted); font-size: 14px; white-space: nowrap; }
+.vnext .link-wizard .slug-field input { flex: 1; min-width: 0; border: 0; padding-left: 2px; }
+.vnext .link-wizard .lw-product { display: grid; grid-template-columns: minmax(0, 1fr) 104px; gap: 10px; align-items: end; }
+.vnext .link-wizard .lw-hint { margin: 0; color: var(--vn-muted); font-size: 14px; line-height: 1.45; }
+.vnext .link-wizard .lw-url { margin: 0; padding: 12px 14px; border-radius: var(--vn-r); background: #fff; font-size: 16px; overflow-wrap: anywhere; box-shadow: var(--vn-shadow); }
+.vnext .link-wizard .lw-summary { display: grid; gap: 6px; margin: 0; padding: 0 0 0 18px; font-size: 15px; }
+.vnext .link-wizard .form-error { margin: 12px 0 0; }
+.vnext .link-wizard .dialog-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; margin-top: 18px; }
+.vnext .link-wizard .button { border-radius: var(--vn-pill); min-height: 48px; }
+.vnext .link-wizard .button-primary { background: var(--vn-berry); border-color: var(--vn-berry); color: #fff; }
+.vnext .link-wizard .button-quiet { background: var(--vn-soft); border: 1px solid #f0dbe2; color: var(--vn-wine); }
+.vnext .link-hero .link-wizard-open { margin-top: 12px; }
+.vnext .link-hero .link-hero-or { margin: 8px 0 0; color: var(--vn-muted); font-size: 14px; }
+@media (max-width: 520px) {
+  .vnext .link-wizard .dialog-actions { display: grid; grid-template-columns: 1fr 1fr; }
+  .vnext .link-wizard .dialog-actions .button-primary { grid-column: 1 / -1; order: -1; }
+  .vnext .link-wizard .dialog-actions .button-quiet:first-child:nth-last-child(2) { grid-column: 1 / -1; }
+}

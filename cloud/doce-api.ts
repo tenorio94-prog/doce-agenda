@@ -1,4 +1,4 @@
-import { createEmptyState, transactState } from './state-engine.js';
+import { canRebaseWrite, createEmptyState, transactState } from './state-engine.js';
 import { monthlySummary } from './monthly-summary.js';
 import { PHOTO_BUCKET, PHOTO_MAX_BYTES, PHOTO_MAX_FILES, checkPageOwnership, decodePhoto, photoFolder, photosToDelete } from './vitrine-photos.js';
 
@@ -52,6 +52,7 @@ type Envelope = {
   method: string;
   body?: unknown;
   expectedRevision?: number;
+  base?: { order?: unknown; section?: unknown };
 };
 type AgendaRow = { owner_user_id: string; business_name?: string; state: unknown; revision: number | string };
 
@@ -283,8 +284,16 @@ export function createDoceApiHandler(dependencies: HandlerDependencies = {}) {
     if (revision === null || !row.state || typeof row.state !== 'object') {
       return jsonResponse(origin, apiError('Estado armazenado inválido.', 500), 500);
     }
+    // Versão antiga: reaplica a ação sobre o estado atual quando o que ela altera não mudou (state-engine).
     if (isWrite && envelope.expectedRevision !== revision) {
-      return jsonResponse(origin, apiError('O estado mudou em outra sessão. Atualize e tente novamente.', 409, 'REVISION_CONFLICT'), 409, revision);
+      const base = envelope.base && typeof envelope.base === 'object' ? envelope.base : {};
+      const seen = {
+        order: typeof base.order === 'string' ? base.order.slice(0, 40) : undefined,
+        section: typeof base.section === 'string' ? base.section : undefined,
+      };
+      if (!canRebaseWrite(row.state, route.path, route.method, seen)) {
+        return jsonResponse(origin, apiError('O estado mudou em outra sessão. Atualize e tente novamente.', 409, 'REVISION_CONFLICT'), 409, revision);
+      }
     }
 
     if (route.path.split('?')[0] === '/api/resumo-mensal') {

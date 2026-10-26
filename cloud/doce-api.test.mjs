@@ -289,3 +289,38 @@ test('vitrine photos: checked bytes go to the account folder; foreign photos are
   const imported = await h.send(envelope('/api/import', 'POST', 2, backup));
   assert.equal(imported.status, 200); assert.deepEqual(h.row.state.orderPage.products, [{ name: 'Bolo', description: '' }]);
 });
+
+test('a stale write is replayed on the newest state when what it touches did not change', async () => {
+  // Revisão 3 foi lida pelo app; a 4 trouxe um pedido novo pelo link.
+  const state = createEmptyState();
+  const seen = { id: 'p1', client: 'Ana', product: 'Bolo', total: 100, status: 'Confirmado', dueAt: '2030-05-10T10:00', origin: 'manual', createdAt: '2030-01-01T10:00:00.000Z', updatedAt: '2030-01-02T10:00:00.000Z', history: [] };
+  const fromLink = { id: 'p2', client: 'Bia', product: 'Torta', total: 0, status: 'Solicitação', dueAt: '2030-05-11T10:00', origin: 'link', createdAt: '2030-01-03T10:00:00.000Z', history: [] };
+  const seeded = { owner_user_id: 'auth-user-id', revision: 4, state: { ...state, orders: [seen, fromLink] } };
+
+  const h = makeHarness({ row: seeded });
+  const advance = await h.send({ ...envelope('/api/orders/p1', 'PUT', 3, { status: 'Em produção' }), base: { order: seen.updatedAt } });
+  assert.equal(advance.status, 200);
+  assert.equal(advance.headers.get('X-Agenda-Revision'), '5');
+  assert.equal(h.calls.rpc[0].args.p_expected_revision, 4, 'grava sobre a versão atual');
+  assert.equal(h.row.state.orders.find(order => order.id === 'p1').status, 'Em produção');
+  assert.ok(h.row.state.orders.some(order => order.id === 'p2'), 'o pedido do link continua lá');
+
+  const created = makeHarness({ row: seeded });
+  const fresh = await created.send(envelope('/api/orders', 'POST', 3, { client: 'Caio', product: 'Brigadeiro', total: 50, status: 'Orçamento' }));
+  assert.equal(fresh.status, 201, 'pedido novo não depende do que mudou');
+  assert.equal(created.row.state.orders.length, 3);
+
+  const changed = makeHarness({ row: seeded });
+  const conflict = await changed.send({ ...envelope('/api/orders/p1', 'PUT', 3, { status: 'Pronto' }), base: { order: '2030-01-01T09:00:00.000Z' } });
+  assert.equal(conflict.status, 409, 'o mesmo pedido mudou depois: continua conflito');
+  assert.equal(changed.calls.rpc.length, 0);
+
+  const blind = makeHarness({ row: seeded });
+  assert.equal((await blind.send(envelope('/api/orders/p1', 'PUT', 3, { status: 'Pronto' }))).status, 409, 'sem carimbo, sem reaplicar');
+
+  const settings = makeHarness({ row: seeded });
+  const sameSection = JSON.stringify(createEmptyState().availability);
+  const saved = await settings.send({ ...envelope('/api/availability', 'PUT', 3, { ...createEmptyState().availability, dailyOrderLimit: 4 }), base: { section: sameSection } });
+  assert.equal(saved.status, 200, 'ajuste igual ao visto: reaplica');
+  assert.equal(settings.row.state.availability.dailyOrderLimit, 4);
+});
