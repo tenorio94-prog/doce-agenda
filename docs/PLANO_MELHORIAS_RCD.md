@@ -1,6 +1,6 @@
 # Plano de melhorias — Revenue-Centric Design
 
-**26/10/2026 · só plano, nada implementado · cada item precisa de "sim" do Lucas antes de começar**
+**26/10/2026 · plano aprovado por Lucas ("pode executar tudo"); situação de cada item na seção 6**
 
 Fonte: skill [Revenue-Centric Design](https://github.com/heliocosta-dev/revenue-centric-design) (Richard, @richardrx). A ideia central: cada tela deve servir a confeiteira **e** o negócio — levar a pessoa ao valor mais rápido, fazer ela voltar e, no momento certo, pagar. São heurísticas de outros produtos, não prova de que vai funcionar aqui.
 
@@ -88,3 +88,23 @@ Legenda de esforço: **P** = só tela, um commit; **M** = várias telas ou regra
 2. **Primeira entrega de código:** 1.1 + 1.2 (pequenas, só tela, baixo risco).
 3. **Em seguida:** 1.4, depois 1.3.
 4. 0.1, 3.2 e tudo de preço só com autorização própria.
+
+## 6. Situação (26/10/2026)
+
+Lucas aprovou executar tudo; o Doce Agenda é projeto de faculdade, sem foco comercial, e as conversas com confeiteiras ficam para quando ele achar que está pronto.
+
+| Item | Situação | Commit |
+|---|---|---|
+| 1.1 Primeiros passos começam com a conta criada (1 de 4) | Feito e testado | `656f48f` |
+| 1.2 Cadastro com 3 campos; senha visível por padrão (não há recuperação por e-mail) | Feito e testado | `28dc29e` |
+| 1.3 "Você já tem encomenda marcada?" na conta nova | Feito e testado | `afe908a` |
+| 1.4 Comemoração do primeiro pedido real | Feito e testado | `281c8f8` |
+| 2.2 Convite para criar conta depois de 2 tarefas da demo | Feito e testado | `24a9963` |
+| 3.1 "O que você já guardou aqui" em Meu mês (calculado no servidor) | Feito e testado; na conta real só aparece depois de publicar a `doce-api` (Supabase) | `55b2ab0` |
+| 2.4 Velocidade da landing: fotos abaixo da dobra só ao rolar | Feito: LCP 3,08 s → 1,90 s em 4G lento simulado, 853 → 500 KB | `1085b2d` |
+| 0.2, 2.1, 2.3, 4.2 | Dependem de conversar com confeiteiras: quando Lucas quiser | — |
+| 4.1 FAQ "Quanto custa?" | Aguarda Lucas decidir se a página diz que é projeto acadêmico | — |
+| 4.3 Plano pago | Fora do escopo (projeto sem foco comercial) | — |
+| 0.1 Contagem agregada, 3.2 aviso de pedido, 3.3 vagas na vitrine | Não feitos: exigem Supabase/política/e-mail; 3.3 contraria a regra atual de a página pública não expor contagens | — |
+
+**Verificado:** `npm run check` passou (65 regras + build + 12 suítes de tela, `test-onboarding` e `test-monthly-summary` ampliados); `npm run screens` antes/depois: só cadastro e Meu mês mudaram, landing idêntica. Chromium headless; sem Safari, aparelho físico ou conta real. **Não publicado** (sessão na nuvem sem login da Cloudflare/Supabase).
