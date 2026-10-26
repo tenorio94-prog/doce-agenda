@@ -591,6 +591,7 @@ function productionMarkup() {
 
 // Hoje: o que pede você primeiro, depois as entregas de hoje e os próximos dias (plano de simplificação, etapa 2).
 // A semana com as vagas e a lista de produção ficam em Pedidos.
+// Conta sem nenhum pedido: nada de dia vazio; a tela abre nos Primeiros passos (ou no convite para o primeiro pedido).
 function renderToday() {
   const panel = $("#view-today");
   panel.classList.add('today-redesign');
@@ -605,7 +606,7 @@ function renderToday() {
     ${firstOrderMarkup()}
     ${firstUse && !onboardingVisible() ? `<section class="welcome-panel"><h2>Cadastre seu primeiro pedido</h2><p>Comece com cliente, produto e valor. Complete os detalhes quando estiverem combinados.</p><div class="welcome-actions"><button class="button button-primary" type="button" data-action="new-order">Nova encomenda</button></div></section>` : ''}
     ${sample && firstUse ? `<section class="sample-card" aria-label="Pedido de exemplo">${rowMarkup(sample)}<p>Toque para ver como fica um pedido completo. O exemplo não entra na sua agenda.</p></section>` : sample ? `<details class="sample-examples"><summary>Exemplo fictício — não entra na sua agenda</summary><div class="sample-example-list">${state.orders.filter(sampleOrder).map((order) => `<button class="text-link" type="button" data-open-order="${esc(order.id)}">Ver exemplo: ${esc(clientName(order) || order.product || "pedido")}</button>`).join("")}</div></details>` : ''}
-    <div class="vn-agenda-grid"><div class="vn-schedule">${attentionMarkup()}${dayScheduleMarkup({ todayOnly: true, upcomingCount: upcoming.length })}
+    <div class="vn-agenda-grid"><div class="vn-schedule">${attentionMarkup()}${firstUse ? "" : dayScheduleMarkup({ todayOnly: true, upcomingCount: upcoming.length })}
     ${onboardingMarkup()}
     ${pendingChanges.length ? `<section class="pending-card surface"><div class="section-head"><h2>Alterações para revisar</h2><span class="pending-count">${pendingChanges.length}</span></div><div class="pending-list">${pendingChanges.slice(0, 3).map((order) => `<button class="pending-row" type="button" data-open-order="${esc(order.id)}"><span><strong>${esc(order.client)}</strong><small>${esc(order.product)}</small></span><span class="pending-chevron" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></span><span class="pending-banner"><strong>Pedido de mudança:</strong> ${esc(order.pendingChange)}</span></button>`).join("")}</div></section>` : ""}
     ${upcomingMarkup(upcoming)}
