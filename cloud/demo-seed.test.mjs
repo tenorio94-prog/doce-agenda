@@ -44,5 +44,7 @@ test('demo gives Clientes a regular customer, one away, a birthday coming back a
   const seed = demoSeedState(now);
   const recent = { ...seed, orders: seed.orders.filter((order) => !order.id.startsWith('DEMO-H')), payments: seed.payments.filter((payment) => !payment.orderId.startsWith('DEMO-H')) };
   const at = new Date('2026-10-14T12:00:00Z');
-  assert.deepEqual(monthlySummary(seed, '2026-10', at), monthlySummary(recent, '2026-10', at), 'older orders stay out of this month');
+  const month = (state) => { const { lifetime, ...rest } = monthlySummary(state, '2026-10', at); return rest; };
+  assert.deepEqual(month(seed), month(recent), 'older orders stay out of this month');
+  assert.ok(monthlySummary(seed, '2026-10', at).lifetime.ordersCount > monthlySummary(recent, '2026-10', at).lifetime.ordersCount, 'but they count in what she kept');
 });

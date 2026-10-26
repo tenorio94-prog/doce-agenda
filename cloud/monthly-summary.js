@@ -1,3 +1,5 @@
+import { clientKeyFor } from './clients.js';
+
 const TIME_ZONE = 'America/Sao_Paulo';
 const dateFormatter = new Intl.DateTimeFormat('en-CA', { timeZone: TIME_ZONE, year: 'numeric', month: '2-digit', day: '2-digit' });
 const WEEKDAYS = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
@@ -57,5 +59,27 @@ export function monthlySummary(state, month, now = new Date()) {
     topProducts: [...products.values()].sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'pt-BR')).slice(0, 5),
     averageNoticeDays: noticeOrdersCount ? Math.round(noticeDays * 10 / noticeOrdersCount) / 10 : null,
     noticeOrdersCount,
+    lifetime: lifetimeSummary(state),
   };
+}
+
+// "O que você já guardou aqui": the same eligible orders and checked payments as Meu mês, in every month,
+// so the total never disagrees with the months added up. Clients are counted by the Clientes key.
+export function lifetimeSummary(state) {
+  const selected = new Set(), clients = new Set();
+  let ordersCount = 0, deliveredCount = 0, receivedCents = 0, firstMonth = null;
+  for (const order of state.orders || []) {
+    if (!['Confirmado', 'Entregue'].includes(order.status) || order.isSample || order.isDemo || order.sample) continue;
+    const day = saoPauloDay(order.dueAt);
+    if (!day) continue;
+    ordersCount++; selected.add(String(order.id));
+    if (order.status === 'Entregue') deliveredCount++;
+    const key = clientKeyFor(order); if (key) clients.add(key);
+    if (!firstMonth || day.slice(0, 7) < firstMonth) firstMonth = day.slice(0, 7);
+  }
+  for (const payment of state.payments || []) {
+    if (payment.status !== 'Conferido' || !selected.has(String(payment.orderId))) continue;
+    const amount = cents(payment.amount); if (amount !== null) receivedCents += amount;
+  }
+  return { ordersCount, deliveredCount, clientsCount: clients.size, receivedCents, firstMonth };
 }
