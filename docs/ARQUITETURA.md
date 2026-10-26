@@ -25,7 +25,7 @@ Atualizado em 15/10/2026. Descreve o código como está e as decisões que orien
 1. **Feita:** instruções dos agentes, base comum dos testes de tela, capturas antes/depois (`npm run screens`) e comandos `npm run check`.
 2. **Feita:** app passa pelo esbuild; modo demo/conta lido em tempo de execução.
 3. **Regras compartilhadas:** extrair constantes e regras puras (situações, etapas, conferido, falta o sinal) para um módulo usado por app e servidor, com testes em Node. Nada muda no servidor além de importar o mesmo módulo.
-4. **Dividir o app por tela** (Agenda, Pedidos, Meu mês, Ajustes/Link, formulário, boas-vindas) com `state` e acesso a dados próprios. Poucos módulos médios, não dezenas de arquivos.
+4. **Dividir o app por tela** (Hoje, Pedidos com Lista/Semana/Produção, Meu mês, Ajustes/Link, formulário, boas-vindas) com `state` e acesso a dados próprios. Poucos módulos médios, não dezenas de arquivos.
 5. **CSS por responsabilidade** junto com as etapas C–E do polimento.
 6. Depois da etapa 3, avaliar `// @ts-check` com JSDoc nos módulos de regras (TypeScript só como verificador, sem compilar o app).
 

@@ -1,6 +1,6 @@
 // Cartão de pedido novo e entrada pela landing: node scripts/build-cloudflare.mjs && node scripts/test-landing-entry.mjs [pasta-de-capturas]
 // Um pedido pelo link: o cartão diz quem pediu, o quê e quando, e abre direto a revisão.
-// Vários: o cartão resume os nomes e leva para Novos. O ?de=landing sai do endereço.
+// Vários: o cartão resume os nomes e leva para Para decidir. O ?de=landing sai do endereço.
 import assert from 'node:assert/strict';
 import { mkdir } from 'node:fs/promises';
 import path from 'node:path';
@@ -47,7 +47,7 @@ try {
     if (shots) await page.screenshot({ path: path.join(shots, `revisao-${width}.png`), fullPage: false });
     await context.close();
 
-    // Vários pedidos (demo com um segundo pedido do link): nomes resumidos e ida para Novos.
+    // Vários pedidos (demo com um segundo pedido do link): nomes resumidos e ida para Para decidir.
     const many = await browser.newContext({ viewport: { width, height }, locale: 'pt-BR', timezoneId: 'America/Sao_Paulo' });
     const manyPage = await many.newPage();
     manyPage.on('pageerror', (error) => errors.push(String(error)));
@@ -71,7 +71,7 @@ try {
 
 
     assert.deepEqual(errors, []);
-    results.push(`${width}px: cartão de um pedido abre a revisão, vários levam a Novos`);
+    results.push(`${width}px: cartão de um pedido abre a revisão, vários levam a Para decidir`);
   }
   results.forEach((line) => console.log(`ok - ${line}`));
 } finally {

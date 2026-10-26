@@ -1,6 +1,6 @@
 // Boas-vindas: node scripts/build-cloudflare.mjs && node scripts/test-onboarding.mjs [pasta-de-capturas]
 // Demonstração: "Experimente em 1 minuto" com 4 tarefas feitas na tela de verdade, convite após 2, Pular e "Como funciona".
-// Conta nova: "Primeiros passos" com 4 tarefas, a conta criada já feita; sem pedido, pergunta se já tem encomenda. Dicas de uma frase nas abas, que somem ao fechar.
+// Conta nova: "Primeiros passos" com 4 tarefas, a conta criada já feita; sem pedido, pergunta se já tem encomenda. Abas sem caixas de dica.
 import assert from 'node:assert/strict';
 import { mkdir } from 'node:fs/promises';
 import path from 'node:path';
@@ -102,20 +102,12 @@ try {
     await skipPage.locator('#toast').filter({ hasText: 'Como funciona' }).waitFor();
     assert.equal(await skipPage.locator('#view-today .onboarding').count(), 0);
 
-    // Dicas: aparecem nas abas e somem para sempre ao fechar.
-    for (const [view, title] of [['orders', '#orders-title'], ['month', '#month-title']]) {
-      await skipPage.locator(`.nav-item[data-view="${view}"]`).click();
+    // Simplificação, etapa 4: sem caixas de dica em nenhuma aba; cada tela se explica sozinha.
+    for (const [view, title] of [['orders', '#orders-title'], ['month', '#month-title'], ['clients', '#clients-title'], ['settings', '#settings-title']]) {
+      await skipPage.locator(`[data-view="${view}"]:visible`).first().click();
       await skipPage.locator(title).waitFor();
-      const tip = skipPage.locator(`#view-${view} .tab-tip`);
-      await tip.waitFor();
-      if (shots && view === 'orders') await skipPage.screenshot({ path: path.join(shots, `dica-${width}.png`) });
-      await tip.locator('[data-action="close-tip"]').click();
-      assert.equal(await skipPage.locator(`#view-${view} .tab-tip`).count(), 0);
+      assert.equal(await skipPage.locator(`#view-${view} .tab-tip, #view-${view} [data-action="close-tip"]`).count(), 0, `sem dica em ${view}`);
     }
-    await skipPage.reload(); await skipPage.locator('#today-title').waitFor();
-    await skipPage.locator('.nav-item[data-view="orders"]').click();
-    await skipPage.locator('#orders-title').waitFor();
-    assert.equal(await skipPage.locator('#view-orders .tab-tip').count(), 0, 'dica fechada não volta');
     await skip.close();
 
     // Conta nova (simulada sobre os dados da demo): "Primeiros passos" com 4 tarefas; a conta criada já vem feita.
@@ -205,7 +197,7 @@ try {
     }
 
     assert.deepEqual(errors, []);
-    results.push(`${width}px: 4 tarefas da demo, fim com convite, Pular, Como funciona, dicas e Primeiros passos`);
+    results.push(`${width}px: 4 tarefas da demo, fim com convite, Pular, Como funciona, abas sem dica e Primeiros passos`);
   }
   results.forEach((line) => console.log(`ok - ${line}`));
 } finally {

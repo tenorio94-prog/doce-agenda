@@ -196,7 +196,7 @@ try {
     await pick(page, 'status', 'Orçamento');
     assert.equal(await page.locator('#save-order-button').innerText(), 'Salvar orçamento');
     await save(page);
-    assert.match(await page.locator('#toast').innerText(), /^Orçamento de Lia salvo em Pedidos, em Novos\./);
+    assert.match(await page.locator('#toast').innerText(), /^Orçamento de Lia salvo em Pedidos, em Para decidir\./);
     assert.equal((await state(page)).orders.find((o) => o.client === 'Lia Souza').status, 'Orçamento');
     results.push({ width, case: 'orçamento diz onde ficou' });
 

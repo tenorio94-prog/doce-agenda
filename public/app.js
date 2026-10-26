@@ -92,17 +92,17 @@ const statusSlug = (status) => ({
 }[status] || "waiting");
 const statusPill = (status) => `<span class="status-pill status-${statusSlug(status)}-pill">${esc(status || "Sem situação")}</span>`;
 // Stages of the Pedidos tab group the existing situations; stored statuses are unchanged.
+// Simplificação, etapa 4: três palavras para a vida do pedido (Para decidir, Combinado, Entregue).
+// As 9 situações gravadas não mudam; Fazendo e Pronto aparecem só como andamento do pedido combinado.
 const ORDER_STAGES = [
   { key: "all", label: "Todos", statuses: null },
-  // Em aberto: ainda tem trabalho (confirmado, fazendo, pronto) ou ainda tem dinheiro a receber depois de entregue.
-  { key: "open", label: "Em aberto", test: (order) => (isCommitted(order) && order.status !== "Entregue") || (order.status === "Entregue" && balanceFor(order) > 0) },
-  { key: "new", label: "Novos", statuses: ["Solicitação", "Orçamento", "Aguardando confirmação"] },
-  { key: "confirmed", label: "Confirmados", statuses: ["Confirmado"] },
-  { key: "production", label: "Fazendo", statuses: ["Em produção"] },
-  { key: "ready", label: "Prontos", statuses: ["Pronto"] },
+  { key: "new", label: "Para decidir", statuses: ["Solicitação", "Orçamento", "Aguardando confirmação"] },
+  { key: "confirmed", label: "Combinados", statuses: ["Confirmado", "Em produção", "Pronto"] },
   { key: "delivered", label: "Entregues", statuses: ["Entregue"] },
   { key: "closed", label: "Cancelados", statuses: ["Cancelado", "Recusado"] },
 ];
+const STATUS_WORDS = { "Solicitação": "Para decidir", "Orçamento": "Para decidir", "Aguardando confirmação": "Para decidir", "Confirmado": "Combinado", "Em produção": "Fazendo", "Pronto": "Pronto", "Entregue": "Entregue", "Cancelado": "Cancelado", "Recusado": "Recusado" };
+const statusWord = (status) => STATUS_WORDS[status] || status;
 // One-tap forward step for orders already confirmed. Earlier stages need the full form.
 const NEXT_STEP = { "Confirmado": ["Em produção", "Começar a fazer"], "Em produção": ["Pronto", "Ficou pronto"], "Pronto": ["Entregue", "Marcar entregue"] };
 // Next action for any order: one tap once confirmed, the form for quotes (date, capacity
@@ -316,7 +316,7 @@ function emptyState(title, message, button = true) {
   return `<div class="empty-state"><h3>${esc(title)}</h3><p>${esc(message)}</p>${button ? `<button class="button button-primary" type="button" data-action="new-order">Criar primeiro pedido</button>` : ""}</div>`;
 }
 
-// New orders from the link: one opens straight into the review; several go to the Novos list.
+// New orders from the link: one opens straight into the review; several go to the Para decidir list.
 function requestBanner() {
   const pending = sortOrders(state.orders.filter((order) => order.status === "Solicitação"));
   if (!pending.length) return "";
@@ -354,7 +354,7 @@ function upcomingMarkup(orders) {
 // Linha baixa de pedido (Próximos dias): hora, produto, cliente e o carimbo pequeno. A linha inteira abre a ficha.
 function agendaLineMarkup(order, options = {}) {
   const mode = (order.mode || "Retirada").toLowerCase();
-  const sub = options.withDate ? `${order.dueAt ? listDayLabel(order.dueAt) : "Sem data"}, ${order.status.toLocaleLowerCase("pt-BR")}` : `${clientName(order) || "Cliente sem nome"}, ${mode}`;
+  const sub = options.withDate ? `${order.dueAt ? listDayLabel(order.dueAt) : "Sem data"}, ${statusWord(order.status).toLocaleLowerCase("pt-BR")}` : `${clientName(order) || "Cliente sem nome"}, ${mode}`;
   const side = options.withDate ? `<span class="vn-line-side"><b>${esc(orderTotalLabel(order))}</b>${moneyStamp(order, informedFor(order.id), { compact: true }).html}</span>` : moneyStamp(order, informedFor(order.id), { compact: true }).html;
   return `<button class="vn-line${options.withDate ? " has-date" : ""}" type="button" data-open-order="${esc(order.id)}"><span class="vn-line-time">${esc(shortTime(order.dueAt) || "—")}</span><span class="vn-line-main"><b>${esc(order.product || "Produto sem descrição")}</b><small>${esc(sub)}</small></span>${side}</button>`;
 }
@@ -414,7 +414,7 @@ function paymentBadge(order) {
   if (order.status === "Entregue" && balance > 0) return `<span class="vn-badge amber">Falta ${esc(money(balance))}</span>`;
   return `<span class="vn-badge green">${balance !== null && balance <= 0 ? "Total conferido" : "Sinal conferido"}</span>`;
 }
-const statusBadge = (status) => `<span class="vn-badge ${["Pronto", "Entregue"].includes(status) ? "green" : isCancelled({ status }) ? "muted" : "outline"}">${esc(status)}</span>`;
+const statusBadge = (status) => `<span class="vn-badge ${["Pronto", "Entregue"].includes(status) ? "green" : isCancelled({ status }) ? "muted" : "outline"}">${esc(statusWord(status))}</span>`;
 // Late = the delivery time has passed and the order was not delivered yet.
 const isLate = (order) => ["Confirmado", "Em produção", "Pronto"].includes(order.status) && (parseDate(order.dueAt)?.getTime() ?? Infinity) < Date.now();
 const lateBadge = (order) => isLate(order) ? '<span class="vn-badge red">Atrasado</span>' : "";
@@ -483,11 +483,11 @@ function agendaCardMarkup(order, options = {}) {
     ${options.compact ? "" : `<div class="vn-row vn-card-foot"><span class="cmd-money">${stamp.html}${stage}</span>${step || `<strong class="vn-total">${esc(orderTotalLabel(order))}</strong>`}</div>`}
   </article>`;
 }
-// Caixa de entrada (Pedidos → Novos): mantém valor e ocupação da data em destaque para decidir.
+// Para decidir (Pedidos): mantém valor e ocupação da data em destaque para decidir.
 function inboxCardMarkup(order, options) {
   const date = parseDate(order.dueAt), mode = order.mode || "Retirada";
   return `<article class="vn-order is-inbox" data-open-order="${esc(order.id)}">
-    <div class="vn-row vn-inbox-top"><span class="vn-eyebrow">${esc(order.status === "Solicitação" ? "Solicitação" : "Pedido")}${order.publicCode ? ` ${esc(order.publicCode)}` : ""}</span>${order.status === "Solicitação" ? '<span class="vn-badge outline">Aguardando revisão</span>' : statusBadge(order.status)}</div>
+    <div class="vn-row vn-inbox-top"><span class="vn-eyebrow">${esc(order.status === "Solicitação" ? "Pelo link" : "Orçamento")}${order.publicCode ? ` ${esc(order.publicCode)}` : ""}</span>${order.status === "Solicitação" ? '<span class="vn-badge outline">Para decidir</span>' : statusBadge(order.status)}</div>
     <div class="vn-product"><div><span class="vn-client">${esc(clientName(order) || "Cliente sem nome")}</span><h3><button class="vn-open" type="button" aria-label="Abrir pedido de ${esc(clientName(order) || "cliente sem nome")}: ${esc(order.product || "produto sem descrição")}">${esc(order.product || "Produto sem descrição")}</button></h3><div class="vn-inbox-value"><span>Valor total</span><strong class="vn-total">${esc(orderTotalLabel(order))}</strong></div></div></div>
     ${originMarkup(order)}
     <div class="vn-note vn-inbox-date">${icon("clock")}<span>${esc(date ? dateTimeLabel(order.dueAt) : "Data e horário a combinar")}, ${esc(mode.toLowerCase())}</span></div>
@@ -649,7 +649,7 @@ function historyLineMarkup(order) {
   const date = parseDate(order.dueAt);
   const day = date ? String(date.getDate()) : "—";
   const month = date ? new Intl.DateTimeFormat("pt-BR", { month: "short", ...(date.getFullYear() !== new Date().getFullYear() ? { year: "2-digit" } : {}) }).format(date).replace(/\./g, "").replace(" de ", " ") : "";
-  const sub = `${clientName(order) || "Cliente sem nome"}, ${order.status.toLocaleLowerCase("pt-BR")}`;
+  const sub = `${clientName(order) || "Cliente sem nome"}, ${statusWord(order.status).toLocaleLowerCase("pt-BR")}`;
   const stamp = moneyStamp(order, informedFor(order.id), { compact: true }).html;
   return `<button class="vn-line is-history${isCancelled(order) ? " is-cancelled" : ""}" type="button" data-open-order="${esc(order.id)}" aria-label="${esc(`${order.product || "Pedido"}, ${sub}, ${date ? listDayLabel(order.dueAt) : "sem data"}`)}"><span class="vn-line-time vn-line-date"><b>${esc(day)}</b><small>${esc(month)}</small></span><span class="vn-line-main"><b>${esc(order.product || "Produto sem descrição")}</b><small>${esc(sub)}</small>${order.origin === "link" ? `<small class="vn-line-origin">${icon("link")}Recebido pelo link</small>` : ""}</span><span class="vn-line-side"><b>${esc(orderTotalLabel(order))}</b>${stamp}</span></button>`;
 }
@@ -693,11 +693,11 @@ function renderOrders() {
   }).join("");
   const pendingRequests = own.filter((order) => order.status === "Solicitação").length;
   const negotiations = own.filter((order) => ["Orçamento", "Aguardando confirmação"].includes(order.status)).length;
-  const inbox = state.statusFilter === "new" ? `<section class="vn-inbox-banner"><span class="vn-summary-icon">${icon("inbox")}</span><div><h2>Caixa de entrada</h2><p class="vn-inbox-counts"><a href="#inbox-review-title">${pendingRequests} para revisar</a> · <a href="#inbox-negotiation-title">${negotiations} em negociação</a></p><p>Solicitações aguardam sua revisão. Orçamentos seguem em negociação. Só a confirmação ocupa vaga.</p></div></section>` : "";
+  const inbox = state.statusFilter === "new" ? `<section class="vn-inbox-banner"><span class="vn-summary-icon">${icon("inbox")}</span><div><h2>Para decidir</h2><p class="vn-inbox-counts"><a href="#inbox-review-title">${pendingRequests} pelo link</a> · <a href="#inbox-negotiation-title">${negotiations} ${negotiations === 1 ? "orçamento" : "orçamentos"}</a></p><p>Nada aqui ocupa vaga até você confirmar.</p></div></section>` : "";
   let leadTaken = false;
   const inboxSections = () => [
-    { key: "review", title: "Para revisar", statuses: ["Solicitação"], description: "Confira o que a cliente pediu e decida se aceita ou recusa.", empty: "Nenhuma solicitação para revisar." },
-    { key: "negotiation", title: "Em negociação", statuses: ["Orçamento", "Aguardando confirmação"], description: "Orçamentos e pedidos aguardando o combinado final com a cliente.", empty: "Nenhum orçamento em negociação." },
+    { key: "review", title: "Chegaram pelo link", statuses: ["Solicitação"], description: "Confira o que a cliente pediu e decida se aceita ou recusa.", empty: "Nenhum pedido pelo link para decidir." },
+    { key: "negotiation", title: "Orçamentos", statuses: ["Orçamento", "Aguardando confirmação"], description: "Você passou o preço e espera a resposta da cliente.", empty: "Nenhum orçamento esperando resposta." },
   ].map((section) => {
     const list = orders.filter((order) => section.statuses.includes(order.status));
     const lead = leadTaken ? null : list[0]; if (lead) leadTaken = true;
@@ -709,7 +709,7 @@ function renderOrders() {
     <p class="order-results" aria-live="polite"><strong>${orders.length}</strong> ${orders.length === 1 ? "pedido encontrado" : "pedidos encontrados"}</p>
     ${state.statusFilter === "new" ? inboxSections() : orders.length ? ordersByDayMarkup(orders) : state.orders.some((order) => !sampleOrder(order)) ? emptyState("Nada por aqui com esse filtro", "Tente outro nome ou situação para encontrar o pedido.", false) : emptyState("Seu próximo pedido começa aqui", "Cadastre o combinado com a cliente e acompanhe pagamentos, mudanças e data de entrega.", true)}`;
   }
-  panel.innerHTML = `<header class="vn-heading"><div><h1 id="orders-title" tabindex="-1">Pedidos</h1></div><button class="vn-btn primary vn-heading-add page-add" data-action="new-order" type="button">${icon("plus")} Nova encomenda</button></header>${tipMarkup("orders")}
+  panel.innerHTML = `<header class="vn-heading"><div><h1 id="orders-title" tabindex="-1">Pedidos</h1></div><button class="vn-btn primary vn-heading-add page-add" data-action="new-order" type="button">${icon("plus")} Nova encomenda</button></header>
     ${modeSwitch}${mode === "week" ? `${weekBarMarkup()}${dayScheduleMarkup()}` : mode === "production" ? productionMarkup() : ordersListMarkup()}`;
   panel.hidden = state.activeView !== "orders";
   if (queryWasFocused) {
@@ -788,7 +788,7 @@ function renderSettings() {
   const focusName = ["date-availability-form", "availability-form"].includes(focusForm) ? focused.name : "";
   const focusSelection = focusName && typeof focused.selectionStart === "number" ? focused.selectionStart : null;
   const summary = settingsSummaries();
-  content.innerHTML = `<div class="page-heading"><div><h1 id="settings-title">Ajustes</h1></div></div>${tipMarkup("settings")}
+  content.innerHTML = `<div class="page-heading"><div><h1 id="settings-title">Ajustes</h1></div></div>
     <div class="settings-list">
       ${settingsCard("link", "Sua vitrine", summary.link, orderPageMarkup())}
       ${settingsCard("days", "Dias e limites", summary.days, availabilitySettingsMarkup(state.settingsDate))}
@@ -867,7 +867,7 @@ function renderMonth() {
     const fact = (value, label) => `<li><strong>${esc(value)}</strong><span>${esc(label)}</span></li>`;
     content += `<section class="surface month-lifetime" aria-labelledby="lifetime-title"><h2 id="lifetime-title">O que você já guardou aqui</h2>${since ? `<p class="month-lifetime-since">Desde ${esc(since)}</p>` : ''}<ul class="month-lifetime-list">${fact(life.ordersCount, life.ordersCount === 1 ? 'encomenda' : 'encomendas')}${fact(life.deliveredCount, life.deliveredCount === 1 ? 'entregue' : 'entregues')}${fact(life.clientsCount, life.clientsCount === 1 ? 'cliente' : 'clientes')}${fact(money(life.receivedCents / 100), 'recebido e conferido')}</ul><p class="month-note">É tudo seu: a cópia de segurança, em Ajustes, leva o histórico inteiro.</p></section>`;
   }
-  panel.innerHTML = `<header class="vn-heading"><div><h1 id="month-title" tabindex="-1">Meu mês</h1></div></header><div class="week-controls month-controls vn-month-nav"><button class="icon-button" type="button" data-month-shift="-1" aria-label="Mês anterior" ${state.month==='1900-01'?'disabled':''}>${icon('left')}</button><span class="month-range" aria-live="polite">${esc(label)}</span><button class="icon-button" type="button" data-month-shift="1" aria-label="Próximo mês" ${state.month>=(data?.currentMonth||currentBusinessMonth())?'disabled':''}>${icon('right')}</button></div>${tipMarkup("month")}<div class="vn-month-grid"><div class="month-content" aria-busy="${state.monthLoading}" aria-live="polite">${content}</div><aside class="vn-wine-panel vn-month-note"><span class="vn-eyebrow">Mais clareza, menos papel</span><h2>Recebido não é lucro.</h2><p>Custos e despesas não fazem parte deste resumo.</p><p>Um Pix informado continua pendente até você conferir no banco e marcar no pedido.</p></aside></div><p class="month-note month-definition">Conta pedidos Confirmados e Entregues pela data de retirada ou entrega. Recebido inclui apenas pagamentos conferidos desses pedidos, mesmo que tenham sido recebidos em outro mês. Não inclui orçamentos, solicitações nem exemplos.</p>`;
+  panel.innerHTML = `<header class="vn-heading"><div><h1 id="month-title" tabindex="-1">Meu mês</h1></div></header><div class="week-controls month-controls vn-month-nav"><button class="icon-button" type="button" data-month-shift="-1" aria-label="Mês anterior" ${state.month==='1900-01'?'disabled':''}>${icon('left')}</button><span class="month-range" aria-live="polite">${esc(label)}</span><button class="icon-button" type="button" data-month-shift="1" aria-label="Próximo mês" ${state.month>=(data?.currentMonth||currentBusinessMonth())?'disabled':''}>${icon('right')}</button></div><div class="vn-month-grid"><div class="month-content" aria-busy="${state.monthLoading}" aria-live="polite">${content}</div><aside class="vn-wine-panel vn-month-note"><span class="vn-eyebrow">Mais clareza, menos papel</span><h2>Recebido não é lucro.</h2><p>Custos e despesas não fazem parte deste resumo.</p><p>Um Pix informado continua pendente até você conferir no banco e marcar no pedido.</p></aside></div><p class="month-note month-definition">Conta pedidos Confirmados e Entregues pela data de retirada ou entrega. Recebido inclui apenas pagamentos conferidos desses pedidos, mesmo que tenham sido recebidos em outro mês. Não inclui orçamentos, solicitações nem exemplos.</p>`;
   if (focused !== undefined) panel.querySelector(`[data-month-shift="${CSS.escape(focused)}"]`)?.focus({preventScroll:true});
   if (!state.monthData && !state.monthError && !state.monthLoading) loadMonth();
 }
@@ -1418,7 +1418,7 @@ function reportOrderFormErrors(form) {
   return form.checkValidity() || form.reportValidity();
 }
 
-// O aviso diz onde o pedido foi parar: na agenda (com o dia) ou em Pedidos, em Novos.
+// O aviso diz onde o pedido foi parar: na agenda (com o dia) ou em Pedidos, em Para decidir.
 // Primeiro pedido de verdade da conta: comemorar no topo da Agenda, não só confirmar (regra pico-fim, plano RCD 1.4).
 // Fica só na memória: some ao fechar ou ao recarregar.
 let firstOrderCelebration = null;
@@ -1430,7 +1430,7 @@ function firstOrderMarkup() {
   if (committed && dayKey) {
     const availability = availabilityFor(dayKey), day = capitalize(calendarDateLabel(dayKey, { weekday: "long", day: "numeric", month: "long" }));
     place = Number.isInteger(availability.limit) ? `${day}: ${availability.count} de ${availability.limit} ${availability.limit === 1 ? "vaga ocupada" : "vagas ocupadas"}.` : `${day} já tem ${availability.count} ${availability.count === 1 ? "pedido" : "pedidos"} na agenda.`;
-  } else if (DECISION_STATUSES.includes(order.status)) place = "Está em Pedidos, em Novos, como orçamento. Quando fechar, confirme e ele ocupa a vaga.";
+  } else if (DECISION_STATUSES.includes(order.status)) place = "Está em Pedidos, em Para decidir, como orçamento. Quando fechar, confirme e ele ocupa a vaga.";
   const next = committed ? (needsDeposit(order) ? "Quando o sinal cair na conta, marque na ficha do pedido." : "No dia, um toque leva o pedido de etapa em etapa.") : "";
   return `<section class="first-order" aria-labelledby="first-order-title">
     <span class="first-order-stamp" aria-hidden="true">✓</span>
@@ -1444,7 +1444,7 @@ function savedOrderMessage(order, created) {
   if (!created) return "Alterações salvas.";
   const name = order.client.split(/\s+/)[0];
   if (isCommitted(order) && order.dueAt) return `${name} está na agenda: ${listDayLabel(order.dueAt)}, ${shortTime(order.dueAt)}.`;
-  if (DECISION_STATUSES.includes(order.status)) return `Orçamento de ${name} salvo em Pedidos, em Novos.`;
+  if (DECISION_STATUSES.includes(order.status)) return `Orçamento de ${name} salvo em Pedidos, em Para decidir.`;
   return "Encomenda salva.";
 }
 
@@ -1601,7 +1601,6 @@ function handleClick(event) {
     case 'onboarding-go': runOnboardingTask(action.dataset.task); break;
     case 'close-first-order': firstOrderCelebration = null; renderToday(); break;
     case 'onboarding-intent': { const progress = readOnboarding(); progress.intent = action.dataset.intent; saveOnboarding(progress); renderToday(); if (progress.intent === 'tem-pedido') openOrderForm(); else showToast('Combinado. Comece pelo link e pelos seus dias.'); break; }
-    case 'close-tip': closeTip(action.dataset.tip); break;
     case 'pix-charge': openPixCharge(id); break;
     case 'retry-clients': state.clientsError = ""; state.clientsData = null; renderClients(); break;
     case 'erase-client': eraseClient(action.dataset.clientKey); break;
@@ -1800,7 +1799,7 @@ function orderPageMarkup() {
       <div class="link-share"><button class="button button-primary" type="button" data-action="copy-order-link">Copiar link</button><button class="button button-quiet" type="button" data-action="share-order-link">Mandar no WhatsApp</button></div>
       <div class="link-kit"><button class="text-link" type="button" data-action="share-kit" data-kind="story">Imagem para status e story</button><button class="text-link" type="button" data-action="share-kit" data-kind="qr">QR para imprimir</button></div>
       <button class="text-link" type="button" data-action="preview-link">Ver como a cliente vê</button>
-      <p class="link-tip">Coloque na bio do Instagram e no status do WhatsApp. Cada pedido chega em <b>Novos</b> para você revisar antes de aceitar.</p></div>`
+      <p class="link-tip">Coloque na bio do Instagram e no status do WhatsApp. Cada pedido chega em <b>Para decidir</b> para você revisar antes de aceitar.</p></div>`
     : `<div class="link-hero"><h2>Sua vitrine</h2><p>Uma página com a sua marca e os seus doces. A cliente escolhe, vê as datas livres e manda o pedido. Você revisa antes de aceitar.</p>${cloud ? "" : '<p class="link-demo-note">Na demonstração dá para montar e ver a prévia. Para receber pedidos de verdade, crie sua conta grátis.</p>'}</div>`;
   const actions = live
     ? '<button class="button button-primary" type="submit" name="intent" value="save">Salvar alterações</button><button class="button button-quiet" type="button" data-action="preview-link">Ver prévia</button><button class="text-link link-pause" type="submit" name="intent" value="pause">Pausar link</button>'
@@ -2025,7 +2024,7 @@ function requestReviewMarkup(order){
  if(order.status!=='Solicitação')return order.reviewOutcome==='refused'?`<p class="pending-banner">Solicitação recusada${order.refusalReason?`: ${esc(order.refusalReason)}`:'.'}</p>`:'';
  const day=order.dueAt?.slice(0,10),available=day?availabilityFor(day):{limit:null},pending=state.orders.filter(o=>o.status==='Solicitação'&&day&&o.dueAt?.slice(0,10)===day).length;
  const remaining=Number.isInteger(available.limit)?Math.max(0,available.limit-available.count):null;
- return `<section class="request-review"><h3>Solicitação${order.publicCode ? ` ${esc(order.publicCode)}` : ""}</h3><p class="request-state"><span class="vn-badge outline">Aguardando revisão</span></p><p>Ainda não confirmada. Confira data, detalhes e valor antes de aceitar.</p><p><strong>Valor total: ${esc(orderTotalLabel(order))}</strong></p>${dateCapacityMarkup(order)}${order.possibleDuplicate?'<p class="form-error">Possível duplicata: compare com as outras solicitações antes de aceitar.</p>':''}${remaining!==null&&pending>remaining?`<p class="form-error">${pending} solicitações para ${remaining} ${remaining===1?'vaga restante':'vagas restantes'} nesta data.</p>`:''}<div class="request-actions"><button class="button button-primary" type="button" data-action="accept-request" data-id="${esc(order.id)}" data-status="Confirmado">Aceitar pedido</button><button class="button button-quiet" type="button" data-action="accept-request" data-id="${esc(order.id)}" data-status="Orçamento">Ainda vou passar o preço</button><button class="text-link" type="button" data-action="refuse-request" data-id="${esc(order.id)}">Recusar</button></div></section>`;
+ return `<section class="request-review"><h3>Pedido pelo link${order.publicCode ? ` ${esc(order.publicCode)}` : ""}</h3><p class="request-state"><span class="vn-badge outline">Para decidir</span></p><p>Ainda não confirmada. Confira data, detalhes e valor antes de aceitar.</p><p><strong>Valor total: ${esc(orderTotalLabel(order))}</strong></p>${dateCapacityMarkup(order)}${order.possibleDuplicate?'<p class="form-error">Possível duplicata: compare com as outras solicitações antes de aceitar.</p>':''}${remaining!==null&&pending>remaining?`<p class="form-error">${pending} solicitações para ${remaining} ${remaining===1?'vaga restante':'vagas restantes'} nesta data.</p>`:''}<div class="request-actions"><button class="button button-primary" type="button" data-action="accept-request" data-id="${esc(order.id)}" data-status="Confirmado">Aceitar pedido</button><button class="button button-quiet" type="button" data-action="accept-request" data-id="${esc(order.id)}" data-status="Orçamento">Ainda vou passar o preço</button><button class="text-link" type="button" data-action="refuse-request" data-id="${esc(order.id)}">Recusar</button></div></section>`;
 }
 async function reviewRequest(id,status){
  try{await apiRequest(`/orders/${encodeURIComponent(id)}/accept`,{method:'POST',body:{status}});closeDetails();await loadState({silent:true});showOrderDetail(id);showToast('Solicitação aceita. Você pode copiar a mensagem para a cliente.');}
@@ -2103,7 +2102,7 @@ function renderClients() {
       ${list.length ? `<div class="client-list">${list.map(clientRowMarkup).join("")}</div>` : '<p class="detail-empty">Nenhuma cliente encontrada.</p>'}`;
   }
   const focused = document.activeElement?.id === "clients-search" ? document.activeElement.selectionStart : null;
-  panel.innerHTML = `<div class="page-heading"><div><h1 id="clients-title">Clientes</h1></div></div>${tipMarkup("clients")}${body}`;
+  panel.innerHTML = `<div class="page-heading"><div><h1 id="clients-title">Clientes</h1></div></div>${body}`;
   if (focused !== null) { const input = $("#clients-search"); input?.focus(); input?.setSelectionRange(focused, focused); }
   if (!data && !state.clientsError && !state.clientsLoading) loadClients();
 }
@@ -2361,17 +2360,4 @@ function runOnboardingTask(key) {
   else if (key === "days" || key === "link") { state.openSettings.add(key); setActiveView("settings"); coach(`.settings-card[data-settings="${key}"]`); }
 }
 
-// One-sentence tips at the top of a tab, until she closes them.
-const TIP_KEY = "doce-agenda.tips.v1";
-const TIPS = {
-  orders: "Em Novos, veja o que está Para revisar e os orçamentos Em negociação. O selo Recebido pelo link mostra a origem, mesmo depois de aceitar.",
-  month: "Só conta como recebido o dinheiro que você marcou como conferido.",
-  settings: "Aqui você ativa o link para as clientes e diz quais dias e quantos pedidos aceita.",
-  clients: "Os pedidos com o mesmo WhatsApp formam a ficha de cada cliente. Sem WhatsApp, juntamos pelo nome.",
-};
-const closedTips = () => { try { const list = JSON.parse(localStorage.getItem(TIP_KEY) || "[]"); return Array.isArray(list) ? list : []; } catch { return []; } };
-const tipMarkup = (key) => closedTips().includes(key) ? "" : `<div class="tab-tip" role="note"><p><strong>Dica:</strong> ${esc(TIPS[key])}</p><button class="tab-tip-close" type="button" data-action="close-tip" data-tip="${key}" aria-label="Fechar dica"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>`;
-function closeTip(key) {
-  try { localStorage.setItem(TIP_KEY, JSON.stringify([...new Set([...closedTips(), key])])); } catch { /* sem armazenamento */ }
-  render();
-}
+// Simplificação, etapa 4: sem caixas de dica; cada tela se explica com as próprias palavras.
