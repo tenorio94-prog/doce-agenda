@@ -144,6 +144,10 @@ try {
       assert.match(await intent.innerText(), /Você já tem encomenda marcada\?/);
       assert.equal(await freshPage.locator('#view-today .onboarding-list').count(), 0, 'pergunta no lugar da lista');
       assert.equal(await count(freshPage), '1 de 4 feitas');
+      // Sem pedido nenhum, a tela abre nos Primeiros passos: sem dia vazio nem "Ajustar esta data" antes deles.
+      assert.equal(await freshPage.locator('#view-today .today-agenda, #view-today .agenda-adjust').count(), 0, 'conta vazia sem caixa do dia');
+      assert.equal(await freshPage.locator('#view-today .vn-schedule > *').first().evaluate((el) => el.classList.contains('onboarding')), true, 'Primeiros passos em primeiro');
+      assert.ok(await intent.locator('[data-intent="tem-pedido"]').evaluate((el) => el.getBoundingClientRect().bottom <= window.innerHeight), `pergunta à vista sem rolar em ${width}px`);
       assert.ok(await freshPage.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), `pergunta sem rolagem lateral em ${width}px`);
       if (shots && answer === 'tem-pedido') await intent.screenshot({ path: path.join(shots, `conta-pergunta-${width}.png`) });
       await intent.locator(`[data-intent="${answer}"]`).click();
@@ -193,6 +197,14 @@ try {
       }
       await freshPage.reload(); await freshPage.locator('#today-title').waitFor();
       assert.equal(await freshPage.locator('#view-today .onboarding-intent').count(), 0, 'resposta lembrada');
+      if (answer === 'sem-pedido') {
+        // Pulou os passos e ainda não tem pedido: fica só o convite para o primeiro pedido.
+        await freshPage.locator('#view-today [data-action="onboarding-skip"]').click();
+        await freshPage.locator('#view-today .welcome-panel').waitFor();
+        assert.equal(await freshPage.locator('#view-today .today-agenda').count(), 0, 'sem caixa do dia depois de Pular');
+      } else {
+        assert.ok(await freshPage.locator('#view-today .today-agenda').count() > 0, 'com pedido, o dia volta');
+      }
       await fresh.close();
     }
 

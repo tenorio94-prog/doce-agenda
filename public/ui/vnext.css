@@ -1773,6 +1773,8 @@ body.vnext { font-variant-numeric: tabular-nums; -webkit-tap-highlight-color: tr
 .vn-day-links { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; margin-top: 8px; }
 .vn-day-links .text-link { min-height: 44px; }
 .vnext #view-today .onboarding { margin-top: 22px; }
+/* Conta sem pedido que pulou os passos: o convite abre a tela, com o mesmo respiro do cartão de passos. */
+.vnext #view-today .welcome-panel { margin-top: 22px; padding: 16px 18px; }
 /* Próximos dias em linhas baixas */
 .vn-coming { margin-top: 26px; }
 .vn-coming .vn-section-row h2 { font: 700 20px var(--vn-title); margin: 0; }
