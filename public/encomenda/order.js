@@ -1,6 +1,7 @@
 // Vitrine da confeitaria e pedido em 3 passos. Empacotado pelo esbuild em /encomenda/order.js.
 // O pedido enviado é o mesmo de antes (mesmos campos e regras no servidor), mais os itens extras opcionais.
 import { VITRINE_STYLE_INFO, vitrinePalette, photoUrl, photoAttrs, initials, formatCents } from '../../cloud/vitrine-theme.js';
+import { usesCakeFields } from '../../cloud/order-link-model.js';
 
 const $ = (s, root = document) => root.querySelector(s), $$ = (s, root = document) => [...root.querySelectorAll(s)];
 const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -8,7 +9,6 @@ const slug = decodeURIComponent(location.pathname.split('/').filter(Boolean).at(
 const api = `https://khvhnbopdluthpcduhqm.supabase.co/functions/v1/doce-public/p/${encodeURIComponent(slug)}`;
 const PREVIEW = new URLSearchParams(location.search).has('preview');
 const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
-const isCake = (name) => /\bbolos?\b/i.test(name || '');
 const ICON = {
   cal: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>',
   clock: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
@@ -200,7 +200,7 @@ function renderExtras() {
   $('#extras').innerHTML = others.map((p) => `<button type="button" data-extra="${esc(p.name)}" aria-pressed="${extras.has(p.name)}">+ ${esc(p.name)}</button>`).join('');
 }
 function renderCake() {
-  const show = isCake(chosenName()); $('#cake-fields').hidden = !show;
+  const show = usesCakeFields(chosen, chosenName()); $('#cake-fields').hidden = !show;
   if (!show) { $('#cake-content').innerHTML = ''; return; }
   if ($('#cake-content').children.length) return;
   $('#cake-content').innerHTML = config.orderTemplate.fields.filter((f) => f.enabled).map((f) => `<div class="field"><label for="cake-${esc(f.key)}">${esc(f.label)} <span class="opt">${f.required ? '(obrigatório)' : '(opcional)'}</span></label>${f.options.length ? `<select id="cake-${esc(f.key)}" data-cake="${esc(f.key)}" ${f.required ? 'required' : ''}><option value="">Selecione</option>${f.options.map((o) => `<option>${esc(o)}</option>`).join('')}</select>` : `<input id="cake-${esc(f.key)}" data-cake="${esc(f.key)}" maxlength="${f.key === 'foodNotes' ? 500 : 200}" ${f.required ? 'required' : ''}>`}</div>`).join('');

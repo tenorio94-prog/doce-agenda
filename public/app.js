@@ -3,6 +3,7 @@
 import { renderSVG } from "uqr";
 import { pixPayload } from "../cloud/pix-code.js";
 import { DEFAULT_COLOR, VITRINE_PRESETS, VITRINE_STYLE_INFO, formatCents, initials, photoUrl, photoAttrs, vitrinePalette } from "../cloud/vitrine-theme.js";
+import { usesCakeFields } from "../cloud/order-link-model.js";
 import { blobToBase64, dominantColor, preparePhoto, shareImage } from "./photo-prep.js";
 import { printQr, shareOrDownload, storyImage } from "./share-kit.js";
 import { icon } from "./ui/icons.js";
@@ -1799,6 +1800,9 @@ function attachEvents() {
   $("#view-settings").addEventListener('input',event=>{
     if(event.target.closest('#order-page-form'))syncVitrineForm(event);
     if(event.target.name==='slug')event.target.dataset.edited='true';
+    // Detalhes do bolo: enquanto ela não decide, a caixa acompanha o nome ("bolo" marca).
+    if(event.target.name==='productName'){const cake=event.target.closest('.product-item')?.querySelector('[name=productCakeFields]');if(cake?.dataset.auto)cake.checked=usesCakeFields(null,event.target.value);}
+    if(event.target.name==='productCakeFields')delete event.target.dataset.auto;
     if(event.target.name==='displayName'){
       const slug=$('#order-page-form [name=slug]');if(slug&&!slug.dataset.edited)slug.value=slugFrom(event.target.value);
     }
@@ -1882,6 +1886,7 @@ const productRowMarkup = (product = { name: "", description: "" }, open = false)
       <label class="field"><span>A partir de <small>(opcional)</small></span><span class="money-field"><span>R$</span><input name="productPrice" inputmode="decimal" maxlength="12" value="${esc(centsToField(product.priceFromCents))}" placeholder="0"></span></label>
     </div>
     <label class="check-row"><input type="checkbox" name="productFeatured" ${product.featured ? "checked" : ""}><span>Mostrar em <b>Mais pedidos</b> <small>(até 3)</small></span></label>
+    <label class="check-row"><input type="checkbox" name="productCakeFields" ${usesCakeFields(product) ? "checked" : ""} ${typeof product.cakeFields === "boolean" ? "" : 'data-auto="true"'}><span>Pedir os <b>detalhes do bolo</b> <small>(os campos de Detalhes do bolo)</small></span></label>
     <div class="pi-actions"><button class="button button-quiet button-small" type="button" data-action="move-product" data-step="-1">Subir</button><button class="button button-quiet button-small" type="button" data-action="move-product" data-step="1">Descer</button><button class="text-link pi-remove" type="button" data-action="remove-product">Remover</button></div>
   </div></details>`;
 
@@ -1949,6 +1954,9 @@ function linkFormValues(form) {
     if (category) product.category = category;
     if (price !== null) product.priceFromCents = price;
     if (field("productFeatured").checked) product.featured = true;
+    // Caixa nunca tocada num doce antigo: fica sem a marca e segue o nome, como antes.
+    const cake = field("productCakeFields");
+    if (cake && !cake.dataset.auto) product.cakeFields = cake.checked;
     if (photo) product.photo = photo;
     return product;
   }).filter((product) => product.name);

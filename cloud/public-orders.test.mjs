@@ -69,3 +69,16 @@ test('accept last-slot race revalidates capacity, refusal/history and backup pre
   assert.equal(imported.status,200);assert.equal(imported.state.orderPage.slug,page.slug);assert.equal(imported.state.orders[0].origin,'link');
   const disabled={...two.state,orderPage:{...page,active:false}};assert.equal(disabled.orders.length,2);assert.throws(()=>createPublicRequest(disabled,body,'DA-GHI234'));
 });
+test('cake details follow the product mark; old products still follow the name',()=>{
+  assert.equal(orderPageInput({...page,products:[{name:'Naked cake',description:'',cakeFields:true}]}).products[0].cakeFields,true);
+  assert.equal('cakeFields' in orderPageInput(page).products[0],false,'sem marca continua sem marca');
+  assert.throws(()=>orderPageInput({...page,products:[{name:'Bolo',description:'',cakeFields:'sim'}]}),/Detalhes do bolo/);
+  const template={...createEmptyState().orderTemplate,fields:[{key:'flavor',label:'Sabor',enabled:true,required:true,options:[]}]};
+  const s=(products)=>({...initial(),orderTemplate:template,orderPage:{...page,products}});
+  const ask=(products,product,cake)=>createPublicRequest(s(products),{...body,product,...(cake?{cake}:{})},'DA-ABC234').order.cake;
+  assert.throws(()=>ask([{name:'Naked cake',description:'',cakeFields:true}],'Naked cake'),/[Ss]abor/,'marcado: exige o obrigatório');
+  assert.equal(ask([{name:'Naked cake',description:'',cakeFields:true}],'Naked cake',{flavor:'Ninho'}).values.flavor,'Ninho');
+  assert.equal(ask([{name:'Bolo de pote',description:'',cakeFields:false}],'Bolo de pote'),null,'desmarcado: sem perguntas, mesmo com "bolo" no nome');
+  assert.throws(()=>ask([{name:'Bolo',description:''}],'Bolo'),/[Ss]abor/,'sem marca: o nome com bolo ainda pede');
+  assert.equal(ask([{name:'Torta',description:''}],'Torta'),null);
+});

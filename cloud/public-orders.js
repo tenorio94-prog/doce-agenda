@@ -1,5 +1,5 @@
 import { checkCapacity, wallTimeEpoch } from './state-engine.js';
-import { limitedText, normalizeWhatsApp, linkError, requestSummary } from './order-link-model.js';
+import { limitedText, normalizeWhatsApp, linkError, requestSummary, usesCakeFields } from './order-link-model.js';
 
 export function validPublicDay(day) { return typeof day === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(day) && Number.isFinite(Date.parse(`${day}T00:00:00Z`)) && new Date(`${day}T00:00:00Z`).toISOString().slice(0,10) === day; }
 export function availabilityDates(state, from, to) {
@@ -44,7 +44,7 @@ export function createPublicRequest(state, input, code, now = new Date().toISOSt
   if (wallTimeEpoch(dueAt)<Date.now()) linkError('Escolha uma data e horário futuros.',409,'DATE_UNAVAILABLE');
   try {checkCapacity({status:'Confirmado',dueAt},state,null);} catch {linkError('Esta data ficou indisponível. Escolha outra data.',409,'DATE_UNAVAILABLE');}
   let cake = null;
-  if (/\bbolos?\b/i.test(productName)) {
+  if (usesCakeFields(custom ? null : page.products.find(p=>p.name===productName), productName)) {
     const values = {}, labels = {};
     for (const field of state.orderTemplate.fields.filter(f=>f.enabled)) {
       const value = limitedText(input.cake?.[field.key] ?? '',field.key==='foodNotes'?500:200,field.label,field.required);

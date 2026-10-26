@@ -1,6 +1,8 @@
 export const VITRINE_STYLES = ['atelie', 'doceria', 'caseira', 'moderna'];
 export const DEFAULT_VITRINE_COLOR = '#b8325a';
 export const MAX_FEATURED = 3;
+// Perguntas do bolo: o produto diz (cakeFields); doces antigos, sem a marca, seguem pelo nome com "bolo".
+export const usesCakeFields = (product, name) => typeof product?.cakeFields === 'boolean' ? product.cakeFields : /\bbolos?\b/i.test(product?.name ?? name ?? '');
 export const defaultOrderPage = () => ({ active: false, slug: '', displayName: '', welcome: '', whatsapp: '', products: [], style: 'atelie', color: '', instagram: '', logo: '', cover: '', share: '' });
 export function linkError(message, status = 400, code) { throw Object.assign(new Error(message), { status, code }); }
 export function limitedText(value, max, label, required = false) {
@@ -43,6 +45,7 @@ function productInput(p) {
   const category = limitedText(p?.category ?? '', 30, 'Categoria'); if (category) product.category = category;
   const price = priceFrom(p?.priceFromCents); if (price !== null) product.priceFromCents = price;
   if (p?.featured === true) product.featured = true;
+  if (p?.cakeFields !== undefined) { if (typeof p.cakeFields !== 'boolean') linkError('Detalhes do bolo: escolha sim ou não.'); product.cakeFields = p.cakeFields; }
   const photo = photoKey(p?.photo, 'Foto do produto'); if (photo) product.photo = photo;
   return product;
 }
