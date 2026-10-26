@@ -1,6 +1,6 @@
 // Boas-vindas: node scripts/build-cloudflare.mjs && node scripts/test-onboarding.mjs [pasta-de-capturas]
 // Demonstração: "Experimente em 1 minuto" com 4 tarefas feitas na tela de verdade, Pular e "Como funciona".
-// Conta nova: "Primeiros passos" com 3 tarefas. Dicas de uma frase nas abas, que somem ao fechar.
+// Conta nova: "Primeiros passos" com 4 tarefas, a conta criada já feita. Dicas de uma frase nas abas, que somem ao fechar.
 import assert from 'node:assert/strict';
 import { mkdir } from 'node:fs/promises';
 import path from 'node:path';
@@ -100,7 +100,7 @@ try {
     assert.equal(await skipPage.locator('#view-orders .tab-tip').count(), 0, 'dica fechada não volta');
     await skip.close();
 
-    // Conta nova (simulada sobre os dados da demo): "Primeiros passos" com 3 tarefas.
+    // Conta nova (simulada sobre os dados da demo): "Primeiros passos" com 4 tarefas; a conta criada já vem feita.
     const account = await browser.newContext({ viewport: { width, height }, locale: 'pt-BR', timezoneId: 'America/Sao_Paulo' });
     await account.addInitScript(() => {
       let store;
@@ -114,7 +114,10 @@ try {
     const stepsText = await steps.innerText();
     assert.match(stepsText, /Primeiros passos/);
     assert.match(stepsText, /Ative seu link de encomenda/);
-    assert.match(stepsText, /2 de 3 feitas/, 'demo já tem pedidos e limite; falta o link');
+    assert.match(stepsText, /Crie sua conta/);
+    assert.match(stepsText, /Falta uma coisa para deixar sua agenda pronta/);
+    assert.match(stepsText, /3 de 4 feitas/, 'conta criada, demo já tem pedidos e limite; falta o link');
+    assert.equal(await steps.locator('.onboarding-task.is-done').first().innerText().then((text) => /Crie sua conta/.test(text)), true, 'conta criada é o primeiro item, já feito');
     if (shots) await accountPage.screenshot({ path: path.join(shots, `conta-${width}.png`) });
     await steps.locator('[data-task="link"]').click();
     await accountPage.locator('.settings-card[data-settings="link"][open].coach-target').waitFor();

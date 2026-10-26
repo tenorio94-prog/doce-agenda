@@ -2242,7 +2242,7 @@ function pixDialogClick(event) {
 }
 
 // ---- Boas-vindas: tarefas na tela de verdade ----
-// The demonstration asks for four short tasks in any order; a new account gets three first steps.
+// The demonstration asks for four short tasks in any order; a new account gets four first steps, the account already done.
 // Progress is read from the agenda itself where possible; the rest is remembered on this device.
 const isDemoMode = () => !!window.DoceStore?.isDemo;
 const onboardingKey = () => `doce-agenda.onboarding.${isDemoMode() ? "demo" : "conta"}.v1`;
@@ -2275,7 +2275,9 @@ function onboardingTasks() {
     ];
   }
   const availability = state.availability || {};
+  // A conta criada já conta como o primeiro passo: começar em 1 de 4 encurta a distância percebida até o fim.
   return [
+    { key: "account", title: "Crie sua conta", text: "Feito. Seus pedidos ficam guardados e você entra de qualquer aparelho.", done: true },
     { key: "order", title: "Anote seu primeiro pedido", text: "Cliente, produto, data e valor. O resto pode vir depois.", done: state.orders.some((order) => !sampleOrder(order) && order.status !== "Solicitação") },
     { key: "days", title: "Diga seus dias e limites", text: "Os dias em que você não trabalha e quantos pedidos cabem por dia.", done: done.includes("days") || (availability.closedWeekdays || []).length > 0 || availability.dailyOrderLimit != null || Number(availability.minimumNoticeHours) > 0 },
     { key: "link", title: "Ative seu link de encomenda", text: "As clientes pedem sozinhas, e nada ocupa vaga até você aceitar.", done: !!state.orderPage?.active },
@@ -2291,7 +2293,7 @@ function onboardingMarkup() {
     return `<section class="onboarding is-complete surface" aria-labelledby="onboarding-title"><h2 id="onboarding-title">Pronto, você já sabe usar.</h2><p>Agora é com a sua confeitaria: crie a conta e anote seus pedidos de verdade.</p><div class="onboarding-end"><a class="button button-primary" href="/cadastro/">Criar conta grátis</a><button class="text-link" type="button" data-action="onboarding-skip">Fechar</button></div></section>`;
   }
   return `<section class="onboarding surface" aria-labelledby="onboarding-title">
-    <div class="onboarding-head"><div><h2 id="onboarding-title">${demo ? "Experimente em 1 minuto" : "Primeiros passos"}</h2><p>${demo ? "Faça na tela de verdade, na ordem que quiser." : "Três coisas para deixar sua agenda pronta."}</p></div><button class="text-link onboarding-skip" type="button" data-action="onboarding-skip">Pular</button></div>
+    <div class="onboarding-head"><div><h2 id="onboarding-title">${demo ? "Experimente em 1 minuto" : "Primeiros passos"}</h2><p>${demo ? "Faça na tela de verdade, na ordem que quiser." : `Você já começou. ${tasks.length - count === 1 ? "Falta uma coisa" : `Faltam ${["", "uma", "duas", "três"][tasks.length - count] || tasks.length - count} coisas`} para deixar sua agenda pronta.`}</p></div><button class="text-link onboarding-skip" type="button" data-action="onboarding-skip">Pular</button></div>
     <div class="onboarding-progress" role="progressbar" aria-label="Tarefas feitas" aria-valuemin="0" aria-valuemax="${tasks.length}" aria-valuenow="${count}"><i style="width:${Math.round(count / tasks.length * 100)}%"></i></div>
     <p class="onboarding-count">${count} de ${tasks.length} feitas</p>
     <ol class="onboarding-list">${tasks.map((task) => `<li class="onboarding-task${task.done ? " is-done" : ""}"><span class="onboarding-check" aria-hidden="true">${task.done ? "✓" : ""}</span><span class="onboarding-text"><strong>${esc(task.title)}</strong><small>${esc(task.text)}</small></span>${task.done ? '<span class="visually-hidden">Feito.</span>' : `<button class="button button-quiet onboarding-go" type="button" data-action="onboarding-go" data-task="${task.key}" aria-label="Fazer: ${esc(task.title)}">Fazer</button>`}</li>`).join("")}</ol>
