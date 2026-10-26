@@ -54,14 +54,24 @@ try {
     assert.equal(await page.locator('#view-orders .vn-closed-group .vn-order', { hasText: 'Roberta' }).count(), 1, 'entregue com saldo continua cartão');
     const lineBox = await history.first().boundingBox();
     assert.ok(lineBox.height <= 80, `linha do histórico alta demais (${Math.round(lineBox.height)})`);
-    // Botão cheio só para o que é para agora (hoje, amanhã, decisões); dias mais distantes, o mesmo verbo mais calmo.
+    // Simplificação, etapa 3: um botão cheio por tela. Na lista de Pedidos, todos os verbos de etapa são calmos.
     const saturday = page.locator('#view-orders .vn-order', { hasText: 'Sônia' }).first();
     assert.equal(await saturday.locator('.vn-btn.secondary[data-action="advance-order"]').count(), 1, 'sábado com botão calmo');
     const todayCard = page.locator('#view-orders .vn-order', { hasText: 'Marcos' }).first();
-    assert.equal(await todayCard.locator('.vn-btn.primary[data-action="advance-order"]').count(), 1, 'hoje com botão cheio');
+    assert.equal(await todayCard.locator('.vn-btn.secondary[data-action="advance-order"]').count(), 1, 'hoje também calmo na lista');
     const decision = page.locator('#view-orders .vn-order', { hasText: 'Renata' }).first();
-    assert.equal(await decision.locator('.vn-btn.primary[data-action="confirm-order"]').count(), 1, 'decisão continua cheia');
-    check(`${width}px: histórico em linhas e peso do botão pelo tempo`);
+    assert.equal(await decision.locator('.vn-btn.secondary[data-action="confirm-order"]').count(), 1, 'decisão calma na lista');
+    assert.equal(await page.locator('#view-orders .vn-order .vn-btn.primary').count(), 0, 'nenhum botão cheio nos cartões da lista');
+    // Em Hoje, o único botão cheio é o da primeira coisa que pede você.
+    await page.locator('[data-view="today"]:visible').first().click();
+    await page.locator('#today-title').waitFor();
+    assert.equal(await page.locator('#view-today .vn-att-row.is-lead').count(), 1);
+    assert.equal(await page.locator('#view-today .vn-order .vn-btn.primary').count(), 0, 'com pendências, os cartões de hoje ficam calmos');
+    const lead = await page.locator('#view-today .vn-att-row.is-lead .att-btn').evaluate((el) => getComputedStyle(el).backgroundColor);
+    assert.equal(lead, 'rgb(176, 36, 74)', 'ação da primeira pendência em framboesa');
+    await page.locator('[data-view="orders"]:visible').first().click();
+    await page.locator('#orders-title').waitFor();
+    check(`${width}px: histórico em linhas e um botão cheio por tela`);
 
     // Etapa 1: entregue com saldo nunca fica verde; o carimbo diz quanto falta.
     const roberta = page.locator('#view-orders .vn-order', { hasText: 'Roberta' }).first();

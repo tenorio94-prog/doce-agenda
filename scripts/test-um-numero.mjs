@@ -5,6 +5,7 @@ import assert from 'node:assert/strict';
 import { mkdir } from 'node:fs/promises';
 import path from 'node:path';
 import { chromium, serveSite } from './lib/browser-test.mjs';
+import { demoSeedState } from '../cloud/demo-seed.js';
 
 const shots = process.argv[2] ? path.resolve(process.argv[2]) : null;
 if (shots) await mkdir(shots, { recursive: true });
@@ -63,6 +64,24 @@ try {
     results.push(`${width}px: selo de Hoje, título e lista com o mesmo número, caem juntos ao conferir o Pix`);
     await context.close();
   }
+  // Nada pendente: "Tudo em dia", sem selo, e o único botão cheio vai para o primeiro pedido de hoje (etapa 3).
+  const seed = demoSeedState(new Date());
+  const keep = seed.orders.filter((order) => ['DEMO-07', 'DEMO-10'].includes(order.id));
+  const calm = JSON.stringify({ ...seed, orders: keep, payments: seed.payments.filter((payment) => keep.some((order) => order.id === payment.orderId)) });
+  const context = await browser.newContext({ viewport: { width: 360, height: 800 }, locale: 'pt-BR', timezoneId: 'America/Sao_Paulo' });
+  await context.addInitScript((state) => {
+    localStorage.setItem('doce-agenda.demo.v2', state);
+    localStorage.setItem('doce-agenda.onboarding.demo.v1', JSON.stringify({ dismissed: true, done: [] }));
+  }, calm);
+  const page = await context.newPage();
+  await page.goto(`${server.origin}/demo/`);
+  await page.locator('#today-title').waitFor();
+  assert.equal(await page.locator('#today-title').innerText(), 'Tudo em dia');
+  assert.equal(await page.locator('#nav-attention-count').evaluate((el) => el.hidden), true, 'sem pendência, sem selo');
+  assert.equal(await page.locator('#view-today .vn-attention').count(), 0);
+  assert.deepEqual(await page.locator('#view-today .vn-order .vn-btn.primary').allInnerTexts(), ['Marcar entregue'], 'um botão cheio: o primeiro pedido de hoje');
+  await context.close();
+  results.push('360px: nada pendente, "Tudo em dia", sem selo e um só botão cheio');
   results.forEach((line) => console.log(`ok - ${line}`));
 } finally {
   await browser.close();

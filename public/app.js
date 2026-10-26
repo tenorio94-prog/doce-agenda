@@ -116,17 +116,9 @@ function nextStepButton(order, extraClass = "") {
   if (order.status === "Solicitação") return `<button class="${cls}" type="button" data-action="review-request" data-id="${id}">Revisar pedido</button>`;
   return "";
 }
-// Rodada 5: o botão de etapa só fica cheio (framboesa) quando a ação é para agora: hoje, amanhã,
-// atrasado, sem data, ou uma decisão (orçamento, solicitação). Dias mais distantes mostram o mesmo
-// botão, mais calmo, para que os cheios na tela digam "isto é agora".
+// Simplificação, etapa 3: um botão cheio (framboesa) por tela. Os botões de etapa dos cartões são calmos;
+// só o cartão marcado com `emphasize` (a ação mais urgente da tela) ganha o botão cheio.
 const DECISION_STATUSES = ["Orçamento", "Aguardando confirmação", "Solicitação"];
-function actionIsDue(order) {
-  if (DECISION_STATUSES.includes(order.status)) return true;
-  const date = parseDate(order.dueAt);
-  if (!date) return true;
-  const now = new Date();
-  return date.getTime() < new Date(now.getFullYear(), now.getMonth(), now.getDate() + 2).getTime();
-}
 const timeValue = (value) => parseDate(value)?.getTime() ?? Number.MAX_SAFE_INTEGER;
 // Lista de Pedidos: o que ainda está em aberto vem primeiro, do mais próximo ao mais distante;
 // entregues, cancelados e recusados depois, do mais recente ao mais antigo.
@@ -394,11 +386,11 @@ function attentionMarkup() {
   const items = attentionItems();
   if (!items.length) return "";
   const glyph = { link: "link", pix: "pix", money: "wallet", next: "clock" };
-  const row = (item) => `<div class="vn-att-row is-${item.kind}${item.cls ? ` ${item.cls}` : ""}"><span class="vn-att-glyph">${icon(glyph[item.kind])}</span><div class="vn-att-text"><h3>${esc(item.title)}</h3><p>${esc(item.text)}</p></div>${item.action}</div>`;
+  const row = (item, index) => `<div class="vn-att-row is-${item.kind}${item.cls ? ` ${item.cls}` : ""}${index === 0 ? " is-lead" : ""}"><span class="vn-att-glyph">${icon(glyph[item.kind])}</span><div class="vn-att-text"><h3>${esc(item.title)}</h3><p>${esc(item.text)}</p></div>${item.action}</div>`;
   const first = items.slice(0, 3), rest = items.slice(3);
   return `<section class="vn-attention" aria-labelledby="attention-title"><h2 id="attention-title" class="visually-hidden">Pedem sua atenção <span class="vn-count">${items.length}</span></h2>
-    <div class="vn-att-list">${first.map(row).join("")}</div>
-    ${rest.length ? `<details class="vn-att-more"><summary>Ver mais ${rest.length}</summary><div class="vn-att-list">${rest.map(row).join("")}</div></details>` : ""}</section>`;
+    <div class="vn-att-list">${first.map((item, index) => row(item, index)).join("")}</div>
+    ${rest.length ? `<details class="vn-att-more"><summary>Ver mais ${rest.length}</summary><div class="vn-att-list">${rest.map((item) => row(item, -1)).join("")}</div></details>` : ""}</section>`;
 }
 
 const scheduledOn = (key) => sortOrders(state.orders.filter((order) => order.status !== 'Solicitação' && !sampleOrder(order) && !isCancelled(order) && order.dueAt && localDateKey(parseDate(order.dueAt) || new Date(0)) === key));
@@ -468,7 +460,7 @@ function agendaCardMarkup(order, options = {}) {
   const stamp = moneyStamp(order, informed, { compact: options.compact });
   const classes = ["vn-order", "comanda", stamp.cls, isLate(order) ? "is-late" : "", options.compact ? "is-compact" : "", options.list ? "is-list" : "", order.status === "Entregue" ? "is-delivered" : "", isCancelled(order) ? "is-cancelled" : "", String(order.id) === String(state.justAdvanced) ? "is-advanced" : ""].filter(Boolean).join(" ");
   const mode = order.mode || "Retirada";
-  const step = options.compact ? "" : nextStepButton(order, `vn-btn ${actionIsDue(order) ? "primary" : "secondary"} small`);
+  const step = options.compact ? "" : nextStepButton(order, `vn-btn ${options.emphasize ? "primary" : "secondary"} small`);
   const day = date && options.withDate ? `<span class="vn-day-label">${esc(listDayLabel(order.dueAt))}</span>` : "";
   const when = `<div class="cmd-when">${day}<b class="vn-time">${date ? esc(shortTime(order.dueAt)) : "—"}</b><small>${icon(mode === "Entrega" ? "delivery" : "bag")}${esc(mode.toLowerCase())}</small>${isLate(order) && !options.compact ? `<span class="cmd-late">Atrasado</span>` : ""}</div>`;
   // A foto fica presa no canto do texto, como numa comanda: a coluna da hora não fica mais alta que o pedido.
@@ -501,7 +493,7 @@ function inboxCardMarkup(order, options) {
     <div class="vn-note vn-inbox-date">${icon("clock")}<span>${esc(date ? dateTimeLabel(order.dueAt) : "Data e horário a combinar")}, ${esc(mode.toLowerCase())}</span></div>
     ${dateCapacityMarkup(order)}
     ${informedFor(order.id) > 0 ? `<div class="vn-note amber">${icon("info")}<span>Pix de ${esc(money(informedFor(order.id)))} informado. Confira no banco.</span></div>` : ""}
-    ${nextStepButton(order, "vn-btn primary small") ? `<div class="vn-row vn-card-foot">${nextStepButton(order, "vn-btn primary small")}</div>` : ""}
+    ${nextStepButton(order, "vn-btn secondary small") ? `<div class="vn-row vn-card-foot">${nextStepButton(order, `vn-btn ${options.emphasize ? "primary" : "secondary"} small`)}</div>` : ""}
   </article>`;
 }
 
@@ -516,6 +508,8 @@ function dayScheduleMarkup({ todayOnly = false, upcomingCount = 0 } = {}) {
   const isToday = selectedKey === todayKey;
   const titleId = todayOnly ? "hoje-list-title" : "today-list-title";
   const scheduled = scheduledOn(selectedKey);
+  // Em Hoje, sem nada pedindo atenção, o primeiro pedido do dia com próximo passo leva o único botão cheio.
+  const lead = todayOnly && !attentionItems().length ? scheduled.find((order) => NEXT_STEP[order.status]) : null;
   const availability = availabilityFor(selectedKey);
   const done = scheduled.filter((order) => ["Pronto", "Entregue"].includes(order.status)).length;
   const dayTitle = todayOnly ? "Entregas de hoje" : isToday ? "Hoje" : capitalize(new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "numeric", month: "short" }).format(selected).replace(".", ""));
@@ -526,7 +520,7 @@ function dayScheduleMarkup({ todayOnly = false, upcomingCount = 0 } = {}) {
     : `<div class="vn-empty">${icon("cake")}<h3>Dia livre de pedidos marcados</h3><p>Pedidos sem data continuam em Pedidos.</p></div>`;
   return `<section class="today-agenda agenda-week" aria-labelledby="${titleId}">
     <div class="vn-day-head"><div class="vn-grow"><h2 id="${titleId}">${esc(dayTitle)} ${dayBadge}</h2><p>${esc(limitText)}</p></div>${scheduled.length ? `<div class="vn-day-progress"><progress value="${done}" max="${scheduled.length}" aria-label="Produção do dia: ${done} de ${scheduled.length} prontas"></progress><span>${done} de ${scheduled.length} ${scheduled.length === 1 ? "pronta" : "prontas"}</span></div>` : ""}</div>
-    ${scheduled.length ? `<div class="vn-order-list${state.agendaEnter ? " is-entering" : ""}">${scheduled.map((order) => agendaCardMarkup(order)).join("")}</div>` : empty}
+    ${scheduled.length ? `<div class="vn-order-list${state.agendaEnter ? " is-entering" : ""}">${scheduled.map((order) => agendaCardMarkup(order, { emphasize: order === lead })).join("")}</div>` : empty}
     <div class="vn-day-links">${isToday || todayOnly ? "" : '<button class="text-link" type="button" data-action="agenda-today">Voltar para hoje</button>'}<button class="text-link agenda-adjust" type="button" data-action="adjust-selected-date" data-date="${selectedKey}">Ajustar esta data</button></div>
   </section>`;
 }
@@ -700,12 +694,14 @@ function renderOrders() {
   const pendingRequests = own.filter((order) => order.status === "Solicitação").length;
   const negotiations = own.filter((order) => ["Orçamento", "Aguardando confirmação"].includes(order.status)).length;
   const inbox = state.statusFilter === "new" ? `<section class="vn-inbox-banner"><span class="vn-summary-icon">${icon("inbox")}</span><div><h2>Caixa de entrada</h2><p class="vn-inbox-counts"><a href="#inbox-review-title">${pendingRequests} para revisar</a> · <a href="#inbox-negotiation-title">${negotiations} em negociação</a></p><p>Solicitações aguardam sua revisão. Orçamentos seguem em negociação. Só a confirmação ocupa vaga.</p></div></section>` : "";
+  let leadTaken = false;
   const inboxSections = () => [
     { key: "review", title: "Para revisar", statuses: ["Solicitação"], description: "Confira o que a cliente pediu e decida se aceita ou recusa.", empty: "Nenhuma solicitação para revisar." },
     { key: "negotiation", title: "Em negociação", statuses: ["Orçamento", "Aguardando confirmação"], description: "Orçamentos e pedidos aguardando o combinado final com a cliente.", empty: "Nenhum orçamento em negociação." },
   ].map((section) => {
     const list = orders.filter((order) => section.statuses.includes(order.status));
-    return `<section class="vn-inbox-section" aria-labelledby="inbox-${section.key}-title"><div class="section-head"><h2 id="inbox-${section.key}-title" tabindex="-1">${section.title} <span class="vn-badge">${list.length}</span></h2></div><p class="vn-inbox-description">${section.description}</p>${list.length ? `<div class="vn-order-list vn-inbox-list">${list.map((order) => agendaCardMarkup(order, { inbox: true })).join("")}</div>` : `<p class="vn-inbox-empty">${state.search.trim() ? "Nenhum resultado nesta seção para a busca." : section.empty}</p>`}</section>`;
+    const lead = leadTaken ? null : list[0]; if (lead) leadTaken = true;
+    return `<section class="vn-inbox-section" aria-labelledby="inbox-${section.key}-title"><div class="section-head"><h2 id="inbox-${section.key}-title" tabindex="-1">${section.title} <span class="vn-badge">${list.length}</span></h2></div><p class="vn-inbox-description">${section.description}</p>${list.length ? `<div class="vn-order-list vn-inbox-list">${list.map((order) => agendaCardMarkup(order, { inbox: true, emphasize: order === lead })).join("")}</div>` : `<p class="vn-inbox-empty">${state.search.trim() ? "Nenhum resultado nesta seção para a busca." : section.empty}</p>`}</section>`;
   }).join("");
   function ordersListMarkup() {
     return `<div class="toolbar"><label class="search-wrap"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 4.5 4.5"/></svg><input class="search-input" id="order-search" type="search" placeholder="Buscar cliente, produto ou detalhe…" value="${esc(state.search)}" aria-label="Buscar pedidos"></label></div>

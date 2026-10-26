@@ -1944,3 +1944,10 @@ body.vnext { font-variant-numeric: tabular-nums; -webkit-tap-highlight-color: tr
 .vnext #view-orders .orders-mode button { flex: 1 1 0; min-height: 44px; }
 .vnext #view-orders .vn-weekbar { margin-bottom: 4px; }
 .vnext #view-orders .production-week { margin-top: 4px; }
+
+/* Simplificação, etapa 3: um botão cheio por tela. Em Hoje é a ação da primeira coisa que pede você. */
+.vnext .vn-att-row.is-lead .att-btn, .vnext .vn-att-row.is-lead .button.att-btn { border: 1px solid var(--vn-berry); background: var(--vn-berry); color: #fff; }
+.vnext .vn-att-row.is-lead .att-btn:hover, .vnext .vn-att-row.is-lead .button.att-btn:hover { background: var(--vn-berry-dark); }
+/* O filtro escolhido não é uma ação: fica marcado em vinho claro, sem competir com o botão cheio da tela. */
+.vnext :is(#view-orders, #view-clients, #view-settings) :is(.stage-chip.is-current, .stage-chip[aria-pressed="true"]) { border: 2px solid var(--vn-wine); background: var(--vn-rose); color: var(--vn-wine); }
+.vnext :is(#view-orders, #view-clients, #view-settings) :is(.stage-chip.is-current, .stage-chip[aria-pressed="true"]) .stage-count { background: #fff; color: var(--vn-wine); }
