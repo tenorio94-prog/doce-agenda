@@ -9,8 +9,10 @@ const CAKE_KEYS = ['size', 'flavor', 'filling', 'decoration', 'inscription', 'fo
 const ORDER_LABELS = {
   client: 'Cliente', product: 'Produto', details: 'Detalhes', dueAt: 'Data e horário', mode: 'Modalidade',
   location: 'Local', total: 'Valor total', status: 'Situação', nextAction: 'Próxima ação', nextAt: 'Prazo da ação',
-  pendingChange: 'Alteração pendente', contact: 'Contato',
+  pendingChange: 'Alteração pendente', contact: 'Contato', slots: 'Vagas no dia',
 };
+// Capacidade por tamanho: um pedido ocupa 1 vaga do dia, ou mais se for grande (campo opcional `slots`, 1 a 10).
+export const orderSlots = order => (Number.isSafeInteger(order?.slots) && order.slots >= 1 ? order.slots : 1);
 
 function fail(message, status = 400, code) {
   throw Object.assign(new Error(message), { status, code });
@@ -79,6 +81,10 @@ function orderInput(body) {
     pendingChange: text(body.pendingChange), contact: text(body.contact, 120),
   };
   if (body.totalKnown !== undefined) order.totalKnown = body.totalKnown;
+  if (body.slots !== undefined) {
+    if (!Number.isSafeInteger(body.slots) || body.slots < 1 || body.slots > 10) fail('Vagas no dia: use um número de 1 a 10.');
+    order.slots = body.slots;
+  }
   // Older app versions do not send totalKnown when a public request receives its price.
   if (order.totalKnown === false && order.total > 0) order.totalKnown = true;
   if (!order.client || !order.product) fail('Preencha cliente e produto.');
@@ -179,9 +185,12 @@ export function checkCapacity(input, state, currentId, override) {
     conflict = ['NOTICE', 'O pedido precisa respeitar a antecedência mínima.'];
   }
   const limit = dayOverride?.limit ?? config.dailyOrderLimit;
-  const count = state.orders.filter(order => order.id !== currentId && COMMITTED_STATUSES.includes(order.status)
-    && !order.isSample && !order.isDemo && !order.sample && order.dueAt?.slice(0, 10) === day).length;
-  if (!conflict && limit !== null && count >= limit) conflict = ['DAILY_LIMIT', 'O limite de pedidos para esta data foi atingido.'];
+  const used = state.orders.filter(order => order.id !== currentId && COMMITTED_STATUSES.includes(order.status)
+    && !order.isSample && !order.isDemo && !order.sample && order.dueAt?.slice(0, 10) === day).reduce((sum, order) => sum + orderSlots(order), 0);
+  const need = orderSlots(input);
+  if (!conflict && limit !== null && used + need > limit) {
+    conflict = ['DAILY_LIMIT', need > 1 && used < limit ? `Este pedido ocupa ${need} vagas e a data só tem ${limit - used} livre${limit - used === 1 ? '' : 's'}.` : 'O limite de pedidos para esta data foi atingido.'];
+  }
   if (!conflict) return;
   if (override?.allowed === true) {
     const reason = text(override.reason, 301);
@@ -367,7 +376,7 @@ export function transactState(state, url, options = {}) {
           const input = orderInput({ ...order, ...body });
           const changes = Object.keys(input).filter(key => JSON.stringify(input[key]) !== JSON.stringify(order[key]));
           const needsCheck = COMMITTED_STATUSES.includes(input.status)
-            && (!COMMITTED_STATUSES.includes(order.status) || input.dueAt !== order.dueAt);
+            && (!COMMITTED_STATUSES.includes(order.status) || input.dueAt !== order.dueAt || orderSlots(input) > orderSlots(order));
           let allowed;
           if (needsCheck) allowed = checkCapacity(input, nextState, order.id, body.capacityOverride);
           if (COMMITTED_STATUSES.includes(input.status) && !COMMITTED_STATUSES.includes(order.status) && input.cake) {

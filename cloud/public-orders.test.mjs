@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createEmptyState,transactState } from './state-engine.js';
-import { availabilityDates,createPublicRequest,publicPageView } from './public-orders.js';
+import { availabilityDates,createPublicRequest,productSlots,publicPageView } from './public-orders.js';
 import { orderPageInput } from './order-link-model.js';
 const page={active:true,slug:'doces-da-ana',displayName:'Doces da Ana',welcome:'Bem-vinda',whatsapp:'+5511999999999',products:[{name:'Bolo',description:''}]};
 const initial=()=>({...createEmptyState(),orderPage:page});
@@ -81,4 +81,19 @@ test('cake details follow the product mark; old products still follow the name',
   assert.equal(ask([{name:'Bolo de pote',description:'',cakeFields:false}],'Bolo de pote'),null,'desmarcado: sem perguntas, mesmo com "bolo" no nome');
   assert.throws(()=>ask([{name:'Bolo',description:''}],'Bolo'),/[Ss]abor/,'sem marca: o nome com bolo ainda pede');
   assert.equal(ask([{name:'Torta',description:''}],'Torta'),null);
+});
+
+test('big products take more slots on the link: dates and requests follow',()=>{
+  assert.equal(orderPageInput({...page,products:[{name:'Bolo de casamento',description:'',slots:3}]}).products[0].slots,3);
+  assert.equal('slots' in orderPageInput({...page,products:[{name:'Bolo',description:'',slots:1}]}).products[0],false,'1 é o normal e não é guardado');
+  for(const slots of [0,11,2.5])assert.throws(()=>orderPageInput({...page,products:[{name:'Bolo',description:'',slots}]}),/Vagas/);
+  const s={...initial(),availability:{...createEmptyState().availability,dailyOrderLimit:3},orderPage:{...page,products:[{name:'Bolo',description:''},{name:'Bolo de casamento',description:'',slots:3}]}};
+  s.orders.push({id:'x',client:'A',product:'Doces',details:'',dueAt:'2099-01-31T10:00',mode:'Retirada',location:'',total:50,status:'Confirmado',nextAction:'',nextAt:'',pendingChange:'',contact:'',history:[]});
+  const day=(slots)=>availabilityDates(s,'2099-01-31','2099-01-31',slots)[0].available;
+  assert.equal(day(1),true);assert.equal(day(3),false,'1 vaga usada: casamento (3) não cabe');
+  assert.equal(productSlots(s.orderPage.products[1]),3);assert.equal(productSlots(undefined),1);
+  assert.throws(()=>createPublicRequest(s,{...body,product:'Bolo de casamento'},'DA-ABC234'),/indisponível/);
+  const made=createPublicRequest(s,{...body,product:'Bolo de casamento',date:'2099-02-01'},'DA-ABC234');
+  assert.equal(made.order.slots,3,'o pedido do link leva as vagas do doce');
+  assert.equal('slots' in createPublicRequest(s,body,'DA-ABC234').order,false);
 });

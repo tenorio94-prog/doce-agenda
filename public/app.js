@@ -4,6 +4,7 @@ import { renderSVG } from "uqr";
 import { pixPayload } from "../cloud/pix-code.js";
 import { DEFAULT_COLOR, VITRINE_PRESETS, VITRINE_STYLE_INFO, formatCents, initials, photoUrl, photoAttrs, vitrinePalette } from "../cloud/vitrine-theme.js";
 import { usesCakeFields } from "../cloud/order-link-model.js";
+import { orderSlots } from "../cloud/state-engine.js";
 import { blobToBase64, dominantColor, preparePhoto, shareImage } from "./photo-prep.js";
 import { printQr, shareOrDownload, storyImage } from "./share-kit.js";
 import { icon } from "./ui/icons.js";
@@ -140,7 +141,8 @@ function availabilityFor(dateKey) {
   const override = state.availability.dateOverrides?.[dateKey] || {};
   const closed = Object.hasOwn(override, "closed") ? override.closed : state.availability.closedWeekdays?.includes(localWeekday(dateKey));
   const limit = Object.hasOwn(override, "limit") && override.limit !== null ? override.limit : state.availability.dailyOrderLimit;
-  const count = state.orders.filter((order) => committedForCapacity(order) && order.dueAt?.slice(0, 10) === dateKey).length;
+  // Vagas ocupadas: cada pedido conta 1, ou mais se for grande (capacidade por tamanho).
+  const count = state.orders.filter((order) => committedForCapacity(order) && order.dueAt?.slice(0, 10) === dateKey).reduce((sum, order) => sum + orderSlots(order), 0);
   return { closed, limit, count, full: Number.isInteger(limit) && count >= limit };
 }
 function calendarDateLabel(dateKey, options) {
@@ -901,7 +903,7 @@ function availabilitySettingsMarkup(selectedKey) {
     <form id="availability-form" class="settings-form">
       <fieldset><legend>Dias em que você não aceita pedidos</legend><div class="closed-weekdays">${weekdayNames.map((name, index) => `<label><input type="checkbox" name="closedWeekdays" value="${index}" aria-label="${name}" ${closedDays.includes(index) ? "checked" : ""}><span aria-hidden="true">${name.slice(0, 3)}</span></label>`).join("")}</div></fieldset>
       <fieldset><legend>Com quanta antecedência a cliente precisa pedir?</legend><div class="choice-chips">${noticeOptions.map(([value, label]) => `<label><input type="radio" name="minimumNoticeHours" value="${value}" ${value === notice ? "checked" : ""}><span>${esc(label)}</span></label>`).join("")}</div></fieldset>
-      <label class="field"><span>Quantos pedidos você aceita por dia?</span><input name="dailyOrderLimit" type="number" inputmode="numeric" min="1" max="50" step="1" value="${Number.isInteger(config.dailyOrderLimit) ? config.dailyOrderLimit : ""}" placeholder="Sem limite"><small>Conta só pedidos confirmados. Quando o dia lota, a agenda avisa e o link não oferece a data.</small></label>
+      <label class="field"><span>Quantos pedidos você aceita por dia?</span><input name="dailyOrderLimit" type="number" inputmode="numeric" min="1" max="50" step="1" value="${Number.isInteger(config.dailyOrderLimit) ? config.dailyOrderLimit : ""}" placeholder="Sem limite"><small>Conta as vagas dos pedidos confirmados: cada um ocupa 1, ou mais se for grande. Quando o dia lota, a agenda avisa e o link não oferece a data.</small></label>
       <button class="button button-primary" type="submit">Salvar dias e limites</button></form>
     <details id="date-availability-details" class="date-exception" ${state.openDateException ? "open" : ""}><summary>Mudar só uma data <span>Fechar um feriado ou aceitar mais pedidos num dia</span></summary>
       <label class="field settings-date-field"><span>Qual data?</span><input id="settings-date" type="date" value="${esc(selectedKey)}"></label>
@@ -1096,13 +1098,13 @@ function updateDueNote() {
   if (/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) {
     const availability = availabilityFor(dateKey);
     const editing = form.dataset.id ? orderById(form.dataset.id) : null;
-    const self = editing && committedForCapacity(editing) && editing.dueAt?.slice(0, 10) === dateKey ? 1 : 0;
-    const count = availability.count - self;
+    const self = editing && committedForCapacity(editing) && editing.dueAt?.slice(0, 10) === dateKey ? orderSlots(editing) : 0;
+    const count = availability.count - self, need = Number(form.elements.namedItem("slots")?.value) || 1;
     const day = capitalize(calendarDateLabel(dateKey, { weekday: "long", day: "numeric", month: "long" }));
     if (availability.closed) { text = `${day} é dia fechado.`; warn = true; }
     else if (Number.isInteger(availability.limit)) {
-      warn = count >= availability.limit;
-      text = `${day}: ${count} de ${availability.limit} ${availability.limit === 1 ? "vaga ocupada" : "vagas ocupadas"}${warn ? ", dia lotado" : ""}.`;
+      warn = count + need > availability.limit;
+      text = `${day}: ${count} de ${availability.limit} ${availability.limit === 1 ? "vaga ocupada" : "vagas ocupadas"}${warn ? (need > 1 && count < availability.limit ? `, este pedido ocupa ${need}` : ", dia lotado") : ""}.`;
     } else text = `${day}: ${count ? `${count} ${count === 1 ? "pedido confirmado" : "pedidos confirmados"}` : "nenhum pedido confirmado ainda"}.`;
     if (warn) text += confirming ? " Para confirmar, você vai anotar o motivo da exceção." : " Orçamento não ocupa vaga.";
   }
@@ -1127,7 +1129,7 @@ function openOrderForm(order = null) {
     client: order?.client || "", product: order?.product || "", details: order?.details || "", dueAt: dateTimeInput(order?.dueAt),
     mode: order?.mode || "Retirada", location: order?.location || "", total: order && order.totalKnown !== false ? moneyInput(order.total) : "",
     status: order?.status==='Solicitação' ? 'Orçamento' : order?.status || "", nextAction: order?.nextAction || "", nextAt: dateTimeInput(order?.nextAt),
-    pendingChange: order?.pendingChange || "", contact: order?.contact || "",
+    pendingChange: order?.pendingChange || "", contact: order?.contact || "", slots: String(orderSlots(order)),
   };
   Object.entries(formValues).forEach(([key, value]) => {
     const field = form.elements.namedItem(key);
@@ -1140,7 +1142,7 @@ function openOrderForm(order = null) {
   cakeToggle.checked = !!order?.cake || /\bbolos?\b/i.test(formValues.product);
   cakeToggle.dataset.touched = "";
   $("#cake-order-fields").hidden = !cakeToggle.checked;
-  $$(".optional-fields", form).forEach((section) => { section.open = !!order && [...section.querySelectorAll("input, textarea, select, wa-input, wa-textarea, wa-select")].some((field) => field.value && field.value !== "Retirada"); });
+  $$(".optional-fields", form).forEach((section) => { section.open = !!order && [...section.querySelectorAll("input, textarea, select, wa-input, wa-textarea, wa-select")].some((field) => field.value && field.value !== "Retirada" && !(field.getAttribute("name") === "slots" && field.value === "1")); });
   syncDateRequirement();
   if(form.dataset.review) $("#order-dialog-title").textContent='Editar e aceitar solicitação';
   $("#order-dialog").showModal();
@@ -1623,7 +1625,7 @@ async function submitOrder(event) {
     mode: String(formData.get("mode") || "Retirada"), location: String(formData.get("location") || "").trim(),
     total, totalKnown: String(formData.get("total") || '').trim() !== '', status: String(formData.get("status") || "Orçamento"), nextAction: String(formData.get("nextAction") || "").trim(),
     nextAt: String(formData.get("nextAt") || ""), pendingChange: String(formData.get("pendingChange") || "").trim(),
-    contact: String(formData.get("contact") || "").trim(),
+    contact: String(formData.get("contact") || "").trim(), slots: Number(formData.get("slots")) || 1,
   };
   const existingOrder = form.dataset.id ? orderById(form.dataset.id) : null;
   const cakeValues = { ...(existingOrder?.cake?.values || {}), ...Object.fromEntries(state.orderTemplate.fields.filter((field) => field.enabled).map((field) => [field.key, String(formData.get(`cake.${field.key}`) || "").trim()])) };
@@ -1878,7 +1880,7 @@ function attachEvents() {
     $("#status-choice .field-error")?.remove();
     syncDateRequirement();
   });
-  ["input", "change"].forEach((type) => $("#order-form").addEventListener(type, (event) => { if (event.target.name === "dueDate") updateDueNote(); }));
+  ["input", "change"].forEach((type) => $("#order-form").addEventListener(type, (event) => { if (["dueDate", "slots"].includes(event.target.name)) updateDueNote(); }));
   $("#order-form").addEventListener("click", (event) => {
     const shortcut = event.target.closest("[data-due-shortcut]");
     if (!shortcut) return;
@@ -1938,6 +1940,7 @@ const productRowMarkup = (product = { name: "", description: "" }, open = false)
       <label class="field"><span>A partir de <small>(opcional)</small></span><span class="money-field"><span>R$</span><input name="productPrice" inputmode="decimal" maxlength="12" value="${esc(centsToField(product.priceFromCents))}" placeholder="0"></span></label>
     </div>
     <label class="check-row"><input type="checkbox" name="productFeatured" ${product.featured ? "checked" : ""}><span>Mostrar em <b>Mais pedidos</b> <small>(até 3)</small></span></label>
+    <label class="field pi-slots"><span>Vagas que ocupa no dia</span><select name="productSlots">${[1, 2, 3, 4, 5].map((n) => `<option value="${n}" ${orderSlots(product) === n ? "selected" : ""}>${n === 1 ? "1 vaga (normal)" : `${n} vagas`}</option>`).join("")}</select></label>
     <label class="check-row"><input type="checkbox" name="productCakeFields" ${usesCakeFields(product) ? "checked" : ""} ${typeof product.cakeFields === "boolean" ? "" : 'data-auto="true"'}><span>Pedir os <b>detalhes do bolo</b> <small>(os campos de Detalhes do bolo)</small></span></label>
     <div class="pi-actions"><button class="button button-quiet button-small" type="button" data-action="move-product" data-step="-1">Subir</button><button class="button button-quiet button-small" type="button" data-action="move-product" data-step="1">Descer</button><button class="text-link pi-remove" type="button" data-action="remove-product">Remover</button></div>
   </div></details>`;
@@ -2007,6 +2010,8 @@ function linkFormValues(form) {
     if (price !== null) product.priceFromCents = price;
     if (field("productFeatured").checked) product.featured = true;
     // Caixa nunca tocada num doce antigo: fica sem a marca e segue o nome, como antes.
+    const slots = Number(field("productSlots")?.value) || 1;
+    if (slots > 1) product.slots = slots;
     const cake = field("productCakeFields");
     if (cake && !cake.dataset.auto) product.cakeFields = cake.checked;
     if (photo) product.photo = photo;

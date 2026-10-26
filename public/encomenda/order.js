@@ -217,7 +217,10 @@ function showStep(n) {
   $$('.step').forEach((s) => { s.hidden = Number(s.dataset.step) !== n; });
   $$('.progress i').forEach((bar, i) => bar.classList.toggle('on', i < n));
   $('#step-count').textContent = `Passo ${n} de 3`; $('#step-back-label').textContent = n === 1 ? 'Vitrine' : 'Voltar';
-  if (n === 2) { renderQuick(); renderCalendar(); }
+  if (n === 2) {
+    renderQuick(); renderCalendar();
+    if (datesSlots !== chosenSlots()) refreshDates().then(() => { renderQuick(); renderCalendar(); }).catch(() => {});
+  }
   window.scrollTo(0, 0);
   $(`#step-title-${n}`).focus({ preventScroll: true });
 }
@@ -252,9 +255,14 @@ $('#request-form').addEventListener('change', (event) => {
 });
 
 // ---- Datas ----
+// Capacidade por tamanho: um doce grande pode ocupar mais de uma vaga; as datas livres são pedidas para ele.
+let datesSlots = 1;
+const chosenSlots = () => (Number.isSafeInteger(chosen?.slots) && chosen.slots > 1 ? chosen.slots : 1);
 async function refreshDates() {
   const start = today(), end = new Date(`${start}T12:00:00Z`); end.setUTCDate(end.getUTCDate() + 89);
-  dates = await json(`${api}/availability?from=${start}&to=${end.toISOString().slice(0, 10)}`);
+  const slots = chosenSlots();
+  dates = await json(`${api}/availability?from=${start}&to=${end.toISOString().slice(0, 10)}${slots > 1 ? `&produto=${encodeURIComponent(chosen.name)}` : ''}`);
+  datesSlots = slots;
   if (!dates.some((d) => d.date === selected && d.available)) selected = '';
   month = month || (freeDates()[0] || start).slice(0, 7);
 }

@@ -1,15 +1,18 @@
 import { checkCapacity, wallTimeEpoch } from './state-engine.js';
 import { limitedText, normalizeWhatsApp, linkError, requestSummary, usesCakeFields } from './order-link-model.js';
+// Vagas de um doce da vitrine (1 se não disser).
+export const productSlots = product => (Number.isSafeInteger(product?.slots) && product.slots >= 1 ? product.slots : 1);
 
 export function validPublicDay(day) { return typeof day === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(day) && Number.isFinite(Date.parse(`${day}T00:00:00Z`)) && new Date(`${day}T00:00:00Z`).toISOString().slice(0,10) === day; }
-export function availabilityDates(state, from, to) {
+// `slots`: vagas que o doce escolhido ocupa (capacidade por tamanho); sem doce, 1.
+export function availabilityDates(state, from, to, slots = 1) {
   if (!validPublicDay(from) || !validPublicDay(to)) linkError('Período inválido.');
   const start = Date.parse(`${from}T00:00:00Z`), end = Date.parse(`${to}T00:00:00Z`);
   if (end < start || (end-start)/86400000 >= 90) linkError('Consulte no máximo 90 dias por vez.');
   const dates = [];
   for (let time=start;time<=end;time+=86400000) {
     const date = new Date(time).toISOString().slice(0,10); let available = true;
-    try { checkCapacity({status:'Confirmado',dueAt:`${date}T23:59`},state,null); } catch { available = false; }
+    try { checkCapacity({status:'Confirmado',dueAt:`${date}T23:59`,slots},state,null); } catch { available = false; }
     dates.push({date,available});
   }
   return dates;
@@ -42,9 +45,10 @@ export function createPublicRequest(state, input, code, now = new Date().toISOSt
   const location = input.mode==='Entrega' ? limitedText(input.location,300,'Endereço',true) : '';
   const dueAt = `${input.date}T${input.time}`;
   if (wallTimeEpoch(dueAt)<Date.now()) linkError('Escolha uma data e horário futuros.',409,'DATE_UNAVAILABLE');
-  try {checkCapacity({status:'Confirmado',dueAt},state,null);} catch {linkError('Esta data ficou indisponível. Escolha outra data.',409,'DATE_UNAVAILABLE');}
+  const product = custom ? null : page.products.find(p=>p.name===productName), slots = productSlots(product);
+  try {checkCapacity({status:'Confirmado',dueAt,slots},state,null);} catch {linkError('Esta data ficou indisponível. Escolha outra data.',409,'DATE_UNAVAILABLE');}
   let cake = null;
-  if (usesCakeFields(custom ? null : page.products.find(p=>p.name===productName), productName)) {
+  if (usesCakeFields(product, productName)) {
     const values = {}, labels = {};
     for (const field of state.orderTemplate.fields.filter(f=>f.enabled)) {
       const value = limitedText(input.cake?.[field.key] ?? '',field.key==='foodNotes'?500:200,field.label,field.required);
@@ -56,6 +60,7 @@ export function createPublicRequest(state, input, code, now = new Date().toISOSt
   const order = {id:crypto.randomUUID(),client,contact,product:productName,details,dueAt,mode:input.mode,location,total:0,totalKnown:false,status:'Solicitação',origin:'link',publicCode:code,
     consentAt:now,consentVersion:'2026-10-13',createdAt:now,updatedAt:now,cake,nextAction:'Revisar solicitação recebida pelo link',nextAt:'',pendingChange:'',
     history:[{at:now,text:'Solicitação recebida pelo link. Dados enviados com consentimento; aguardando revisão.'}]};
+  if (slots > 1) order.slots = slots;
   const next = structuredClone(state);
   const duplicates=next.orders.filter(o=>o.origin==='link'&&o.contact===contact&&o.product===productName&&o.dueAt.slice(0,10)===input.date&&Math.abs(Date.parse(now)-Date.parse(o.createdAt))<=600000);
   if(duplicates.length){order.possibleDuplicate=true;for(const previous of duplicates)previous.possibleDuplicate=true;}

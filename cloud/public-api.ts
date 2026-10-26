@@ -1,4 +1,4 @@
-import { availabilityDates, createPublicRequest, publicPageView } from './public-orders.js';
+import { availabilityDates, createPublicRequest, productSlots, publicPageView } from './public-orders.js';
 
 const origins = new Set(['https://lucast.app','https://www.lucast.app','https://doce-agenda-piloto.netlify.app','https://doce-agenda.doce-agenda-local.workers.dev','http://localhost:4173','http://127.0.0.1:4173']);
 export function createPublicHandler(deps:any={}) {
@@ -45,7 +45,8 @@ export function createPublicHandler(deps:any={}) {
         if(state.orderPage.slug!==match[1])return reply({error:'Página não encontrada.'},404);
         if(!state.orderPage.active)return reply({error:'Esta confeitaria não está recebendo pedidos pelo link no momento'},403);
         if(request.method==='GET'){
-          if(match[3]==='availability')return reply(availabilityDates(state,url.searchParams.get('from'),url.searchParams.get('to')));
+          // ?produto=: as datas livres para aquele doce, pelas vagas que ele ocupa (o envio confere de novo).
+          if(match[3]==='availability')return reply(availabilityDates(state,url.searchParams.get('from'),url.searchParams.get('to'),productSlots(state.orderPage.products?.find((p:any)=>p.name===url.searchParams.get('produto')))));
           // visita=0: robô de prévia do WhatsApp/Instagram, lido pelo código da Cloudflare; não conta como visita.
           if(url.searchParams.get('visita')!=='0')await admin.rpc('record_pilot_page_visit',{p_owner:owner});
           return reply(publicPageView(state.orderPage,state));

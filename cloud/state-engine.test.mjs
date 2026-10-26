@@ -164,3 +164,24 @@ test('canRebaseWrite only replays what the app saw unchanged', () => {
   assert.equal(canRebaseWrite(state, '/api/availability', 'PUT', { section: seen }), true);
   assert.equal(canRebaseWrite(state, '/api/availability', 'PUT', { section: '{}' }), false);
 });
+
+test('capacity counts the slots each order takes', () => {
+  let state = createEmptyState();
+  state.availability.dailyOrderLimit = 3;
+  const add = (body) => { const r = transactState(state, '/api/orders', { method: 'POST', body: JSON.stringify(body) }); if (r.status < 400) state = r.state; return r; };
+  const base = { client: 'Ana', product: 'Bolo', total: 100, status: 'Confirmado', dueAt: '2099-05-10T10:00' };
+  assert.equal(add({ ...base, slots: 2 }).status, 201, 'casamento: 2 vagas');
+  const big = add({ ...base, product: 'Bolo de três andares', slots: 2 });
+  assert.equal(big.status, 409);
+  assert.equal(big.body.code, 'DAILY_LIMIT');
+  assert.match(big.body.error, /ocupa 2 vagas e a data só tem 1 livre/);
+  assert.equal(add({ ...base, product: 'Brigadeiro' }).status, 201, 'sem slots: 1 vaga, cabe');
+  assert.equal(add({ ...base, product: 'Pudim' }).status, 409, 'agora lotou: 2 + 1 = 3');
+  for (const slots of [0, 11, 1.5, '2']) assert.equal(add({ ...base, dueAt: '2099-05-11T10:00', slots }).status, 400, `slots ${slots} é inválido`);
+  const id = state.orders.find((order) => order.product === 'Brigadeiro').id;
+  const edited = transactState(state, `/api/orders/${id}`, { method: 'PUT', body: JSON.stringify({ slots: 2 }) });
+  assert.equal(edited.status, 409, 'aumentar as vagas confere o limite do dia');
+  const moved = transactState(state, `/api/orders/${id}`, { method: 'PUT', body: JSON.stringify({ slots: 2, dueAt: '2099-05-12T10:00' }) });
+  assert.equal(moved.status, 200);
+  assert.match(moved.body.history.at(-1).text, /Vagas no dia: — → 2/);
+});
