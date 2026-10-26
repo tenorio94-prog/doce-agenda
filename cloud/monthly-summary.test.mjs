@@ -58,3 +58,13 @@ test('older clients can price a request without sending the new optional marker'
   const accepted=transactState(state,'/api/orders/public/accept',{method:'POST',body:JSON.stringify({status:'Confirmado',order:{total:150}})});
   assert.equal(accepted.status,200);assert.equal(accepted.body.total,150);assert.equal(accepted.body.totalKnown,true);
 });
+test('lifetime adds up every month with the same rules, counting clients once', () => {
+  const state = createEmptyState();
+  state.orders = [makeOrder('a', { contact: '(11) 98888-7777' }), makeOrder('b', { status: 'Entregue', dueAt: '2026-08-20T10:00', contact: '+55 11 98888-7777', total: 80 }),
+    makeOrder('c', { client: 'Outra cliente', dueAt: '2026-12-01T10:00' }), makeOrder('no-date', { dueAt: '' }), makeOrder('quote', { status: 'Orçamento' }),
+    makeOrder('cancelled', { status: 'Cancelado' }), makeOrder('sample', { isSample: true })];
+  state.payments = [payment('a', 30.1), payment('b', 80), payment('c', 20, 'Informado'), payment('cancelled', 100), payment('sample', 10)];
+  const { lifetime } = summary(state);
+  assert.deepEqual(lifetime, { ordersCount: 3, deliveredCount: 1, clientsCount: 2, receivedCents: 11010, firstMonth: '2026-08' });
+  assert.deepEqual(monthlySummary(createEmptyState(), '2026-10', now).lifetime, { ordersCount: 0, deliveredCount: 0, clientsCount: 0, receivedCents: 0, firstMonth: null });
+});

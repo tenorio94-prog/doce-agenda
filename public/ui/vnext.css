@@ -959,6 +959,26 @@ wa-input[aria-invalid="true"]::part(input-wrapper), wa-textarea[aria-invalid="tr
 .onboarding-demo { display: inline-flex; align-items: center; min-height: 44px; margin-top: 2px; font-size: var(--fs-sm); }
 .onboarding.is-complete { border-color: var(--pistache); background: var(--pistache); }
 .onboarding-end { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; margin-top: 12px; }
+/* Demo: depois de duas tarefas, o convite para guardar de verdade aparece no meio do caminho (plano RCD 2.2). */
+.onboarding-midcta { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; margin-top: 10px; padding-top: 12px; border-top: var(--hairline); }
+.onboarding-midcta p { flex: 1 1 220px; margin: 0; color: var(--ink-soft); font-size: var(--fs-sm); line-height: 1.45; }
+.onboarding-midcta .button { text-decoration: none; }
+/* Primeiro pedido de verdade: comemoração no topo da Agenda (plano RCD 1.4). */
+.first-order { display: flex; align-items: flex-start; gap: 14px; margin: 12px 0 16px; padding: 16px 18px; border: 1px solid var(--carimbo); border-radius: var(--r-m); background: var(--pistache); }
+.first-order-stamp { display: grid; flex: none; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: var(--carimbo); color: var(--branco); font-size: 22px; font-weight: 700; animation: first-order-pop .5s cubic-bezier(.3, 1.6, .5, 1) both; }
+.first-order-body { min-width: 0; }
+.first-order h2 { margin: 0; font-weight: 600; font-size: var(--fs-xl); line-height: 1.2; }
+.first-order h2:focus { outline: none; }
+.first-order p { margin: 6px 0 0; color: var(--ink); font-size: var(--fs-sm); line-height: 1.45; }
+.first-order-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; margin-top: 12px; }
+@keyframes first-order-pop { from { transform: scale(.4) rotate(-20deg); opacity: 0; } to { transform: none; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .first-order-stamp { animation: none; } }
+/* Conta nova sem pedido: uma pergunta antes da lista (plano RCD 1.3). */
+.onboarding-intent { margin-top: 14px; padding-top: 14px; border-top: var(--hairline); }
+.onboarding .onboarding-intent-q { margin: 0; font-weight: 600; font-size: var(--fs-lg); line-height: 1.3; }
+.onboarding .onboarding-intent-why { margin: 4px 0 0; color: var(--ink-soft); font-size: var(--fs-sm); line-height: 1.45; }
+.onboarding-intent-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.onboarding-intent-actions .button { flex: 1 1 140px; }
 @media (min-width: 761px) {
   .onboarding-list { grid-template-columns: 1fr 1fr; column-gap: 28px; }
   .onboarding-task:nth-child(2) { border-top: 0; }
@@ -1365,6 +1385,15 @@ body.vnext { background: var(--vn-canvas); }
 .vnext #view-month .empty-state { border: 1px dashed #d9bcc5; border-radius: var(--vn-r); background: #fff9; }
 .vnext #view-month .vn-month-note h2 { margin: 12px 0 10px; color: #fff; font-size: 26px; line-height: 1.15; }
 .vn-month-note p { color: #e4bdc9; font-size: 14px; margin: 0 0 10px; }
+/* O que ela já guardou: todos os meses somados, mesmas regras (plano RCD 3.1). */
+.vnext #view-month .month-lifetime { margin-top: 18px; padding: 18px; border: 1px solid var(--vn-line-soft); border-radius: var(--vn-r); background: #fff; box-shadow: var(--vn-shadow); }
+.vnext #view-month .month-lifetime h2 { margin: 0; font-size: 19px; }
+.vnext #view-month .month-lifetime-since { margin: 4px 0 0; color: var(--vn-muted); font-size: 14px; }
+.month-lifetime-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px 16px; margin: 14px 0 10px; padding: 0; list-style: none; }
+.month-lifetime-list li { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.vnext #view-month .month-lifetime-list strong { color: var(--vn-berry); font-family: var(--vn-title); font-size: 24px; line-height: 1.15; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.month-lifetime-list span { color: var(--vn-muted); font-size: 14px; }
+.vnext #view-month .month-lifetime .month-note { margin: 0; }
 @media (max-width: 1000px) { .vn-month-grid { grid-template-columns: minmax(0, 1fr); } .vnext #view-month .vn-month-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 380px) { .vnext #view-month .vn-stat { padding: 16px; } .vnext #view-month .vn-stat .stat-value { font-size: 22px; } }
 

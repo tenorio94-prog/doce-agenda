@@ -619,6 +619,7 @@ function renderToday() {
   const attentionBeside = wideAgenda?.matches === true;
   const attentionCount = weekMode || attentionBeside ? 0 : attentionItems().length;
   panel.innerHTML = `<header class="vn-heading"><div><span class="vn-date">${esc(capitalize(new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "numeric", month: "long" }).format(new Date())))}</span><h1 id="today-title" tabindex="-1">${esc(headline)}</h1>${summaryParts.length || attentionCount ? `<p class="today-summary">${esc(summaryParts.join(", "))}${attentionCount ? `<button class="vn-att-jump" type="button" data-action="jump-attention">${attentionCount} ${attentionCount === 1 ? "pede" : "pedem"} sua atenção</button>` : ""}</p>` : ""}</div>${modeSwitch}</header>
+    ${firstOrderMarkup()}
     ${firstUse && !onboardingVisible() ? `<section class="welcome-panel"><h2>Cadastre seu primeiro pedido</h2><p>Comece com cliente, produto e valor. Complete os detalhes quando estiverem combinados.</p><div class="welcome-actions"><button class="button button-primary" type="button" data-action="new-order">Nova encomenda</button></div></section>` : ''}
     ${sample && firstUse ? `<section class="sample-card" aria-label="Pedido de exemplo">${rowMarkup(sample)}<p>Toque para ver como fica um pedido completo. O exemplo não entra na sua agenda.</p></section>` : sample ? `<details class="sample-examples"><summary>Exemplo fictício — não entra na sua agenda</summary><div class="sample-example-list">${state.orders.filter(sampleOrder).map((order) => `<button class="text-link" type="button" data-open-order="${esc(order.id)}">Ver exemplo: ${esc(clientName(order) || order.product || "pedido")}</button>`).join("")}</div></details>` : ''}
     ${weekMode ? "" : weekBarMarkup()}
@@ -866,6 +867,13 @@ function renderMonth() {
       const item = row => `<li><span>${esc(row.name)}</span><strong>${row.count} ${row.count===1?'pedido':'pedidos'}</strong></li>`;
       content += `<div class="month-details"><section class="surface"><h2>Dias mais cheios</h2><ol class="month-ranking">${data.busiestDays.map(item).join('')}</ol></section><section class="surface"><h2>O que mais sai</h2><ol class="month-ranking">${data.topProducts.map(item).join('')}</ol></section><section class="surface"><h2>Prazo médio de aviso</h2><p class="month-lead-value">${data.averageNoticeDays===null?'Sem datas de criação':`${esc(new Intl.NumberFormat('pt-BR',{maximumFractionDigits:1}).format(data.averageNoticeDays))} ${data.averageNoticeDays===1?'dia':'dias'}`}</p><p class="month-note">Entre o registro e a retirada ou entrega.${data.noticeOrdersCount<data.ordersCount?` Calculado com ${data.noticeOrdersCount} pedidos que têm data de criação.`:''}</p></section></div>`;
     }
+  }
+  // O que ela já guardou, somando todos os meses com as mesmas regras (plano RCD 3.1). Servidor antigo não manda: não aparece.
+  const life = !state.monthError && data?.lifetime;
+  if (life?.ordersCount) {
+    const since = life.firstMonth ? new Intl.DateTimeFormat('pt-BR',{month:'long',year:'numeric',timeZone:'UTC'}).format(new Date(`${life.firstMonth}-01T12:00:00Z`)) : '';
+    const fact = (value, label) => `<li><strong>${esc(value)}</strong><span>${esc(label)}</span></li>`;
+    content += `<section class="surface month-lifetime" aria-labelledby="lifetime-title"><h2 id="lifetime-title">O que você já guardou aqui</h2>${since ? `<p class="month-lifetime-since">Desde ${esc(since)}</p>` : ''}<ul class="month-lifetime-list">${fact(life.ordersCount, life.ordersCount === 1 ? 'encomenda' : 'encomendas')}${fact(life.deliveredCount, life.deliveredCount === 1 ? 'entregue' : 'entregues')}${fact(life.clientsCount, life.clientsCount === 1 ? 'cliente' : 'clientes')}${fact(money(life.receivedCents / 100), 'recebido e conferido')}</ul><p class="month-note">É tudo seu: a cópia de segurança, em Ajustes, leva o histórico inteiro.</p></section>`;
   }
   panel.innerHTML = `<header class="vn-heading"><div><h1 id="month-title" tabindex="-1">Meu mês</h1></div></header><div class="week-controls month-controls vn-month-nav"><button class="icon-button" type="button" data-month-shift="-1" aria-label="Mês anterior" ${state.month==='1900-01'?'disabled':''}>${icon('left')}</button><span class="month-range" aria-live="polite">${esc(label)}</span><button class="icon-button" type="button" data-month-shift="1" aria-label="Próximo mês" ${state.month>=(data?.currentMonth||currentBusinessMonth())?'disabled':''}>${icon('right')}</button></div>${tipMarkup("month")}<div class="vn-month-grid"><div class="month-content" aria-busy="${state.monthLoading}" aria-live="polite">${content}</div><aside class="vn-wine-panel vn-month-note"><span class="vn-eyebrow">Mais clareza, menos papel</span><h2>Recebido não é lucro.</h2><p>Custos e despesas não fazem parte deste resumo.</p><p>Um Pix informado continua pendente até você conferir no banco e marcar no pedido.</p></aside></div><p class="month-note month-definition">Conta pedidos Confirmados e Entregues pela data de retirada ou entrega. Recebido inclui apenas pagamentos conferidos desses pedidos, mesmo que tenham sido recebidos em outro mês. Não inclui orçamentos, solicitações nem exemplos.</p>`;
   if (focused !== undefined) panel.querySelector(`[data-month-shift="${CSS.escape(focused)}"]`)?.focus({preventScroll:true});
@@ -1415,6 +1423,26 @@ function reportOrderFormErrors(form) {
 }
 
 // O aviso diz onde o pedido foi parar: na agenda (com o dia) ou em Pedidos, em Novos.
+// Primeiro pedido de verdade da conta: comemorar no topo da Agenda, não só confirmar (regra pico-fim, plano RCD 1.4).
+// Fica só na memória: some ao fechar ou ao recarregar.
+let firstOrderCelebration = null;
+function firstOrderMarkup() {
+  const order = firstOrderCelebration && orderById(firstOrderCelebration);
+  if (!order) return "";
+  const dayKey = order.dueAt?.slice(0, 10), committed = isCommitted(order);
+  let place = "Ele está guardado em Pedidos.";
+  if (committed && dayKey) {
+    const availability = availabilityFor(dayKey), day = capitalize(calendarDateLabel(dayKey, { weekday: "long", day: "numeric", month: "long" }));
+    place = Number.isInteger(availability.limit) ? `${day}: ${availability.count} de ${availability.limit} ${availability.limit === 1 ? "vaga ocupada" : "vagas ocupadas"}.` : `${day} já tem ${availability.count} ${availability.count === 1 ? "pedido" : "pedidos"} na agenda.`;
+  } else if (DECISION_STATUSES.includes(order.status)) place = "Está em Pedidos, em Novos, como orçamento. Quando fechar, confirme e ele ocupa a vaga.";
+  const next = committed ? (needsDeposit(order) ? "Quando o sinal cair na conta, marque na ficha do pedido." : "No dia, um toque leva o pedido de etapa em etapa.") : "";
+  return `<section class="first-order" aria-labelledby="first-order-title">
+    <span class="first-order-stamp" aria-hidden="true">✓</span>
+    <div class="first-order-body"><h2 id="first-order-title" tabindex="-1">${committed ? "Primeiro pedido na agenda!" : "Primeiro pedido anotado!"}</h2><p>${esc(place)}${next ? ` ${esc(next)}` : ""}</p>
+    <div class="first-order-actions"><button class="button button-primary" type="button" data-open-order="${esc(order.id)}">Ver o pedido</button><button class="text-link" type="button" data-action="close-first-order">Fechar</button></div></div>
+  </section>`;
+}
+
 function savedOrderMessage(order, created) {
   if (!order) return "Encomenda salva.";
   if (!created) return "Alterações salvas.";
@@ -1465,11 +1493,18 @@ async function submitOrder(event) {
   try {
     const id = form.dataset.id;
     const reviewing=form.dataset.review==='true';
+    const firstReal = (!id || reviewing) && !isDemoMode() && !state.orders.some((order) => !sampleOrder(order) && order.status !== "Solicitação");
     const saved = await apiRequest(reviewing ? `/orders/${encodeURIComponent(id)}/accept` : id ? `/orders/${encodeURIComponent(id)}` : "/orders", { method: reviewing ? 'POST' : id ? "PUT" : "POST", body: reviewing ? {status:body.status,order:body} : body });
     $("#order-dialog").close();
     closeDetails();
     await loadState({ silent: true });
     const savedOrder = orderById(id || saved?.id || saved?.order?.id);
+    if (firstReal && savedOrder && !sampleOrder(savedOrder)) {
+      firstOrderCelebration = savedOrder.id;
+      setActiveView("today");
+      $("#first-order-title")?.focus({ preventScroll: true });
+      $("#view-today .first-order")?.scrollIntoView({ block: "nearest" });
+    }
     if (savedOrder) $$(".order-row").filter((row) => row.dataset.openOrder === savedOrder.id).forEach((row) => row.classList.add("is-fresh"));
     showToast(savedOrderMessage(savedOrder, !id || reviewing), savedOrder && { label: "Copiar resumo", run: () => copyText(makeWhatsAppSummary(savedOrder)).then(() => showToast("Resumo copiado para enviar no WhatsApp.")).catch((error) => showToast(error.message)) });
   } catch (error) {
@@ -1568,6 +1603,8 @@ function handleClick(event) {
     case 'open-onboarding': { const progress = readOnboarding(); progress.dismissed = false; saveOnboarding(progress); setActiveView('today'); coach('#view-today .onboarding'); break; }
     case 'onboarding-skip': { const progress = readOnboarding(); progress.dismissed = true; saveOnboarding(progress); renderToday(); if (isDemoMode()) showToast('Para ver de novo, toque em Como funciona.'); break; }
     case 'onboarding-go': runOnboardingTask(action.dataset.task); break;
+    case 'close-first-order': firstOrderCelebration = null; renderToday(); break;
+    case 'onboarding-intent': { const progress = readOnboarding(); progress.intent = action.dataset.intent; saveOnboarding(progress); renderToday(); if (progress.intent === 'tem-pedido') openOrderForm(); else showToast('Combinado. Comece pelo link e pelos seus dias.'); break; }
     case 'close-tip': closeTip(action.dataset.tip); break;
     case 'pix-charge': openPixCharge(id); break;
     case 'retry-clients': state.clientsError = ""; state.clientsData = null; renderClients(); break;
@@ -2242,15 +2279,15 @@ function pixDialogClick(event) {
 }
 
 // ---- Boas-vindas: tarefas na tela de verdade ----
-// The demonstration asks for four short tasks in any order; a new account gets three first steps.
+// The demonstration asks for four short tasks in any order; a new account gets four first steps, the account already done.
 // Progress is read from the agenda itself where possible; the rest is remembered on this device.
 const isDemoMode = () => !!window.DoceStore?.isDemo;
 const onboardingKey = () => `doce-agenda.onboarding.${isDemoMode() ? "demo" : "conta"}.v1`;
 function readOnboarding() {
   try {
     const saved = JSON.parse(localStorage.getItem(onboardingKey()) || "{}");
-    return { dismissed: saved.dismissed === true, done: Array.isArray(saved.done) ? saved.done : [] };
-  } catch { return { dismissed: false, done: [] }; }
+    return { dismissed: saved.dismissed === true, done: Array.isArray(saved.done) ? saved.done : [], intent: ["tem-pedido", "sem-pedido"].includes(saved.intent) ? saved.intent : "" };
+  } catch { return { dismissed: false, done: [], intent: "" }; }
 }
 function saveOnboarding(progress) {
   try { localStorage.setItem(onboardingKey(), JSON.stringify(progress)); } catch { /* sem armazenamento: só não lembra */ }
@@ -2275,11 +2312,16 @@ function onboardingTasks() {
     ];
   }
   const availability = state.availability || {};
-  return [
-    { key: "order", title: "Anote seu primeiro pedido", text: "Cliente, produto, data e valor. O resto pode vir depois.", done: state.orders.some((order) => !sampleOrder(order) && order.status !== "Solicitação") },
+  const waiting = readOnboarding().intent === "sem-pedido";
+  // A conta criada já conta como o primeiro passo: começar em 1 de 4 encurta a distância percebida até o fim.
+  const tasks = [
+    { key: "account", title: "Crie sua conta", text: "Feito. Seus pedidos ficam guardados e você entra de qualquer aparelho.", done: true },
+    { key: "order", title: "Anote seu primeiro pedido", text: waiting ? "Quando a próxima encomenda for combinada, anote aqui. Leva um minuto." : "Cliente, produto, data e valor. O resto pode vir depois.", done: state.orders.some((order) => !sampleOrder(order) && order.status !== "Solicitação") },
     { key: "days", title: "Diga seus dias e limites", text: "Os dias em que você não trabalha e quantos pedidos cabem por dia.", done: done.includes("days") || (availability.closedWeekdays || []).length > 0 || availability.dailyOrderLimit != null || Number(availability.minimumNoticeHours) > 0 },
     { key: "link", title: "Ative seu link de encomenda", text: "As clientes pedem sozinhas, e nada ocupa vaga até você aceitar.", done: !!state.orderPage?.active },
   ];
+  // Sem encomenda marcada, o link e os dias vêm primeiro: são eles que trazem o primeiro pedido.
+  return waiting ? [tasks[0], tasks[3], tasks[2], tasks[1]] : tasks;
 }
 
 const onboardingVisible = () => !readOnboarding().dismissed && (isDemoMode() || onboardingTasks().some((task) => !task.done));
@@ -2287,14 +2329,17 @@ const onboardingVisible = () => !readOnboarding().dismissed && (isDemoMode() || 
 function onboardingMarkup() {
   if (!onboardingVisible()) return "";
   const demo = isDemoMode(), tasks = onboardingTasks(), count = tasks.filter((task) => task.done).length;
+  // Conta nova sem pedido: antes da lista, ela diz o que veio fazer (uma pergunta, duas respostas).
+  const askIntent = !demo && !readOnboarding().intent && !tasks.find((task) => task.key === "order")?.done;
   if (count === tasks.length) {
     return `<section class="onboarding is-complete surface" aria-labelledby="onboarding-title"><h2 id="onboarding-title">Pronto, você já sabe usar.</h2><p>Agora é com a sua confeitaria: crie a conta e anote seus pedidos de verdade.</p><div class="onboarding-end"><a class="button button-primary" href="/cadastro/">Criar conta grátis</a><button class="text-link" type="button" data-action="onboarding-skip">Fechar</button></div></section>`;
   }
   return `<section class="onboarding surface" aria-labelledby="onboarding-title">
-    <div class="onboarding-head"><div><h2 id="onboarding-title">${demo ? "Experimente em 1 minuto" : "Primeiros passos"}</h2><p>${demo ? "Faça na tela de verdade, na ordem que quiser." : "Três coisas para deixar sua agenda pronta."}</p></div><button class="text-link onboarding-skip" type="button" data-action="onboarding-skip">Pular</button></div>
+    <div class="onboarding-head"><div><h2 id="onboarding-title">${demo ? "Experimente em 1 minuto" : "Primeiros passos"}</h2><p>${demo ? "Faça na tela de verdade, na ordem que quiser." : `Você já começou. ${tasks.length - count === 1 ? "Falta uma coisa" : `Faltam ${["", "uma", "duas", "três"][tasks.length - count] || tasks.length - count} coisas`} para deixar sua agenda pronta.`}</p></div><button class="text-link onboarding-skip" type="button" data-action="onboarding-skip">Pular</button></div>
     <div class="onboarding-progress" role="progressbar" aria-label="Tarefas feitas" aria-valuemin="0" aria-valuemax="${tasks.length}" aria-valuenow="${count}"><i style="width:${Math.round(count / tasks.length * 100)}%"></i></div>
     <p class="onboarding-count">${count} de ${tasks.length} feitas</p>
-    <ol class="onboarding-list">${tasks.map((task) => `<li class="onboarding-task${task.done ? " is-done" : ""}"><span class="onboarding-check" aria-hidden="true">${task.done ? "✓" : ""}</span><span class="onboarding-text"><strong>${esc(task.title)}</strong><small>${esc(task.text)}</small></span>${task.done ? '<span class="visually-hidden">Feito.</span>' : `<button class="button button-quiet onboarding-go" type="button" data-action="onboarding-go" data-task="${task.key}" aria-label="Fazer: ${esc(task.title)}">Fazer</button>`}</li>`).join("")}</ol>
+    ${askIntent ? `<div class="onboarding-intent"><p class="onboarding-intent-q" id="onboarding-intent-q">Você já tem encomenda marcada?</p><p class="onboarding-intent-why">Assim a gente começa pelo que ajuda agora.</p><div class="onboarding-intent-actions" role="group" aria-labelledby="onboarding-intent-q"><button class="button button-primary" type="button" data-action="onboarding-intent" data-intent="tem-pedido">Sim, já tenho</button><button class="button button-quiet" type="button" data-action="onboarding-intent" data-intent="sem-pedido">Ainda não</button></div></div>` : `<ol class="onboarding-list">${tasks.map((task) => `<li class="onboarding-task${task.done ? " is-done" : ""}"><span class="onboarding-check" aria-hidden="true">${task.done ? "✓" : ""}</span><span class="onboarding-text"><strong>${esc(task.title)}</strong><small>${esc(task.text)}</small></span>${task.done ? '<span class="visually-hidden">Feito.</span>' : `<button class="button button-quiet onboarding-go" type="button" data-action="onboarding-go" data-task="${task.key}" aria-label="Fazer: ${esc(task.title)}">Fazer</button>`}</li>`).join("")}</ol>`}
+    ${demo && count >= 2 ? `<div class="onboarding-midcta"><p>Gostou? Na sua conta, os pedidos ficam guardados de verdade e você entra de qualquer aparelho.</p><a class="button button-quiet" href="/cadastro/">Criar minha conta grátis</a></div>` : ""}
     ${demo ? "" : '<a class="text-link onboarding-demo" href="/demo/">Ver a demonstração antes</a>'}
   </section>`;
 }
