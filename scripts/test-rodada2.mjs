@@ -18,20 +18,21 @@ try {
     await page.goto(`${server.origin}/demo/`);
     await page.locator('#today-title').waitFor();
 
-    // Etapa 3: a Agenda responde "o que faço hoje?": semana acima da lista, primeiro pedido sem rolar,
-    // cobranças e decisões numa lista só, nenhum resumo financeiro na Agenda.
-    const week = await page.locator('#view-today .vn-weekbar').boundingBox();
-    const list = await page.locator('#view-today #today-list-title').boundingBox();
-    assert.ok(week && list && week.y < list.y, 'a semana fica acima da lista do dia');
-    const firstOrder = await page.locator('#view-today .today-agenda .vn-order').first().boundingBox();
-    if (height >= 800) assert.ok(firstOrder.y + 60 < height, `primeiro pedido fora da primeira tela (${Math.round(firstOrder.y)})`);
+    // Simplificação, etapa 2: Hoje responde "o que faço agora?". O título traz o número do que pede você,
+    // a lista vem primeiro e as entregas de hoje logo abaixo; a semana com as vagas fica em Pedidos > Semana.
+    const pending = await page.locator('#attention-title .vn-count').innerText();
+    assert.equal(await page.locator('#today-title').innerText(), `${pending} coisas pedem você`);
+    assert.equal(await page.locator('#view-today .vn-weekbar, #view-today .agenda-mode').count(), 0, 'Hoje sem a semana nem a chave de modo');
+    const attention = await page.locator('#view-today .vn-attention').boundingBox();
+    const todayList = await page.locator('#view-today #hoje-list-title').boundingBox();
+    assert.ok(attention.y < todayList.y, 'o que pede você vem antes das entregas de hoje');
+    assert.ok(attention.y < height, 'o que pede você já na primeira tela');
+    assert.match(await page.locator('#hoje-list-title').innerText(), /Entregas de hoje/);
     assert.equal(await page.locator('#view-today .finance-summary').count(), 0, 'resumo financeiro saiu da Agenda');
-    assert.match(await page.locator('#view-today .vn-attention').innerText(), /Pedem sua atenção[\s\S]*Pedido novo pelo link/);
-    // Rodada 5: no computador a lista fica na coluna ao lado do dia, já na primeira tela; no celular, logo abaixo do dia.
-    const where = width > 1000 ? '.vn-aside' : '.vn-schedule';
-    assert.equal(await page.locator(`#view-today ${where} .vn-attention`).count(), 1, `atenção em ${where}`);
-    if (width > 1000) assert.ok((await page.locator('#view-today .vn-attention').boundingBox()).y < height, 'atenção à vista no computador');
-    check(`${width}px: Agenda com a semana no topo e o dia na primeira tela`);
+    assert.match(await page.locator('#view-today .vn-attention').innerText(), /Pedido novo pelo link/);
+    assert.equal(await page.locator('#view-today .vn-schedule .vn-attention').count(), 1, 'a lista fica na coluna principal em todas as larguras');
+    check(`${width}px: Hoje com o que pede você no topo e as entregas de hoje logo abaixo`);
+
 
     // Etapa 0: Pedidos mostra o dia de cada pedido e começa pelo que está em aberto.
     await page.locator('[data-view="orders"]:visible').first().click();

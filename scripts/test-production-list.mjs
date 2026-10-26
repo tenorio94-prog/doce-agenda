@@ -1,4 +1,4 @@
-// Lista da semana (Agenda): node scripts/build-cloudflare.mjs && node scripts/test-production-list.mjs [pasta-de-capturas]
+// Lista da semana (Pedidos > Produção): node scripts/build-cloudflare.mjs && node scripts/test-production-list.mjs [pasta-de-capturas]
 // Roda na demonstração (dados só no navegador do teste): marcar pronto, desfazer, copiar e 360 px sem rolagem lateral.
 import assert from 'node:assert/strict';
 import { mkdir } from 'node:fs/promises';
@@ -19,7 +19,11 @@ try {
     const errors = [];
     page.on('pageerror', (error) => errors.push(String(error)));
     await page.goto(`${origin}/demo/`);
-    await page.locator('[data-agenda-mode="week"]').click();
+    // Simplificação, etapa 2: a lista da semana saiu de Hoje e fica em Pedidos > Produção.
+    await page.locator('#today-title').waitFor();
+    assert.equal(await page.locator('#view-today [data-orders-mode], #view-today .production-week').count(), 0, 'Hoje não tem mais a lista da semana');
+    await page.locator('.nav-item[data-view="orders"]:visible').first().click();
+    await page.locator('[data-orders-mode="production"]').click();
     await page.locator('#production-title').waitFor();
     const items = page.locator('.prod-item');
     assert.ok(await items.count() > 0, 'a semana da demonstração deve ter pedidos confirmados');
@@ -43,9 +47,12 @@ try {
     assert.match(text, /^Produção da semana \(/);
     assert.match(text, /☐|✅/);
 
-    // Voltar ao Dia a dia mantém a agenda de antes.
-    await page.locator('[data-agenda-mode="day"]').click();
-    await page.locator('#today-list-title').waitFor();
+    // Semana: a faixa com as vagas e o dia escolhido; Lista volta à lista de antes.
+    await page.locator('[data-orders-mode="week"]').click();
+    await page.locator('#view-orders #today-list-title').waitFor();
+    assert.equal(await page.locator('#view-orders .vn-weekbar').count(), 1);
+    await page.locator('[data-orders-mode="list"]').click();
+    await page.locator('#order-search').waitFor();
     assert.deepEqual(errors, []);
     results.push(width);
     await context.close();

@@ -1,5 +1,5 @@
 // Um número só (simplificação, etapa 1): node scripts/build-cloudflare.mjs && node scripts/test-um-numero.mjs [pasta-de-capturas]
-// O selo da Agenda, o aviso do topo e "Pedem sua atenção" contam a mesma coisa e mudam juntos.
+// O selo de Hoje, o título e "Pedem sua atenção" contam a mesma coisa e mudam juntos (etapa 2: o título é o aviso).
 // Pedidos não tem mais selo próprio; o topo não repete "sem sinal". Só a demo local.
 import assert from 'node:assert/strict';
 import { mkdir } from 'node:fs/promises';
@@ -24,13 +24,13 @@ try {
 
     const badge = page.locator('.nav-item[data-view="today"]:visible #nav-attention-count');
     const heading = () => page.locator('#attention-title .vn-count').innerText();
-    const chip = page.locator('#view-today .vn-att-jump');
+    const title = page.locator('#today-title');
     const check = async () => {
       const n = await heading();
-      assert.equal(await badge.innerText(), n, 'selo da Agenda = lista');
+      assert.equal(await badge.innerText(), n, 'selo de Hoje = lista');
       assert.equal(await badge.getAttribute('aria-label'), `${n} ${n === '1' ? 'pede' : 'pedem'} sua atenção`);
-      if (width < 1001) assert.equal(await chip.innerText(), `${n} ${n === '1' ? 'pede' : 'pedem'} sua atenção`, 'aviso do topo = lista');
-      else assert.equal(await chip.count(), 0, 'no computador a lista já está ao lado: sem aviso no topo');
+      assert.equal(await title.innerText(), `${n} ${n === '1' ? 'coisa pede' : 'coisas pedem'} você`, 'título = lista');
+      assert.equal(await page.locator('#view-today .vn-att-jump').count(), 0, 'sem aviso repetido no topo');
       return Number(n);
     };
     const before = await check();
@@ -43,6 +43,7 @@ try {
     });
     assert.equal(await page.locator('#nav-order-count').isVisible(), false, 'selo legado continua invisível para JavaScript em cache');
     assert.doesNotMatch(await page.locator('#view-today .vn-heading').innerText(), /sem sinal/, 'o topo não repete "sem sinal"');
+    assert.equal(await page.locator('.nav-item[data-view="today"]:visible').first().innerText().then((text) => text.replace(/\d+/g, '').trim()), 'Hoje', 'a aba se chama Hoje');
     if (shots) await page.screenshot({ path: path.join(shots, `um-numero-${width}.png`) });
 
     // Conferir o Pix informado tira uma pendência: os três números caem juntos.
@@ -59,7 +60,7 @@ try {
     assert.equal(await badge.innerText(), String(before - 1));
 
     assert.deepEqual(errors, []);
-    results.push(`${width}px: selo da Agenda, aviso e lista com o mesmo número, caem juntos ao conferir o Pix`);
+    results.push(`${width}px: selo de Hoje, título e lista com o mesmo número, caem juntos ao conferir o Pix`);
     await context.close();
   }
   results.forEach((line) => console.log(`ok - ${line}`));

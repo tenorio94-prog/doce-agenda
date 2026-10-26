@@ -29,7 +29,7 @@ const state = {
   orderPage: {active:false,slug:'',displayName:'',welcome:'',whatsapp:'',products:[]},
   pix: { keyType: "", key: "", name: "", city: "", depositPercent: 30 },
   restoreData: null, activeView: "today", search: "", statusFilter: "all",
-  weekOffset: 0, agendaMode: "day", selectedDay: localDateKey(new Date()), settingsDate: localDateKey(new Date()), detailOrderId: null,
+  weekOffset: 0, ordersMode: "list", selectedDay: localDateKey(new Date()), settingsDate: localDateKey(new Date()), detailOrderId: null,
   paymentOrderId: null, toastTimer: null,
   month: null, monthData: null, monthLoading: false, monthError: '', monthRequest: 0,
   openSettings: new Set(), openDateException: false,
@@ -340,10 +340,10 @@ function requestBanner() {
 }
 const capitalize = (text) => text.charAt(0).toLocaleUpperCase("pt-BR") + text.slice(1);
 
-// Reminder of what comes after today, grouped under a clear day label. It only shows while
-// today is selected, so the same order never appears twice on screen.
+// Reminder of what comes after today, grouped under a clear day label. Hoje shows only today,
+// so the same order never appears twice on screen; the whole week lives in Pedidos > Semana.
 function upcomingMarkup(orders) {
-  if (!orders.length || state.selectedDay !== localDateKey(new Date())) return "";
+  if (!orders.length) return "";
   const now = new Date();
   const tomorrow = localDateKey(new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1));
   const groups = new Map();
@@ -356,7 +356,7 @@ function upcomingMarkup(orders) {
     const full = availabilityFor(key).full;
     return `${key === tomorrow ? `Amanhã, ${name.charAt(0).toLocaleLowerCase("pt-BR")}${name.slice(1)}` : name}${full ? " (lotado)" : ""}`;
   };
-  return `<section class="coming-soon vn-coming"><div class="vn-section-row"><h2>Próximos dias</h2><button class="text-link" type="button" data-view="orders">Todos os pedidos</button></div>
+  return `<section class="coming-soon vn-coming"><div class="vn-section-row"><h2>Próximos dias</h2><button class="text-link" type="button" data-action="orders-week">Ver a semana em Pedidos</button></div>
     ${[...groups].map(([key, list]) => `<div class="upcoming-day"><h3 class="upcoming-label">${esc(label(key))}</h3><div class="vn-lines">${list.map((order) => agendaLineMarkup(order)).join("")}</div></div>`).join("")}</section>`;
 }
 // Linha baixa de pedido (Próximos dias): hora, produto, cliente e o carimbo pequeno. A linha inteira abre a ficha.
@@ -396,7 +396,7 @@ function attentionMarkup() {
   const glyph = { link: "link", pix: "pix", money: "wallet", next: "clock" };
   const row = (item) => `<div class="vn-att-row is-${item.kind}${item.cls ? ` ${item.cls}` : ""}"><span class="vn-att-glyph">${icon(glyph[item.kind])}</span><div class="vn-att-text"><h3>${esc(item.title)}</h3><p>${esc(item.text)}</p></div>${item.action}</div>`;
   const first = items.slice(0, 3), rest = items.slice(3);
-  return `<section class="vn-attention" aria-labelledby="attention-title"><h2 id="attention-title">Pedem sua atenção <span class="vn-count">${items.length}</span></h2>
+  return `<section class="vn-attention" aria-labelledby="attention-title"><h2 id="attention-title" class="visually-hidden">Pedem sua atenção <span class="vn-count">${items.length}</span></h2>
     <div class="vn-att-list">${first.map(row).join("")}</div>
     ${rest.length ? `<details class="vn-att-more"><summary>Ver mais ${rest.length}</summary><div class="vn-att-list">${rest.map(row).join("")}</div></details>` : ""}</section>`;
 }
@@ -505,30 +505,32 @@ function inboxCardMarkup(order, options) {
   </article>`;
 }
 
-// Agenda = today plus the week picker: the selected day starts on today and the list shows that day.
-function agendaWeekMarkup(upcomingCount) {
+// Os pedidos de um dia. Hoje mostra só hoje ("Entregas de hoje"); Pedidos > Semana mostra o dia
+// escolhido na semana, que começa em hoje.
+function dayScheduleMarkup({ todayOnly = false, upcomingCount = 0 } = {}) {
   const days = weekDates();
   const todayKey = localDateKey(new Date());
-  if (!days.some((day) => localDateKey(day) === state.selectedDay)) state.selectedDay = days.some((day) => localDateKey(day) === todayKey) ? todayKey : localDateKey(days[0]);
-  const selected = days.find((day) => localDateKey(day) === state.selectedDay) || days[0];
+  if (!todayOnly && !days.some((day) => localDateKey(day) === state.selectedDay)) state.selectedDay = days.some((day) => localDateKey(day) === todayKey) ? todayKey : localDateKey(days[0]);
+  const selected = todayOnly ? new Date() : days.find((day) => localDateKey(day) === state.selectedDay) || days[0];
   const selectedKey = localDateKey(selected);
   const isToday = selectedKey === todayKey;
+  const titleId = todayOnly ? "hoje-list-title" : "today-list-title";
   const scheduled = scheduledOn(selectedKey);
   const availability = availabilityFor(selectedKey);
   const done = scheduled.filter((order) => ["Pronto", "Entregue"].includes(order.status)).length;
-  const dayTitle = isToday ? "Hoje" : capitalize(new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "numeric", month: "short" }).format(selected).replace(".", ""));
+  const dayTitle = todayOnly ? "Entregas de hoje" : isToday ? "Hoje" : capitalize(new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "numeric", month: "short" }).format(selected).replace(".", ""));
   const dayBadge = availability.closed ? '<span class="vn-badge muted">Fechado</span>' : availability.full ? '<span class="vn-badge red">Dia lotado</span>' : "";
   const limitText = availability.closed ? "Dia fechado" : Number.isInteger(availability.limit) ? `${scheduled.length} de ${availability.limit} ${availability.limit === 1 ? "vaga ocupada" : "vagas ocupadas"}` : `${scheduled.length} ${scheduled.length === 1 ? "encomenda" : "encomendas"}, sem limite definido`;
   const empty = isToday
     ? `<div class="vn-empty">${icon("cake")}<h3>Nenhuma encomenda para hoje</h3><p>${upcomingCount ? "As próximas estão logo abaixo." : "Pedidos sem data aparecem em Pedidos."}</p><button class="vn-btn secondary" type="button" data-action="new-order">${icon("plus")} Anotar encomenda</button></div>`
     : `<div class="vn-empty">${icon("cake")}<h3>Dia livre de pedidos marcados</h3><p>Pedidos sem data continuam em Pedidos.</p></div>`;
-  return `<section class="today-agenda agenda-week" aria-labelledby="today-list-title">
-    <div class="vn-day-head"><div class="vn-grow"><h2 id="today-list-title">${esc(dayTitle)} ${dayBadge}</h2><p>${esc(limitText)}</p></div>${scheduled.length ? `<div class="vn-day-progress"><progress value="${done}" max="${scheduled.length}" aria-label="Produção do dia: ${done} de ${scheduled.length} prontas"></progress><span>${done} de ${scheduled.length} ${scheduled.length === 1 ? "pronta" : "prontas"}</span></div>` : ""}</div>
+  return `<section class="today-agenda agenda-week" aria-labelledby="${titleId}">
+    <div class="vn-day-head"><div class="vn-grow"><h2 id="${titleId}">${esc(dayTitle)} ${dayBadge}</h2><p>${esc(limitText)}</p></div>${scheduled.length ? `<div class="vn-day-progress"><progress value="${done}" max="${scheduled.length}" aria-label="Produção do dia: ${done} de ${scheduled.length} prontas"></progress><span>${done} de ${scheduled.length} ${scheduled.length === 1 ? "pronta" : "prontas"}</span></div>` : ""}</div>
     ${scheduled.length ? `<div class="vn-order-list${state.agendaEnter ? " is-entering" : ""}">${scheduled.map((order) => agendaCardMarkup(order)).join("")}</div>` : empty}
-    <div class="vn-day-links">${isToday ? "" : '<button class="text-link" type="button" data-action="agenda-today">Voltar para hoje</button>'}<button class="text-link agenda-adjust" type="button" data-action="adjust-selected-date" data-date="${selectedKey}">Ajustar esta data</button></div>
+    <div class="vn-day-links">${isToday || todayOnly ? "" : '<button class="text-link" type="button" data-action="agenda-today">Voltar para hoje</button>'}<button class="text-link agenda-adjust" type="button" data-action="adjust-selected-date" data-date="${selectedKey}">Ajustar esta data</button></div>
   </section>`;
 }
-// A semana fica no topo da Agenda, acima do que ela controla. Pontinhos = vagas ocupadas (tijolo quando lota).
+// A semana fica no topo de Pedidos > Semana, acima do dia que ela escolhe. Pontinhos = vagas ocupadas (tijolo quando lota).
 function weekBarMarkup() {
   const days = weekDates();
   const todayKey = localDateKey(new Date());
@@ -593,43 +595,29 @@ function productionMarkup() {
   </section>`;
 }
 
-const wideAgenda = window.matchMedia?.("(min-width: 1001px)");
-wideAgenda?.addEventListener?.("change", () => { if (state.activeView === "today") renderToday(); });
+// Hoje: o que pede você primeiro, depois as entregas de hoje e os próximos dias (plano de simplificação, etapa 2).
+// A semana com as vagas e a lista de produção ficam em Pedidos.
 function renderToday() {
   const panel = $("#view-today");
-  const focused = document.activeElement;
-  const focusSelector = focused?.dataset?.weekShift !== undefined ? `[data-week-shift="${CSS.escape(focused.dataset.weekShift)}"]` : focused?.dataset?.selectDay ? `[data-select-day="${CSS.escape(focused.dataset.selectDay)}"]` : focused?.dataset?.agendaMode ? `[data-agenda-mode="${CSS.escape(focused.dataset.agendaMode)}"]` : "";
-  const weekMode = state.agendaMode === "week";
-  const modeSwitch = `<div class="agenda-mode vn-segmented" role="group" aria-label="Como ver a agenda"><button type="button" data-agenda-mode="day" aria-pressed="${!weekMode}">Dia a dia</button><button type="button" data-agenda-mode="week" aria-pressed="${weekMode}">Lista da semana</button></div>`;
   panel.classList.add('today-redesign');
-  const todays = todayOrders();
   const upcoming = sortOrders(state.orders.filter((order) => order.status!=='Solicitação' && !sampleOrder(order) && !isFinished(order) && order.dueAt && (parseDate(order.dueAt)?.getTime() ?? 0) >= new Date(new Date().setHours(24, 0, 0, 0)).getTime())).slice(0, 5);
   const pendingChanges = state.orders.filter((order) => !sampleOrder(order) && !isFinished(order) && order.pendingChange);
   const sample = state.orders.find((order) => order.isSample || order.isDemo || order.sample);
   const firstUse = !state.orders.some((order) => !(order.isSample || order.isDemo || order.sample));
-  const toDeliver = todays.filter((order) => !isFinished(order));
-  const todayKey = localDateKey(new Date()), todayAvailability = availabilityFor(todayKey);
-  const headline = toDeliver.length ? `${toDeliver.length} ${toDeliver.length === 1 ? "entrega" : "entregas"} hoje` : "Nada para entregar hoje";
-  // Com hoje escolhido na semana, "Dia lotado"/"Fechado" já aparece no cabeçalho do dia logo abaixo: não repetir.
-  const dayHeadShowsToday = !weekMode && state.selectedDay === todayKey;
-  const summaryParts = [dayHeadShowsToday ? "" : todayAvailability.closed ? "Hoje é dia fechado" : todayAvailability.full ? "Dia lotado" : ""].filter(Boolean);
-  // Rodada 5: no computador, "Pedem sua atenção" fica na coluna ao lado do dia, à vista junto com os pedidos de hoje.
-  // No celular continua logo abaixo do dia. A ordem no HTML acompanha a ordem na tela nos dois casos.
-  const attentionBeside = wideAgenda?.matches === true;
-  const attentionCount = weekMode || attentionBeside ? 0 : attentionItems().length;
-  panel.innerHTML = `<header class="vn-heading"><div><span class="vn-date">${esc(capitalize(new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "numeric", month: "long" }).format(new Date())))}</span><h1 id="today-title" tabindex="-1">${esc(headline)}</h1>${summaryParts.length || attentionCount ? `<p class="today-summary">${esc(summaryParts.join(", "))}${attentionCount ? `<button class="vn-att-jump" type="button" data-action="jump-attention">${attentionCount} ${attentionCount === 1 ? "pede" : "pedem"} sua atenção</button>` : ""}</p>` : ""}</div>${modeSwitch}</header>
+  // O título é o mesmo número do selo da barra e da lista logo abaixo.
+  const attention = attentionItems().length;
+  const headline = firstUse ? "Sua agenda começa aqui" : attention ? `${attention} ${attention === 1 ? "coisa pede" : "coisas pedem"} você` : "Tudo em dia";
+  panel.innerHTML = `<header class="vn-heading"><div><span class="vn-date">${esc(capitalize(new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "numeric", month: "long" }).format(new Date())))}</span><h1 id="today-title" tabindex="-1">${esc(headline)}</h1></div></header>
     ${firstOrderMarkup()}
     ${firstUse && !onboardingVisible() ? `<section class="welcome-panel"><h2>Cadastre seu primeiro pedido</h2><p>Comece com cliente, produto e valor. Complete os detalhes quando estiverem combinados.</p><div class="welcome-actions"><button class="button button-primary" type="button" data-action="new-order">Nova encomenda</button></div></section>` : ''}
     ${sample && firstUse ? `<section class="sample-card" aria-label="Pedido de exemplo">${rowMarkup(sample)}<p>Toque para ver como fica um pedido completo. O exemplo não entra na sua agenda.</p></section>` : sample ? `<details class="sample-examples"><summary>Exemplo fictício — não entra na sua agenda</summary><div class="sample-example-list">${state.orders.filter(sampleOrder).map((order) => `<button class="text-link" type="button" data-open-order="${esc(order.id)}">Ver exemplo: ${esc(clientName(order) || order.product || "pedido")}</button>`).join("")}</div></details>` : ''}
-    ${weekMode ? "" : weekBarMarkup()}
-    <div class="vn-agenda-grid"><div class="vn-schedule">${weekMode ? productionMarkup() : `${agendaWeekMarkup(upcoming.length)}${attentionBeside ? "" : attentionMarkup()}`}
+    <div class="vn-agenda-grid"><div class="vn-schedule">${attentionMarkup()}${dayScheduleMarkup({ todayOnly: true, upcomingCount: upcoming.length })}
     ${onboardingMarkup()}
     ${pendingChanges.length ? `<section class="pending-card surface"><div class="section-head"><h2>Alterações para revisar</h2><span class="pending-count">${pendingChanges.length}</span></div><div class="pending-list">${pendingChanges.slice(0, 3).map((order) => `<button class="pending-row" type="button" data-open-order="${esc(order.id)}"><span><strong>${esc(order.client)}</strong><small>${esc(order.product)}</small></span><span class="pending-chevron" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></span><span class="pending-banner"><strong>Pedido de mudança:</strong> ${esc(order.pendingChange)}</span></button>`).join("")}</div></section>` : ""}
-    ${weekMode ? "" : upcomingMarkup(upcoming)}
-    </div><aside class="vn-aside">${attentionBeside && !weekMode ? attentionMarkup() : ""}${storageNoteMarkup()}</aside></div>`;
+    ${upcomingMarkup(upcoming)}
+    </div><aside class="vn-aside">${storageNoteMarkup()}</aside></div>`;
   state.agendaEnter = false;
   panel.hidden = state.activeView !== "today";
-  if (focusSelector) panel.querySelector(focusSelector)?.focus({ preventScroll: true });
 }
 
 function filteredOrders() {
@@ -695,6 +683,10 @@ function ordersByDayMarkup(orders) {
 }
 function renderOrders() {
   const panel = $("#view-orders");
+  const focused = document.activeElement;
+  const focusSelector = focused?.dataset?.weekShift !== undefined ? `[data-week-shift="${CSS.escape(focused.dataset.weekShift)}"]` : focused?.dataset?.selectDay ? `[data-select-day="${CSS.escape(focused.dataset.selectDay)}"]` : focused?.dataset?.ordersMode ? `[data-orders-mode="${CSS.escape(focused.dataset.ordersMode)}"]` : "";
+  const mode = ["week", "production"].includes(state.ordersMode) ? state.ordersMode : "list";
+  const modeSwitch = `<div class="orders-mode vn-segmented" role="group" aria-label="Como ver os pedidos">${[["list", "Lista"], ["week", "Semana"], ["production", "Produção"]].map(([key, label]) => `<button type="button" data-orders-mode="${key}" aria-pressed="${mode === key}">${label}</button>`).join("")}</div>`;
   const queryWasFocused = document.activeElement?.id === "order-search";
   const stageFocused = document.activeElement?.dataset?.stage;
   const caret = queryWasFocused ? document.activeElement.selectionStart : null;
@@ -715,16 +707,21 @@ function renderOrders() {
     const list = orders.filter((order) => section.statuses.includes(order.status));
     return `<section class="vn-inbox-section" aria-labelledby="inbox-${section.key}-title"><div class="section-head"><h2 id="inbox-${section.key}-title" tabindex="-1">${section.title} <span class="vn-badge">${list.length}</span></h2></div><p class="vn-inbox-description">${section.description}</p>${list.length ? `<div class="vn-order-list vn-inbox-list">${list.map((order) => agendaCardMarkup(order, { inbox: true })).join("")}</div>` : `<p class="vn-inbox-empty">${state.search.trim() ? "Nenhum resultado nesta seção para a busca." : section.empty}</p>`}</section>`;
   }).join("");
-  panel.innerHTML = `<header class="vn-heading"><div><h1 id="orders-title" tabindex="-1">Pedidos</h1></div><button class="vn-btn primary vn-heading-add page-add" data-action="new-order" type="button">${icon("plus")} Nova encomenda</button></header>${tipMarkup("orders")}
-    <div class="toolbar"><label class="search-wrap"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 4.5 4.5"/></svg><input class="search-input" id="order-search" type="search" placeholder="Buscar cliente, produto ou detalhe…" value="${esc(state.search)}" aria-label="Buscar pedidos"></label></div>
+  function ordersListMarkup() {
+    return `<div class="toolbar"><label class="search-wrap"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 4.5 4.5"/></svg><input class="search-input" id="order-search" type="search" placeholder="Buscar cliente, produto ou detalhe…" value="${esc(state.search)}" aria-label="Buscar pedidos"></label></div>
     <div class="stage-strip" role="group" aria-label="Ver pedidos por etapa">${stageChips}</div>${inbox}
     <p class="order-results" aria-live="polite"><strong>${orders.length}</strong> ${orders.length === 1 ? "pedido encontrado" : "pedidos encontrados"}</p>
     ${state.statusFilter === "new" ? inboxSections() : orders.length ? ordersByDayMarkup(orders) : state.orders.some((order) => !sampleOrder(order)) ? emptyState("Nada por aqui com esse filtro", "Tente outro nome ou situação para encontrar o pedido.", false) : emptyState("Seu próximo pedido começa aqui", "Cadastre o combinado com a cliente e acompanhe pagamentos, mudanças e data de entrega.", true)}`;
+  }
+  panel.innerHTML = `<header class="vn-heading"><div><h1 id="orders-title" tabindex="-1">Pedidos</h1></div><button class="vn-btn primary vn-heading-add page-add" data-action="new-order" type="button">${icon("plus")} Nova encomenda</button></header>${tipMarkup("orders")}
+    ${modeSwitch}${mode === "week" ? `${weekBarMarkup()}${dayScheduleMarkup()}` : mode === "production" ? productionMarkup() : ordersListMarkup()}`;
   panel.hidden = state.activeView !== "orders";
   if (queryWasFocused) {
     const input = $("#order-search"); input?.focus(); input?.setSelectionRange(caret, caret);
   }
   if (stageFocused) panel.querySelector(`[data-stage="${CSS.escape(stageFocused)}"]`)?.focus({ preventScroll: true });
+  if (focusSelector) panel.querySelector(focusSelector)?.focus({ preventScroll: true });
+  state.agendaEnter = false;
 }
 
 function mondayFor(date) {
@@ -1581,11 +1578,11 @@ function handleClick(event) {
   const open = event.target.closest("[data-open-order]");
   if (open && !event.target.closest("[data-action]")) { showOrderDetail(open.dataset.openOrder); return; }
   const weekShift = event.target.closest("[data-week-shift]");
-  if (weekShift) { state.weekOffset += Number(weekShift.dataset.weekShift); state.selectedDay = ""; state.agendaEnter = true; renderToday(); return; }
-  const agendaMode = event.target.closest("[data-agenda-mode]");
-  if (agendaMode) { state.agendaMode = agendaMode.dataset.agendaMode === "week" ? "week" : "day"; renderToday(); return; }
+  if (weekShift) { state.weekOffset += Number(weekShift.dataset.weekShift); state.selectedDay = ""; state.agendaEnter = true; renderOrders(); return; }
+  const ordersMode = event.target.closest("[data-orders-mode]");
+  if (ordersMode) { state.ordersMode = ordersMode.dataset.ordersMode; renderOrders(); return; }
   const selectDay = event.target.closest("[data-select-day]");
-  if (selectDay) { state.selectedDay = selectDay.dataset.selectDay; state.agendaEnter = true; renderToday(); $("#today-list-title")?.scrollIntoView({ block: "start", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" }); return; }
+  if (selectDay) { state.selectedDay = selectDay.dataset.selectDay; state.agendaEnter = true; renderOrders(); $("#today-list-title")?.scrollIntoView({ block: "start", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" }); return; }
   const stage = event.target.closest("[data-stage]");
   if (stage) { state.statusFilter = stage.dataset.stage; renderOrders(); return; }
   const adjustDate = event.target.closest('[data-action="adjust-selected-date"]');
@@ -1619,7 +1616,8 @@ function handleClick(event) {
       if (window.DoceStore?.resetDemo && window.confirm('Recomeçar a demonstração? Os pedidos de exemplo voltam ao início e o que você mudou aqui é apagado.')) { window.DoceStore.resetDemo(); try { localStorage.removeItem(onboardingKey()); } catch { /* sem armazenamento */ } location.reload(); }
       break;
     case 'jump-attention': $("#attention-title")?.scrollIntoView({ block: "start", behavior: reducedMotion() ? "auto" : "smooth" }); break;
-    case 'agenda-today': state.weekOffset=0;state.selectedDay=localDateKey(new Date());state.agendaEnter=true;renderToday();break;
+    case 'agenda-today': state.weekOffset=0;state.selectedDay=localDateKey(new Date());state.agendaEnter=true;renderOrders();break;
+    case 'orders-week': state.ordersMode='week';state.weekOffset=0;state.selectedDay=localDateKey(new Date());setActiveView('orders');break;
     case 'advance-order': action.disabled=true;advanceOrder(id,action.dataset.status);break;
     case 'toggle-produced': { const order = orderById(id); if (!order || order.status === 'Entregue') break; action.disabled = true; advanceOrder(id, order.status === 'Pronto' ? 'Em produção' : 'Pronto'); break; }
     case 'copy-production': copyText(productionText()).then(() => showToast("Lista da semana copiada.")).catch((error) => showToast(error.message)); break;
@@ -2361,7 +2359,7 @@ function coach(selector) {
 function runOnboardingTask(key) {
   if (key === "request") { setActiveView("today"); coach("#view-today .request-banner .button"); }
   else if (key === "pix") { const payment = informedPayment(); if (payment) { showOrderDetail(payment.orderId); coach('#detail-dialog [data-action="confirm-payment"]'); } }
-  else if (key === "advance") { state.agendaMode = "day"; state.selectedDay = localDateKey(new Date()); setActiveView("today"); coach('#view-today [data-action="advance-order"]'); }
+  else if (key === "advance") { setActiveView("today"); coach('#view-today [data-action="advance-order"]'); }
   else if (key === "month") setActiveView("month");
   else if (key === "order") openOrderForm();
   else if (key === "days" || key === "link") { state.openSettings.add(key); setActiveView("settings"); coach(`.settings-card[data-settings="${key}"]`); }
