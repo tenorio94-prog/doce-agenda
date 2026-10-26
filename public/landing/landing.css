@@ -20,9 +20,11 @@ wa-button::part(button){font-family:var(--font-title);font-weight:500;letter-spa
 .btn-entrar::part(button){min-height:44px;padding-inline:20px;font-size:16px;border-width:1.5px}
 .btn-cta::part(button){min-height:56px;padding-inline:32px;font-size:19px;box-shadow:var(--shadow-s)}
 .btn-on-ameixa::part(button){background:var(--glace);border-color:var(--glace);color:var(--ameixa)}
+/* Criar conta no topo: mesmo tamanho do principal, só de contorno (um botão cheio por vez) */
+.btn-conta::part(button){min-height:56px;padding-inline:28px;font-size:19px;border-width:1.5px}
 /* Antes do componente carregar: mesmo tamanho, sem pular a página */
 wa-button:not(:defined){display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 20px;border-radius:999px;font-family:var(--font-title);font-weight:500;visibility:hidden}
-.btn-cta:not(:defined){min-height:56px;padding:0 32px;font-size:19px}
+.btn-cta:not(:defined),.btn-conta:not(:defined){min-height:56px;padding:0 32px;font-size:19px}
 .text-link{display:inline-flex;align-items:center;gap:6px;min-height:44px;color:var(--ink);font-size:17px;font-weight:600}
 .text-link:hover{color:var(--link)}
 
@@ -57,7 +59,7 @@ h1 em{font-style:normal;color:var(--link)}
 @media (max-width:820px){
   .hero{grid-template-columns:1fr;gap:20px;padding-top:20px}
   .hero-copy{gap:14px}
-  .hero-actions .btn-cta{width:100%}
+  .hero-actions .btn-cta,.hero-actions .btn-conta{width:100%}
   .hero-actions .text-link{align-self:center}
 }
 @media (max-width:420px){

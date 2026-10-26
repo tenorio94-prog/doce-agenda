@@ -144,7 +144,7 @@ function setupLinkDemo(root) {
 }
 
 // Semana: um pedido avança uma etapa a cada toque, enquanto está na tela.
-const ORDER_STEPS = [['Confirmado', 'Começar a fazer'], ['Em produção', 'Ficou pronto'], ['Pronto', 'Marcar entregue'], ['Entregue', '']];
+const ORDER_STEPS = [['Combinado', 'Começar a fazer'], ['Fazendo', 'Ficou pronto'], ['Pronto', 'Marcar entregue'], ['Entregue', '']];
 function setupWeekDemo(visual) {
   const card = visual.querySelector('.order-mock');
   const pill = card.querySelector('.om-pill');

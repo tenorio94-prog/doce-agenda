@@ -23,6 +23,30 @@ try {
     results.push('landing aponta para /demo/?de=landing');
   }
 
+  // Topo da landing: experimentar (cheio) e criar conta (contorno) à vista sem rolar; nada do app antigo.
+  for (const [width, height] of [[360, 740], [1280, 800]]) {
+    const page = await browser.newPage({ viewport: { width, height } });
+    await page.goto(`${origin}/`);
+    await page.waitForFunction(() => customElements.get('wa-button'));
+    const actions = page.locator('.hero-actions');
+    const demo = actions.locator('.btn-cta'), account = actions.locator('.btn-conta');
+    assert.equal(await account.getAttribute('href'), '/cadastro/');
+    assert.equal(await account.getAttribute('appearance'), 'outlined', 'criar conta é de contorno: um só botão cheio no topo');
+    for (const [name, button] of [['experimentar', demo], ['criar conta', account]]) {
+      const box = await button.boundingBox();
+      assert.ok(box && box.y + box.height <= height, `${name} à vista sem rolar em ${width}px`);
+    }
+    assert.equal(await account.innerText(), 'Criar conta grátis');
+    const text = await page.locator('body').innerText();
+    for (const old of [/Solicitação DA-/, /3 entregas hoje/, /Em produção/, /[Pp]iloto/, /Pedem sua atenção/]) assert.doesNotMatch(text, old, `sem "${old.source}" na landing`);
+    // O carimbo animado da foto passa da borda durante a entrada (cerca de 1 s): espera a animação terminar.
+    await page.waitForFunction(() => document.documentElement.scrollWidth <= window.innerWidth, null, { timeout: 5000 }).catch(() => {});
+    assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), `landing sem rolagem lateral em ${width}px`);
+    if (shots) await page.screenshot({ path: path.join(shots, `landing-topo-${width}.png`) });
+    await page.close();
+    results.push(`${width}px: landing com experimentar e criar conta à vista, sem palavras antigas`);
+  }
+
   for (const [width, height] of [[360, 800], [1280, 900]]) {
     const context = await browser.newContext({ viewport: { width, height }, locale: 'pt-BR', timezoneId: 'America/Sao_Paulo' });
     const page = await context.newPage();
