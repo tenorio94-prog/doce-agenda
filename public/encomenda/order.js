@@ -181,7 +181,15 @@ function resumeDraft() {
 }
 
 // ---- Pedido ----
+// Funil do link: avisa uma vez por visita que um pedido começou (só conta; nada da cliente é enviado).
+let startCounted = false;
+function countStart() {
+  if (startCounted || PREVIEW) return;
+  startCounted = true;
+  fetch(`${api}/inicio`, { method: 'POST', keepalive: true }).catch(() => {});
+}
 function startOrder(product, fromSheet = false) {
+  countStart();
   if (sent) resetForm();
   chosen = product || null; extras = new Set([...extras].filter((n) => n !== chosen?.name));
   $('#chosen').hidden = !chosen; $('#other-field').hidden = !!chosen; $('#other-product').required = !chosen;

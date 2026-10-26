@@ -18,10 +18,11 @@ const day = (offset) => { const d = new Date(`${spToday}T12:00:00Z`); d.setUTCDa
 try {
   for (const [width, height] of [[360, 780], [1280, 900]]) {
     const context = await browser.newContext({ viewport: { width, height }, locale: 'pt-BR', timezoneId: 'America/Sao_Paulo' });
-    const sent = [];
+    const sent = [], starts = [];
     await context.route('**/functions/v1/doce-public/**', async (route) => {
       const url = new URL(route.request().url());
       if (url.pathname.endsWith('/availability')) return route.fulfill({ json: Array.from({ length: 90 }, (_, i) => ({ date: day(i), available: i >= 2 })) });
+      if (url.pathname.endsWith('/inicio')) { starts.push(route.request().method()); return route.fulfill({ status: 204, body: '' }); }
       if (url.pathname.endsWith('/requests')) { sent.push(JSON.parse(route.request().postData())); return route.fulfill({ status: 201, json: { code: 'DA-RASC1', summary: 'Solicitação DA-RASC1', whatsapp: '' } }); }
       return route.fulfill({ json: config });
     });
@@ -45,6 +46,8 @@ try {
     await page.locator('.step[data-step="2"] [data-next]').click();
     await page.locator('#client').fill('Cliente Teste');
     await page.locator('#contact').fill('11 98888-1234');
+    // Funil do link: um aviso de "começou" por visita, sem corpo.
+    assert.deepEqual(starts, ['POST'], 'começou um pedido: conta uma vez');
     const stored = await page.evaluate((key) => localStorage.getItem(key), KEY);
     const draft = JSON.parse(stored);
     assert.equal(draft.product, 'Bolo de aniversário');
@@ -99,6 +102,10 @@ try {
     await page.goto(`${server.origin}/encomenda/?preview=1`);
     await page.locator('#vitrine:not([hidden])').waitFor();
     assert.equal(await banner.count(), 0, 'prévia sem rascunho');
+    const before = starts.length;
+    await page.locator('[data-product]').first().click();
+    await page.locator('#sheet-order').click();
+    assert.equal(starts.length, before, 'a prévia não conta no funil');
 
     assert.deepEqual(errors, []);
     results.push(`${width}px: rascunho sem nome e WhatsApp, volta com doce, extras, data e bolo; some ao enviar, ao recomeçar e depois de 24 h`);

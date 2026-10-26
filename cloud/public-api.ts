@@ -11,11 +11,18 @@ export function createPublicHandler(deps:any={}) {
     if(origin && !origins.has(origin))return reply({error:'Origem não permitida.'},403);
     if(request.method==='OPTIONS')return new Response(null,{status:204,headers});
     const url=new URL(request.url), path=url.pathname.replace(/^.*\/doce-public/,'');
-    const match=path.match(/^\/p\/([a-z0-9][a-z0-9-]{1,38}[a-z0-9])(\/(availability|requests))?$/);
-    if(!match || !['GET','POST'].includes(request.method) || (request.method==='POST' && match[3]!=='requests') || (request.method==='GET' && match[3]==='requests'))return reply({error:'Página não encontrada.'},404);
+    const match=path.match(/^\/p\/([a-z0-9][a-z0-9-]{1,38}[a-z0-9])(\/(availability|requests|inicio))?$/);
+    if(!match || !['GET','POST'].includes(request.method) || (request.method==='POST' && !['requests','inicio'].includes(match[3])) || (request.method==='GET' && ['requests','inicio'].includes(match[3])))return reply({error:'Página não encontrada.'},404);
     try{
       const createClient=deps.createClient ?? (await import('npm:@supabase/supabase-js@2.117.3')).createClient;
       const admin=createClient(env('SUPABASE_URL'),env('SUPABASE_SERVICE_ROLE_KEY'),{auth:{persistSession:false,autoRefreshToken:false}});
+      // Funil do link: "começou um pedido" só soma um número da página (sem corpo, sem dado pessoal).
+      // Sem a migração record_pilot_page_start, a chamada falha em silêncio e nada muda para a cliente.
+      if(match[3]==='inicio'){
+        const found=await admin.from('pilot_order_pages').select('owner_user_id').eq('slug',match[1]).maybeSingle();
+        if(found.data?.owner_user_id)await admin.rpc('record_pilot_page_start',{p_owner:found.data.owner_user_id});
+        return new Response(null,{status:204,headers});
+      }
       let body:any;
       if(request.method==='POST'){
         if(Number(request.headers.get('content-length'))>8192)return reply({error:'Solicitação muito grande.'},413);

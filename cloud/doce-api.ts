@@ -311,9 +311,12 @@ export function createDoceApiHandler(dependencies: HandlerDependencies = {}) {
       return jsonResponse(origin,{available:!found.data || found.data.owner_user_id===user.id},200,revision);
     }
     if(route.path==='/api/order-page/metrics'){
-      const metrics=await admin.from('pilot_order_pages').select('visits').eq('owner_user_id',user.id).maybeSingle();
+      // "starts" vem da migração do funil; sem ela, só as visitas (starts: null).
+      let metrics=await admin.from('pilot_order_pages').select('visits,starts').eq('owner_user_id',user.id).maybeSingle();
+      const withStarts=!metrics.error;
+      if(metrics.error)metrics=await admin.from('pilot_order_pages').select('visits').eq('owner_user_id',user.id).maybeSingle();
       if(metrics.error)return jsonResponse(origin,apiError('Não foi possível carregar as métricas.',503),503,revision);
-      return jsonResponse(origin,{visits:Number(metrics.data?.visits||0)},200,revision);
+      return jsonResponse(origin,{visits:Number(metrics.data?.visits||0),starts:withStarts?Number(metrics.data?.starts||0):null},200,revision);
     }
 
     // Vitrine photos: checked by bytes, stored in this account's folder; the state does not change here.
