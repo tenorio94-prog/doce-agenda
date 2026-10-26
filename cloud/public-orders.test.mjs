@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createEmptyState,transactState } from './state-engine.js';
-import { availabilityDates,createPublicRequest,productSlots,publicPageView } from './public-orders.js';
+import { availabilityDates,createPublicRequest,productSlots,publicPageView,trackView } from './public-orders.js';
 import { orderPageInput } from './order-link-model.js';
 const page={active:true,slug:'doces-da-ana',displayName:'Doces da Ana',welcome:'Bem-vinda',whatsapp:'+5511999999999',products:[{name:'Bolo',description:''}]};
 const initial=()=>({...createEmptyState(),orderPage:page});
@@ -109,4 +109,23 @@ test('special dates close the link for the limited product only',()=>{
   assert.equal(open('','2099-04-03'),true,'sem doce, só as regras do dia');
   assert.throws(()=>createPublicRequest(s,{...body,product:'Ovo de colher',date:'2099-04-03'},'DA-ABC234'),/indisponível/);
   assert.equal(createPublicRequest(s,{...body,product:'Bolo',date:'2099-04-03'},'DA-ABC234').order.product,'Bolo');
+});
+
+test('my order page: a secret link shows only the situation, never personal data',()=>{
+  const token='abcdefghijkmnpqrstuvwxyz2';
+  const made=createPublicRequest(initial(),{...body,details:'Sem glúten'},'DA-ABC234',undefined,token);
+  assert.equal(made.order.trackToken,token);
+  assert.equal(made.confirmation.trackUrl,`https://lucast.app/p/doces-da-ana?pedido=${token}`);
+  assert.match(made.confirmation.summary,/Acompanhe o pedido: https:\/\/lucast\.app\/p\/doces-da-ana\?pedido=/);
+  assert.throws(()=>createPublicRequest(initial(),body,'DA-ABC234',undefined,'curto'),/acompanhamento/);
+  const s=made.state;
+  const view=trackView(s,token);
+  assert.deepEqual(Object.keys(view).sort(),['code','displayName','dueAt','mode','product','stage','whatsapp']);
+  assert.equal(view.stage,'decidir');assert.equal(view.code,'DA-ABC234');
+  assert.doesNotMatch(JSON.stringify(view),/Cliente fictícia|11988887777|Rua de teste|glúten/,'sem nome, WhatsApp, endereço nem detalhes');
+  const order=s.orders.find(o=>o.trackToken===token);
+  Object.assign(order,{status:'Em produção',total:200,totalKnown:true});
+  s.payments.push({id:'p1',orderId:order.id,amount:60,status:'Conferido',createdAt:'2099-01-01T10:00:00Z'},{id:'p2',orderId:order.id,amount:40,status:'Informado',createdAt:'2099-01-01T10:00:00Z'});
+  assert.deepEqual([trackView(s,token).stage,trackView(s,token).totalCents,trackView(s,token).paidCents],['fazendo',20000,6000],'só o conferido conta');
+  for(const bad of ['', 'abc', token.toUpperCase(), 'zzzzzzzzzzzzzzzzzzzzzzzz'])assert.equal(trackView(s,bad),null);
 });

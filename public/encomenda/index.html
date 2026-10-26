@@ -92,8 +92,11 @@ if (/[?&]preview=/.test(location.search) && window.top === window) document.writ
     <pre id="summary"></pre>
     <a id="whatsapp-link" class="pill wa" target="_blank" rel="noopener" hidden><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.3-.7-2.8-1.1-4.5-3.9-4.7-4.1-.1-.2-1.1-1.5-1.1-2.9s.7-2 1-2.3c.2-.3.6-.4.8-.4h.6c.2 0 .4 0 .6.5l.9 2.1c.1.2.1.4 0 .5l-.4.6-.4.4c-.1.2-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.3 2.4 1.5.3.1.5.1.6-.1l.9-1c.2-.3.4-.2.6-.1l2 .9c.3.2.5.2.5.4.1.1.1.7-.1 1.3Z"/></svg>Avisar no WhatsApp</a>
     <p id="no-whatsapp" class="help" hidden>Guarde o código e aguarde o contato da confeitaria.</p>
+    <p id="track-link" class="track-link" hidden>Acompanhe seu pedido por <a id="track-url" href="#">este link</a>. Guarde: é só seu.</p>
     <button id="back-home" class="pill soft" type="button">Voltar à vitrine</button>
   </section>
+
+  <section id="tracking" class="done track" hidden tabindex="-1" aria-labelledby="track-title"></section>
 
   <dialog id="product-sheet" class="sheet" aria-labelledby="sheet-title">
     <button class="close" type="button" data-close aria-label="Fechar"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>

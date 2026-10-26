@@ -26,3 +26,19 @@ test('funnel start only adds to the page counter, and a missing counter changes 
  const get=await createPublicHandler({env:()=>'',createClient:()=>{throw Error('Should not touch database');}})(new Request('https://edge.test/doce-public/p/doces-da-ana/inicio'));
  assert.equal(get.status,404,'só POST');
 });
+
+test('my order route reads only the matching store and answers 404 for unknown links',async()=>{
+ const token='abcdefghijkmnpqrstuvwxyz2';
+ const state={version:1,orderPage:{active:true,slug:'doces-da-ana',displayName:'Doces da Ana',whatsapp:'+5511999999999',products:[]},payments:[],
+  orders:[{id:'o1',client:'Cliente fictícia',contact:'11988887777',product:'Bolo',dueAt:'2099-01-31T15:00',mode:'Retirada',status:'Confirmado',total:150,totalKnown:true,publicCode:'DA-ABC234',trackToken:token}]};
+ const client=()=>({from(table){const q={table,filters:[]};const b={select(){return b;},eq(c,v){q.filters.push([c,v]);return b;},
+  async maybeSingle(){assert.equal(table,'pilot_order_pages');return{data:q.filters[0][1]==='doces-da-ana'?{owner_user_id:'dona'}:null,error:null};},
+  async single(){assert.equal(table,'pilot_agendas');return{data:{state},error:null};}};return b;}});
+ const handle=createPublicHandler({env:()=>'',createClient:client});
+ const ok=await handle(new Request(`https://edge.test/doce-public/p/doces-da-ana/pedido/${token}`));
+ assert.equal(ok.status,200);const view=await ok.json();
+ assert.equal(view.stage,'combinado');assert.equal(view.totalCents,15000);assert.doesNotMatch(JSON.stringify(view),/Cliente fictícia|11988887777/);
+ assert.equal((await handle(new Request(`https://edge.test/doce-public/p/doces-da-ana/pedido/${'x'.repeat(24)}`))).status,404);
+ assert.equal((await handle(new Request(`https://edge.test/doce-public/p/outra-loja/pedido/${token}`))).status,404,'o link vale só na loja do pedido');
+ assert.equal((await handle(new Request(`https://edge.test/doce-public/p/doces-da-ana/pedido/${token}`,{method:'POST'}))).status,404);
+});

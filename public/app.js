@@ -1354,6 +1354,8 @@ function makeWhatsAppSummary(order) {
   if(order.publicCode)lines.unshift(`Solicitação ${order.publicCode}`);
   if(order.status==='Solicitação')lines.push('Ainda não confirmado. Aguarde a revisão da confeitaria.');
   if(order.status==='Recusado')lines.push(`Solicitação recusada${order.refusalReason?`: ${order.refusalReason}`:'.'}`);
+  // Meu pedido: pedidos do link têm um endereço só deles para a cliente acompanhar a situação.
+  if (order.trackToken && state.orderPage?.slug) lines.push("", `Acompanhe o pedido: https://${LINK_BASE}${state.orderPage.slug}?pedido=${order.trackToken}`);
   return lines.join("\n");
 }
 

@@ -1,4 +1,4 @@
-import { availabilityDates, createPublicRequest, productSlots, publicPageView } from './public-orders.js';
+import { availabilityDates, createPublicRequest, productSlots, publicPageView, trackView } from './public-orders.js';
 
 const origins = new Set(['https://lucast.app','https://www.lucast.app','https://doce-agenda-piloto.netlify.app','https://doce-agenda.doce-agenda-local.workers.dev','http://localhost:4173','http://127.0.0.1:4173']);
 export function createPublicHandler(deps:any={}) {
@@ -11,6 +11,22 @@ export function createPublicHandler(deps:any={}) {
     if(origin && !origins.has(origin))return reply({error:'Origem não permitida.'},403);
     if(request.method==='OPTIONS')return new Response(null,{status:204,headers});
     const url=new URL(request.url), path=url.pathname.replace(/^.*\/doce-public/,'');
+    // Meu pedido: GET /p/<loja>/pedido/<código secreto> mostra só a situação daquele pedido.
+    const track=path.match(/^\/p\/([a-z0-9][a-z0-9-]{1,38}[a-z0-9])\/pedido\/([a-z0-9]{24,40})$/);
+    if(track){
+      if(request.method!=='GET')return reply({error:'Página não encontrada.'},404);
+      try{
+        const createClient=deps.createClient ?? (await import('npm:@supabase/supabase-js@2.117.3')).createClient;
+        const admin=createClient(env('SUPABASE_URL'),env('SUPABASE_SERVICE_ROLE_KEY'),{auth:{persistSession:false,autoRefreshToken:false}});
+        const found=await admin.from('pilot_order_pages').select('owner_user_id').eq('slug',track[1]).maybeSingle();
+        if(found.error)throw new Error('Serviço indisponível');
+        if(!found.data)return reply({error:'Pedido não encontrado.'},404);
+        const loaded=await admin.from('pilot_agendas').select('state').eq('owner_user_id',found.data.owner_user_id).single();
+        if(loaded.error||!loaded.data)throw new Error('Serviço indisponível');
+        const view=loaded.data.state?.orderPage?.slug===track[1]?trackView(loaded.data.state,track[2]):null;
+        return view?reply(view):reply({error:'Pedido não encontrado.'},404);
+      }catch{return reply({error:'Não foi possível abrir o pedido agora. Tente de novo.'},503);}
+    }
     const match=path.match(/^\/p\/([a-z0-9][a-z0-9-]{1,38}[a-z0-9])(\/(availability|requests|inicio))?$/);
     if(!match || !['GET','POST'].includes(request.method) || (request.method==='POST' && !['requests','inicio'].includes(match[3])) || (request.method==='GET' && ['requests','inicio'].includes(match[3])))return reply({error:'Página não encontrada.'},404);
     try{
@@ -61,7 +77,8 @@ export function createPublicHandler(deps:any={}) {
         const digest=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(`${env('SUPABASE_SERVICE_ROLE_KEY')}:${ip}`));
         const hash=Array.from(new Uint8Array(digest),n=>n.toString(16).padStart(2,'0')).join('');
         const code=`DA-${Array.from(crypto.getRandomValues(new Uint8Array(6)),n=>'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[n%32]).join('')}`;
-        const created=createPublicRequest(state,body,code);
+        const token=Array.from(crypto.getRandomValues(new Uint8Array(24)),n=>'abcdefghijkmnpqrstuvwxyz23456789'[n%32]).join('');
+        const created=createPublicRequest(state,body,code,undefined,token);
         const committed=await admin.rpc('submit_pilot_request',{p_owner:owner,p_slug:match[1],p_expected_revision:Number(loaded.data.revision),p_state:created.state,p_ip_hash:hash});
         if(!committed.error)return reply(created.confirmation,201);
         if(committed.error.code==='40001')continue;

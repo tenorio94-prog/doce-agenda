@@ -25,7 +25,23 @@ export function publicPageView(page, state) {
     style:page.style||'atelie',color:page.color||'',instagram:page.instagram||'',logo:page.logo||'',cover:page.cover||'',share:page.share||'',
     noticeHours:state.availability?.minimumNoticeHours||0,orderTemplate:state.orderTemplate,privacyUrl:'/privacidade/'};
 }
-export function createPublicRequest(state, input, code, now = new Date().toISOString()) {
+// Página "Meu pedido" (O10): cada solicitação pelo link ganha um endereço secreto (`trackToken`, 24 caracteres
+// aleatórios). Quem tem o endereço vê só a situação: código, doce, data, retirada/entrega e valores; nunca nome,
+// WhatsApp, endereço, detalhes ou histórico.
+export const TRACK_BASE = 'https://lucast.app/p/';
+export const TRACK_TOKEN = /^[a-z0-9]{24,40}$/;
+const STAGES = { 'Solicitação': 'decidir', 'Orçamento': 'decidir', 'Aguardando confirmação': 'decidir', 'Confirmado': 'combinado', 'Em produção': 'fazendo', 'Pronto': 'pronto', 'Entregue': 'entregue', 'Cancelado': 'cancelado', 'Recusado': 'recusado' };
+export function trackView(state, token) {
+  if (typeof token !== 'string' || !TRACK_TOKEN.test(token)) return null;
+  const order = state.orders.find(item => item.trackToken === token);
+  if (!order) return null;
+  const cents = value => Math.round(Number(value || 0) * 100);
+  const known = order.totalKnown !== false && cents(order.total) > 0 && order.status !== 'Solicitação';
+  const paid = state.payments.filter(payment => payment.orderId === order.id && payment.status === 'Conferido').reduce((sum, payment) => sum + cents(payment.amount), 0);
+  return { code: order.publicCode || '', displayName: state.orderPage?.displayName || '', whatsapp: state.orderPage?.whatsapp || '', product: order.product, dueAt: order.dueAt || '',
+    mode: order.mode || 'Retirada', stage: STAGES[order.status] || 'decidir', ...(known ? { totalCents: cents(order.total), paidCents: Math.min(paid, cents(order.total)) } : {}) };
+}
+export function createPublicRequest(state, input, code, now = new Date().toISOString(), token = '') {
   const page = state.orderPage;
   if (!page?.active) linkError('Esta confeitaria não está recebendo pedidos pelo link no momento',403,'LINK_DISABLED');
   if (!input || typeof input !== 'object' || Array.isArray(input)) linkError('Solicitação inválida.');
@@ -62,10 +78,13 @@ export function createPublicRequest(state, input, code, now = new Date().toISOSt
     consentAt:now,consentVersion:'2026-10-13',createdAt:now,updatedAt:now,cake,nextAction:'Revisar solicitação recebida pelo link',nextAt:'',pendingChange:'',
     history:[{at:now,text:'Solicitação recebida pelo link. Dados enviados com consentimento; aguardando revisão.'}]};
   if (slots > 1) order.slots = slots;
+  if (token) { if (!TRACK_TOKEN.test(token)) linkError('Código de acompanhamento inválido.'); order.trackToken = token; }
   const next = structuredClone(state);
   const duplicates=next.orders.filter(o=>o.origin==='link'&&o.contact===contact&&o.product===productName&&o.dueAt.slice(0,10)===input.date&&Math.abs(Date.parse(now)-Date.parse(o.createdAt))<=600000);
   if(duplicates.length){order.possibleDuplicate=true;for(const previous of duplicates)previous.possibleDuplicate=true;}
   next.orders.push(order);
-  return {state:next,order,confirmation:{code,summary:requestSummary(order,page.displayName),whatsapp:page.whatsapp,
+  const trackUrl = token ? `${TRACK_BASE}${page.slug}?pedido=${token}` : '';
+  const summary = [requestSummary(order,page.displayName), ...(trackUrl ? ['', `Acompanhe o pedido: ${trackUrl}`] : [])].join('\n');
+  return {state:next,order,confirmation:{code,summary,whatsapp:page.whatsapp,...(trackUrl?{trackUrl}:{}),
     message:'Seu pedido ainda não está confirmado. A confeitaria vai responder pelo WhatsApp.'}};
 }
