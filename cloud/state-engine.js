@@ -210,25 +210,27 @@ export function wallTimeEpoch(value) {
   return guess + (guess - represented);
 }
 
-export function checkCapacity(input, state, currentId, override) {
+// `only`: confere só uma parte. Editar um pedido já combinado sem mudar data nem situação confere só o que mudou:
+// mais vagas ('limit') ou outro doce ('special'); dia fechado e antecedência não voltam a valer para ele.
+export function checkCapacity(input, state, currentId, override, only = null) {
   if (!COMMITTED_STATUSES.includes(input.status)) return;
   const day = input.dueAt.slice(0, 10);
   const config = state.availability;
   const dayOverride = config.dateOverrides[day];
   const weekday = new Date(`${day}T00:00:00Z`).getUTCDay();
-  let conflict = dayOverride?.closed || (!dayOverride && config.closedWeekdays.includes(weekday))
+  let conflict = !only && (dayOverride?.closed || (!dayOverride && config.closedWeekdays.includes(weekday)))
     ? ['DATE_CLOSED', 'Esta data está marcada como fechada.'] : null;
-  if (!conflict && wallTimeEpoch(input.dueAt) - Date.now() < config.minimumNoticeHours * 3_600_000) {
+  if (!conflict && !only && wallTimeEpoch(input.dueAt) - Date.now() < config.minimumNoticeHours * 3_600_000) {
     conflict = ['NOTICE', 'O pedido precisa respeitar a antecedência mínima.'];
   }
   const limit = dayOverride?.limit ?? config.dailyOrderLimit;
   const used = state.orders.filter(order => order.id !== currentId && COMMITTED_STATUSES.includes(order.status)
     && !order.isSample && !order.isDemo && !order.sample && order.dueAt?.slice(0, 10) === day).reduce((sum, order) => sum + orderSlots(order), 0);
   const need = orderSlots(input);
-  if (!conflict && limit !== null && used + need > limit) {
+  if (!conflict && (!only || only === 'limit') && limit !== null && used + need > limit) {
     conflict = ['DAILY_LIMIT', need > 1 && used < limit ? `Este pedido ocupa ${need} vagas e a data só tem ${limit - used} livre${limit - used === 1 ? '' : 's'}.` : 'O limite de pedidos para esta data foi atingido.'];
   }
-  const special = conflict ? null : specialLimitFor(state, input.product, day, currentId);
+  const special = conflict || (only && only !== 'special') ? null : specialLimitFor(state, input.product, day, currentId);
   if (special && special.used >= special.max) conflict = ['PRODUCT_LIMIT', special.max === 1 ? `${special.name}: o único pedido de ${special.product} já foi combinado.` : `${special.name}: os ${special.max} pedidos de ${special.product} já foram combinados.`];
   if (!conflict) return;
   if (override?.allowed === true) {
@@ -415,10 +417,12 @@ export function transactState(state, url, options = {}) {
           if (order.status === 'Solicitação' && body.status && body.status !== 'Solicitação') fail('Use Aceitar ou Recusar para revisar a solicitação.');
           const input = orderInput({ ...order, ...body });
           const changes = Object.keys(input).filter(key => JSON.stringify(input[key]) !== JSON.stringify(order[key]));
-          const needsCheck = COMMITTED_STATUSES.includes(input.status)
-            && (!COMMITTED_STATUSES.includes(order.status) || input.dueAt !== order.dueAt || orderSlots(input) > orderSlots(order) || input.product !== order.product);
+          const committed = COMMITTED_STATUSES.includes(input.status);
+          const needsCheck = committed && (!COMMITTED_STATUSES.includes(order.status) || input.dueAt !== order.dueAt);
           let allowed;
           if (needsCheck) allowed = checkCapacity(input, nextState, order.id, body.capacityOverride);
+          else if (committed && orderSlots(input) > orderSlots(order)) allowed = checkCapacity(input, nextState, order.id, body.capacityOverride, 'limit');
+          if (!needsCheck && !allowed && committed && input.product !== order.product) allowed = checkCapacity(input, nextState, order.id, body.capacityOverride, 'special');
           if (COMMITTED_STATUSES.includes(input.status) && !COMMITTED_STATUSES.includes(order.status) && input.cake) {
             checkRequiredCake(input, nextState.orderTemplate);
           }

@@ -212,3 +212,15 @@ test('special dates limit combined orders per product inside the period', () => 
   const cake = state.orders.find((order) => order.product === 'Bolo');
   assert.equal(transactState(state, `/api/orders/${cake.id}`, { method: 'PUT', body: JSON.stringify({ product: 'Ovo de colher' }) }).status, 409, 'trocar para o doce limitado confere');
 });
+
+test('editing a combined order only rechecks what changed', () => {
+  const state = createEmptyState();
+  state.availability.minimumNoticeHours = 48;
+  state.availability.closedWeekdays = [0, 1, 2, 3, 4, 5, 6];
+  // Pedido antigo, de uma data que hoje estaria fechada e sem antecedência.
+  state.orders.push({ id: 'velho', client: 'Ana', product: 'Bolo', details: '', dueAt: '2026-01-10T10:00', mode: 'Retirada', location: '', total: 100, status: 'Pronto', nextAction: '', nextAt: '', pendingChange: '', contact: '', createdAt: '2026-01-01T10:00:00.000Z', history: [] });
+  const renamed = transactState(state, '/api/orders/velho', { method: 'PUT', body: JSON.stringify({ product: 'Bolo de cenoura' }) });
+  assert.equal(renamed.status, 200, 'trocar o nome não volta a conferir dia fechado nem antecedência');
+  const bigger = transactState(state, '/api/orders/velho', { method: 'PUT', body: JSON.stringify({ slots: 2 }) });
+  assert.equal(bigger.status, 200, 'sem limite diário, mais vagas passam');
+});
