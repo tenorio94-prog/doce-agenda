@@ -37,6 +37,8 @@
         <button class="nav-item" data-view="month" type="button"><span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 20h16M6 16v-5M12 16V4M18 16V8"/></svg></span>Meu mês</button>
         <button class="nav-item nav-new-order" data-action="new-order" type="button"><span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span><span class="nav-new-label">Novo</span></button>
       </nav>
+      <!-- Compatibilidade com app.js anterior em cache: o pai mantém o selo legado invisível. -->
+      <span hidden aria-hidden="true"><span id="nav-order-count"></span></span>
 
       <main id="main-content" tabindex="-1">
         <div class="notice error-notice" id="error-notice" role="alert" hidden>

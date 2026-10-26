@@ -36,6 +36,12 @@ try {
     const before = await check();
     assert.ok(before > 0, 'a demo começa com pendências');
     assert.equal(await page.locator('.nav-item[data-view="orders"] .nav-count').count(), 0, 'Pedidos sem selo próprio');
+    // O bundle anterior ainda escreve neste elemento. Mesmo desocultando o filho, o selo legado não aparece.
+    await page.evaluate(() => {
+      const legacy = document.querySelector('#nav-order-count');
+      legacy.textContent = '2'; legacy.hidden = false; legacy.setAttribute('aria-label', '2 pedidos precisam de você');
+    });
+    assert.equal(await page.locator('#nav-order-count').isVisible(), false, 'selo legado continua invisível para JavaScript em cache');
     assert.doesNotMatch(await page.locator('#view-today .vn-heading').innerText(), /sem sinal/, 'o topo não repete "sem sinal"');
     if (shots) await page.screenshot({ path: path.join(shots, `um-numero-${width}.png`) });
 
