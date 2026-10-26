@@ -12,6 +12,13 @@ if (shots) await mkdir(shots, { recursive: true });
 const server = await serveSite();
 const browser = await chromium.launch();
 const results = [];
+const shortcutsReady = (page) => page.waitForFunction(() => [...document.querySelectorAll('.header-add, .nav-new-order, .nav-new-order .nav-icon')].filter((element) => element.getClientRects().length).every((element) => !element.getAnimations().some((animation) => animation.playState === 'running')), undefined, { timeout: 4000 });
+// Inclui cabeçalho e navegação. O selo pequeno não equivale ao preenchimento do botão de Novo.
+const filledActions = (page) => page.locator('button').evaluateAll((buttons) => buttons.filter((button) => [button, ...button.querySelectorAll('.nav-icon')].some((element) => {
+  const style = getComputedStyle(element);
+  const [r, g, b] = style.backgroundColor.match(/[\d.]+/g)?.slice(0, 3).map(Number) || [];
+  return element.getClientRects().length > 0 && style.visibility !== 'hidden' && Number(style.opacity) > 0 && r > g * 1.45 && r > b * 1.1 && style.color === 'rgb(255, 255, 255)';
+})).map((button) => button.innerText.trim()));
 
 try {
   for (const [width, height] of [[360, 800], [1280, 900]]) {
@@ -36,6 +43,8 @@ try {
     };
     const before = await check();
     assert.ok(before > 0, 'a demo começa com pendências');
+    await shortcutsReady(page);
+    assert.equal((await filledActions(page)).length, 1, 'um só botão cheio na tela inteira de Hoje, incluindo os atalhos globais');
     assert.equal(await page.locator('.nav-item[data-view="orders"] .nav-count').count(), 0, 'Pedidos sem selo próprio');
     // O bundle anterior ainda escreve neste elemento. Mesmo desocultando o filho, o selo legado não aparece.
     await page.evaluate(() => {
@@ -59,6 +68,12 @@ try {
     await page.locator('.nav-item[data-view="month"]:visible').first().click();
     await page.locator('#month-title').waitFor();
     assert.equal(await badge.innerText(), String(before - 1));
+    await shortcutsReady(page);
+    const globalNew = page.locator(width < 760 ? '.nav-new-order .nav-icon' : '.header-add');
+    assert.equal(await globalNew.evaluate((element) => getComputedStyle(element).backgroundColor), 'rgb(176, 36, 74)', 'atalho global volta ao fundo original fora de Hoje');
+    await page.locator('.nav-item[data-view="today"]:visible').first().click();
+    await shortcutsReady(page);
+    assert.equal((await filledActions(page)).length, 1, 'Hoje volta a ter um só botão cheio após trocar de aba');
 
     assert.deepEqual(errors, []);
     results.push(`${width}px: selo de Hoje, título e lista com o mesmo número, caem juntos ao conferir o Pix`);
@@ -80,6 +95,8 @@ try {
   assert.equal(await page.locator('#nav-attention-count').evaluate((el) => el.hidden), true, 'sem pendência, sem selo');
   assert.equal(await page.locator('#view-today .vn-attention').count(), 0);
   assert.deepEqual(await page.locator('#view-today .vn-order .vn-btn.primary').allInnerTexts(), ['Marcar entregue'], 'um botão cheio: o primeiro pedido de hoje');
+  await shortcutsReady(page);
+  assert.equal((await filledActions(page)).length, 1, 'um só botão cheio na tela inteira também sem pendências');
   await context.close();
   results.push('360px: nada pendente, "Tudo em dia", sem selo e um só botão cheio');
   results.forEach((line) => console.log(`ok - ${line}`));

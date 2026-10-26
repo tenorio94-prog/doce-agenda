@@ -1951,3 +1951,9 @@ body.vnext { font-variant-numeric: tabular-nums; -webkit-tap-highlight-color: tr
 /* O filtro escolhido não é uma ação: fica marcado em vinho claro, sem competir com o botão cheio da tela. */
 .vnext :is(#view-orders, #view-clients, #view-settings) :is(.stage-chip.is-current, .stage-chip[aria-pressed="true"]) { border: 2px solid var(--vn-wine); background: var(--vn-rose); color: var(--vn-wine); }
 .vnext :is(#view-orders, #view-clients, #view-settings) :is(.stage-chip.is-current, .stage-chip[aria-pressed="true"]) .stage-count { background: #fff; color: var(--vn-wine); }
+
+/* Em Hoje a ação principal já está na lista; os atalhos globais de Novo ficam secundários. */
+.vnext[data-active-view="today"] .header-add { background: #fff; border-color: var(--vn-berry); color: var(--vn-berry); box-shadow: none; }
+.vnext[data-active-view="today"] .header-add:hover { background: var(--vn-rose); }
+.vnext[data-active-view="today"] .nav-new-order { background: transparent; color: var(--vn-berry); }
+.vnext[data-active-view="today"] .nav-new-order .nav-icon { background: #fff; border: 1.5px solid var(--vn-berry); color: var(--vn-berry); box-shadow: none; }

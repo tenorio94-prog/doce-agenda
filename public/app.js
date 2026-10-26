@@ -873,6 +873,7 @@ function renderMonth() {
 }
 
 function render() {
+  document.body.dataset.activeView = state.activeView;
   $("#demo-bar").hidden = window.DoceApi.mode !== "browser";
   // Barra lateral (computador): nome da confeitaria. Opcional: página antiga em cache pode não ter o elemento.
   const studio = $("#nav-studio");
