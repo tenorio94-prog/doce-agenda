@@ -41,6 +41,11 @@ try {
   assert.ok(hits.some((u) => u.endsWith('/doces-da-lu?visita=0')), 'robô de prévia não conta visita');
   results.push('robô do WhatsApp não conta como visita');
 
+  hits.length = 0;
+  await fetch(`${origin}/p/doces-da-lu?pedido=${'a'.repeat(24)}`);
+  assert.ok(hits.some((u) => u.endsWith('/doces-da-lu?visita=0')), 'acompanhar pedido não conta visita');
+  results.push('acompanhamento do pedido não conta como visita da vitrine');
+
   const missing = await fetch(`${origin}/p/nao-existe`);
   const missingHtml = await missing.text();
   assert.equal(missing.status, 200); assert.ok(!missingHtml.includes('vitrine-data')); assert.match(missingHtml, /<title>Encomendas<\/title>/);
@@ -69,7 +74,10 @@ try {
     results.push('página abre com os dados embutidos, sem segunda busca');
   } finally { await browser.close(); }
 } finally {
-  dev.kill(); if (process.platform === 'win32') spawn('taskkill', ['/pid', String(dev.pid), '/t', '/f'], { shell: true });
-  upstream.close();
+  if (process.platform === 'win32') {
+    await new Promise((resolve) => spawn('taskkill', ['/pid', String(dev.pid), '/t', '/f'], { stdio: 'ignore' }).once('close', resolve));
+  } else dev.kill();
+  dev.stdout.destroy(); dev.stderr.destroy();
+  upstream.closeAllConnections(); upstream.close();
 }
 console.log(JSON.stringify({ passed: results.length, results }, null, 2));

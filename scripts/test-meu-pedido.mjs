@@ -16,14 +16,15 @@ const day = (offset) => { const d = new Date(`${spToday}T12:00:00Z`); d.setUTCDa
 try {
   for (const [width, height] of [[360, 780], [1280, 900]]) {
     const context = await browser.newContext({ viewport: { width, height }, locale: 'pt-BR', timezoneId: 'America/Sao_Paulo' });
+    let pageActive = true, availabilityCalls = 0;
     let view = { code: 'DA-ABC234', displayName: 'Doces da Lu', whatsapp: '+5511999999999', product: 'Bolo de aniversário', dueAt: `${day(5)}T15:30`, mode: 'Retirada', stage: 'fazendo', totalCents: 20000, paidCents: 6000 };
     await context.route('**/functions/v1/doce-public/**', (route) => {
       const url = new URL(route.request().url());
       if (url.pathname.includes('/pedido/')) return url.pathname.endsWith(TOKEN) ? route.fulfill({ json: view }) : route.fulfill({ status: 404, json: { error: 'Pedido não encontrado.' } });
-      if (url.pathname.endsWith('/availability')) return route.fulfill({ json: Array.from({ length: 90 }, (_, i) => ({ date: day(i), available: i >= 2 })) });
+      if (url.pathname.endsWith('/availability')) { availabilityCalls++; return pageActive ? route.fulfill({ json: Array.from({ length: 90 }, (_, i) => ({ date: day(i), available: i >= 2 })) }) : route.fulfill({ status: 403, json: { error: 'Encomendas pausadas' } }); }
       if (url.pathname.endsWith('/inicio')) return route.fulfill({ status: 204, body: '' });
       if (url.pathname.endsWith('/requests')) return route.fulfill({ status: 201, json: { code: 'DA-ABC234', summary: 'Solicitação DA-ABC234', whatsapp: '+5511999999999', trackUrl: `https://lucast.app/p/encomenda?pedido=${TOKEN}` } });
-      return route.fulfill({ json: config });
+      return pageActive ? route.fulfill({ json: config }) : route.fulfill({ status: 403, json: { error: 'Encomendas pausadas' } });
     });
     const page = await context.newPage();
     const errors = [];
@@ -46,7 +47,8 @@ try {
     await page.waitForFunction(() => document.documentElement.scrollWidth <= window.innerWidth, null, { timeout: 3000 }).catch(() => {});
     const wide = await page.evaluate(() => [...document.querySelectorAll('body *')].filter((el) => el.getBoundingClientRect().right > window.innerWidth + 1 && el.getBoundingClientRect().width).map((el) => `${el.tagName}.${el.className}`).slice(0, 4));
     assert.deepEqual(wide, [], `sem rolagem lateral em ${width}px`);
-    await box.locator('[data-track-home]').click();
+    await Promise.all([page.waitForURL(`${server.origin}/encomenda/`), box.locator('[data-track-home]').click()]);
+    await page.locator('#vitrine:not([hidden])').waitFor();
     assert.equal(await page.locator('#vitrine').isVisible(), true, 'Ver a vitrine leva à loja');
     assert.equal(new URL(page.url()).search, '', 'o código sai do endereço');
 
@@ -60,6 +62,17 @@ try {
     await page.goto(`${server.origin}/encomenda/?pedido=${'x'.repeat(24)}`);
     await box.locator('#track-title').waitFor();
     assert.equal(await box.locator('#track-title').innerText(), 'Pedido não encontrado');
+
+    // Loja pausada: acompanhar independe da vitrine e das datas; voltar mostra o estado pausado.
+    pageActive = false; availabilityCalls = 0;
+    await page.goto(`${server.origin}/encomenda/?pedido=${TOKEN}`);
+    await box.locator('#track-title').waitFor();
+    assert.equal(await box.locator('#track-title').innerText(), 'Desta vez não vai dar');
+    assert.equal(availabilityCalls, 0, 'acompanhar não consulta datas da vitrine');
+    await Promise.all([page.waitForURL(`${server.origin}/encomenda/`), box.locator('[data-track-home]').click()]);
+    await page.locator('#unavailable:not([hidden])').waitFor();
+    assert.equal(new URL(page.url()).search, '', 'voltar à loja pausada remove o token');
+    pageActive = true;
 
     // 3. Depois de enviar, o endereço de acompanhamento aparece.
     await page.goto(`${server.origin}/encomenda/`);

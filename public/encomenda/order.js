@@ -369,6 +369,7 @@ async function showTracking() {
 }
 $('#tracking').addEventListener('click', (event) => {
   if (!event.target.closest('[data-track-home]')) return;
+  if (!config) { location.assign(location.pathname); return; }
   history.replaceState({ v: 'home' }, '', location.pathname);
   $('#tracking').hidden = true; $('#vitrine').hidden = false; window.scrollTo(0, 0);
 });
@@ -382,6 +383,8 @@ function readInjected() {
 }
 async function start() {
   try {
+    // Um pedido já enviado continua acessível mesmo se a vitrine estiver pausada ou sem datas livres.
+    if (TRACK && !PREVIEW) { $('#loading').hidden = true; await showTracking(); return; }
     config = readInjected() || await json(TRACK ? `${api}?visita=0` : api);
     if (!config.active) {
       $('#loading').hidden = true; $('#unavailable').hidden = false;
