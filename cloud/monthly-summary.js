@@ -1,6 +1,9 @@
 import { clientKeyFor } from './clients.js';
 
 const TIME_ZONE = 'America/Sao_Paulo';
+// Pedidos combinados (inclusive fazendo e prontos) e entregues contam no mês pela data de entrega.
+// Antes de 26/10/2026 só Confirmado e Entregue contavam; o pedido em produção sumia até a entrega.
+const MONTH_STATUSES = ['Confirmado', 'Em produção', 'Pronto', 'Entregue'];
 const dateFormatter = new Intl.DateTimeFormat('en-CA', { timeZone: TIME_ZONE, year: 'numeric', month: '2-digit', day: '2-digit' });
 const WEEKDAYS = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
 
@@ -32,7 +35,7 @@ export function monthlySummary(state, month, now = new Date()) {
   const selected = new Set(), weekdays = Array(7).fill(0), products = new Map();
   let ordersCount = 0, soldCents = 0, receivedCents = 0, ordersWithoutValue = 0, noticeDays = 0, noticeOrdersCount = 0;
   for (const order of state.orders || []) {
-    if (!['Confirmado', 'Entregue'].includes(order.status) || order.isSample || order.isDemo || order.sample) continue;
+    if (!MONTH_STATUSES.includes(order.status) || order.isSample || order.isDemo || order.sample) continue;
     const day = saoPauloDay(order.dueAt);
     if (!day || day.slice(0, 7) !== month) continue;
     ordersCount++; selected.add(String(order.id));
@@ -69,7 +72,7 @@ export function lifetimeSummary(state) {
   const selected = new Set(), clients = new Set();
   let ordersCount = 0, deliveredCount = 0, receivedCents = 0, firstMonth = null;
   for (const order of state.orders || []) {
-    if (!['Confirmado', 'Entregue'].includes(order.status) || order.isSample || order.isDemo || order.sample) continue;
+    if (!MONTH_STATUSES.includes(order.status) || order.isSample || order.isDemo || order.sample) continue;
     const day = saoPauloDay(order.dueAt);
     if (!day) continue;
     ordersCount++; selected.add(String(order.id));

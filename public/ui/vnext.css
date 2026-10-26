@@ -1157,22 +1157,22 @@ body.vnext { background: var(--vn-canvas); }
 .vn-section-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin: 0 0 12px; }
 .vn-section-row h2 { margin: 0; font-size: 22px; font-weight: 600; }
 .vn-month-row { margin-bottom: 8px; }
-.vnext #view-today .week-controls { display: flex; align-items: center; justify-content: space-between; margin: 4px 0 0; color: var(--vn-muted); font-size: 13px; }
-.vnext #view-today .week-step { width: 44px; height: 44px; border: 0; border-radius: 50%; background: transparent; color: var(--vn-muted); }
-.vnext #view-today .week-step:hover { background: var(--vn-soft); }
+.vnext :is(#view-today, #view-orders) .week-controls { display: flex; align-items: center; justify-content: space-between; margin: 4px 0 0; color: var(--vn-muted); font-size: 13px; }
+.vnext :is(#view-today, #view-orders) .week-step { width: 44px; height: 44px; border: 0; border-radius: 50%; background: transparent; color: var(--vn-muted); }
+.vnext :is(#view-today, #view-orders) .week-step:hover { background: var(--vn-soft); }
 .vn-week { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; margin: 10px 0 16px; }
-.vnext #view-today .vn-day { display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 0; min-height: 98px; padding: 10px 2px; border: 1px solid #f2e6e9; border-radius: var(--vn-r); background: #fff; color: var(--vn-ink); font-family: var(--vn-font); box-shadow: 0 2px 4px #4a152503; cursor: pointer; transition: background .18s, box-shadow .18s; }
-.vnext #view-today .vn-day:hover:not(.is-selected) { background: var(--vn-soft); }
-.vnext #view-today .vn-day .day-name { font-size: 12px; }
-.vnext #view-today .vn-day .day-number { font: 600 24px/1.2 var(--vn-title); }
-.vnext #view-today .vn-day .day-count { font-size: 12px; padding: 1px 8px; border-radius: var(--vn-r); background: var(--vn-soft); color: var(--vn-muted); }
-.vnext #view-today .vn-day .day-availability { font-size: 12px; font-style: normal; }
-.vnext #view-today .vn-day.is-full .day-availability { color: var(--vn-amber); font-weight: 700; }
-.vnext #view-today .vn-day.is-closed { background: #f6f1f2; color: var(--vn-muted); }
-.vnext #view-today .vn-day.is-today:not(.is-selected) { border-color: var(--vn-berry); }
-.vnext #view-today .vn-day.is-selected { background: var(--vn-berry); border-color: var(--vn-berry); color: #fff; box-shadow: 0 4px 12px #ad264430; }
-.vnext #view-today .vn-day.is-selected .day-count { background: #ffffff25; color: #fff; }
-.vnext #view-today .vn-day.is-selected .day-availability { color: #fff; }
+.vnext :is(#view-today, #view-orders) .vn-day { display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 0; min-height: 98px; padding: 10px 2px; border: 1px solid #f2e6e9; border-radius: var(--vn-r); background: #fff; color: var(--vn-ink); font-family: var(--vn-font); box-shadow: 0 2px 4px #4a152503; cursor: pointer; transition: background .18s, box-shadow .18s; }
+.vnext :is(#view-today, #view-orders) .vn-day:hover:not(.is-selected) { background: var(--vn-soft); }
+.vnext :is(#view-today, #view-orders) .vn-day .day-name { font-size: 12px; }
+.vnext :is(#view-today, #view-orders) .vn-day .day-number { font: 600 24px/1.2 var(--vn-title); }
+.vnext :is(#view-today, #view-orders) .vn-day .day-count { font-size: 12px; padding: 1px 8px; border-radius: var(--vn-r); background: var(--vn-soft); color: var(--vn-muted); }
+.vnext :is(#view-today, #view-orders) .vn-day .day-availability { font-size: 12px; font-style: normal; }
+.vnext :is(#view-today, #view-orders) .vn-day.is-full .day-availability { color: var(--vn-amber); font-weight: 700; }
+.vnext :is(#view-today, #view-orders) .vn-day.is-closed { background: #f6f1f2; color: var(--vn-muted); }
+.vnext :is(#view-today, #view-orders) .vn-day.is-today:not(.is-selected) { border-color: var(--vn-berry); }
+.vnext :is(#view-today, #view-orders) .vn-day.is-selected { background: var(--vn-berry); border-color: var(--vn-berry); color: #fff; box-shadow: 0 4px 12px #ad264430; }
+.vnext :is(#view-today, #view-orders) .vn-day.is-selected .day-count { background: #ffffff25; color: #fff; }
+.vnext :is(#view-today, #view-orders) .vn-day.is-selected .day-availability { color: #fff; }
 .vn-daily { margin-bottom: 22px; padding: 18px; background: #fff; border: 1px solid var(--vn-line-soft); border-radius: var(--vn-r); box-shadow: var(--vn-shadow); }
 .vn-daily h2 { margin: 0; font-size: 20px; font-weight: 600; }
 .vn-daily p { margin: 4px 0 0; font-size: 13px; color: var(--vn-muted); }
@@ -1204,7 +1204,7 @@ body.vnext { background: var(--vn-canvas); }
 .vn-order.is-compact .vn-product { padding: 8px 0 0; }
 .vn-order.is-compact .vn-thumb { width: 48px; height: 48px; border-radius: var(--vn-r-sm); font-size: 19px; }
 .vn-order.is-compact h3 { font-size: 16px; }
-.vnext #view-today .agenda-adjust { margin-top: 12px; color: var(--vn-berry); }
+.vnext :is(#view-today, #view-orders) .agenda-adjust { margin-top: 12px; color: var(--vn-berry); }
 @media (prefers-reduced-motion: no-preference) {
   .vn-order-list.is-entering > .vn-order { animation: vn-in .26s ease-out both; }
   .vn-order-list.is-entering > .vn-order:nth-child(2) { animation-delay: .04s; }
@@ -1230,14 +1230,14 @@ body.vnext { background: var(--vn-canvas); }
 .vnext #view-today .storage-note, .vnext #view-today .vn-aside > section:not(.vn-wine-panel) { border-radius: var(--vn-r); border-color: var(--vn-line-soft); background: #fff; box-shadow: var(--vn-shadow); }
 
 /* Cartões que já existiam na Agenda, na nova linguagem */
-.vnext #view-today .onboarding, .vnext #view-today .welcome-panel, .vnext #view-today .next-action-card, .vnext #view-today .pending-card, .vnext #view-today .coming-soon, .vnext #view-today .production-week { border: 1px solid var(--vn-line-soft); border-radius: var(--vn-r); background: #fff; box-shadow: var(--vn-shadow); }
+.vnext #view-today .onboarding, .vnext #view-today .welcome-panel, .vnext #view-today .next-action-card, .vnext #view-today .pending-card, .vnext #view-today .coming-soon, .vnext :is(#view-today, #view-orders) .production-week { border: 1px solid var(--vn-line-soft); border-radius: var(--vn-r); background: #fff; box-shadow: var(--vn-shadow); }
 .vnext #view-today .next-action-card, .vnext #view-today .pending-card { margin-top: 20px; }
 .vnext #view-today .coming-soon { margin-top: 24px; padding: 20px; }
 .vnext #view-today .upcoming-label { font: 750 12px var(--vn-font); letter-spacing: .1em; text-transform: uppercase; color: var(--vn-berry); margin: 16px 0 8px; }
 .vnext #view-today .button-primary { background: var(--vn-berry); border-color: var(--vn-berry); }
 .vnext #view-today .text-link { color: var(--vn-berry); }
-.vnext #view-today .production-week { padding: 18px; }
-.vnext #view-today .prod-check[aria-pressed="true"] { background: var(--vn-green); border-color: var(--vn-green); }
+.vnext :is(#view-today, #view-orders) .production-week { padding: 18px; }
+.vnext :is(#view-today, #view-orders) .prod-check[aria-pressed="true"] { background: var(--vn-green); border-color: var(--vn-green); }
 
 @media (max-width: 1000px) { .vn-agenda-grid { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 760px) {
@@ -1245,9 +1245,9 @@ body.vnext { background: var(--vn-canvas); }
   .vn-heading h1 { font-size: 28px; }
   .vn-heading-add { display: none; }
   .vn-week { gap: 4px; }
-  .vnext #view-today .vn-day { min-height: 88px; border-radius: var(--vn-r-ctl); padding: 8px 0; }
-  .vnext #view-today .vn-day .day-number { font-size: 21px; }
-  .vnext #view-today .vn-day .day-count { padding: 1px 5px; }
+  .vnext :is(#view-today, #view-orders) .vn-day { min-height: 88px; border-radius: var(--vn-r-ctl); padding: 8px 0; }
+  .vnext :is(#view-today, #view-orders) .vn-day .day-number { font-size: 21px; }
+  .vnext :is(#view-today, #view-orders) .vn-day .day-count { padding: 1px 5px; }
   .vn-order { padding: 16px; }
   .vn-time { font-size: 20px; }
   .vn-thumb { width: 58px; height: 58px; }
@@ -1255,7 +1255,7 @@ body.vnext { background: var(--vn-canvas); }
 }
 @media (max-width: 380px) { .vn-day .day-name, .vn-day .day-count, .vn-day .day-availability { font-size: 12px; letter-spacing: -.02em; } .vn-day .day-count { padding: 0 3px; } }
 @media (prefers-reduced-motion: reduce) { .vn-btn, .vn-day, .vn-order { transition: none; } .vn-btn:active { transform: none; } .vn-order.is-advanced { animation: none; } }
-.vnext #view-today .vn-day .day-name { text-transform: none; letter-spacing: 0; }
+.vnext :is(#view-today, #view-orders) .vn-day .day-name { text-transform: none; letter-spacing: 0; }
 .vnext #view-today .next-action-card { padding: 18px 20px; }
 .vnext #view-today .next-action-card .section-head { border: 0; padding: 0; margin: 0 0 6px; }
 .vnext #view-today .next-action-card .section-head h2 { font: 750 12px var(--vn-font); letter-spacing: .12em; text-transform: uppercase; color: var(--vn-berry); }
@@ -1459,8 +1459,8 @@ body.vnext { background: var(--vn-canvas); }
 .vnext { --vn-red: #a3341a; --vn-red-soft: #fdebe5; }
 .vn-badge.red { background: var(--vn-red-soft); color: var(--vn-red); font-weight: 750; }
 .vn-badge.outline { background: #fff; color: var(--vn-wine); box-shadow: inset 0 0 0 1px #e3cdd4; }
-.vnext #view-today .vn-day.is-full:not(.is-selected) .day-availability { color: var(--vn-red); }
-.vnext #view-today .vn-day.is-closed:not(.is-selected) .day-availability { color: var(--vn-muted); }
+.vnext :is(#view-today, #view-orders) .vn-day.is-full:not(.is-selected) .day-availability { color: var(--vn-red); }
+.vnext :is(#view-today, #view-orders) .vn-day.is-closed:not(.is-selected) .day-availability { color: var(--vn-muted); }
 
 /* Toques: no mínimo 48 px nos botões de ação; letras de apoio com 14 px; hora e dinheiro em destaque. */
 .vn-btn, .vn-btn.small, .vnext .button, .vnext .button-small, .vnext .detail-actions .button { min-height: 48px; }
@@ -1488,7 +1488,7 @@ body.vnext { background: var(--vn-canvas); }
 
 /* Agenda: lista do dia primeiro, depois a semana para escolher outro dia, depois o que falta cobrar. */
 .vn-week-pick { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--vn-line); }
-.vnext #view-today .vn-week-title { margin: 0 0 6px; font: 600 17px var(--vn-title); }
+.vnext :is(#view-today, #view-orders) .vn-week-title { margin: 0 0 6px; font: 600 17px var(--vn-title); }
 .vn-collect { margin-top: 26px; }
 .vn-collect-list { display: grid; gap: 8px; }
 .vn-collect-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; width: 100%; min-height: 56px; padding: 12px 14px; border: 1px solid var(--vn-line-soft); border-radius: var(--vn-r); background: #fff; color: var(--vn-ink); font: 15px/1.35 var(--vn-font); text-align: left; cursor: pointer; }
@@ -1512,7 +1512,7 @@ body.vnext { background: var(--vn-canvas); }
 /* Contraste: pedido entregue fica apagado só no fundo, não no texto (antes a opacidade derrubava o contraste). */
 .vn-order.is-delivered, .vn-order.is-cancelled { opacity: 1; background: #fbf8f9; }
 .vn-order.is-delivered .vn-thumb, .vn-order.is-cancelled .vn-thumb { opacity: .6; }
-.vnext #view-today .vn-day .day-count { color: #5f4a51; opacity: 1; }
+.vnext :is(#view-today, #view-orders) .vn-day .day-count { color: #5f4a51; opacity: 1; }
 /* D6: "Avançado" com a mesma seta dos outros cartões de Ajustes. */
 details.settings-data-tools > summary { list-style: none; justify-content: space-between; gap: 12px; color: var(--vn-ink); }
 details.settings-data-tools > summary::-webkit-details-marker { display: none; }
@@ -1717,28 +1717,28 @@ body.vnext { font-variant-numeric: tabular-nums; -webkit-tap-highlight-color: tr
 /* Semana no topo: navegação acima do que ela controla; gruda no topo ao rolar. */
 .vn-weekbar { position: sticky; top: 0; z-index: 5; margin: 0 0 6px; padding: 8px 0 10px; background: color-mix(in srgb, var(--vn-canvas) 94%, transparent); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); border-bottom: 1px solid var(--vn-line-soft); }
 @media (min-width: 761px) { .vn-weekbar { border-bottom: 0; } }
-.vnext #view-today .vn-weekbar .week-controls { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 0; }
-.vnext #view-today .vn-weekbar .week-range { color: var(--vn-muted); font: 600 13px var(--vn-font); }
-.vnext #view-today .vn-weekbar .week-step { width: 44px; height: 40px; min-height: 40px; }
-.vnext #view-today .vn-weekbar .vn-week { gap: 4px; margin: 4px 0 0; }
-.vnext #view-today .vn-weekbar .vn-day { min-height: 64px; padding: 6px 0 8px; gap: 1px; border: 0; border-radius: var(--vn-r-ctl); background: transparent; box-shadow: none; }
-.vnext #view-today .vn-weekbar .vn-day .day-name { color: var(--vn-muted); font: 600 12px var(--vn-font); }
-.vnext #view-today .vn-weekbar .vn-day .day-number { font: 700 21px/1.1 var(--vn-title); }
-.vnext #view-today .vn-weekbar .day-load { display: flex; gap: 3px; min-height: 6px; align-items: center; }
-.vnext #view-today .vn-weekbar .day-load i { width: 5px; height: 5px; border-radius: 50%; background: var(--vn-line); }
-.vnext #view-today .vn-weekbar .day-load i.on { background: var(--vn-muted); }
-.vnext #view-today .vn-weekbar .day-load em { font: 700 12px/1 var(--vn-font); font-style: normal; color: var(--vn-muted); }
-.vnext #view-today .vn-weekbar .vn-day.is-full .day-load i.on { background: var(--vn-red); }
-.vnext #view-today .vn-weekbar .vn-day.is-closed { background: transparent; }
-.vnext #view-today .vn-weekbar .vn-day.is-closed .day-number { color: #b9aab0; }
-.vnext #view-today .vn-weekbar .vn-day.is-today:not(.is-selected) { box-shadow: inset 0 0 0 1.5px var(--vn-line); }
-.vnext #view-today .vn-weekbar .vn-day:hover:not(.is-selected) { background: var(--vn-soft); }
-.vnext #view-today .vn-weekbar .vn-day.is-selected { background: var(--vn-wine); color: #fff; box-shadow: none; }
-.vnext #view-today .vn-weekbar .vn-day.is-selected .day-name { color: #f0dbe2; }
-.vnext #view-today .vn-weekbar .vn-day.is-selected .day-load i { background: #ffffff40; }
-.vnext #view-today .vn-weekbar .vn-day.is-selected .day-load i.on { background: #fff; }
-.vnext #view-today .vn-weekbar .vn-day.is-selected.is-full .day-load i.on { background: #ff9c84; }
-.vnext #view-today .vn-weekbar .vn-day.is-selected .day-load em { color: #fff; }
+.vnext :is(#view-today, #view-orders) .vn-weekbar .week-controls { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 0; }
+.vnext :is(#view-today, #view-orders) .vn-weekbar .week-range { color: var(--vn-muted); font: 600 13px var(--vn-font); }
+.vnext :is(#view-today, #view-orders) .vn-weekbar .week-step { width: 44px; height: 40px; min-height: 40px; }
+.vnext :is(#view-today, #view-orders) .vn-weekbar .vn-week { gap: 4px; margin: 4px 0 0; }
+.vnext :is(#view-today, #view-orders) .vn-weekbar .vn-day { min-height: 64px; padding: 6px 0 8px; gap: 1px; border: 0; border-radius: var(--vn-r-ctl); background: transparent; box-shadow: none; }
+.vnext :is(#view-today, #view-orders) .vn-weekbar .vn-day .day-name { color: var(--vn-muted); font: 600 12px var(--vn-font); }
+.vnext :is(#view-today, #view-orders) .vn-weekbar .vn-day .day-number { font: 700 21px/1.1 var(--vn-title); }
+.vnext :is(#view-today, #view-orders) .vn-weekbar .day-load { display: flex; gap: 3px; min-height: 6px; align-items: center; }
+.vnext :is(#view-today, #view-orders) .vn-weekbar .day-load i { width: 5px; height: 5px; border-radius: 50%; background: var(--vn-line); }
+.vnext :is(#view-today, #view-orders) .vn-weekbar .day-load i.on { background: var(--vn-muted); }
+.vnext :is(#view-today, #view-orders) .vn-weekbar .day-load em { font: 700 12px/1 var(--vn-font); font-style: normal; color: var(--vn-muted); }
+.vnext :is(#view-today, #view-orders) .vn-weekbar .vn-day.is-full .day-load i.on { background: var(--vn-red); }
+.vnext :is(#view-today, #view-orders) .vn-weekbar .vn-day.is-closed { background: transparent; }
+.vnext :is(#view-today, #view-orders) .vn-weekbar .vn-day.is-closed .day-number { color: #b9aab0; }
+.vnext :is(#view-today, #view-orders) .vn-weekbar .vn-day.is-today:not(.is-selected) { box-shadow: inset 0 0 0 1.5px var(--vn-line); }
+.vnext :is(#view-today, #view-orders) .vn-weekbar .vn-day:hover:not(.is-selected) { background: var(--vn-soft); }
+.vnext :is(#view-today, #view-orders) .vn-weekbar .vn-day.is-selected { background: var(--vn-wine); color: #fff; box-shadow: none; }
+.vnext :is(#view-today, #view-orders) .vn-weekbar .vn-day.is-selected .day-name { color: #f0dbe2; }
+.vnext :is(#view-today, #view-orders) .vn-weekbar .vn-day.is-selected .day-load i { background: #ffffff40; }
+.vnext :is(#view-today, #view-orders) .vn-weekbar .vn-day.is-selected .day-load i.on { background: #fff; }
+.vnext :is(#view-today, #view-orders) .vn-weekbar .vn-day.is-selected.is-full .day-load i.on { background: #ff9c84; }
+.vnext :is(#view-today, #view-orders) .vn-weekbar .vn-day.is-selected .day-load em { color: #fff; }
 /* Pedem sua atenção */
 .vn-attention { margin: 12px 0 0; border-radius: var(--vn-r); background: #fff; box-shadow: var(--vn-shadow); overflow: hidden; }
 .vn-attention > h2 { display: flex; align-items: center; gap: 8px; margin: 0; padding: 14px 16px 10px; font: 700 17px var(--vn-title); }
@@ -1761,7 +1761,7 @@ body.vnext { font-variant-numeric: tabular-nums; -webkit-tap-highlight-color: tr
 .vn-att-more[open] > summary { color: var(--vn-muted); }
 @media (max-width: 380px) { .vn-att-row { grid-template-columns: minmax(0, 1fr) auto; } .vn-att-glyph { display: none; } }
 /* Cabeçalho do dia */
-.vnext #view-today .today-agenda { margin-top: 18px; }
+.vnext :is(#view-today, #view-orders) .today-agenda { margin-top: 18px; }
 .vn-day-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; margin: 0 0 10px; }
 .vn-day-head h2 { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0; font: 700 22px var(--vn-title); letter-spacing: -.02em; }
 .vn-day-head p { margin: 2px 0 0; color: var(--vn-muted); font-size: 14px; }
@@ -1844,7 +1844,7 @@ body.vnext { font-variant-numeric: tabular-nums; -webkit-tap-highlight-color: tr
 /* ---- Rodada 2: verificação final ---- */
 /* Alvos de toque das peças novas com pelo menos 44 px. */
 .vn-att-jump { min-height: 44px; }
-.vnext #view-today .vn-weekbar .week-step { height: 44px; min-height: 44px; }
+.vnext :is(#view-today, #view-orders) .vn-weekbar .week-step { height: 44px; min-height: 44px; }
 .vnext .detail-dialog .detail-phone { min-height: 44px; }
 
 /* ---- Rodada 3 (16/10): ficha em telas baixas ---- */
@@ -1938,3 +1938,16 @@ body.vnext { font-variant-numeric: tabular-nums; -webkit-tap-highlight-color: tr
    repetida até virar ruído). Agora é texto de apoio; "faz tempo que não pede" ganha só peso, sem cor nova. */
 .vnext #view-clients .client-status { justify-self: start; padding: 0; border-radius: 0; background: none; color: var(--vn-muted); font: 600 13px/1.3 var(--vn-font); text-align: left; }
 .vnext #view-clients .client-row.is-away .client-status { color: var(--vn-ink); font-weight: 700; }
+
+/* Simplificação, etapa 2: Pedidos escolhe entre Lista, Semana (vagas por dia) e Produção. */
+.vnext #view-orders .orders-mode { display: flex; width: 100%; max-width: 480px; margin: 0 0 16px; }
+.vnext #view-orders .orders-mode button { flex: 1 1 0; min-height: 44px; }
+.vnext #view-orders .vn-weekbar { margin-bottom: 4px; }
+.vnext #view-orders .production-week { margin-top: 4px; }
+
+/* Simplificação, etapa 3: um botão cheio por tela. Em Hoje é a ação da primeira coisa que pede você. */
+.vnext .vn-att-row.is-lead .att-btn, .vnext .vn-att-row.is-lead .button.att-btn { border: 1px solid var(--vn-berry); background: var(--vn-berry); color: #fff; }
+.vnext .vn-att-row.is-lead .att-btn:hover, .vnext .vn-att-row.is-lead .button.att-btn:hover { background: var(--vn-berry-dark); }
+/* O filtro escolhido não é uma ação: fica marcado em vinho claro, sem competir com o botão cheio da tela. */
+.vnext :is(#view-orders, #view-clients, #view-settings) :is(.stage-chip.is-current, .stage-chip[aria-pressed="true"]) { border: 2px solid var(--vn-wine); background: var(--vn-rose); color: var(--vn-wine); }
+.vnext :is(#view-orders, #view-clients, #view-settings) :is(.stage-chip.is-current, .stage-chip[aria-pressed="true"]) .stage-count { background: #fff; color: var(--vn-wine); }

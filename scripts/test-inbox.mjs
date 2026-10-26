@@ -1,4 +1,4 @@
-// Caixa de entrada: apenas a demo local, sem contas ou dados externos.
+// Para decidir (antiga caixa de entrada): apenas a demo local, sem contas ou dados externos.
 // npm run build && node scripts/test-inbox.mjs [pasta-de-capturas]
 import assert from 'node:assert/strict';
 import { mkdir } from 'node:fs/promises';
@@ -81,10 +81,10 @@ try {
     await loadFixture(page, fixture());
     assert.match(await page.title(), /Doce Agenda/);
     assert.equal(new URL(page.url()).pathname, '/demo/');
-    assert.match(await page.locator('.vn-inbox-counts').textContent(), /3 para revisar · 2 em negociação/);
+    assert.match(await page.locator('.vn-inbox-counts').textContent(), /3 pelo link · 2 orçamentos/);
     assert.equal(await section(page, 'review').locator('.vn-order').count(), 3);
     assert.equal(await section(page, 'negotiation').locator('.vn-order').count(), 2);
-    assert.match(await card(page, 'known').innerText(), /Aguardando revisão/);
+    assert.match(await card(page, 'known').innerText(), /Pelo link[\s\S]*Para decidir/);
     assert.match(await card(page, 'known').innerText(), /155,50/);
     assert.match(await card(page, 'unknown').innerText(), /A combinar/);
     assert.match(await card(page, 'zero').innerText(), /R\$\s*0,00/);
@@ -151,7 +151,7 @@ try {
     assert.equal((await orderOf(page, 'known')).status, 'Recusado');
     assert.match(await page.locator('#detail-dialog .vn-origin').innerText(), /Recebido pelo link/);
     await closeDetails(page);
-    assert.match(await section(page, 'review').innerText(), /Nenhuma solicitação para revisar/);
+    assert.match(await section(page, 'review').innerText(), /Nenhum pedido pelo link para decidir/);
     await page.reload(); await page.locator('#today-title').waitFor();
     await page.locator('[data-view="orders"]:visible').first().click();
     for (const id of ['known', 'unknown', 'zero']) {
@@ -200,9 +200,9 @@ try {
 
     const empty = fixture(); empty.orders = []; empty.payments = [];
     await loadFixture(page, empty);
-    assert.match(await page.locator('.vn-inbox-counts').textContent(), /0 para revisar · 0 em negociação/);
-    assert.match(await section(page, 'review').innerText(), /Nenhuma solicitação para revisar/);
-    assert.match(await section(page, 'negotiation').innerText(), /Nenhum orçamento em negociação/);
+    assert.match(await page.locator('.vn-inbox-counts').textContent(), /0 pelo link · 0 orçamentos/);
+    assert.match(await section(page, 'review').innerText(), /Nenhum pedido pelo link para decidir/);
+    assert.match(await section(page, 'negotiation').innerText(), /Nenhum orçamento esperando resposta/);
     await noOverflow(page);
     assert.deepEqual(errors, [], 'sem erros de console, execução ou recursos');
     await context.close();

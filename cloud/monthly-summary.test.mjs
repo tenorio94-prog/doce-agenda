@@ -11,7 +11,7 @@ const summary = state => monthlySummary(state, '2026-10', now);
 test('all seven definitions use eligible orders, integer cents and checked payments', () => {
   const state = createEmptyState();
   state.orders = [makeOrder('a'), makeOrder('b', { product: 'BOLO DE CENÓURA', total: 50.2, status: 'Entregue', createdAt: '2026-10-05T12:00:00Z' }), makeOrder('c', { product:'bolo de cenoura', total:0, totalKnown:false, dueAt:'2026-10-07T17:00', createdAt:'2026-10-05T12:00:00Z' }),
-    ...['Cancelado','Recusado','Orçamento','Solicitação','Aguardando confirmação','Em produção','Pronto'].map(status => makeOrder(status, {status})), makeOrder('no-date',{dueAt:''}), makeOrder('other-month',{dueAt:'2026-09-30T23:30'}),makeOrder('sample',{isSample:true})];
+    ...['Cancelado','Recusado','Orçamento','Solicitação','Aguardando confirmação'].map(status => makeOrder(status, {status})), makeOrder('no-date',{dueAt:''}), makeOrder('other-month',{dueAt:'2026-09-30T23:30'}),makeOrder('sample',{isSample:true})];
   state.payments = [payment('a',30.1),payment('b',10.2),payment('a',500,'Informado'),payment('Cancelado',100),payment('unknown-order',100)];
   const result = summary(state);
   assert.equal(result.ordersCount,3);assert.equal(result.soldCents,15030);assert.equal(result.receivedCents,4030);assert.equal(result.receivableCents,11000);assert.equal(result.ordersWithoutValue,1);
@@ -67,4 +67,17 @@ test('lifetime adds up every month with the same rules, counting clients once', 
   const { lifetime } = summary(state);
   assert.deepEqual(lifetime, { ordersCount: 3, deliveredCount: 1, clientsCount: 2, receivedCents: 11010, firstMonth: '2026-08' });
   assert.deepEqual(monthlySummary(createEmptyState(), '2026-10', now).lifetime, { ordersCount: 0, deliveredCount: 0, clientsCount: 0, receivedCents: 0, firstMonth: null });
+});
+test('combined orders count in the month while being made or ready, not only once delivered', () => {
+  const state = createEmptyState();
+  state.orders = [makeOrder('confirmed', { total: 100 }), makeOrder('making', { status: 'Em produção', total: 80 }), makeOrder('ready', { status: 'Pronto', total: 60 }),
+    makeOrder('delivered', { status: 'Entregue', total: 40 }), makeOrder('quote', { status: 'Orçamento', total: 999 })];
+  state.payments = [payment('making', 30), payment('ready', 60), payment('ready', 5, 'Informado'), payment('quote', 50)];
+  const result = summary(state);
+  assert.equal(result.ordersCount, 4);
+  assert.equal(result.soldCents, 28000);
+  assert.equal(result.receivedCents, 9000, 'só conferido, de pedidos combinados ou entregues');
+  assert.equal(result.receivableCents, 19000);
+  assert.equal(result.lifetime.ordersCount, 4);
+  assert.equal(result.lifetime.receivedCents, 9000);
 });

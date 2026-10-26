@@ -18,20 +18,21 @@ try {
     await page.goto(`${server.origin}/demo/`);
     await page.locator('#today-title').waitFor();
 
-    // Etapa 3: a Agenda responde "o que faço hoje?": semana acima da lista, primeiro pedido sem rolar,
-    // cobranças e decisões numa lista só, nenhum resumo financeiro na Agenda.
-    const week = await page.locator('#view-today .vn-weekbar').boundingBox();
-    const list = await page.locator('#view-today #today-list-title').boundingBox();
-    assert.ok(week && list && week.y < list.y, 'a semana fica acima da lista do dia');
-    const firstOrder = await page.locator('#view-today .today-agenda .vn-order').first().boundingBox();
-    if (height >= 800) assert.ok(firstOrder.y + 60 < height, `primeiro pedido fora da primeira tela (${Math.round(firstOrder.y)})`);
+    // Simplificação, etapa 2: Hoje responde "o que faço agora?". O título traz o número do que pede você,
+    // a lista vem primeiro e as entregas de hoje logo abaixo; a semana com as vagas fica em Pedidos > Semana.
+    const pending = await page.locator('#attention-title .vn-count').innerText();
+    assert.equal(await page.locator('#today-title').innerText(), `${pending} coisas pedem você`);
+    assert.equal(await page.locator('#view-today .vn-weekbar, #view-today .agenda-mode').count(), 0, 'Hoje sem a semana nem a chave de modo');
+    const attention = await page.locator('#view-today .vn-attention').boundingBox();
+    const todayList = await page.locator('#view-today #hoje-list-title').boundingBox();
+    assert.ok(attention.y < todayList.y, 'o que pede você vem antes das entregas de hoje');
+    assert.ok(attention.y < height, 'o que pede você já na primeira tela');
+    assert.match(await page.locator('#hoje-list-title').innerText(), /Entregas de hoje/);
     assert.equal(await page.locator('#view-today .finance-summary').count(), 0, 'resumo financeiro saiu da Agenda');
-    assert.match(await page.locator('#view-today .vn-attention').innerText(), /Pedem sua atenção[\s\S]*Pedido novo pelo link/);
-    // Rodada 5: no computador a lista fica na coluna ao lado do dia, já na primeira tela; no celular, logo abaixo do dia.
-    const where = width > 1000 ? '.vn-aside' : '.vn-schedule';
-    assert.equal(await page.locator(`#view-today ${where} .vn-attention`).count(), 1, `atenção em ${where}`);
-    if (width > 1000) assert.ok((await page.locator('#view-today .vn-attention').boundingBox()).y < height, 'atenção à vista no computador');
-    check(`${width}px: Agenda com a semana no topo e o dia na primeira tela`);
+    assert.match(await page.locator('#view-today .vn-attention').innerText(), /Pedido novo pelo link/);
+    assert.equal(await page.locator('#view-today .vn-schedule .vn-attention').count(), 1, 'a lista fica na coluna principal em todas as larguras');
+    check(`${width}px: Hoje com o que pede você no topo e as entregas de hoje logo abaixo`);
+
 
     // Etapa 0: Pedidos mostra o dia de cada pedido e começa pelo que está em aberto.
     await page.locator('[data-view="orders"]:visible').first().click();
@@ -53,14 +54,24 @@ try {
     assert.equal(await page.locator('#view-orders .vn-closed-group .vn-order', { hasText: 'Roberta' }).count(), 1, 'entregue com saldo continua cartão');
     const lineBox = await history.first().boundingBox();
     assert.ok(lineBox.height <= 80, `linha do histórico alta demais (${Math.round(lineBox.height)})`);
-    // Botão cheio só para o que é para agora (hoje, amanhã, decisões); dias mais distantes, o mesmo verbo mais calmo.
+    // Simplificação, etapa 3: um botão cheio por tela. Na lista de Pedidos, todos os verbos de etapa são calmos.
     const saturday = page.locator('#view-orders .vn-order', { hasText: 'Sônia' }).first();
     assert.equal(await saturday.locator('.vn-btn.secondary[data-action="advance-order"]').count(), 1, 'sábado com botão calmo');
     const todayCard = page.locator('#view-orders .vn-order', { hasText: 'Marcos' }).first();
-    assert.equal(await todayCard.locator('.vn-btn.primary[data-action="advance-order"]').count(), 1, 'hoje com botão cheio');
+    assert.equal(await todayCard.locator('.vn-btn.secondary[data-action="advance-order"]').count(), 1, 'hoje também calmo na lista');
     const decision = page.locator('#view-orders .vn-order', { hasText: 'Renata' }).first();
-    assert.equal(await decision.locator('.vn-btn.primary[data-action="confirm-order"]').count(), 1, 'decisão continua cheia');
-    check(`${width}px: histórico em linhas e peso do botão pelo tempo`);
+    assert.equal(await decision.locator('.vn-btn.secondary[data-action="confirm-order"]').count(), 1, 'decisão calma na lista');
+    assert.equal(await page.locator('#view-orders .vn-order .vn-btn.primary').count(), 0, 'nenhum botão cheio nos cartões da lista');
+    // Em Hoje, o único botão cheio é o da primeira coisa que pede você.
+    await page.locator('[data-view="today"]:visible').first().click();
+    await page.locator('#today-title').waitFor();
+    assert.equal(await page.locator('#view-today .vn-att-row.is-lead').count(), 1);
+    assert.equal(await page.locator('#view-today .vn-order .vn-btn.primary').count(), 0, 'com pendências, os cartões de hoje ficam calmos');
+    const lead = await page.locator('#view-today .vn-att-row.is-lead .att-btn').evaluate((el) => getComputedStyle(el).backgroundColor);
+    assert.equal(lead, 'rgb(176, 36, 74)', 'ação da primeira pendência em framboesa');
+    await page.locator('[data-view="orders"]:visible').first().click();
+    await page.locator('#orders-title').waitFor();
+    check(`${width}px: histórico em linhas e um botão cheio por tela`);
 
     // Etapa 1: entregue com saldo nunca fica verde; o carimbo diz quanto falta.
     const roberta = page.locator('#view-orders .vn-order', { hasText: 'Roberta' }).first();
