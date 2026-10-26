@@ -189,14 +189,62 @@ function setError(message = "Verifique sua conexão e tente novamente.") {
 // para não apagar o que ela está digitando.
 let lastLoadAt = 0;
 async function refreshInBackground({ force = false } = {}) {
-  if (LOCAL_ONLY || document.hidden || state.refreshing || !navigator.onLine) return;
+  // Com avisos ligados, também confere com o app em outra aba (o navegador pode espaçar as checagens).
+  if (LOCAL_ONLY || (document.hidden && !alertsOn()) || state.refreshing || !navigator.onLine) return;
   if (!force && Date.now() - lastLoadAt < 30_000) return;
   if (state.activeView === "settings" || document.activeElement?.matches?.("input, textarea, select, [contenteditable]")) return;
   const before = new Set(state.orders.filter((order) => order.status === "Solicitação").map((order) => order.id));
   state.refreshing = true;
   try { await loadState({ silent: true, background: true }); } finally { state.refreshing = false; }
-  const fresh = state.orders.filter((order) => order.status === "Solicitação" && !before.has(order.id)).length;
+  const freshOrders = state.orders.filter((order) => order.status === "Solicitação" && !before.has(order.id)), fresh = freshOrders.length;
   if (fresh) showToast(fresh === 1 ? "Chegou 1 pedido novo pelo link." : `Chegaram ${fresh} pedidos novos pelo link.`);
+  notifyNewRequests(freshOrders);
+}
+
+// Aviso de pedido novo (O13): com o app aberto, mesmo em outra aba, o título mostra quantos pedidos do link
+// esperam e, se ela ligar, o aparelho avisa. Com o app fechado ainda não há aviso (precisaria de push).
+const ALERTS_KEY = "doce-agenda.avisos.v1", BASE_TITLE = document.title;
+const alertsSupported = () => "Notification" in window && "serviceWorker" in navigator;
+function alertsOn() {
+  try { return alertsSupported() && Notification.permission === "granted" && localStorage.getItem(ALERTS_KEY) === "1"; } catch { return false; }
+}
+function updateTitle() {
+  const waiting = state.orders.filter((order) => order.status === "Solicitação" && !sampleOrder(order)).length;
+  document.title = waiting ? `(${waiting}) ${BASE_TITLE}` : BASE_TITLE;
+}
+const alertsScope = () => (location.pathname.startsWith("/demo") ? "/demo/" : "/app/");
+async function notifyNewRequests(list) {
+  if (!list.length || !alertsOn() || !document.hidden) return;
+  const title = list.length === 1 ? "Pedido novo pelo link" : `${list.length} pedidos novos pelo link`;
+  const body = list.length === 1 ? `${clientName(list[0]) || "Uma cliente"} quer ${list[0].product || "uma encomenda"}.` : `${list.map((order) => clientName(order)).filter(Boolean).join(", ")}.`;
+  const options = { body, tag: "doce-agenda-pedido", icon: "/favicon.svg" };
+  try {
+    // No Android só o service worker mostra notificação; no computador, qualquer um dos dois.
+    const registration = await navigator.serviceWorker.getRegistration(alertsScope());
+    if (registration) await registration.showNotification(title, options); else new Notification(title, options);
+  } catch (error) { console.warn("Aviso não mostrado:", error); }
+}
+async function turnAlertsOn() {
+  if (!alertsSupported()) return;
+  const permission = await Notification.requestPermission();
+  if (permission !== "granted") { showToast("Os avisos ficaram bloqueados. Dá para liberar nas configurações do site, no navegador."); renderSettings(); return; }
+  try { await navigator.serviceWorker.register("/aviso-sw.js", { scope: alertsScope() }); } catch (error) { console.warn("Sem service worker:", error); }
+  try { localStorage.setItem(ALERTS_KEY, "1"); } catch { /* sem armazenamento: não lembra */ }
+  showToast("Avisos ligados neste aparelho.");
+  renderSettings();
+}
+function turnAlertsOff() {
+  try { localStorage.removeItem(ALERTS_KEY); } catch { /* nada a apagar */ }
+  showToast("Avisos desligados neste aparelho.");
+  renderSettings();
+}
+function alertsSettingsMarkup() {
+  const intro = '<p class="settings-intro">Com o app aberto, inclusive em outra aba, o aparelho avisa quando chega pedido pelo link. Com o app fechado ainda não avisa: abra o app de vez em quando.</p>';
+  if (!alertsSupported()) return `${intro}<p class="form-hint">Este navegador não mostra avisos. No iPhone, só funciona com o app adicionado à tela de início.</p>`;
+  if (Notification.permission === "denied") return `${intro}<p class="form-hint">Os avisos estão bloqueados para este site. Libere nas configurações do navegador e volte aqui.</p>`;
+  return alertsOn()
+    ? `${intro}<p class="alerts-state is-on">Ligados neste aparelho.</p><button class="button button-quiet" type="button" data-action="alerts-off">Desligar avisos</button>`
+    : `${intro}<button class="button button-primary" type="button" data-action="alerts-on">Ligar avisos neste aparelho</button>`;
 }
 
 async function loadState({ silent = false, background = false } = {}) {
@@ -895,6 +943,7 @@ function renderSettings() {
     <div class="settings-list">
       ${settingsCard("link", "Sua vitrine", summary.link, orderPageMarkup())}
       ${settingsCard("days", "Dias e limites", summary.days, availabilitySettingsMarkup(state.settingsDate))}
+      ${LOCAL_ONLY ? "" : settingsCard("alerts", "Aviso de pedido novo", alertsOn() ? "Ligado neste aparelho" : "Desligado", alertsSettingsMarkup())}
       ${pixEnabled() ? settingsCard("pix", "Pix", pixSummary(), pixSettingsMarkup()) : ""}
       ${settingsCard("cake", "Detalhes do bolo", summary.cake, `<p class="settings-intro">Os campos que aparecem quando o pedido é um bolo, aqui e no seu link. Campos obrigatórios só são exigidos ao confirmar.</p>${orderTemplateSettingsMarkup()}`)}
     </div>`;
@@ -999,6 +1048,7 @@ function render() {
     badge.hidden = !attention;
     badge.setAttribute("aria-label", `${attention} ${attention === 1 ? "pede" : "pedem"} sua atenção`);
   }
+  updateTitle();
   $("#main-content").setAttribute("aria-busy", "false");
 }
 
@@ -1728,6 +1778,8 @@ function handleClick(event) {
     case 'share-order-link': shareOrderLink(); break;
     case 'preview-link': previewOrderLink(); break;
     case 'link-wizard': openLinkWizard(); break;
+    case 'alerts-on': turnAlertsOn(); break;
+    case 'alerts-off': turnAlertsOff(); break;
     case 'add-product': addProductRow(); break;
     case 'remove-product': removeProductRow(action); break;
     case 'move-product': moveProductRow(action); break;
