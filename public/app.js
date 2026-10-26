@@ -608,12 +608,11 @@ function renderToday() {
   const sample = state.orders.find((order) => order.isSample || order.isDemo || order.sample);
   const firstUse = !state.orders.some((order) => !(order.isSample || order.isDemo || order.sample));
   const toDeliver = todays.filter((order) => !isFinished(order));
-  const missingDeposit = toDeliver.filter(needsDeposit);
   const todayKey = localDateKey(new Date()), todayAvailability = availabilityFor(todayKey);
   const headline = toDeliver.length ? `${toDeliver.length} ${toDeliver.length === 1 ? "entrega" : "entregas"} hoje` : "Nada para entregar hoje";
   // Com hoje escolhido na semana, "Dia lotado"/"Fechado" já aparece no cabeçalho do dia logo abaixo: não repetir.
   const dayHeadShowsToday = !weekMode && state.selectedDay === todayKey;
-  const summaryParts = [dayHeadShowsToday ? "" : todayAvailability.closed ? "Hoje é dia fechado" : todayAvailability.full ? "Dia lotado" : "",missingDeposit.length ? `${missingDeposit.length} sem sinal` : ""].filter(Boolean);
+  const summaryParts = [dayHeadShowsToday ? "" : todayAvailability.closed ? "Hoje é dia fechado" : todayAvailability.full ? "Dia lotado" : ""].filter(Boolean);
   // Rodada 5: no computador, "Pedem sua atenção" fica na coluna ao lado do dia, à vista junto com os pedidos de hoje.
   // No celular continua logo abaixo do dia. A ordem no HTML acompanha a ordem na tela nos dois casos.
   const attentionBeside = wideAgenda?.matches === true;
@@ -895,10 +894,14 @@ function render() {
     button.classList.toggle("active", current);
     if (current) button.setAttribute("aria-current", "page"); else button.removeAttribute("aria-current");
   });
-  const needsYou = state.orders.filter((order) => !sampleOrder(order) && !isCancelled(order) && (order.status === "Solicitação" || informedFor(order.id) > 0)).length;
-  $("#nav-order-count").textContent = String(needsYou);
-  $("#nav-order-count").hidden = !needsYou;
-  $("#nav-order-count").setAttribute("aria-label", `${needsYou} ${needsYou === 1 ? "pedido precisa" : "pedidos precisam"} de você`);
+  // Um número só: o selo da Agenda conta o mesmo que "Pedem sua atenção" (plano de simplificação, etapa 1).
+  // Opcional: uma página em cache de antes desta etapa não tem o selo.
+  const attention = attentionItems().length, badge = $("#nav-attention-count");
+  if (badge) {
+    badge.textContent = String(attention);
+    badge.hidden = !attention;
+    badge.setAttribute("aria-label", `${attention} ${attention === 1 ? "pede" : "pedem"} sua atenção`);
+  }
   $("#main-content").setAttribute("aria-busy", "false");
 }
 
