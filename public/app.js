@@ -1707,6 +1707,7 @@ function handleClick(event) {
     case 'copy-order-link': copyOrderLink(); break;
     case 'share-order-link': shareOrderLink(); break;
     case 'preview-link': previewOrderLink(); break;
+    case 'link-wizard': openLinkWizard(); break;
     case 'add-product': addProductRow(); break;
     case 'remove-product': removeProductRow(action); break;
     case 'move-product': moveProductRow(action); break;
@@ -1888,10 +1889,10 @@ function orderPageMarkup() {
       <div class="link-kit"><button class="text-link" type="button" data-action="share-kit" data-kind="story">Imagem para status e story</button><button class="text-link" type="button" data-action="share-kit" data-kind="qr">QR para imprimir</button></div>
       <button class="text-link" type="button" data-action="preview-link">Ver como a cliente vê</button>
       <p class="link-tip">Coloque na bio do Instagram e no status do WhatsApp. Cada pedido chega em <b>Para decidir</b> para você revisar antes de aceitar.</p></div>`
-    : `<div class="link-hero"><h2>Sua vitrine</h2><p>Uma página com a sua marca e os seus doces. A cliente escolhe, vê as datas livres e manda o pedido. Você revisa antes de aceitar.</p>${cloud ? "" : '<p class="link-demo-note">Na demonstração dá para montar e ver a prévia. Para receber pedidos de verdade, crie sua conta grátis.</p>'}</div>`;
+    : `<div class="link-hero"><h2>Sua vitrine</h2><p>Uma página com a sua marca e os seus doces. A cliente escolhe, vê as datas livres e manda o pedido. Você revisa antes de aceitar.</p>${cloud ? "" : '<p class="link-demo-note">Na demonstração dá para montar e ver a prévia. Para receber pedidos de verdade, crie sua conta grátis.</p>'}<button class="button button-primary link-wizard-open" type="button" data-action="link-wizard">${cloud ? "Ativar em 3 passos" : "Montar em 3 passos"}</button><p class="link-hero-or">Ou preencha tudo abaixo, com estilo, cor e fotos.</p></div>`;
   const actions = live
     ? '<button class="button button-primary" type="submit" name="intent" value="save">Salvar alterações</button><button class="button button-quiet" type="button" data-action="preview-link">Ver prévia</button><button class="text-link link-pause" type="submit" name="intent" value="pause">Pausar link</button>'
-    : `${cloud ? '<button class="button button-primary" type="submit" name="intent" value="activate">Ativar meu link</button>' : ""}<button class="button ${cloud ? "button-quiet" : "button-primary"}" type="button" data-action="preview-link">Ver como a cliente vê</button>${cloud ? '<button class="text-link" type="submit" name="intent" value="save">Salvar sem ativar</button>' : ""}`;
+    : `${cloud ? '<button class="button button-quiet" type="submit" name="intent" value="activate">Ativar meu link</button>' : ""}<button class="button button-quiet" type="button" data-action="preview-link">Ver como a cliente vê</button>${cloud ? '<button class="text-link" type="submit" name="intent" value="save">Salvar sem ativar</button>' : ""}`;
   const form = `<form id="order-page-form" class="link-steps" novalidate>
     <input type="hidden" name="logo" value="${esc(p.logo || "")}"><input type="hidden" name="cover" value="${esc(p.cover || "")}"><input type="hidden" name="share" value="${esc(p.share || "")}">
     <fieldset class="link-step"><legend><span class="step-n">1</span>Sua marca</legend>
@@ -1980,10 +1981,10 @@ function shareOrderLink() {
 
 // The preview reads the form as it is now (even unsaved) and never sends anything.
 // It opens inside the app, over Ajustes, like a phone screen; the dialog is created on first use.
-function previewOrderLink() {
+function previewOrderLink(fromWizard) {
   const form = $("#order-page-form");
   let values;
-  try { values = form ? linkFormValues(form) : state.orderPage; } catch (failure) { showToast(failure.message); return; }
+  try { values = fromWizard || (form ? linkFormValues(form) : state.orderPage); } catch (failure) { showToast(failure.message); return; }
   const draft = { ...values, displayName: values.displayName || "Sua confeitaria", orderTemplate: state.orderTemplate, availability: state.availability };
   try { localStorage.setItem(LINK_PREVIEW_KEY, JSON.stringify(draft)); } catch { /* a prévia usa o exemplo padrão */ }
   let dialog = $("#link-preview-dialog");
@@ -1994,6 +1995,97 @@ function previewOrderLink() {
   }
   dialog.querySelector("iframe").src = `/encomenda/?preview=1&t=${Date.now()}`;
   dialog.showModal();
+}
+
+// Link no ar em 3 passos: nome e WhatsApp, até 3 doces, ativar e copiar. Estilo, cor, fotos e o resto
+// continuam no cartão completo de Ajustes. Na demonstração, o último passo só mostra a prévia.
+function openLinkWizard() {
+  const page = state.orderPage, first = page.products.slice(0, 3);
+  state.linkWizard = { step: 1, displayName: page.displayName || "", slug: page.slug || "", slugEdited: !!page.slug, whatsapp: page.whatsapp || "",
+    products: [0, 1, 2].map((i) => ({ name: first[i]?.name || "", price: centsToField(first[i]?.priceFromCents) })) };
+  let dialog = $("#link-wizard");
+  if (!dialog) {
+    document.body.insertAdjacentHTML("beforeend", '<dialog class="dialog link-wizard" id="link-wizard" aria-labelledby="link-wizard-title"><form method="dialog" novalidate></form></dialog>');
+    dialog = $("#link-wizard");
+    dialog.addEventListener("click", (event) => { if (event.target === dialog) dialog.close(); });
+    dialog.addEventListener("input", (event) => {
+      const w = state.linkWizard, field = event.target;
+      if (field.name === "displayName") { w.displayName = field.value; if (!w.slugEdited) { w.slug = slugFrom(field.value); dialog.querySelector("[name=slug]").value = w.slug; } }
+      else if (field.name === "slug") { w.slugEdited = true; w.slug = field.value; }
+      else if (field.name === "whatsapp") w.whatsapp = field.value;
+      else if (field.dataset.product) w.products[Number(field.dataset.index)][field.dataset.product] = field.value;
+    });
+    dialog.querySelector("form").addEventListener("submit", (event) => { event.preventDefault(); linkWizardNext(event.submitter?.value || "next"); });
+  }
+  renderLinkWizard();
+  dialog.showModal();
+}
+function renderLinkWizard(errorText = "") {
+  const w = state.linkWizard, cloud = window.DoceApi.mode === "cloud", form = $("#link-wizard form");
+  const titles = ["Como a cliente te encontra", "O que você vende", "Pronto para ir ao ar"];
+  const body = w.step === 1
+    ? `<label class="field"><span>Nome da confeitaria</span><input name="displayName" maxlength="60" value="${esc(w.displayName)}" placeholder="Ex.: Doces da Ana" autocomplete="organization"></label>
+      <label class="field"><span>Endereço do link</span><span class="slug-field"><span class="slug-prefix">${esc(LINK_BASE)}</span><input name="slug" maxlength="40" value="${esc(w.slug)}" autocapitalize="none" autocomplete="off" spellcheck="false" placeholder="preenche sozinho"></span></label>
+      <label class="field"><span>Seu WhatsApp <small>(opcional)</small></span><input name="whatsapp" type="tel" maxlength="30" value="${esc(w.whatsapp)}" placeholder="(11) 99999-9999" autocomplete="tel"><small>A cliente pode te avisar no WhatsApp depois de mandar o pedido.</small></label>`
+    : w.step === 2
+      ? `<p class="lw-hint">Até 3 doces para começar. O valor é opcional: sem ele, a vitrine diz que o preço é combinado depois.</p>
+        ${w.products.map((product, i) => `<div class="lw-product"><label class="field"><span>Doce ${i + 1}${i ? " <small>(opcional)</small>" : ""}</span><input data-product="name" data-index="${i}" maxlength="80" value="${esc(product.name)}" placeholder="${["Ex.: Bolo de aniversário", "Ex.: Brigadeiro (cento)", "Ex.: Torta de limão"][i]}"></label><label class="field lw-price"><span>A partir de</span><input data-product="price" data-index="${i}" inputmode="decimal" maxlength="12" value="${esc(product.price)}" placeholder="R$"></label></div>`).join("")}`
+      : `<p class="lw-url">${esc(LINK_BASE)}<b>${esc(w.slug)}</b></p>
+        <ul class="lw-summary"><li><b>${esc(w.displayName)}</b>${w.whatsapp ? ` · ${esc(w.whatsapp)}` : ""}</li><li>${esc(w.products.filter((p) => p.name.trim()).map((p) => p.name.trim()).join(", "))}</li></ul>
+        <p class="lw-hint">${cloud ? "Os pedidos chegam em Para decidir e só ocupam vaga quando você aceita. Estilo, cor e fotos você ajusta depois, em Ajustes." : "Na demonstração o link não vai ao ar. Na sua conta, este passo ativa o link e já copia o endereço."}</p>`;
+  const primary = w.step < 3 ? "Continuar" : cloud ? "Ativar e copiar link" : "Ver como a cliente vê";
+  form.innerHTML = `<div class="dialog-heading"><div><p class="lw-step">Passo ${w.step} de 3</p><h2 id="link-wizard-title">${titles[w.step - 1]}</h2></div><button class="icon-button close-dialog" type="button" data-close="link-wizard" aria-label="Fechar"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+    <div class="lw-body">${body}</div>
+    <p class="form-error" id="link-wizard-error" role="alert"${errorText ? "" : " hidden"}>${esc(errorText)}</p>
+    <div class="dialog-actions">${w.step > 1 ? '<button class="button button-quiet" type="submit" value="back">Voltar</button>' : ""}${w.step === 3 && cloud ? '<button class="button button-quiet" type="submit" value="preview">Ver prévia</button>' : ""}<button class="button button-primary" type="submit" value="next">${primary}</button></div>`;
+  form.querySelector("input")?.focus();
+}
+function linkWizardValues() {
+  const w = state.linkWizard, page = state.orderPage, typed = [];
+  for (const product of w.products) {
+    const name = product.name.trim(), price = priceToCents(product.price);
+    if (!name) continue;
+    if (Number.isNaN(price)) throw new Error(`Confira o valor de ${name}: use só números, como 150 ou 89,90.`);
+    typed.push({ name, price });
+  }
+  // Os 3 primeiros doces são os do passo 2 (foto, descrição e categoria continuam); os outros ficam como estão.
+  const kept = page.products.slice(0, 3), products = typed.map(({ name, price }, i) => {
+    const before = kept.find((item) => item.name === name) || (kept[i] && !typed.some((t) => t.name === kept[i].name) ? kept[i] : {});
+    const product = { ...before, name };
+    if (price === null) delete product.priceFromCents; else product.priceFromCents = price;
+    return product;
+  });
+  return { ...page, displayName: w.displayName.trim(), slug: slugFrom(w.slug), whatsapp: w.whatsapp.trim(), products: [...products, ...page.products.slice(3)] };
+}
+async function linkWizardNext(intent) {
+  const w = state.linkWizard, cloud = window.DoceApi.mode === "cloud";
+  if (intent === "back") { w.step -= 1; renderLinkWizard(); return; }
+  if (w.step === 1) {
+    const slug = slugFrom(w.slug), digits = w.whatsapp.replace(/\D/g, "");
+    if (!w.displayName.trim()) return renderLinkWizard("Escreva o nome da confeitaria.");
+    if (!/^[a-z0-9](?:[a-z0-9-]{1,38})[a-z0-9]$/.test(slug)) return renderLinkWizard("O endereço precisa de pelo menos 3 letras ou números.");
+    if (w.whatsapp.trim() && (digits.length < 10 || digits.length > 13)) return renderLinkWizard("Confira o WhatsApp: com DDD, como (11) 99999-9999.");
+    w.slug = slug; w.step = 2; renderLinkWizard(); return;
+  }
+  let values;
+  try { values = linkWizardValues(); } catch (failure) { return renderLinkWizard(failure.message); }
+  if (w.step === 2) {
+    if (!values.products.length) return renderLinkWizard("Escreva pelo menos um doce.");
+    w.step = 3; renderLinkWizard(); return;
+  }
+  if (intent === "preview" || !cloud) { previewOrderLink(values); return; }
+  const buttons = $$("#link-wizard [type=submit]");
+  buttons.forEach((button) => { button.disabled = true; });
+  try {
+    await apiRequest("/order-page", { method: "PUT", body: { ...values, active: true } });
+    $("#link-wizard").close();
+    await loadState({ silent: true });
+    copyText(`https://${LINK_BASE}${state.orderPage.slug}`).catch(() => {});
+    showToast("Seu link está no ar! O endereço foi copiado: cole na bio ou no WhatsApp.", { label: "Mandar no WhatsApp", run: shareOrderLink });
+  } catch (failure) {
+    if (failure.code === "SLUG_TAKEN") { w.step = 1; renderLinkWizard("Este endereço já está em uso. Troque por outro, como o nome com a cidade."); }
+    else renderLinkWizard(failure.message);
+  } finally { buttons.forEach((button) => { button.disabled = false; }); }
 }
 
 function addProductRow() {
@@ -2445,6 +2537,8 @@ function runOnboardingTask(key) {
   else if (key === "advance") { setActiveView("today"); coach('#view-today [data-action="advance-order"]'); }
   else if (key === "month") setActiveView("month");
   else if (key === "order") openOrderForm();
+  // Link ainda fora do ar: o caminho curto. Depois de ativo, o cartão completo de Ajustes.
+  else if (key === "link" && !state.orderPage.active) openLinkWizard();
   else if (key === "days" || key === "link") { state.openSettings.add(key); setActiveView("settings"); coach(`.settings-card[data-settings="${key}"]`); }
 }
 

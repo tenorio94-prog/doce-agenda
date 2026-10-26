@@ -129,8 +129,10 @@ try {
     assert.match(stepsText, /3 de 4 feitas/, 'conta criada, demo já tem pedidos e limite; falta o link');
     assert.equal(await steps.locator('.onboarding-task.is-done').first().innerText().then((text) => /Crie sua conta/.test(text)), true, 'conta criada é o primeiro item, já feito');
     if (shots) await accountPage.screenshot({ path: path.join(shots, `conta-${width}.png`) });
+    // Link fora do ar: a tarefa abre o caminho curto (3 passos), não o cartão completo de Ajustes.
     await steps.locator('[data-task="link"]').click();
-    await accountPage.locator('.settings-card[data-settings="link"][open].coach-target').waitFor();
+    await accountPage.locator('#link-wizard[open]').waitFor();
+    assert.match(await accountPage.locator('#link-wizard').innerText(), /Passo 1 de 3/);
     await account.close();
 
     // Conta vazia: pergunta "Você já tem encomenda marcada?" antes da lista.
