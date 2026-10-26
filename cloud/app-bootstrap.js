@@ -2,9 +2,36 @@ import { createClient } from '@supabase/supabase-js';
 
 const config = window.DoceCloudConfig || {};
 const login = '/cadastro/?mode=login';
-const errorResponse = (message, status = 503) => new Response(JSON.stringify({ error: message }), {
+const errorResponse = (message, status = 503, code) => new Response(JSON.stringify({ error: message, ...(code ? { code } : {}) }), {
   status, headers: { 'Content-Type': 'application/json' },
 });
+// O que o app viu de cada pedido e de cada ajuste. Vai junto da gravação: se outra sessão ou o link gravou
+// antes, o servidor reaplica a ação sobre o estado novo quando isto não mudou (canRebaseWrite em state-engine).
+const SECTIONS = { '/api/availability': 'availability', '/api/order-template': 'orderTemplate', '/api/order-page': 'orderPage', '/api/pix': 'pix' };
+const seen = { orders: new Map(), payments: new Map(), sections: {} };
+const stampOf = order => (order && (order.updatedAt || order.createdAt)) || '';
+function rememberState(data) {
+  seen.orders = new Map((data.orders || []).map(order => [order.id, stampOf(order)]));
+  seen.payments = new Map((data.payments || []).map(payment => [payment.id, payment.orderId]));
+  seen.sections = Object.fromEntries(Object.values(SECTIONS).map(key => [key, JSON.stringify(data[key])]));
+}
+function rememberWrite(path, data) {
+  if (!data || typeof data !== 'object') return;
+  if (SECTIONS[path]) { seen.sections[SECTIONS[path]] = JSON.stringify(data); return; }
+  if (data.orderId) {
+    // Pagamento: o pedido ganhou o mesmo carimbo do lançamento ou da conferência.
+    seen.payments.set(data.id, data.orderId);
+    const at = data.confirmedAt || data.createdAt;
+    if (at && seen.orders.has(data.orderId)) seen.orders.set(data.orderId, at);
+  } else if (data.id) seen.orders.set(data.id, stampOf(data));
+}
+function baseFor(path) {
+  if (SECTIONS[path]) return seen.sections[SECTIONS[path]] !== undefined ? { section: seen.sections[SECTIONS[path]] } : {};
+  const order = path.match(/^\/api\/orders\/([^/]+)/), payment = path.match(/^\/api\/payments\/([^/]+)$/);
+  const id = order ? decodeURIComponent(order[1]) : payment ? seen.payments.get(decodeURIComponent(payment[1])) : null;
+  const stamp = id && seen.orders.get(id);
+  return stamp ? { order: stamp } : {};
+}
 function showFailure(message) {
   document.getElementById('loading-state').hidden = true;
   document.getElementById('error-notice').hidden = false;
@@ -28,7 +55,7 @@ async function start() {
     async fetch(path, options = {}) {
       const method = (options.method || 'GET').toUpperCase();
       const write = method !== 'GET';
-      if (write && (conflict || revision === null)) return errorResponse('Recarregue a agenda antes de salvar. Ela mudou em outra sessão.', 409);
+      if (write && (conflict || revision === null)) return errorResponse('Recarregue a agenda antes de salvar. Ela mudou em outra sessão.', 409, 'REVISION_CONFLICT');
       const { data, error } = await client.auth.getSession();
       if (error || !data.session || signingOut) return errorResponse('Seu acesso expirou. Entre novamente para continuar.', 401);
       let body;
@@ -39,7 +66,7 @@ async function start() {
           'Content-Type': 'application/json', apikey: config.publishableKey,
           Authorization: `Bearer ${data.session.access_token}`,
         },
-        body: JSON.stringify({ path, method, body, ...(write ? { expectedRevision: revision } : {}) }),
+        body: JSON.stringify({ path, method, body, ...(write ? { expectedRevision: revision, base: baseFor(path.split('?')[0]) } : {}) }),
       });
       if (response.status === 409) {
         const errorBody=await response.clone().json().catch(()=>({}));
@@ -50,9 +77,16 @@ async function start() {
         const header = response.headers.get('X-Agenda-Revision');
         const next = header !== null ? Number(header) : NaN;
         if (!Number.isSafeInteger(next) || next < 0) throw new Error('Resposta inválida. Recarregue a agenda.');
+        // Gravação que pulou versões: outra sessão ou o link gravou no meio. O app recarrega em silêncio.
+        const othersWrote = write && revision !== null && next > revision + 1;
         revision = next;
-        if (path === '/api/state') conflict = false;
+        if (path === '/api/state') {
+          conflict = false;
+          rememberState(await response.clone().json().catch(() => ({})));
+        } else rememberWrite(path, await response.clone().json().catch(() => null));
+        if (othersWrote) window.dispatchEvent(new Event('doce:stale'));
       }
+      if (conflict) window.dispatchEvent(new Event('doce:stale'));
       return response;
     },
   });

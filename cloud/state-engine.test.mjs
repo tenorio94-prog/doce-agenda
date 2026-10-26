@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createEmptyState, transactState } from './state-engine.js';
+import { canRebaseWrite, createEmptyState, orderStamp, transactState } from './state-engine.js';
 
 const request = (state, path, method = 'GET', body) => transactState(state, path, {
   method,
@@ -143,4 +143,24 @@ test('GET routes return current representations without mutating input', () => {
   assert.notEqual(result.body, state);
   assert.deepEqual(state, before);
   assert.equal(result.mutated, false);
+});
+
+test('canRebaseWrite only replays what the app saw unchanged', () => {
+  const state = createEmptyState();
+  state.orders.push({ id: 'p1', client: 'Ana', product: 'Bolo', total: 100, status: 'Confirmado', dueAt: '2030-05-10T10:00', createdAt: '2030-01-01T10:00:00.000Z', updatedAt: '2030-01-02T10:00:00.000Z', history: [] });
+  state.payments.push({ id: 'pg1', orderId: 'p1', amount: 50, status: 'Informado', createdAt: '2030-01-02T10:00:00.000Z' });
+  const stamp = orderStamp(state.orders[0]);
+  assert.equal(canRebaseWrite(state, '/api/orders', 'POST'), true);
+  assert.equal(canRebaseWrite(state, '/api/orders/p1', 'PUT', { order: stamp }), true);
+  assert.equal(canRebaseWrite(state, '/api/orders/p1/payments', 'POST', { order: stamp }), true);
+  assert.equal(canRebaseWrite(state, '/api/orders/p1/accept', 'POST', { order: stamp }), true);
+  assert.equal(canRebaseWrite(state, '/api/payments/pg1', 'PUT', { order: stamp }), true);
+  assert.equal(canRebaseWrite(state, '/api/orders/p1', 'PUT', { order: 'outro' }), false);
+  assert.equal(canRebaseWrite(state, '/api/orders/p1', 'PUT', {}), false);
+  assert.equal(canRebaseWrite(state, '/api/orders/nao-existe', 'PUT', { order: stamp }), false);
+  assert.equal(canRebaseWrite(state, '/api/import', 'POST', { order: stamp }), false);
+  assert.equal(canRebaseWrite(state, '/api/clientes/x/anonimizar', 'POST', { order: stamp }), false);
+  const seen = JSON.stringify(transactState(state, '/api/state').body.availability);
+  assert.equal(canRebaseWrite(state, '/api/availability', 'PUT', { section: seen }), true);
+  assert.equal(canRebaseWrite(state, '/api/availability', 'PUT', { section: '{}' }), false);
 });

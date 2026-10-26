@@ -183,7 +183,22 @@ function setError(message = "Verifique sua conexão e tente novamente.") {
   setConnection("error", LOCAL_ONLY ? "Armazenamento indisponível" : "Sem conexão");
 }
 
-async function loadState({ silent = false } = {}) {
+// Agenda sempre em dia (conta): recarrega em silêncio ao voltar para o app, a cada 2 minutos com a tela à vista
+// e quando o servidor avisa que outra sessão ou o link gravou algo. Não recarrega em Ajustes nem com campo em uso,
+// para não apagar o que ela está digitando.
+let lastLoadAt = 0;
+async function refreshInBackground({ force = false } = {}) {
+  if (LOCAL_ONLY || document.hidden || state.refreshing || !navigator.onLine) return;
+  if (!force && Date.now() - lastLoadAt < 30_000) return;
+  if (state.activeView === "settings" || document.activeElement?.matches?.("input, textarea, select, [contenteditable]")) return;
+  const before = new Set(state.orders.filter((order) => order.status === "Solicitação").map((order) => order.id));
+  state.refreshing = true;
+  try { await loadState({ silent: true, background: true }); } finally { state.refreshing = false; }
+  const fresh = state.orders.filter((order) => order.status === "Solicitação" && !before.has(order.id)).length;
+  if (fresh) showToast(fresh === 1 ? "Chegou 1 pedido novo pelo link." : `Chegaram ${fresh} pedidos novos pelo link.`);
+}
+
+async function loadState({ silent = false, background = false } = {}) {
   if (!silent) {
     $("#loading-state").hidden = false;
     $("#error-notice").hidden = true;
@@ -204,8 +219,10 @@ async function loadState({ silent = false } = {}) {
     $("#error-notice").hidden = true;
     $("#loading-state").hidden = true;
     setConnection("online", window.DoceApi.mode === "cloud" ? "Salvo na sua conta" : window.DoceApi.mode === "browser" ? "Salvo neste navegador" : "Salvo neste navegador");
+    lastLoadAt = Date.now();
     render();
   } catch (error) {
+    if (background) { console.warn("Atualização em segundo plano falhou:", error); return; }
     $("#loading-state").hidden = true;
     setError(LOCAL_ONLY ? "Este navegador não deixou guardar os dados. Se estiver em janela anônima, abra numa janela normal." : "Confira sua internet e toque em Tentar de novo. O que já estava na tela continua aqui.");
     if (!state.orders.length) render();
@@ -227,6 +244,11 @@ async function apiRequest(path, { method = "GET", body } = {}) {
       errorData = data || {};
       if (data && (data.error || data.message)) message = data.error || data.message;
     } catch { /* A resposta pode não ter corpo JSON. */ }
+    if (errorData.code === "REVISION_CONFLICT") {
+      // O que ela tentou salvar mudou em outro lugar: a agenda é atualizada já, e ela confere antes de repetir.
+      message = "Isto mudou em outro aparelho ou chegou pedido pelo link. A agenda foi atualizada: confira e tente de novo.";
+      refreshInBackground({ force: true });
+    }
     throw Object.assign(new Error(message), { status: response.status, code: errorData.code || "", data: errorData });
   }
   return response.status === 204 ? null : response.json().catch(() => null);
@@ -1743,6 +1765,9 @@ function attachEvents() {
     dialog.addEventListener("click", (event) => { if (event.target === dialog) dialog.close(); });
   });
   window.addEventListener("online", () => { if (!$("#error-notice").hidden) loadState({ silent: true }); });
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) refreshInBackground(); });
+  window.addEventListener("doce:stale", () => refreshInBackground({ force: true }));
+  setInterval(() => refreshInBackground(), 120_000);
   window.addEventListener("offline", () => LOCAL_ONLY ? showToast("Sem internet. Os pedidos continuam salvos neste navegador.") : setError("O navegador está sem conexão. Verifique sua rede e tente novamente."));
 }
 
