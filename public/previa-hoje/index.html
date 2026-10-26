@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f1f2">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Doce Agenda — prévia da tela Hoje</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/tokens.css">
+  <link rel="stylesheet" href="style.css">
+  <script defer src="prototype.js"></script>
+</head>
+<body>
+  <div class="pv-banner" role="note">
+    <p><strong>Prévia da nova tela Hoje.</strong> Exemplos fictícios, nada é salvo.</p>
+    <div class="pv-banner-actions">
+      <a href="/demo/">Ver a atual</a>
+      <button type="button" class="pv-link" data-about-open>O que mudou?</button>
+      <button type="button" class="pv-link" data-reset>Recomeçar</button>
+    </div>
+  </div>
+
+  <div class="pv-layout">
+    <div class="app-col">
+    <main class="app" aria-labelledby="hoje-title">
+      <header class="app-top">
+        <img src="/logo.svg" alt="Doce Agenda" width="150" height="40">
+        <span class="app-studio">Doces da Lu</span>
+      </header>
+
+      <section class="hoje-head">
+        <p class="hoje-date" id="hoje-date"></p>
+        <h1 id="hoje-title" tabindex="-1">Hoje</h1>
+      </section>
+
+      <section class="todo" aria-labelledby="todo-title">
+        <h2 id="todo-title" class="visually-hidden">O que pede você agora</h2>
+        <ol class="todo-list" id="todo-list"></ol>
+        <div class="todo-clear" id="todo-clear" hidden>
+          <span class="todo-clear-stamp" aria-hidden="true">✓</span>
+          <p><strong>Tudo em dia por agora.</strong> Quando chegar pedido novo ou um Pix para conferir, ele aparece aqui.</p>
+        </div>
+      </section>
+
+      <section class="deliveries" aria-labelledby="deliveries-title">
+        <div class="section-head">
+          <h2 id="deliveries-title">Entregas de hoje</h2>
+          <span class="section-note" id="deliveries-note"></span>
+        </div>
+        <ul class="delivery-list" id="delivery-list"></ul>
+      </section>
+
+      <section class="upcoming" aria-labelledby="upcoming-title">
+        <div class="section-head">
+          <h2 id="upcoming-title">Próximos dias</h2>
+        </div>
+        <ul class="upcoming-list" id="upcoming-list"></ul>
+        <button type="button" class="text-link" data-tab="pedidos">Ver a semana inteira em Pedidos</button>
+      </section>
+    </main>
+      <nav class="tabbar" aria-label="Seções">
+        <button type="button" class="tab is-current" aria-current="page" data-tab="hoje"><span class="tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 11.5 12 4l8 7.5V20h-5v-5.5H9V20H4z"/></svg></span>Hoje<span class="tab-badge" id="tab-badge"></span></button>
+        <button type="button" class="tab" data-tab="pedidos"><span class="tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18M8 14h.01M12 14h.01M16 14h.01M8 17h.01M12 17h.01"/></svg></span>Pedidos</button>
+        <button type="button" class="tab tab-new" data-tab="novo"><span class="tab-plus" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span>Novo</button>
+        <button type="button" class="tab" data-tab="clientes"><span class="tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M16 4.5a3.5 3.5 0 0 1 0 7M18 14c1.9.7 3 2.6 3 6"/></svg></span>Clientes</button>
+        <button type="button" class="tab" data-tab="mes"><span class="tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 20h16M6 16v-5M12 16V4M18 16V8"/></svg></span>Meu mês</button>
+      </nav>
+    </div>
+
+    <aside class="about" id="about-panel" aria-labelledby="about-title">
+      <h2 id="about-title">O que mudou</h2>
+      <ol class="about-list">
+        <li><strong>Uma tela, uma pergunta.</strong> Hoje responde "o que faço agora?". O calendário da semana e o histórico ficam em Pedidos.</li>
+        <li><strong>Um número só.</strong> O título e o selo da barra de baixo contam a mesma coisa: o que pede você.</li>
+        <li><strong>Três palavras para o pedido:</strong> Para decidir, Combinado e Entregue. Fazendo e Pronto aparecem só como andamento do dia.</li>
+        <li><strong>Um botão cheio por tela:</strong> o da tarefa mais urgente. O resto é toque na linha.</li>
+        <li><strong>Sem caixas de dica.</strong> Cada linha diz o que fazer com as próprias palavras.</li>
+      </ol>
+      <p class="about-measure" id="about-measure">Medido no celular (360 px), com os mesmos pedidos: a Agenda atual da demonstração tem 3.108 px de altura (quase 4 telas) e 3 botões cheios; esta prévia tem 1.727 px (pouco mais de 2 telas) e 1 botão cheio.</p>
+      <h3>Para testar com alguém</h3>
+      <p>Peça para fazer, sem ajuda, primeiro na <a href="/demo/">demonstração atual</a> e depois aqui. Anote o tempo e onde a pessoa travou.</p>
+      <ol class="about-tasks">
+        <li>"O que você precisa fazer agora?"</li>
+        <li>"A Juliana mandou o Pix do sinal. Marque que caiu."</li>
+        <li>"Aceite o pedido que chegou pelo link."</li>
+        <li>"O bolo da Ana Clara foi retirado. Registre."</li>
+      </ol>
+    </aside>
+  </div>
+
+
+
+  <dialog class="sheet" id="sheet" aria-labelledby="sheet-title">
+    <form method="dialog" class="sheet-close-form"><button class="sheet-close" aria-label="Fechar">×</button></form>
+    <div id="sheet-body"></div>
+  </dialog>
+
+  <dialog class="sheet about-sheet" id="about-dialog" aria-labelledby="about-dialog-title">
+    <form method="dialog" class="sheet-close-form"><button class="sheet-close" aria-label="Fechar">×</button></form>
+    <div id="about-dialog-body"></div>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+</body>
+</html>
