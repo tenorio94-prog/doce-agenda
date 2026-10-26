@@ -1568,6 +1568,7 @@ function handleClick(event) {
     case 'open-onboarding': { const progress = readOnboarding(); progress.dismissed = false; saveOnboarding(progress); setActiveView('today'); coach('#view-today .onboarding'); break; }
     case 'onboarding-skip': { const progress = readOnboarding(); progress.dismissed = true; saveOnboarding(progress); renderToday(); if (isDemoMode()) showToast('Para ver de novo, toque em Como funciona.'); break; }
     case 'onboarding-go': runOnboardingTask(action.dataset.task); break;
+    case 'onboarding-intent': { const progress = readOnboarding(); progress.intent = action.dataset.intent; saveOnboarding(progress); renderToday(); if (progress.intent === 'tem-pedido') openOrderForm(); else showToast('Combinado. Comece pelo link e pelos seus dias.'); break; }
     case 'close-tip': closeTip(action.dataset.tip); break;
     case 'pix-charge': openPixCharge(id); break;
     case 'retry-clients': state.clientsError = ""; state.clientsData = null; renderClients(); break;
@@ -2249,8 +2250,8 @@ const onboardingKey = () => `doce-agenda.onboarding.${isDemoMode() ? "demo" : "c
 function readOnboarding() {
   try {
     const saved = JSON.parse(localStorage.getItem(onboardingKey()) || "{}");
-    return { dismissed: saved.dismissed === true, done: Array.isArray(saved.done) ? saved.done : [] };
-  } catch { return { dismissed: false, done: [] }; }
+    return { dismissed: saved.dismissed === true, done: Array.isArray(saved.done) ? saved.done : [], intent: ["tem-pedido", "sem-pedido"].includes(saved.intent) ? saved.intent : "" };
+  } catch { return { dismissed: false, done: [], intent: "" }; }
 }
 function saveOnboarding(progress) {
   try { localStorage.setItem(onboardingKey(), JSON.stringify(progress)); } catch { /* sem armazenamento: só não lembra */ }
@@ -2275,13 +2276,16 @@ function onboardingTasks() {
     ];
   }
   const availability = state.availability || {};
+  const waiting = readOnboarding().intent === "sem-pedido";
   // A conta criada já conta como o primeiro passo: começar em 1 de 4 encurta a distância percebida até o fim.
-  return [
+  const tasks = [
     { key: "account", title: "Crie sua conta", text: "Feito. Seus pedidos ficam guardados e você entra de qualquer aparelho.", done: true },
-    { key: "order", title: "Anote seu primeiro pedido", text: "Cliente, produto, data e valor. O resto pode vir depois.", done: state.orders.some((order) => !sampleOrder(order) && order.status !== "Solicitação") },
+    { key: "order", title: "Anote seu primeiro pedido", text: waiting ? "Quando a próxima encomenda for combinada, anote aqui. Leva um minuto." : "Cliente, produto, data e valor. O resto pode vir depois.", done: state.orders.some((order) => !sampleOrder(order) && order.status !== "Solicitação") },
     { key: "days", title: "Diga seus dias e limites", text: "Os dias em que você não trabalha e quantos pedidos cabem por dia.", done: done.includes("days") || (availability.closedWeekdays || []).length > 0 || availability.dailyOrderLimit != null || Number(availability.minimumNoticeHours) > 0 },
     { key: "link", title: "Ative seu link de encomenda", text: "As clientes pedem sozinhas, e nada ocupa vaga até você aceitar.", done: !!state.orderPage?.active },
   ];
+  // Sem encomenda marcada, o link e os dias vêm primeiro: são eles que trazem o primeiro pedido.
+  return waiting ? [tasks[0], tasks[3], tasks[2], tasks[1]] : tasks;
 }
 
 const onboardingVisible = () => !readOnboarding().dismissed && (isDemoMode() || onboardingTasks().some((task) => !task.done));
@@ -2289,6 +2293,8 @@ const onboardingVisible = () => !readOnboarding().dismissed && (isDemoMode() || 
 function onboardingMarkup() {
   if (!onboardingVisible()) return "";
   const demo = isDemoMode(), tasks = onboardingTasks(), count = tasks.filter((task) => task.done).length;
+  // Conta nova sem pedido: antes da lista, ela diz o que veio fazer (uma pergunta, duas respostas).
+  const askIntent = !demo && !readOnboarding().intent && !tasks.find((task) => task.key === "order")?.done;
   if (count === tasks.length) {
     return `<section class="onboarding is-complete surface" aria-labelledby="onboarding-title"><h2 id="onboarding-title">Pronto, você já sabe usar.</h2><p>Agora é com a sua confeitaria: crie a conta e anote seus pedidos de verdade.</p><div class="onboarding-end"><a class="button button-primary" href="/cadastro/">Criar conta grátis</a><button class="text-link" type="button" data-action="onboarding-skip">Fechar</button></div></section>`;
   }
@@ -2296,7 +2302,7 @@ function onboardingMarkup() {
     <div class="onboarding-head"><div><h2 id="onboarding-title">${demo ? "Experimente em 1 minuto" : "Primeiros passos"}</h2><p>${demo ? "Faça na tela de verdade, na ordem que quiser." : `Você já começou. ${tasks.length - count === 1 ? "Falta uma coisa" : `Faltam ${["", "uma", "duas", "três"][tasks.length - count] || tasks.length - count} coisas`} para deixar sua agenda pronta.`}</p></div><button class="text-link onboarding-skip" type="button" data-action="onboarding-skip">Pular</button></div>
     <div class="onboarding-progress" role="progressbar" aria-label="Tarefas feitas" aria-valuemin="0" aria-valuemax="${tasks.length}" aria-valuenow="${count}"><i style="width:${Math.round(count / tasks.length * 100)}%"></i></div>
     <p class="onboarding-count">${count} de ${tasks.length} feitas</p>
-    <ol class="onboarding-list">${tasks.map((task) => `<li class="onboarding-task${task.done ? " is-done" : ""}"><span class="onboarding-check" aria-hidden="true">${task.done ? "✓" : ""}</span><span class="onboarding-text"><strong>${esc(task.title)}</strong><small>${esc(task.text)}</small></span>${task.done ? '<span class="visually-hidden">Feito.</span>' : `<button class="button button-quiet onboarding-go" type="button" data-action="onboarding-go" data-task="${task.key}" aria-label="Fazer: ${esc(task.title)}">Fazer</button>`}</li>`).join("")}</ol>
+    ${askIntent ? `<div class="onboarding-intent"><p class="onboarding-intent-q" id="onboarding-intent-q">Você já tem encomenda marcada?</p><p class="onboarding-intent-why">Assim a gente começa pelo que ajuda agora.</p><div class="onboarding-intent-actions" role="group" aria-labelledby="onboarding-intent-q"><button class="button button-primary" type="button" data-action="onboarding-intent" data-intent="tem-pedido">Sim, já tenho</button><button class="button button-secondary" type="button" data-action="onboarding-intent" data-intent="sem-pedido">Ainda não</button></div></div>` : `<ol class="onboarding-list">${tasks.map((task) => `<li class="onboarding-task${task.done ? " is-done" : ""}"><span class="onboarding-check" aria-hidden="true">${task.done ? "✓" : ""}</span><span class="onboarding-text"><strong>${esc(task.title)}</strong><small>${esc(task.text)}</small></span>${task.done ? '<span class="visually-hidden">Feito.</span>' : `<button class="button button-quiet onboarding-go" type="button" data-action="onboarding-go" data-task="${task.key}" aria-label="Fazer: ${esc(task.title)}">Fazer</button>`}</li>`).join("")}</ol>`}
     ${demo ? "" : '<a class="text-link onboarding-demo" href="/demo/">Ver a demonstração antes</a>'}
   </section>`;
 }

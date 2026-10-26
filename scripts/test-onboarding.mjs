@@ -1,10 +1,11 @@
 // Boas-vindas: node scripts/build-cloudflare.mjs && node scripts/test-onboarding.mjs [pasta-de-capturas]
 // Demonstração: "Experimente em 1 minuto" com 4 tarefas feitas na tela de verdade, Pular e "Como funciona".
-// Conta nova: "Primeiros passos" com 4 tarefas, a conta criada já feita. Dicas de uma frase nas abas, que somem ao fechar.
+// Conta nova: "Primeiros passos" com 4 tarefas, a conta criada já feita; sem pedido, pergunta se já tem encomenda. Dicas de uma frase nas abas, que somem ao fechar.
 import assert from 'node:assert/strict';
 import { mkdir } from 'node:fs/promises';
 import path from 'node:path';
 import { chromium, serveSite, siteRoot as root } from './lib/browser-test.mjs';
+import { createEmptyState } from '../cloud/state-engine.js';
 
 const shots = process.argv[2] ? path.resolve(process.argv[2]) : null;
 if (shots) await mkdir(shots, { recursive: true });
@@ -13,6 +14,17 @@ const { origin } = server;
 const browser = await chromium.launch();
 const results = [];
 const count = (page) => page.locator('#view-today .onboarding-count').innerText();
+// Conta nova simulada sobre a demo: a loja finge não ser demo; com `empty`, a agenda começa vazia.
+async function accountContext(viewport, empty = false) {
+  const context = await browser.newContext({ viewport, locale: 'pt-BR', timezoneId: 'America/Sao_Paulo' });
+  const emptyState = empty ? JSON.stringify({ ...createEmptyState(), orderPage: { displayName: 'Ateliê Teste', slug: 'atelie-teste', active: false, products: [] } }) : null;
+  await context.addInitScript((seed) => {
+    if (seed && !localStorage.getItem('doce-agenda.demo.v2')) localStorage.setItem('doce-agenda.demo.v2', seed);
+    let store;
+    Object.defineProperty(window, 'DoceStore', { configurable: true, get: () => store, set: (value) => { store = { ...value, isDemo: false }; } });
+  }, emptyState);
+  return context;
+}
 const closeDetail = async (page) => { await page.keyboard.press('Escape'); await page.locator('#detail-dialog[open]').waitFor({ state: 'detached' }).catch(() => {}); };
 
 try {
@@ -122,6 +134,35 @@ try {
     await steps.locator('[data-task="link"]').click();
     await accountPage.locator('.settings-card[data-settings="link"][open].coach-target').waitFor();
     await account.close();
+
+    // Conta vazia: pergunta "Você já tem encomenda marcada?" antes da lista.
+    for (const answer of ['tem-pedido', 'sem-pedido']) {
+      const fresh = await accountContext({ width, height }, true);
+      const freshPage = await fresh.newPage();
+      freshPage.on('pageerror', (error) => errors.push(String(error)));
+      await freshPage.goto(`${origin}/demo/`);
+      const intent = freshPage.locator('#view-today .onboarding .onboarding-intent');
+      await intent.waitFor();
+      assert.match(await intent.innerText(), /Você já tem encomenda marcada\?/);
+      assert.equal(await freshPage.locator('#view-today .onboarding-list').count(), 0, 'pergunta no lugar da lista');
+      assert.equal(await count(freshPage), '1 de 4 feitas');
+      assert.ok(await freshPage.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), `pergunta sem rolagem lateral em ${width}px`);
+      if (shots && answer === 'tem-pedido') await intent.screenshot({ path: path.join(shots, `conta-pergunta-${width}.png`) });
+      await intent.locator(`[data-intent="${answer}"]`).click();
+      if (answer === 'tem-pedido') {
+        await freshPage.locator('#order-dialog[open], dialog[open] #order-form').first().waitFor();
+      } else {
+        await freshPage.locator('#toast').filter({ hasText: 'link' }).waitFor();
+        const order = await freshPage.locator('#view-today .onboarding-task').allInnerTexts();
+        assert.match(order[0], /Crie sua conta/);
+        assert.match(order[1], /Ative seu link/, 'sem encomenda: link vem antes');
+        assert.match(order[3], /Anote seu primeiro pedido[\s\S]*Quando a próxima encomenda/);
+        if (shots) await freshPage.locator('#view-today .onboarding').screenshot({ path: path.join(shots, `conta-sem-pedido-${width}.png`) });
+      }
+      await freshPage.reload(); await freshPage.locator('#today-title').waitFor();
+      assert.equal(await freshPage.locator('#view-today .onboarding-intent').count(), 0, 'resposta lembrada');
+      await fresh.close();
+    }
 
     assert.deepEqual(errors, []);
     results.push(`${width}px: 4 tarefas da demo, fim com convite, Pular, Como funciona, dicas e Primeiros passos`);
