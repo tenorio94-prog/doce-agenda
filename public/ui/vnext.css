@@ -1780,6 +1780,18 @@ body.vnext { font-variant-numeric: tabular-nums; -webkit-tap-highlight-color: tr
 .vn-coming .vn-section-row h2 { font: 700 20px var(--vn-title); margin: 0; }
 .vnext #view-today .vn-coming .upcoming-label { margin: 14px 0 4px; color: var(--vn-muted); font: 700 14px var(--vn-font); }
 .vn-lines { display: grid; padding: 0 14px; border-radius: var(--vn-r); background: #fff; box-shadow: var(--vn-shadow); }
+/* Lembrete da véspera: mesma lista branca de Próximos dias, com o botão de contorno ao lado de cada cliente. */
+.vn-reminders { margin-top: 26px; }
+.vn-reminders .vn-section-row { margin-bottom: 4px; }
+.vn-reminders .vn-section-row h2 { font: 700 20px var(--vn-title); margin: 0; }
+.vn-reminders-hint { margin: 0 0 10px; color: var(--vn-muted); font-size: 14px; }
+.vn-remind-list { display: grid; margin: 0; padding: 0 14px; list-style: none; border-radius: var(--vn-r); background: #fff; box-shadow: var(--vn-shadow); }
+.vn-remind { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 58px; padding: 8px 0; border-bottom: 1px solid var(--vn-line-soft); }
+.vn-remind:last-child { border-bottom: 0; }
+.vn-remind-text { display: grid; min-width: 0; }
+.vn-remind-text b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 15px; }
+.vn-remind-text small { color: var(--vn-muted); font-size: 13px; }
+.vn-remind .vn-btn { flex: none; min-height: 44px; text-decoration: none; }
 .vn-line { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 10px; align-items: center; width: 100%; min-height: 58px; padding: 8px 0; border: 0; border-bottom: 1px solid var(--vn-line-soft); background: none; color: var(--vn-ink); text-align: left; font: inherit; cursor: pointer; }
 .vn-line:last-child { border-bottom: 0; }
 .vn-line:focus-visible { outline: 3px solid var(--vn-green); outline-offset: 2px; border-radius: var(--vn-r-sm); }

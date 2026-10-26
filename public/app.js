@@ -373,6 +373,65 @@ function upcomingMarkup(orders) {
   return `<section class="coming-soon vn-coming"><div class="vn-section-row"><h2>Próximos dias</h2><button class="text-link" type="button" data-action="orders-week">Ver a semana em Pedidos</button></div>
     ${[...groups].map(([key, list]) => `<div class="upcoming-day"><h3 class="upcoming-label">${esc(label(key))}</h3><div class="vn-lines">${list.map((order) => agendaLineMarkup(order)).join("")}</div></div>`).join("")}</section>`;
 }
+// Lembrete da véspera: a partir das 14h, quem retira ou recebe amanhã ganha uma mensagem pronta, um toque por cliente.
+// Ela revisa e envia; o app só lembra, neste aparelho, quem já foi lembrado.
+const REMINDERS_KEY = "doce-agenda.lembretes.v1";
+function remindedIds() {
+  try { const saved = JSON.parse(localStorage.getItem(REMINDERS_KEY) || "{}"); return saved && typeof saved === "object" ? saved : {}; } catch { return {}; }
+}
+function markReminded(order) {
+  const saved = remindedIds(), today = localDateKey(new Date());
+  // Guarda só o que ainda importa: lembretes de amanhã em diante.
+  for (const [id, day] of Object.entries(saved)) if (day <= today) delete saved[id];
+  saved[order.id] = localDateKey(parseDate(order.dueAt));
+  try { localStorage.setItem(REMINDERS_KEY, JSON.stringify(saved)); } catch { /* sem armazenamento: o lembrete só não some */ }
+}
+function tomorrowToRemind(now = new Date()) {
+  if (now.getHours() < 14) return [];
+  const tomorrow = localDateKey(new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1)), saved = remindedIds();
+  return sortOrders(state.orders.filter((order) => ["Confirmado", "Em produção", "Pronto"].includes(order.status) && !sampleOrder(order)
+    && order.dueAt && localDateKey(parseDate(order.dueAt)) === tomorrow && saved[order.id] !== tomorrow));
+}
+function reminderText(order) {
+  const delivery = (order.mode || "Retirada") === "Entrega", time = shortTime(order.dueAt);
+  // Sem nada conferido, falta o total combinado; recebido só conta o que ela conferiu.
+  const due = balanceFor(order) ?? (order.totalKnown !== false ? Number(order.total || 0) : 0);
+  const lines = [`Oi, ${clientName(order) || "tudo bem"}! Passando para lembrar: amanhã${time ? `, às ${time}` : ""}, é dia de ${delivery ? "entregar" : "retirar"} ${order.product || "sua encomenda"}.`];
+  if (order.location) lines.push(`${delivery ? "Endereço" : "Local"}: ${order.location}`);
+  if (due > 0) lines.push(`Fica faltando ${money(due)}${pixEnabled() && pixReady() ? `. Se preferir, o Pix é ${state.pix.key}${state.pix.name ? ` (${state.pix.name})` : ""}` : ""}.`);
+  lines.push("", "Qualquer coisa, me avise por aqui!");
+  return lines.join("\n");
+}
+function remindersMarkup() {
+  const list = tomorrowToRemind();
+  if (!list.length) return "";
+  const button = (order) => {
+    const number = whatsAppNumber(order), label = `Lembrar ${clientName(order) || "a cliente"}`;
+    if (isDemoMode() || !number) return `<button class="vn-btn secondary small" type="button" data-action="remind" data-id="${esc(order.id)}" aria-label="${esc(label)}">${number || isDemoMode() ? "Lembrar" : "Copiar"}</button>`;
+    return `<a class="vn-btn secondary small" href="https://wa.me/${number}?text=${encodeURIComponent(reminderText(order))}" target="_blank" rel="noopener" data-action="remind" data-id="${esc(order.id)}" aria-label="${esc(label)}">Lembrar</a>`;
+  };
+  return `<section class="vn-reminders" aria-labelledby="reminders-title"><div class="vn-section-row"><h2 id="reminders-title">Lembrar quem é de amanhã</h2></div>
+    <p class="vn-reminders-hint">Uma mensagem pronta para cada cliente. Você revisa e envia.</p>
+    <ul class="vn-remind-list">${list.map((order) => `<li class="vn-remind"><span class="vn-remind-text"><b>${esc(shortTime(order.dueAt) || "—")} · ${esc(clientName(order) || "Cliente sem nome")}</b><small>${esc(order.product || "Produto sem descrição")}, ${esc((order.mode || "Retirada").toLowerCase())}</small></span>${button(order)}</li>`).join("")}</ul></section>`;
+}
+function remind(id) {
+  const order = orderById(id);
+  if (!order) return;
+  const text = reminderText(order);
+  if (isDemoMode()) {
+    // Mesma janela de exemplo das outras mensagens: telefones inventados nunca abrem o WhatsApp.
+    state.zapDemoText = text;
+    const dialog = $("#zap-demo-dialog");
+    dialog.querySelector("#zap-demo-who").textContent = clientName(order) || "a cliente";
+    dialog.querySelector("#zap-demo-text").textContent = text;
+    dialog.showModal();
+  } else if (!whatsAppNumber(order)) {
+    copyText(text).then(() => showToast("Lembrete copiado. Cole na conversa com a cliente.")).catch((error) => showToast(error.message));
+  }
+  markReminded(order);
+  renderToday();
+}
+
 // Linha baixa de pedido (Próximos dias): hora, produto, cliente e o carimbo pequeno. A linha inteira abre a ficha.
 function agendaLineMarkup(order, options = {}) {
   const mode = (order.mode || "Retirada").toLowerCase();
@@ -631,6 +690,7 @@ function renderToday() {
     <div class="vn-agenda-grid"><div class="vn-schedule">${attentionMarkup()}${firstUse ? "" : dayScheduleMarkup({ todayOnly: true, upcomingCount: upcoming.length })}
     ${onboardingMarkup()}
     ${pendingChanges.length ? `<section class="pending-card surface"><div class="section-head"><h2>Alterações para revisar</h2><span class="pending-count">${pendingChanges.length}</span></div><div class="pending-list">${pendingChanges.slice(0, 3).map((order) => `<button class="pending-row" type="button" data-open-order="${esc(order.id)}"><span><strong>${esc(order.client)}</strong><small>${esc(order.product)}</small></span><span class="pending-chevron" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></span><span class="pending-banner"><strong>Pedido de mudança:</strong> ${esc(order.pendingChange)}</span></button>`).join("")}</div></section>` : ""}
+    ${remindersMarkup()}
     ${upcomingMarkup(upcoming)}
     </div><aside class="vn-aside">${storageNoteMarkup()}</aside></div>`;
   state.agendaEnter = false;
@@ -1630,6 +1690,7 @@ function handleClick(event) {
     case 'erase-client': eraseClient(action.dataset.clientKey); break;
     case 'clear-pix': clearPix(); break;
     case 'demo-whatsapp': showDemoWhatsApp(id); break;
+    case 'remind': remind(id); break;
     case 'copy-zap-demo': copyText(state.zapDemoText || "").then(() => showToast("Mensagem copiada.")).catch((error) => showToast(error.message)); break;
     case 'reset-demo':
       if (window.DoceStore?.resetDemo && window.confirm('Recomeçar a demonstração? Os pedidos de exemplo voltam ao início e o que você mudou aqui é apagado.')) { window.DoceStore.resetDemo(); try { localStorage.removeItem(onboardingKey()); } catch { /* sem armazenamento */ } location.reload(); }
