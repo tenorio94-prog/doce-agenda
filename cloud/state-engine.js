@@ -138,7 +138,44 @@ function availabilityInput(value) {
     minimumNoticeHours: value.minimumNoticeHours,
     dailyOrderLimit: limitValue(value.dailyOrderLimit),
     dateOverrides,
+    ...(value.specialDates === undefined ? {} : { specialDates: specialDatesInput(value.specialDates) }),
   };
+}
+
+// Datas especiais (Páscoa, Dia das Mães): um período com limite de pedidos combinados por doce.
+// O doce é comparado pelo nome, sem diferença de maiúsculas e espaços nas pontas.
+const productKey = name => String(name || '').trim().toLocaleLowerCase('pt-BR');
+function specialDatesInput(list) {
+  if (!Array.isArray(list) || list.length > 10) fail('Use até 10 datas especiais.');
+  return list.map(item => {
+    if (!item || typeof item !== 'object' || Array.isArray(item)) fail('Data especial inválida.');
+    const id = text(item.id, 40), name = text(item.name, 40);
+    if (!id || !name) fail('Dê um nome para a data especial.');
+    if (!validDay(item.from) || !validDay(item.to) || item.from > item.to) fail(`${name}: confira o começo e o fim do período.`);
+    if ((Date.parse(item.to) - Date.parse(item.from)) / 86400000 > 92) fail(`${name}: use um período de até 3 meses.`);
+    if (!Array.isArray(item.limits) || !item.limits.length || item.limits.length > 10) fail(`${name}: informe de 1 a 10 doces com limite.`);
+    const limits = item.limits.map(limit => {
+      const product = text(limit?.product, 80), max = limit?.max;
+      if (!product || !Number.isSafeInteger(max) || max < 1 || max > 500) fail(`${name}: cada doce precisa de um limite de 1 a 500 pedidos.`);
+      return { product, max };
+    });
+    if (new Set(limits.map(limit => productKey(limit.product))).size !== limits.length) fail(`${name}: não repita o mesmo doce.`);
+    return { id, name, from: item.from, to: item.to, limits };
+  });
+}
+// Limite especial que vale para este doce nesta data, e quantos pedidos combinados já o usam.
+export function specialLimitFor(state, product, day, currentId = null) {
+  const key = productKey(product);
+  if (!key || !day) return null;
+  for (const period of state.availability?.specialDates || []) {
+    if (day < period.from || day > period.to) continue;
+    const limit = period.limits.find(item => productKey(item.product) === key);
+    if (!limit) continue;
+    const used = state.orders.filter(order => order.id !== currentId && COMMITTED_STATUSES.includes(order.status) && !order.isSample && !order.isDemo && !order.sample
+      && productKey(order.product) === key && order.dueAt && order.dueAt.slice(0, 10) >= period.from && order.dueAt.slice(0, 10) <= period.to).length;
+    return { name: period.name, product: limit.product, max: limit.max, used };
+  }
+  return null;
 }
 
 function templateInput(value) {
@@ -191,6 +228,8 @@ export function checkCapacity(input, state, currentId, override) {
   if (!conflict && limit !== null && used + need > limit) {
     conflict = ['DAILY_LIMIT', need > 1 && used < limit ? `Este pedido ocupa ${need} vagas e a data só tem ${limit - used} livre${limit - used === 1 ? '' : 's'}.` : 'O limite de pedidos para esta data foi atingido.'];
   }
+  const special = conflict ? null : specialLimitFor(state, input.product, day, currentId);
+  if (special && special.used >= special.max) conflict = ['PRODUCT_LIMIT', special.max === 1 ? `${special.name}: o único pedido de ${special.product} já foi combinado.` : `${special.name}: os ${special.max} pedidos de ${special.product} já foram combinados.`];
   if (!conflict) return;
   if (override?.allowed === true) {
     const reason = text(override.reason, 301);
@@ -339,7 +378,8 @@ export function transactState(state, url, options = {}) {
     } else if (path === '/api/pix' && method === 'PUT') {
       nextState.pix = pixSettingsInput(body); result = nextState.pix;
     } else if (path === '/api/availability' && method === 'PUT') {
-      nextState.availability = availabilityInput(body);
+      // Quem salva só dias e limites (sem specialDates) não apaga as datas especiais.
+      nextState.availability = availabilityInput({ ...(nextState.availability.specialDates ? { specialDates: nextState.availability.specialDates } : {}), ...body });
       result = nextState.availability;
     } else if (path === '/api/order-template' && method === 'PUT') {
       const requested = templateInput(body);
@@ -376,7 +416,7 @@ export function transactState(state, url, options = {}) {
           const input = orderInput({ ...order, ...body });
           const changes = Object.keys(input).filter(key => JSON.stringify(input[key]) !== JSON.stringify(order[key]));
           const needsCheck = COMMITTED_STATUSES.includes(input.status)
-            && (!COMMITTED_STATUSES.includes(order.status) || input.dueAt !== order.dueAt || orderSlots(input) > orderSlots(order));
+            && (!COMMITTED_STATUSES.includes(order.status) || input.dueAt !== order.dueAt || orderSlots(input) > orderSlots(order) || input.product !== order.product);
           let allowed;
           if (needsCheck) allowed = checkCapacity(input, nextState, order.id, body.capacityOverride);
           if (COMMITTED_STATUSES.includes(input.status) && !COMMITTED_STATUSES.includes(order.status) && input.cake) {

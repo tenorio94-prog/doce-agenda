@@ -4,7 +4,7 @@ import { renderSVG } from "uqr";
 import { pixPayload } from "../cloud/pix-code.js";
 import { DEFAULT_COLOR, VITRINE_PRESETS, VITRINE_STYLE_INFO, formatCents, initials, photoUrl, photoAttrs, vitrinePalette } from "../cloud/vitrine-theme.js";
 import { usesCakeFields } from "../cloud/order-link-model.js";
-import { orderSlots } from "../cloud/state-engine.js";
+import { orderSlots, specialLimitFor } from "../cloud/state-engine.js";
 import { blobToBase64, dominantColor, preparePhoto, shareImage } from "./photo-prep.js";
 import { printQr, shareOrDownload, storyImage } from "./share-kit.js";
 import { icon } from "./ui/icons.js";
@@ -945,6 +945,7 @@ function renderSettings() {
     <div class="settings-list">
       ${settingsCard("link", "Sua vitrine", summary.link, orderPageMarkup())}
       ${settingsCard("days", "Dias e limites", summary.days, availabilitySettingsMarkup(state.settingsDate))}
+      ${settingsCard("special", "Datas especiais", (state.availability.specialDates || []).length ? esc(state.availability.specialDates.map((period) => period.name).join(", ")) : "Páscoa, Dia das Mães, Natal", specialDatesMarkup())}
       ${LOCAL_ONLY ? "" : settingsCard("alerts", "Aviso de pedido novo", alertsOn() ? "Ligado neste aparelho" : "Desligado", alertsSettingsMarkup())}
       ${pixEnabled() ? settingsCard("pix", "Pix", pixSummary(), pixSettingsMarkup()) : ""}
       ${settingsCard("cake", "Detalhes do bolo", summary.cake, `<p class="settings-intro">Os campos que aparecem quando o pedido é um bolo, aqui e no seu link. Campos obrigatórios só são exigidos ao confirmar.</p>${orderTemplateSettingsMarkup()}`)}
@@ -1106,6 +1107,13 @@ function updateDueNote() {
       warn = count + need > availability.limit;
       text = `${day}: ${count} de ${availability.limit} ${availability.limit === 1 ? "vaga ocupada" : "vagas ocupadas"}${warn ? (need > 1 && count < availability.limit ? `, este pedido ocupa ${need}` : ", dia lotado") : ""}.`;
     } else text = `${day}: ${count ? `${count} ${count === 1 ? "pedido confirmado" : "pedidos confirmados"}` : "nenhum pedido confirmado ainda"}.`;
+    // Data especial com limite para este doce (ex.: Páscoa, ovos de colher até 40).
+    const special = availability.closed ? null : specialLimitFor(state, form.elements.namedItem("product").value, dateKey, editing?.id || null);
+    if (special) {
+      const full = special.used >= special.max;
+      text += ` ${special.name}: ${special.used} de ${special.max} ${special.product} combinados${full ? ", limite atingido" : ""}.`;
+      warn = warn || full;
+    }
     if (warn) text += confirming ? " Para confirmar, você vai anotar o motivo da exceção." : " Orçamento não ocupa vaga.";
   }
   note.textContent = text;
@@ -1660,9 +1668,9 @@ async function submitOrder(event) {
     if (savedOrder) $$(".order-row").filter((row) => row.dataset.openOrder === savedOrder.id).forEach((row) => row.classList.add("is-fresh"));
     showToast(savedOrderMessage(savedOrder, !id || reviewing), savedOrder && { label: "Copiar resumo", run: () => copyText(makeWhatsAppSummary(savedOrder)).then(() => showToast("Resumo copiado para enviar no WhatsApp.")).catch((error) => showToast(error.message)) });
   } catch (error) {
-    if (["DATE_CLOSED", "DAILY_LIMIT", "NOTICE"].includes(error.code) && form.dataset.review!=='true') {
+    if (["DATE_CLOSED", "DAILY_LIMIT", "NOTICE", "PRODUCT_LIMIT"].includes(error.code) && form.dataset.review!=='true') {
       $("#capacity-override-box").hidden = false;
-      const explanation = error.code === "DATE_CLOSED" ? "A data está fechada para novos pedidos." : error.code === "DAILY_LIMIT" ? "O limite de pedidos desta data foi atingido." : "Este pedido não atende à antecedência mínima definida.";
+      const explanation = error.code === "DATE_CLOSED" ? "A data está fechada para novos pedidos." : error.code === "DAILY_LIMIT" ? "O limite de pedidos desta data foi atingido." : error.code === "PRODUCT_LIMIT" ? error.message : "Este pedido não atende à antecedência mínima definida.";
       setFormError("#order-form-error", `${explanation} Se decidiu abrir uma exceção, registre o motivo abaixo e salve novamente.`);
       // O aviso fica no topo da janela; no celular ela está no fim do formulário. Levar o foco ao motivo mostra o aviso.
       $("#order-form-error").scrollIntoView({ block: "start" });
@@ -1780,6 +1788,7 @@ function handleClick(event) {
     case 'share-order-link': shareOrderLink(); break;
     case 'preview-link': previewOrderLink(); break;
     case 'link-wizard': openLinkWizard(); break;
+    case 'remove-special': removeSpecialDate(id); break;
     case 'alerts-on': turnAlertsOn(); break;
     case 'alerts-off': turnAlertsOff(); break;
     case 'add-product': addProductRow(); break;
@@ -1841,6 +1850,7 @@ function attachEvents() {
     if (event.target.id === "order-template-form") saveOrderTemplate(event);
     if (event.target.id === "order-page-form") saveOrderPage(event);
     if (event.target.id === "pix-form") savePix(event);
+    if (event.target.id === "special-date-form") saveSpecialDate(event);
   });
   $("#view-settings").addEventListener("change", (event) => {
     if (event.target.id === "settings-date" && /^\d{4}-\d{2}-\d{2}$/.test(event.target.value)) { state.settingsDate = event.target.value; renderSettings(); }
@@ -1880,7 +1890,7 @@ function attachEvents() {
     $("#status-choice .field-error")?.remove();
     syncDateRequirement();
   });
-  ["input", "change"].forEach((type) => $("#order-form").addEventListener(type, (event) => { if (["dueDate", "slots"].includes(event.target.name)) updateDueNote(); }));
+  ["input", "change"].forEach((type) => $("#order-form").addEventListener(type, (event) => { if (["dueDate", "slots", "product"].includes(event.target.name)) updateDueNote(); }));
   $("#order-form").addEventListener("click", (event) => {
     const shortcut = event.target.closest("[data-due-shortcut]");
     if (!shortcut) return;
@@ -2170,6 +2180,59 @@ async function linkWizardNext(intent) {
     if (failure.code === "SLUG_TAKEN") { w.step = 1; renderLinkWizard("Este endereço já está em uso. Troque por outro, como o nome com a cidade."); }
     else renderLinkWizard(failure.message);
   } finally { buttons.forEach((button) => { button.disabled = false; }); }
+}
+
+// Datas especiais (O11): um período com limite de pedidos combinados por doce. Vale no app e no link;
+// acima do limite, confirmar pede o motivo da exceção, e o link deixa de oferecer o doce nessas datas.
+function specialDatesMarkup() {
+  const list = state.availability.specialDates || [], products = [...new Set((state.orderPage?.products || []).map((product) => product.name))];
+  const when = (from, to) => `${calendarDateLabel(from, { day: "numeric", month: "short" })} a ${calendarDateLabel(to, { day: "numeric", month: "short" })}`.replace(/\./g, "");
+  const items = list.map((period) => `<li class="special-item"><div><b>${esc(period.name)}</b><small>${esc(when(period.from, period.to))}</small>${period.limits.map((limit) => {
+    const used = specialLimitFor(state, limit.product, period.from)?.used || 0;
+    return `<small class="special-use${used >= limit.max ? " is-full" : ""}">${esc(limit.product)}: ${used} de ${limit.max} combinados</small>`;
+  }).join("")}</div><button class="text-link" type="button" data-action="remove-special" data-id="${esc(period.id)}">Remover</button></li>`).join("");
+  const rows = [0, 1, 2].map((i) => `<div class="pi-two special-row"><label class="field"><span>Doce ${i ? "<small>(opcional)</small>" : ""}</span><input name="product" list="special-products" maxlength="80" placeholder="${["Ex.: Ovo de colher", "Ex.: Ovo trufado", "Ex.: Cesta de Páscoa"][i]}"></label><label class="field"><span>Limite</span><input name="max" type="number" min="1" max="500" inputmode="numeric" placeholder="Ex.: 40"></label></div>`).join("");
+  return `<p class="settings-intro">Para Páscoa, Dia das Mães ou Natal: um período com limite de pedidos combinados por doce. Passou do limite, confirmar pede o motivo, e o link deixa de oferecer o doce nessas datas.</p>
+    ${list.length ? `<ul class="special-list">${items}</ul>` : ""}
+    <details class="special-new"${list.length ? "" : " open"}><summary>Nova data especial</summary>
+    <form id="special-date-form" class="settings-form" novalidate>
+      <label class="field"><span>Nome</span><input name="name" maxlength="40" placeholder="Ex.: Páscoa"></label>
+      <div class="pi-two"><label class="field"><span>De</span><input name="from" type="date"></label><label class="field"><span>Até</span><input name="to" type="date"></label></div>
+      ${rows}<datalist id="special-products">${products.map((name) => `<option value="${esc(name)}"></option>`).join("")}</datalist>
+      <p class="form-error" id="special-date-error" role="alert" hidden></p>
+      <button class="button button-primary" type="submit">Salvar data especial</button>
+    </form></details>`;
+}
+async function putSpecialDates(list) {
+  await apiRequest("/availability", { method: "PUT", body: { ...state.availability, specialDates: list } });
+  await loadState({ silent: true });
+}
+async function saveSpecialDate(event) {
+  event.preventDefault();
+  const form = event.target, error = $("#special-date-error"), data = new FormData(form);
+  const fail = (message) => { error.textContent = message; error.hidden = false; };
+  error.hidden = true;
+  const name = String(data.get("name") || "").trim(), from = String(data.get("from") || ""), to = String(data.get("to") || "");
+  const products = data.getAll("product").map((value) => String(value).trim()), maxes = data.getAll("max").map((value) => String(value).trim());
+  const limits = products.map((product, i) => ({ product, max: Number(maxes[i]) })).filter((limit) => limit.product);
+  if (!name) return fail("Dê um nome, como Páscoa.");
+  if (!from || !to || from > to) return fail("Confira o começo e o fim do período.");
+  if (!limits.length) return fail("Escreva pelo menos um doce com o limite de pedidos.");
+  if (limits.some((limit) => !Number.isInteger(limit.max) || limit.max < 1 || limit.max > 500)) return fail("Cada doce precisa de um limite de 1 a 500 pedidos.");
+  try {
+    await putSpecialDates([...(state.availability.specialDates || []), { id: `esp-${Date.now().toString(36)}`, name, from, to, limits }]);
+    state.openSettings.add("special");
+    renderSettings();
+    showToast(`${name} salva.`);
+  } catch (failure) { fail(failure.message); }
+}
+async function removeSpecialDate(id) {
+  const list = state.availability.specialDates || [], removed = list.find((period) => period.id === id);
+  if (!removed) return;
+  try {
+    await putSpecialDates(list.filter((period) => period.id !== id));
+    showToast(`${removed.name} removida.`, { label: "Desfazer", run: () => putSpecialDates([...(state.availability.specialDates || []), removed]).catch((failure) => showToast(failure.message)) });
+  } catch (failure) { showToast(failure.message); }
 }
 
 function addProductRow() {

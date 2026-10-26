@@ -45,8 +45,12 @@ export function createPublicHandler(deps:any={}) {
         if(state.orderPage.slug!==match[1])return reply({error:'Página não encontrada.'},404);
         if(!state.orderPage.active)return reply({error:'Esta confeitaria não está recebendo pedidos pelo link no momento'},403);
         if(request.method==='GET'){
-          // ?produto=: as datas livres para aquele doce, pelas vagas que ele ocupa (o envio confere de novo).
-          if(match[3]==='availability')return reply(availabilityDates(state,url.searchParams.get('from'),url.searchParams.get('to'),productSlots(state.orderPage.products?.find((p:any)=>p.name===url.searchParams.get('produto')))));
+          // ?produto=: as datas livres para aquele doce, pelas vagas que ele ocupa e pelos limites das datas especiais
+          // (o envio confere de novo). Doce que não está na vitrine conta como nenhum.
+          if(match[3]==='availability'){
+            const product=state.orderPage.products?.find((p:any)=>p.name===url.searchParams.get('produto'));
+            return reply(availabilityDates(state,url.searchParams.get('from'),url.searchParams.get('to'),productSlots(product),product?.name||''));
+          }
           // visita=0: robô de prévia do WhatsApp/Instagram, lido pelo código da Cloudflare; não conta como visita.
           if(url.searchParams.get('visita')!=='0')await admin.rpc('record_pilot_page_visit',{p_owner:owner});
           return reply(publicPageView(state.orderPage,state));

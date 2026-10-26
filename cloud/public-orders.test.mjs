@@ -97,3 +97,16 @@ test('big products take more slots on the link: dates and requests follow',()=>{
   assert.equal(made.order.slots,3,'o pedido do link leva as vagas do doce');
   assert.equal('slots' in createPublicRequest(s,body,'DA-ABC234').order,false);
 });
+
+test('special dates close the link for the limited product only',()=>{
+  const s={...initial(),availability:{...createEmptyState().availability,specialDates:[{id:'esp-1',name:'Páscoa',from:'2099-04-01',to:'2099-04-05',limits:[{product:'Ovo de colher',max:1}]}]},
+    orderPage:{...page,products:[{name:'Bolo',description:''},{name:'Ovo de colher',description:''}]}};
+  s.orders.push({id:'x',client:'A',product:'Ovo de colher',details:'',dueAt:'2099-04-02T10:00',mode:'Retirada',location:'',total:80,status:'Confirmado',nextAction:'',nextAt:'',pendingChange:'',contact:'',history:[]});
+  const open=(product,day)=>availabilityDates(s,day,day,1,product)[0].available;
+  assert.equal(open('Ovo de colher','2099-04-03'),false,'esgotado no período');
+  assert.equal(open('Ovo de colher','2099-04-06'),true,'depois do período volta');
+  assert.equal(open('Bolo','2099-04-03'),true,'outro doce segue livre');
+  assert.equal(open('','2099-04-03'),true,'sem doce, só as regras do dia');
+  assert.throws(()=>createPublicRequest(s,{...body,product:'Ovo de colher',date:'2099-04-03'},'DA-ABC234'),/indisponível/);
+  assert.equal(createPublicRequest(s,{...body,product:'Bolo',date:'2099-04-03'},'DA-ABC234').order.product,'Bolo');
+});

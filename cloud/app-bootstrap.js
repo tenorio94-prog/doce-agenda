@@ -70,7 +70,7 @@ async function start() {
       });
       if (response.status === 409) {
         const errorBody=await response.clone().json().catch(()=>({}));
-        if(!['DATE_CLOSED','DAILY_LIMIT','NOTICE','SLUG_TAKEN'].includes(errorBody.code))conflict=true;
+        if(!['DATE_CLOSED','DAILY_LIMIT','NOTICE','PRODUCT_LIMIT','SLUG_TAKEN'].includes(errorBody.code))conflict=true;
       }
       // Never adopt a new revision without its full state, or a successful own write.
       if (response.ok && (path === '/api/state' || write)) {

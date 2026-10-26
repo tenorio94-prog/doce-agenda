@@ -2003,3 +2003,11 @@ body.vnext { font-variant-numeric: tabular-nums; -webkit-tap-highlight-color: tr
 .vnext #view-orders .order-money { font-weight: 700; color: var(--vn-ink); }
 .vnext #view-orders .order-money.is-due { color: var(--vn-amber); }
 .vnext #view-orders .order-money.is-in { color: var(--vn-green); }
+/* Datas especiais: lista com o uso de cada limite e o formulário de uma nova. */
+.vnext .special-list { display: grid; gap: 8px; margin: 0 0 12px; padding: 0; list-style: none; }
+.vnext .special-item { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 12px 14px; border: 1px solid var(--vn-line-soft); border-radius: var(--vn-r); background: #fff; }
+.vnext .special-item div { display: grid; gap: 2px; min-width: 0; }
+.vnext .special-item small { color: var(--vn-muted); font-size: 13px; }
+.vnext .special-item .special-use.is-full { color: var(--vn-red, #a8321c); font-weight: 700; }
+.vnext .special-new > summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; font-weight: 700; color: var(--vn-berry); }
+.vnext .special-row { grid-template-columns: minmax(0, 1fr) 104px; align-items: end; }

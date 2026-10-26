@@ -84,7 +84,7 @@ try {
       await vitrine.waitForTimeout(300);
     };
     await choose(0);
-    assert.deepEqual(asked, [null], 'doce normal: só as datas gerais');
+    assert.deepEqual(asked, [null, 'Brigadeiro'], 'as datas são pedidas para o doce escolhido (vagas e datas especiais)');
     await choose(1);
     assert.equal(asked.at(-1), 'Bolo de casamento', 'doce de 3 vagas: datas para ele');
     assert.equal(await vitrine.locator(`#calendar-days [data-date="${day(5)}"]`).isDisabled(), true, 'dia sem 3 vagas fica riscado');

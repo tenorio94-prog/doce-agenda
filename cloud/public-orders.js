@@ -4,15 +4,16 @@ import { limitedText, normalizeWhatsApp, linkError, requestSummary, usesCakeFiel
 export const productSlots = product => (Number.isSafeInteger(product?.slots) && product.slots >= 1 ? product.slots : 1);
 
 export function validPublicDay(day) { return typeof day === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(day) && Number.isFinite(Date.parse(`${day}T00:00:00Z`)) && new Date(`${day}T00:00:00Z`).toISOString().slice(0,10) === day; }
-// `slots`: vagas que o doce escolhido ocupa (capacidade por tamanho); sem doce, 1.
-export function availabilityDates(state, from, to, slots = 1) {
+// `slots`: vagas que o doce escolhido ocupa (capacidade por tamanho); `product`: o doce, para os limites das
+// datas especiais. Sem doce, 1 vaga e nenhum limite especial.
+export function availabilityDates(state, from, to, slots = 1, product = '') {
   if (!validPublicDay(from) || !validPublicDay(to)) linkError('Período inválido.');
   const start = Date.parse(`${from}T00:00:00Z`), end = Date.parse(`${to}T00:00:00Z`);
   if (end < start || (end-start)/86400000 >= 90) linkError('Consulte no máximo 90 dias por vez.');
   const dates = [];
   for (let time=start;time<=end;time+=86400000) {
     const date = new Date(time).toISOString().slice(0,10); let available = true;
-    try { checkCapacity({status:'Confirmado',dueAt:`${date}T23:59`,slots},state,null); } catch { available = false; }
+    try { checkCapacity({status:'Confirmado',dueAt:`${date}T23:59`,slots,product},state,null); } catch { available = false; }
     dates.push({date,available});
   }
   return dates;
@@ -46,7 +47,7 @@ export function createPublicRequest(state, input, code, now = new Date().toISOSt
   const dueAt = `${input.date}T${input.time}`;
   if (wallTimeEpoch(dueAt)<Date.now()) linkError('Escolha uma data e horário futuros.',409,'DATE_UNAVAILABLE');
   const product = custom ? null : page.products.find(p=>p.name===productName), slots = productSlots(product);
-  try {checkCapacity({status:'Confirmado',dueAt,slots},state,null);} catch {linkError('Esta data ficou indisponível. Escolha outra data.',409,'DATE_UNAVAILABLE');}
+  try {checkCapacity({status:'Confirmado',dueAt,slots,product:productName},state,null);} catch {linkError('Esta data ficou indisponível. Escolha outra data.',409,'DATE_UNAVAILABLE');}
   let cake = null;
   if (usesCakeFields(product, productName)) {
     const values = {}, labels = {};
