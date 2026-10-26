@@ -281,3 +281,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px soli
 /* Rodada 3: alvos de toque do rodapé com pelo menos 44 px. */
 .foot .made{min-height:44px;padding-block:0}
 .foot .priv{display:inline-flex;align-items:center;min-height:44px}
+/* Pedido começado (rascunho de até 24 h neste aparelho): continuar ou começar de novo. */
+.draft-banner{margin:16px 16px 0;padding:16px 18px;border-radius:18px;background:var(--card);border:1.5px solid var(--a-soft)}
+.draft-banner p{margin:0 0 12px;line-height:1.45}
+.draft-actions{display:flex;flex-wrap:wrap;gap:8px}

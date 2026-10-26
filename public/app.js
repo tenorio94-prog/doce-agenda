@@ -3,6 +3,7 @@
 import { renderSVG } from "uqr";
 import { pixPayload } from "../cloud/pix-code.js";
 import { DEFAULT_COLOR, VITRINE_PRESETS, VITRINE_STYLE_INFO, formatCents, initials, photoUrl, photoAttrs, vitrinePalette } from "../cloud/vitrine-theme.js";
+import { usesCakeFields } from "../cloud/order-link-model.js";
 import { blobToBase64, dominantColor, preparePhoto, shareImage } from "./photo-prep.js";
 import { printQr, shareOrDownload, storyImage } from "./share-kit.js";
 import { icon } from "./ui/icons.js";
@@ -789,7 +790,7 @@ function renderOrders() {
   function ordersListMarkup() {
     return `<div class="toolbar"><label class="search-wrap"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 4.5 4.5"/></svg><input class="search-input" id="order-search" type="search" placeholder="Buscar cliente, produto ou detalhe…" value="${esc(state.search)}" aria-label="Buscar pedidos"></label></div>
     <div class="stage-strip" role="group" aria-label="Ver pedidos por etapa">${stageChips}</div>${inbox}
-    <p class="order-results" aria-live="polite"><strong>${orders.length}</strong> ${orders.length === 1 ? "pedido encontrado" : "pedidos encontrados"}</p>
+    <p class="order-results" aria-live="polite"><strong>${orders.length}</strong> ${orders.length === 1 ? "pedido encontrado" : "pedidos encontrados"}${stageMoneyLabel(orders)}</p>
     ${state.statusFilter === "new" ? inboxSections() : orders.length ? ordersByDayMarkup(orders) : state.orders.some((order) => !sampleOrder(order)) ? emptyState("Nada por aqui com esse filtro", "Tente outro nome ou situação para encontrar o pedido.", false) : emptyState("Seu próximo pedido começa aqui", "Cadastre o combinado com a cliente e acompanhe pagamentos, mudanças e data de entrega.", true)}`;
   }
   panel.innerHTML = `<header class="vn-heading"><div><h1 id="orders-title" tabindex="-1">Pedidos</h1></div><button class="vn-btn primary vn-heading-add page-add" data-action="new-order" type="button">${icon("plus")} Nova encomenda</button></header>
@@ -801,6 +802,25 @@ function renderOrders() {
   if (stageFocused) panel.querySelector(`[data-stage="${CSS.escape(stageFocused)}"]`)?.focus({ preventScroll: true });
   if (focusSelector) panel.querySelector(focusSelector)?.focus({ preventScroll: true });
   state.agendaEnter = false;
+}
+
+// Soma em reais da etapa escolhida (ao lado da contagem), em centavos inteiros. A receber usa só o conferido,
+// como o Meu mês; pedidos com valor a combinar ficam fora da soma e são contados à parte.
+function stageMoneyLabel(orders) {
+  const cents = (value) => Math.round(Number(value || 0) * 100);
+  const known = orders.filter((order) => order.totalKnown !== false && cents(order.total) > 0);
+  const open = orders.length - known.length;
+  const openNote = open ? ` · ${open} sem valor` : "";
+  if (state.statusFilter === "new") {
+    const total = known.reduce((sum, order) => sum + cents(order.total), 0);
+    return total ? ` · <span class="order-money">${esc(moneyShort(total / 100))} para decidir</span>${openNote}` : openNote;
+  }
+  if (state.statusFilter === "confirmed" || state.statusFilter === "delivered") {
+    const due = known.reduce((sum, order) => sum + Math.max(0, cents(order.total) - cents(confirmedPaid(order.id))), 0);
+    if (!known.length) return openNote;
+    return due ? ` · <span class="order-money is-due">${esc(moneyShort(due / 100))} a receber</span>${openNote}` : ` · <span class="order-money is-in">tudo recebido</span>${openNote}`;
+  }
+  return "";
 }
 
 function mondayFor(date) {
@@ -1780,6 +1800,9 @@ function attachEvents() {
   $("#view-settings").addEventListener('input',event=>{
     if(event.target.closest('#order-page-form'))syncVitrineForm(event);
     if(event.target.name==='slug')event.target.dataset.edited='true';
+    // Detalhes do bolo: enquanto ela não decide, a caixa acompanha o nome ("bolo" marca).
+    if(event.target.name==='productName'){const cake=event.target.closest('.product-item')?.querySelector('[name=productCakeFields]');if(cake?.dataset.auto)cake.checked=usesCakeFields(null,event.target.value);}
+    if(event.target.name==='productCakeFields')delete event.target.dataset.auto;
     if(event.target.name==='displayName'){
       const slug=$('#order-page-form [name=slug]');if(slug&&!slug.dataset.edited)slug.value=slugFrom(event.target.value);
     }
@@ -1863,6 +1886,7 @@ const productRowMarkup = (product = { name: "", description: "" }, open = false)
       <label class="field"><span>A partir de <small>(opcional)</small></span><span class="money-field"><span>R$</span><input name="productPrice" inputmode="decimal" maxlength="12" value="${esc(centsToField(product.priceFromCents))}" placeholder="0"></span></label>
     </div>
     <label class="check-row"><input type="checkbox" name="productFeatured" ${product.featured ? "checked" : ""}><span>Mostrar em <b>Mais pedidos</b> <small>(até 3)</small></span></label>
+    <label class="check-row"><input type="checkbox" name="productCakeFields" ${usesCakeFields(product) ? "checked" : ""} ${typeof product.cakeFields === "boolean" ? "" : 'data-auto="true"'}><span>Pedir os <b>detalhes do bolo</b> <small>(os campos de Detalhes do bolo)</small></span></label>
     <div class="pi-actions"><button class="button button-quiet button-small" type="button" data-action="move-product" data-step="-1">Subir</button><button class="button button-quiet button-small" type="button" data-action="move-product" data-step="1">Descer</button><button class="text-link pi-remove" type="button" data-action="remove-product">Remover</button></div>
   </div></details>`;
 
@@ -1930,6 +1954,9 @@ function linkFormValues(form) {
     if (category) product.category = category;
     if (price !== null) product.priceFromCents = price;
     if (field("productFeatured").checked) product.featured = true;
+    // Caixa nunca tocada num doce antigo: fica sem a marca e segue o nome, como antes.
+    const cake = field("productCakeFields");
+    if (cake && !cake.dataset.auto) product.cakeFields = cake.checked;
     if (photo) product.photo = photo;
     return product;
   }).filter((product) => product.name);

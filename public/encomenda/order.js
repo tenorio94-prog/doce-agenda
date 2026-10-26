@@ -1,6 +1,7 @@
 // Vitrine da confeitaria e pedido em 3 passos. Empacotado pelo esbuild em /encomenda/order.js.
 // O pedido enviado é o mesmo de antes (mesmos campos e regras no servidor), mais os itens extras opcionais.
 import { VITRINE_STYLE_INFO, vitrinePalette, photoUrl, photoAttrs, initials, formatCents } from '../../cloud/vitrine-theme.js';
+import { usesCakeFields } from '../../cloud/order-link-model.js';
 
 const $ = (s, root = document) => root.querySelector(s), $$ = (s, root = document) => [...root.querySelectorAll(s)];
 const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -8,7 +9,6 @@ const slug = decodeURIComponent(location.pathname.split('/').filter(Boolean).at(
 const api = `https://khvhnbopdluthpcduhqm.supabase.co/functions/v1/doce-public/p/${encodeURIComponent(slug)}`;
 const PREVIEW = new URLSearchParams(location.search).has('preview');
 const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
-const isCake = (name) => /\bbolos?\b/i.test(name || '');
 const ICON = {
   cal: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>',
   clock: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
@@ -141,6 +141,45 @@ $('#product-sheet').addEventListener('click', (event) => { if (event.target === 
 $('#product-sheet').addEventListener('cancel', (event) => { event.preventDefault(); history.back(); });
 $('#sheet-order').addEventListener('click', (event) => startOrder(config.products[Number(event.currentTarget.dataset.product)], true));
 
+// ---- Rascunho: o que ela já escolheu fica neste aparelho por 24 horas e some ao enviar ----
+// Só o pedido (doce, extras, data, horário, retirada/entrega e campos do bolo); nome, WhatsApp, endereço e
+// detalhes não são guardados.
+const DRAFT_KEY = `doce-agenda.rascunho-pedido.${slug}`, DRAFT_MS = 24 * 3600e3;
+function saveDraft() {
+  if (PREVIEW || sent || !config) return;
+  const draft = { at: Date.now(), product: chosen?.name || '', other: chosen ? '' : $('#other-product').value.trim(), extras: [...extras], date: selected,
+    time: $('#time').value, mode: $('input[name=mode]:checked')?.value || '', cake: Object.fromEntries($$('[data-cake]').map((el) => [el.dataset.cake, el.value])) };
+  if (!draft.product && !draft.other) return;
+  try { localStorage.setItem(DRAFT_KEY, JSON.stringify(draft)); } catch { /* sem armazenamento: só não lembra */ }
+}
+function readDraft() {
+  try {
+    const draft = JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null');
+    if (draft && Date.now() - draft.at < DRAFT_MS && (draft.product || draft.other)) return draft;
+    localStorage.removeItem(DRAFT_KEY);
+  } catch { /* rascunho ilegível: começa do zero */ }
+  return null;
+}
+function clearDraft() { try { localStorage.removeItem(DRAFT_KEY); } catch { /* nada a apagar */ } }
+function draftBanner(draft) {
+  const what = draft.product || draft.other, when = draft.date && freeDates().includes(draft.date) ? ` para ${shortDay(draft.date)}` : '';
+  return `<section class="draft-banner" aria-labelledby="draft-title"><p id="draft-title"><b>Você começou um pedido</b> de ${esc(what)}${esc(when)}.</p><div class="draft-actions"><button type="button" class="pill" data-draft="resume">Continuar</button><button type="button" class="pill soft" data-draft="discard">Começar de novo</button></div></section>`;
+}
+function resumeDraft() {
+  const draft = readDraft();
+  $('.draft-banner')?.remove();
+  if (!draft) return;
+  const product = config.products.find((p) => p.name === draft.product) || null;
+  extras = new Set((draft.extras || []).filter((name) => config.products.some((p) => p.name === name)));
+  startOrder(product);
+  if (!product) { $('#other-product').value = draft.other || draft.product; renderCake(); }
+  for (const el of $$('[data-cake]')) if (draft.cake?.[el.dataset.cake] !== undefined) el.value = draft.cake[el.dataset.cake];
+  if (draft.time) $('#time').value = draft.time;
+  const mode = draft.mode && $(`input[name=mode][value="${CSS.escape(draft.mode)}"]`);
+  if (mode) { mode.checked = true; mode.dispatchEvent(new Event('change', { bubbles: true })); }
+  if (draft.date && freeDates().includes(draft.date)) pickDate(draft.date);
+}
+
 // ---- Pedido ----
 function startOrder(product, fromSheet = false) {
   if (sent) resetForm();
@@ -152,6 +191,7 @@ function startOrder(product, fromSheet = false) {
   }
   renderExtras(); renderCake();
   go({ v: 'order', s: 1 }, fromSheet);
+  saveDraft();
 }
 function chosenName() { return chosen ? chosen.name : $('#other-product').value.trim(); }
 function renderExtras() {
@@ -160,7 +200,7 @@ function renderExtras() {
   $('#extras').innerHTML = others.map((p) => `<button type="button" data-extra="${esc(p.name)}" aria-pressed="${extras.has(p.name)}">+ ${esc(p.name)}</button>`).join('');
 }
 function renderCake() {
-  const show = isCake(chosenName()); $('#cake-fields').hidden = !show;
+  const show = usesCakeFields(chosen, chosenName()); $('#cake-fields').hidden = !show;
   if (!show) { $('#cake-content').innerHTML = ''; return; }
   if ($('#cake-content').children.length) return;
   $('#cake-content').innerHTML = config.orderTemplate.fields.filter((f) => f.enabled).map((f) => `<div class="field"><label for="cake-${esc(f.key)}">${esc(f.label)} <span class="opt">${f.required ? '(obrigatório)' : '(opcional)'}</span></label>${f.options.length ? `<select id="cake-${esc(f.key)}" data-cake="${esc(f.key)}" ${f.required ? 'required' : ''}><option value="">Selecione</option>${f.options.map((o) => `<option>${esc(o)}</option>`).join('')}</select>` : `<input id="cake-${esc(f.key)}" data-cake="${esc(f.key)}" maxlength="${f.key === 'foodNotes' ? 500 : 200}" ${f.required ? 'required' : ''}>`}</div>`).join('');
@@ -191,14 +231,16 @@ $('#request-page').addEventListener('click', (event) => {
   if (extra) {
     const name = extra.dataset.extra;
     if (extras.has(name)) extras.delete(name); else if (extras.size < 5) extras.add(name);
-    extra.setAttribute('aria-pressed', String(extras.has(name))); return;
+    extra.setAttribute('aria-pressed', String(extras.has(name))); saveDraft(); return;
   }
   const day = event.target.closest('[data-date]');
   if (day && !day.disabled) pickDate(day.dataset.date);
 });
 $('#other-product').addEventListener('input', renderCake);
+$('#request-form').addEventListener('input', saveDraft);
 $('#request-form').addEventListener('change', (event) => {
   if (event.target.name === 'mode') { const delivery = event.target.value === 'Entrega'; $('#address-field').hidden = !delivery; $('#location').required = delivery; }
+  saveDraft();
 });
 
 // ---- Datas ----
@@ -212,7 +254,7 @@ function pickDate(date) {
   selected = date; $('#date').value = date; $('#step2-error').hidden = true;
   if (date.slice(0, 7) !== month) month = date.slice(0, 7);
   $('#chosen-date').textContent = `Data escolhida: ${brDate(date, { weekday: 'long', day: 'numeric', month: 'long' })}. A vaga é conferida de novo no envio.`;
-  renderQuick(); renderCalendar();
+  renderQuick(); renderCalendar(); saveDraft();
   $(`#calendar-days [data-date="${date}"]`)?.focus({ preventScroll: true });
 }
 function renderQuick() {
@@ -244,7 +286,7 @@ $('#request-form').addEventListener('submit', async (event) => {
       product: chosenName(), other: !chosen, extras: [...extras], date: selected, time: $('#time').value, mode: $('input[name=mode]:checked').value, location: $('#location').value,
       details: $('#details').value, client: $('#client').value, contact: $('#contact').value, consent: $('#consent').checked, website: $('#website').value,
       cake: Object.fromEntries($$('[data-cake]').map((el) => [el.dataset.cake, el.value])) }) });
-    sent = true;
+    sent = true; clearDraft();
     $('#done-title').textContent = `Pedido enviado para ${config.displayName}`; $('#code').textContent = data.code; $('#summary').textContent = data.summary;
     const wa = $('#whatsapp-link');
     if (data.whatsapp) { wa.href = `https://wa.me/${data.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(data.summary)}`; wa.hidden = false; $('#no-whatsapp').hidden = true; } else { wa.hidden = true; $('#no-whatsapp').hidden = false; }
@@ -269,6 +311,8 @@ $('#vitrine').addEventListener('click', (event) => {
   const card = event.target.closest('[data-product]');
   if (card) { go({ v: 'sheet', p: Number(card.dataset.product) }); return; }
   if (event.target.closest('[data-other]')) { startOrder(null); return; }
+  const draft = event.target.closest('[data-draft]');
+  if (draft) { if (draft.dataset.draft === 'resume') resumeDraft(); else { clearDraft(); $('.draft-banner')?.remove(); } return; }
   const jump = event.target.closest('[data-jump]');
   if (jump) {
     $$('.chips button').forEach((b) => b.setAttribute('aria-pressed', String(b === jump)));
@@ -296,6 +340,8 @@ async function start() {
     applyTheme();
     await refreshDates();
     renderHome();
+    const draft = PREVIEW ? null : readDraft();
+    if (draft) $('#vitrine').firstElementChild.insertAdjacentHTML('afterend', draftBanner(draft));
     $('#consent-business').textContent = config.displayName;
     $('#send-note').textContent = `Nenhum pagamento agora. Enviar não confirma nem reserva a data: ${config.displayName} responde pelo WhatsApp.`;
     $('#loading').hidden = true; $('#vitrine').hidden = false;
