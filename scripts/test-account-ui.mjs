@@ -188,20 +188,16 @@ try {
   assert.equal(await fixturePage.locator("#signup-email").getAttribute("type"), "email");
   assert.equal(await fixturePage.locator("#signup-password").getAttribute("minlength"), "8");
 
-  // Short and mismatched passwords must fail before the auth provider is called.
+  // Short passwords must fail before the auth provider is called (no confirmation field: the password shows by default).
   await fixturePage.locator("#signup-business-name").fill("Ateliê de Teste");
   await fixturePage.locator("#signup-email").fill("confeiteira@example.test");
   await fixturePage.locator("#signup-password").fill("curta");
-  await fixturePage.locator("#signup-password-confirm").fill("curta");
   await fixturePage.locator("#signup-submit").click();
   assert.deepEqual(await fixturePage.evaluate(() => window.__doceAuthCalls.filter((call) => call.method === "signUp")), [], "Short passwords must not call signUp.");
-  await fixturePage.locator("#signup-password").fill("senha-segura-123");
-  await fixturePage.locator("#signup-password-confirm").fill("senha-diferente-123");
-  await fixturePage.locator("#signup-submit").click();
-  assert.deepEqual(await fixturePage.evaluate(() => window.__doceAuthCalls.filter((call) => call.method === "signUp")), [], "Password mismatch must not call signUp.");
+  assert.equal(await fixturePage.locator("#signup-password-confirm").count(), 0, "Signup has no confirmation field.");
 
   // Signup without an active session must display email confirmation without opening the app.
-  await fixturePage.locator("#signup-password-confirm").fill("senha-segura-123");
+  await fixturePage.locator("#signup-password").fill("senha-segura-123");
   await fixturePage.locator("#signup-submit").click();
   await fixturePage.locator("#status-message").getByText("Confira seu e-mail para confirmar o cadastro").waitFor();
   assert.match(fixturePage.url(), /\/cadastro\//, "An email-confirmation signup must not be treated as an active account session.");
@@ -301,7 +297,6 @@ try {
   await netPage.locator("#signup-business-name").fill("Ateliê de Teste");
   await netPage.locator("#signup-email").fill("confeiteira@example.test");
   await netPage.locator("#signup-password").fill("senha-segura-123");
-  await netPage.locator("#signup-password-confirm").fill("senha-segura-123");
   await netPage.locator("#signup-submit").click();
   await netPage.locator("#error-message").waitFor({ state: "visible" });
   assert.match(await netPage.locator("#error-message").innerText(), /Não conseguimos falar com o servidor/);
@@ -323,7 +318,6 @@ try {
   await errorPage.locator("#signup-business-name").fill("Ateliê de Teste");
   await errorPage.locator("#signup-email").fill("confeiteira@example.test");
   await errorPage.locator("#signup-password").fill("senha-segura-123");
-  await errorPage.locator("#signup-password-confirm").fill("senha-segura-123");
   const signupErrors = [
     [{ message: "User already registered", status: 422, code: "user_already_exists" }, /Já existe uma conta com esse e-mail/, false],
     [{ message: "Password should be at least 6 characters.", status: 422, code: "weak_password" }, /senha mais forte/, false],
@@ -408,7 +402,6 @@ try {
   await realPage.locator("#signup-business-name").fill("Ateliê de Teste");
   await realPage.locator("#signup-email").fill("confeiteira@example.test");
   await realPage.locator("#signup-password").fill("senha-segura-123");
-  await realPage.locator("#signup-password-confirm").fill("senha-segura-123");
   await realPage.locator("#signup-submit").click();
   await realPage.locator("#error-message").waitFor({ state: "visible" });
   assert.match(await realPage.locator("#error-message").innerText(), /Não conseguimos falar com o servidor/);

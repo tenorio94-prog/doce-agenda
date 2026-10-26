@@ -67,17 +67,10 @@
           <label class="field" for="signup-password">
             <span>Senha</span>
             <span class="password-control">
-              <input id="signup-password" name="password" type="password" autocomplete="new-password" minlength="8" required>
-              <button class="reveal-password" type="button" data-password-toggle="signup-password" aria-label="Mostrar senha" aria-pressed="false">Mostrar</button>
+              <input id="signup-password" name="password" type="text" autocomplete="new-password" minlength="8" required spellcheck="false" autocapitalize="off">
+              <button class="reveal-password" type="button" data-password-toggle="signup-password" aria-label="Ocultar senha" aria-pressed="true">Ocultar</button>
             </span>
-            <small class="field-hint">Use pelo menos 8 caracteres.</small>
-          </label>
-          <label class="field" for="signup-password-confirm">
-            <span>Confirme a senha</span>
-            <span class="password-control">
-              <input id="signup-password-confirm" name="passwordConfirm" type="password" autocomplete="new-password" minlength="8" required>
-              <button class="reveal-password" type="button" data-password-toggle="signup-password-confirm" aria-label="Mostrar confirmação de senha" aria-pressed="false">Mostrar</button>
-            </span>
+            <small class="field-hint">Pelo menos 8 caracteres. Confira antes de criar: é com ela que você entra.</small>
           </label>
           <button id="signup-submit" class="button button-primary" type="submit">Criar conta</button>
         </form>

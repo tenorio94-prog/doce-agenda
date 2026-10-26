@@ -159,15 +159,20 @@
     return false;
   };
 
+  const revealPassword = (input, reveal) => {
+    const button = document.querySelector(`[data-password-toggle="${input.id}"]`);
+    input.type = reveal ? "text" : "password";
+    if (!button) return;
+    button.textContent = reveal ? "Ocultar" : "Mostrar";
+    button.setAttribute("aria-pressed", String(reveal));
+    button.setAttribute("aria-label", `${reveal ? "Ocultar" : "Mostrar"} ${input.id.includes("confirm") ? "confirmação da senha" : "senha"}`);
+  };
+
   const bindPasswordToggles = () => {
     document.querySelectorAll("[data-password-toggle]").forEach((button) => {
       button.addEventListener("click", () => {
         const input = $(button.dataset.passwordToggle);
-        const reveal = input.type === "password";
-        input.type = reveal ? "text" : "password";
-        button.textContent = reveal ? "Ocultar" : "Mostrar";
-        button.setAttribute("aria-pressed", String(reveal));
-        button.setAttribute("aria-label", `${reveal ? "Ocultar" : "Mostrar"} ${input.id.includes("confirm") ? "confirmação da senha" : "senha"}`);
+        revealPassword(input, input.type === "password");
         input.focus();
       });
     });
@@ -179,14 +184,10 @@
       clearNotices();
       const form = forms.signup;
       const password = $("signup-password").value;
-      const confirmation = $("signup-password-confirm").value;
       if (!form.reportValidity()) return;
-      if (password !== confirmation) {
-        $("signup-password-confirm").setCustomValidity("As senhas não coincidem.");
-        $("signup-password-confirm").reportValidity();
-        $("signup-password-confirm").addEventListener("input", () => $("signup-password-confirm").setCustomValidity(""), { once: true });
-        return;
-      }
+      // Sem campo de confirmação: a senha aparece por padrão para ser conferida, e volta a ser
+      // campo de senha no envio para o navegador oferecer guardá-la.
+      revealPassword($("signup-password"), false);
       if (!auth()?.signUp) return showError(null, "Não foi possível iniciar o cadastro agora. Tente novamente.");
       isBusy(true);
       try {
