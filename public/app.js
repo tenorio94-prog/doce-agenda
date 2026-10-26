@@ -619,6 +619,7 @@ function renderToday() {
   const attentionBeside = wideAgenda?.matches === true;
   const attentionCount = weekMode || attentionBeside ? 0 : attentionItems().length;
   panel.innerHTML = `<header class="vn-heading"><div><span class="vn-date">${esc(capitalize(new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "numeric", month: "long" }).format(new Date())))}</span><h1 id="today-title" tabindex="-1">${esc(headline)}</h1>${summaryParts.length || attentionCount ? `<p class="today-summary">${esc(summaryParts.join(", "))}${attentionCount ? `<button class="vn-att-jump" type="button" data-action="jump-attention">${attentionCount} ${attentionCount === 1 ? "pede" : "pedem"} sua atenção</button>` : ""}</p>` : ""}</div>${modeSwitch}</header>
+    ${firstOrderMarkup()}
     ${firstUse && !onboardingVisible() ? `<section class="welcome-panel"><h2>Cadastre seu primeiro pedido</h2><p>Comece com cliente, produto e valor. Complete os detalhes quando estiverem combinados.</p><div class="welcome-actions"><button class="button button-primary" type="button" data-action="new-order">Nova encomenda</button></div></section>` : ''}
     ${sample && firstUse ? `<section class="sample-card" aria-label="Pedido de exemplo">${rowMarkup(sample)}<p>Toque para ver como fica um pedido completo. O exemplo não entra na sua agenda.</p></section>` : sample ? `<details class="sample-examples"><summary>Exemplo fictício — não entra na sua agenda</summary><div class="sample-example-list">${state.orders.filter(sampleOrder).map((order) => `<button class="text-link" type="button" data-open-order="${esc(order.id)}">Ver exemplo: ${esc(clientName(order) || order.product || "pedido")}</button>`).join("")}</div></details>` : ''}
     ${weekMode ? "" : weekBarMarkup()}
@@ -1415,6 +1416,26 @@ function reportOrderFormErrors(form) {
 }
 
 // O aviso diz onde o pedido foi parar: na agenda (com o dia) ou em Pedidos, em Novos.
+// Primeiro pedido de verdade da conta: comemorar no topo da Agenda, não só confirmar (regra pico-fim, plano RCD 1.4).
+// Fica só na memória: some ao fechar ou ao recarregar.
+let firstOrderCelebration = null;
+function firstOrderMarkup() {
+  const order = firstOrderCelebration && orderById(firstOrderCelebration);
+  if (!order) return "";
+  const dayKey = order.dueAt?.slice(0, 10), committed = isCommitted(order);
+  let place = "Ele está guardado em Pedidos.";
+  if (committed && dayKey) {
+    const availability = availabilityFor(dayKey), day = capitalize(calendarDateLabel(dayKey, { weekday: "long", day: "numeric", month: "long" }));
+    place = Number.isInteger(availability.limit) ? `${day}: ${availability.count} de ${availability.limit} ${availability.limit === 1 ? "vaga ocupada" : "vagas ocupadas"}.` : `${day} já tem ${availability.count} ${availability.count === 1 ? "pedido" : "pedidos"} na agenda.`;
+  } else if (DECISION_STATUSES.includes(order.status)) place = "Está em Pedidos, em Novos, como orçamento. Quando fechar, confirme e ele ocupa a vaga.";
+  const next = committed ? (needsDeposit(order) ? "Quando o sinal cair na conta, marque na ficha do pedido." : "No dia, um toque leva o pedido de etapa em etapa.") : "";
+  return `<section class="first-order" aria-labelledby="first-order-title">
+    <span class="first-order-stamp" aria-hidden="true">✓</span>
+    <div class="first-order-body"><h2 id="first-order-title" tabindex="-1">${committed ? "Primeiro pedido na agenda!" : "Primeiro pedido anotado!"}</h2><p>${esc(place)}${next ? ` ${esc(next)}` : ""}</p>
+    <div class="first-order-actions"><button class="button button-primary" type="button" data-open-order="${esc(order.id)}">Ver o pedido</button><button class="text-link" type="button" data-action="close-first-order">Fechar</button></div></div>
+  </section>`;
+}
+
 function savedOrderMessage(order, created) {
   if (!order) return "Encomenda salva.";
   if (!created) return "Alterações salvas.";
@@ -1465,11 +1486,18 @@ async function submitOrder(event) {
   try {
     const id = form.dataset.id;
     const reviewing=form.dataset.review==='true';
+    const firstReal = (!id || reviewing) && !isDemoMode() && !state.orders.some((order) => !sampleOrder(order) && order.status !== "Solicitação");
     const saved = await apiRequest(reviewing ? `/orders/${encodeURIComponent(id)}/accept` : id ? `/orders/${encodeURIComponent(id)}` : "/orders", { method: reviewing ? 'POST' : id ? "PUT" : "POST", body: reviewing ? {status:body.status,order:body} : body });
     $("#order-dialog").close();
     closeDetails();
     await loadState({ silent: true });
     const savedOrder = orderById(id || saved?.id || saved?.order?.id);
+    if (firstReal && savedOrder && !sampleOrder(savedOrder)) {
+      firstOrderCelebration = savedOrder.id;
+      setActiveView("today");
+      $("#first-order-title")?.focus({ preventScroll: true });
+      $("#view-today .first-order")?.scrollIntoView({ block: "nearest" });
+    }
     if (savedOrder) $$(".order-row").filter((row) => row.dataset.openOrder === savedOrder.id).forEach((row) => row.classList.add("is-fresh"));
     showToast(savedOrderMessage(savedOrder, !id || reviewing), savedOrder && { label: "Copiar resumo", run: () => copyText(makeWhatsAppSummary(savedOrder)).then(() => showToast("Resumo copiado para enviar no WhatsApp.")).catch((error) => showToast(error.message)) });
   } catch (error) {
@@ -1568,6 +1596,7 @@ function handleClick(event) {
     case 'open-onboarding': { const progress = readOnboarding(); progress.dismissed = false; saveOnboarding(progress); setActiveView('today'); coach('#view-today .onboarding'); break; }
     case 'onboarding-skip': { const progress = readOnboarding(); progress.dismissed = true; saveOnboarding(progress); renderToday(); if (isDemoMode()) showToast('Para ver de novo, toque em Como funciona.'); break; }
     case 'onboarding-go': runOnboardingTask(action.dataset.task); break;
+    case 'close-first-order': firstOrderCelebration = null; renderToday(); break;
     case 'onboarding-intent': { const progress = readOnboarding(); progress.intent = action.dataset.intent; saveOnboarding(progress); renderToday(); if (progress.intent === 'tem-pedido') openOrderForm(); else showToast('Combinado. Comece pelo link e pelos seus dias.'); break; }
     case 'close-tip': closeTip(action.dataset.tip); break;
     case 'pix-charge': openPixCharge(id); break;

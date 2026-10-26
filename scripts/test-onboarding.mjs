@@ -5,6 +5,7 @@ import assert from 'node:assert/strict';
 import { mkdir } from 'node:fs/promises';
 import path from 'node:path';
 import { chromium, serveSite, siteRoot as root } from './lib/browser-test.mjs';
+import { demoSeedState } from '../cloud/demo-seed.js';
 import { createEmptyState } from '../cloud/state-engine.js';
 
 const shots = process.argv[2] ? path.resolve(process.argv[2]) : null;
@@ -17,7 +18,8 @@ const count = (page) => page.locator('#view-today .onboarding-count').innerText(
 // Conta nova simulada sobre a demo: a loja finge não ser demo; com `empty`, a agenda começa vazia.
 async function accountContext(viewport, empty = false) {
   const context = await browser.newContext({ viewport, locale: 'pt-BR', timezoneId: 'America/Sao_Paulo' });
-  const emptyState = empty ? JSON.stringify({ ...createEmptyState(), orderPage: { displayName: 'Ateliê Teste', slug: 'atelie-teste', active: false, products: [] } }) : null;
+  const seed = demoSeedState(new Date());
+  const emptyState = empty ? JSON.stringify({ ...seed, orders: [], payments: [], availability: createEmptyState().availability, orderPage: { ...seed.orderPage, active: false } }) : null;
   await context.addInitScript((seed) => {
     if (seed && !localStorage.getItem('doce-agenda.demo.v2')) localStorage.setItem('doce-agenda.demo.v2', seed);
     let store;
@@ -150,7 +152,41 @@ try {
       if (shots && answer === 'tem-pedido') await intent.screenshot({ path: path.join(shots, `conta-pergunta-${width}.png`) });
       await intent.locator(`[data-intent="${answer}"]`).click();
       if (answer === 'tem-pedido') {
-        await freshPage.locator('#order-dialog[open], dialog[open] #order-form').first().waitFor();
+        // Primeiro pedido de verdade: comemoração no topo da Agenda, com a vaga do dia e o próximo passo.
+        await freshPage.locator('#order-dialog[open]').waitFor();
+        await freshPage.waitForTimeout(150);
+        await freshPage.locator('wa-input[name="client"] input').fill('Bia Teste');
+        await freshPage.locator('wa-input[name="product"] input').fill('Bolo de cenoura');
+        await freshPage.locator('[data-due-shortcut="1"]').click();
+        await freshPage.locator('wa-input[name="dueTime"] input').fill('15:00');
+        await freshPage.locator('wa-input[name="total"] input').fill('120');
+        await freshPage.locator('#status-choice input[value="Confirmado"]').check();
+        await freshPage.locator('#save-order-button').click();
+        const party = freshPage.locator('#view-today .first-order');
+        await party.waitFor();
+        const partyText = await party.innerText();
+        assert.match(partyText, /Primeiro pedido na agenda!/);
+        assert.match(partyText, /de \d+ vagas? ocupadas?|já tem 1 pedido/, 'mostra a vaga do dia');
+        assert.match(partyText, /sinal/, 'sem sinal: o próximo passo é marcar o sinal');
+        assert.equal(await freshPage.evaluate(() => document.activeElement?.id), 'first-order-title', 'foco vai para a comemoração');
+        assert.ok(await freshPage.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), `comemoração sem rolagem lateral em ${width}px`);
+        if (shots) await party.screenshot({ path: path.join(shots, `primeiro-pedido-${width}.png`) });
+        await party.locator('[data-open-order]').click();
+        await freshPage.locator('#detail-dialog[open]').waitFor();
+        await closeDetail(freshPage);
+        await party.locator('[data-action="close-first-order"]').click();
+        assert.equal(await freshPage.locator('#view-today .first-order').count(), 0, 'fechar some com a comemoração');
+        // Segundo pedido não comemora de novo.
+        await freshPage.locator('[data-action="new-order"]:visible').first().click();
+        await freshPage.locator('#order-dialog[open]').waitFor();
+        await freshPage.waitForTimeout(150);
+        await freshPage.locator('wa-input[name="client"] input').fill('Caio Teste');
+        await freshPage.locator('wa-input[name="product"] input').fill('Brigadeiros');
+        await freshPage.locator('#status-choice input[value="Orçamento"]').check();
+        await freshPage.locator('#save-order-button').click();
+        await freshPage.locator('#order-dialog[open]').waitFor({ state: 'detached' }).catch(() => {});
+        await freshPage.waitForTimeout(300);
+        assert.equal(await freshPage.locator('#view-today .first-order').count(), 0, 'só o primeiro pedido é comemorado');
       } else {
         await freshPage.locator('#toast').filter({ hasText: 'link' }).waitFor();
         const order = await freshPage.locator('#view-today .onboarding-task').allInnerTexts();

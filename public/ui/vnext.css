@@ -959,6 +959,16 @@ wa-input[aria-invalid="true"]::part(input-wrapper), wa-textarea[aria-invalid="tr
 .onboarding-demo { display: inline-flex; align-items: center; min-height: 44px; margin-top: 2px; font-size: var(--fs-sm); }
 .onboarding.is-complete { border-color: var(--pistache); background: var(--pistache); }
 .onboarding-end { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; margin-top: 12px; }
+/* Primeiro pedido de verdade: comemoração no topo da Agenda (plano RCD 1.4). */
+.first-order { display: flex; align-items: flex-start; gap: 14px; margin: 12px 0 16px; padding: 16px 18px; border: 1px solid var(--carimbo); border-radius: var(--r-m); background: var(--pistache); }
+.first-order-stamp { display: grid; flex: none; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: var(--carimbo); color: var(--branco); font-size: 22px; font-weight: 700; animation: first-order-pop .5s cubic-bezier(.3, 1.6, .5, 1) both; }
+.first-order-body { min-width: 0; }
+.first-order h2 { margin: 0; font-weight: 600; font-size: var(--fs-xl); line-height: 1.2; }
+.first-order h2:focus { outline: none; }
+.first-order p { margin: 6px 0 0; color: var(--ink); font-size: var(--fs-sm); line-height: 1.45; }
+.first-order-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; margin-top: 12px; }
+@keyframes first-order-pop { from { transform: scale(.4) rotate(-20deg); opacity: 0; } to { transform: none; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .first-order-stamp { animation: none; } }
 /* Conta nova sem pedido: uma pergunta antes da lista (plano RCD 1.3). */
 .onboarding-intent { margin-top: 14px; padding-top: 14px; border-top: var(--hairline); }
 .onboarding .onboarding-intent-q { margin: 0; font-weight: 600; font-size: var(--fs-lg); line-height: 1.3; }
