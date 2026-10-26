@@ -164,3 +164,63 @@ test('canRebaseWrite only replays what the app saw unchanged', () => {
   assert.equal(canRebaseWrite(state, '/api/availability', 'PUT', { section: seen }), true);
   assert.equal(canRebaseWrite(state, '/api/availability', 'PUT', { section: '{}' }), false);
 });
+
+test('capacity counts the slots each order takes', () => {
+  let state = createEmptyState();
+  state.availability.dailyOrderLimit = 3;
+  const add = (body) => { const r = transactState(state, '/api/orders', { method: 'POST', body: JSON.stringify(body) }); if (r.status < 400) state = r.state; return r; };
+  const base = { client: 'Ana', product: 'Bolo', total: 100, status: 'Confirmado', dueAt: '2099-05-10T10:00' };
+  assert.equal(add({ ...base, slots: 2 }).status, 201, 'casamento: 2 vagas');
+  const big = add({ ...base, product: 'Bolo de três andares', slots: 2 });
+  assert.equal(big.status, 409);
+  assert.equal(big.body.code, 'DAILY_LIMIT');
+  assert.match(big.body.error, /ocupa 2 vagas e a data só tem 1 livre/);
+  assert.equal(add({ ...base, product: 'Brigadeiro' }).status, 201, 'sem slots: 1 vaga, cabe');
+  assert.equal(add({ ...base, product: 'Pudim' }).status, 409, 'agora lotou: 2 + 1 = 3');
+  for (const slots of [0, 11, 1.5, '2']) assert.equal(add({ ...base, dueAt: '2099-05-11T10:00', slots }).status, 400, `slots ${slots} é inválido`);
+  const id = state.orders.find((order) => order.product === 'Brigadeiro').id;
+  const edited = transactState(state, `/api/orders/${id}`, { method: 'PUT', body: JSON.stringify({ slots: 2 }) });
+  assert.equal(edited.status, 409, 'aumentar as vagas confere o limite do dia');
+  const moved = transactState(state, `/api/orders/${id}`, { method: 'PUT', body: JSON.stringify({ slots: 2, dueAt: '2099-05-12T10:00' }) });
+  assert.equal(moved.status, 200);
+  assert.match(moved.body.history.at(-1).text, /Vagas no dia: — → 2/);
+});
+
+test('special dates limit combined orders per product inside the period', () => {
+  let state = createEmptyState();
+  const put = (availability) => transactState(state, '/api/availability', { method: 'PUT', body: JSON.stringify(availability) });
+  const easter = { id: 'esp-1', name: 'Páscoa', from: '2099-04-01', to: '2099-04-05', limits: [{ product: 'Ovo de colher', max: 2 }] };
+  for (const bad of [{ ...easter, from: '2099-04-06' }, { ...easter, limits: [] }, { ...easter, limits: [{ product: 'Ovo', max: 0 }] }, { ...easter, to: '2099-08-30' },
+    { ...easter, limits: [{ product: 'Ovo', max: 2 }, { product: ' ovo ', max: 3 }] }]) assert.equal(put({ ...state.availability, specialDates: [bad] }).status, 400);
+  const saved = put({ ...state.availability, specialDates: [easter] });
+  assert.equal(saved.status, 200);
+  state = saved.state;
+  const kept = put({ ...createEmptyState().availability, dailyOrderLimit: 5 });
+  assert.deepEqual(kept.state.availability.specialDates, [easter], 'salvar só dias e limites mantém as datas especiais');
+  const add = (body) => { const r = transactState(state, '/api/orders', { method: 'POST', body: JSON.stringify(body) }); if (r.status < 400) state = r.state; return r; };
+  const egg = { client: 'Ana', product: 'Ovo de colher', total: 80, status: 'Confirmado', dueAt: '2099-04-02T10:00' };
+  assert.equal(add(egg).status, 201);
+  assert.equal(add({ ...egg, product: ' OVO DE COLHER ', dueAt: '2099-04-05T09:00' }).status, 201, 'nome sem diferença de maiúsculas e espaços');
+  const third = add({ ...egg, dueAt: '2099-04-03T10:00' });
+  assert.equal(third.status, 409);
+  assert.equal(third.body.code, 'PRODUCT_LIMIT');
+  assert.match(third.body.error, /Páscoa: os 2 pedidos de Ovo de colher já foram combinados/);
+  assert.equal(add({ ...egg, dueAt: '2099-04-06T10:00' }).status, 201, 'fora do período não conta');
+  assert.equal(add({ ...egg, status: 'Orçamento', dueAt: '2099-04-03T10:00' }).status, 201, 'orçamento não ocupa');
+  assert.equal(add({ ...egg, product: 'Bolo', dueAt: '2099-04-03T10:00' }).status, 201, 'outro doce não tem limite');
+  assert.equal(add({ ...egg, dueAt: '2099-04-03T11:00', capacityOverride: { allowed: true, reason: 'Cliente antiga' } }).status, 201, 'exceção com motivo');
+  const cake = state.orders.find((order) => order.product === 'Bolo');
+  assert.equal(transactState(state, `/api/orders/${cake.id}`, { method: 'PUT', body: JSON.stringify({ product: 'Ovo de colher' }) }).status, 409, 'trocar para o doce limitado confere');
+});
+
+test('editing a combined order only rechecks what changed', () => {
+  const state = createEmptyState();
+  state.availability.minimumNoticeHours = 48;
+  state.availability.closedWeekdays = [0, 1, 2, 3, 4, 5, 6];
+  // Pedido antigo, de uma data que hoje estaria fechada e sem antecedência.
+  state.orders.push({ id: 'velho', client: 'Ana', product: 'Bolo', details: '', dueAt: '2026-01-10T10:00', mode: 'Retirada', location: '', total: 100, status: 'Pronto', nextAction: '', nextAt: '', pendingChange: '', contact: '', createdAt: '2026-01-01T10:00:00.000Z', history: [] });
+  const renamed = transactState(state, '/api/orders/velho', { method: 'PUT', body: JSON.stringify({ product: 'Bolo de cenoura' }) });
+  assert.equal(renamed.status, 200, 'trocar o nome não volta a conferir dia fechado nem antecedência');
+  const bigger = transactState(state, '/api/orders/velho', { method: 'PUT', body: JSON.stringify({ slots: 2 }) });
+  assert.equal(bigger.status, 200, 'sem limite diário, mais vagas passam');
+});

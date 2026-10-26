@@ -8,6 +8,8 @@ const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '
 const slug = decodeURIComponent(location.pathname.split('/').filter(Boolean).at(-1) || '');
 const api = `https://khvhnbopdluthpcduhqm.supabase.co/functions/v1/doce-public/p/${encodeURIComponent(slug)}`;
 const PREVIEW = new URLSearchParams(location.search).has('preview');
+// Meu pedido: ?pedido=<código secreto> abre a situação do pedido em vez da vitrine.
+const TRACK = new URLSearchParams(location.search).get('pedido') || '';
 const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const ICON = {
   cal: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>',
@@ -181,7 +183,15 @@ function resumeDraft() {
 }
 
 // ---- Pedido ----
+// Funil do link: avisa uma vez por visita que um pedido começou (só conta; nada da cliente é enviado).
+let startCounted = false;
+function countStart() {
+  if (startCounted || PREVIEW) return;
+  startCounted = true;
+  fetch(`${api}/inicio`, { method: 'POST', keepalive: true }).catch(() => {});
+}
 function startOrder(product, fromSheet = false) {
+  countStart();
   if (sent) resetForm();
   chosen = product || null; extras = new Set([...extras].filter((n) => n !== chosen?.name));
   $('#chosen').hidden = !chosen; $('#other-field').hidden = !!chosen; $('#other-product').required = !chosen;
@@ -209,7 +219,10 @@ function showStep(n) {
   $$('.step').forEach((s) => { s.hidden = Number(s.dataset.step) !== n; });
   $$('.progress i').forEach((bar, i) => bar.classList.toggle('on', i < n));
   $('#step-count').textContent = `Passo ${n} de 3`; $('#step-back-label').textContent = n === 1 ? 'Vitrine' : 'Voltar';
-  if (n === 2) { renderQuick(); renderCalendar(); }
+  if (n === 2) {
+    renderQuick(); renderCalendar();
+    if (datesFor !== (chosen?.name || '')) refreshDates().then(() => { renderQuick(); renderCalendar(); }).catch(() => {});
+  }
   window.scrollTo(0, 0);
   $(`#step-title-${n}`).focus({ preventScroll: true });
 }
@@ -244,9 +257,14 @@ $('#request-form').addEventListener('change', (event) => {
 });
 
 // ---- Datas ----
+// As datas livres são pedidas para o doce escolhido: ele pode ocupar mais de uma vaga (capacidade por tamanho)
+// ou ter limite numa data especial, como a Páscoa.
+let datesFor = '';
 async function refreshDates() {
   const start = today(), end = new Date(`${start}T12:00:00Z`); end.setUTCDate(end.getUTCDate() + 89);
-  dates = await json(`${api}/availability?from=${start}&to=${end.toISOString().slice(0, 10)}`);
+  const product = chosen?.name || '';
+  dates = await json(`${api}/availability?from=${start}&to=${end.toISOString().slice(0, 10)}${product ? `&produto=${encodeURIComponent(product)}` : ''}`);
+  datesFor = product;
   if (!dates.some((d) => d.date === selected && d.available)) selected = '';
   month = month || (freeDates()[0] || start).slice(0, 7);
 }
@@ -287,6 +305,7 @@ $('#request-form').addEventListener('submit', async (event) => {
       details: $('#details').value, client: $('#client').value, contact: $('#contact').value, consent: $('#consent').checked, website: $('#website').value,
       cake: Object.fromEntries($$('[data-cake]').map((el) => [el.dataset.cake, el.value])) }) });
     sent = true; clearDraft();
+    $('#track-link').hidden = !data.trackUrl; if (data.trackUrl) $('#track-url').href = data.trackUrl;
     $('#done-title').textContent = `Pedido enviado para ${config.displayName}`; $('#code').textContent = data.code; $('#summary').textContent = data.summary;
     const wa = $('#whatsapp-link');
     if (data.whatsapp) { wa.href = `https://wa.me/${data.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(data.summary)}`; wa.hidden = false; $('#no-whatsapp').hidden = true; } else { wa.hidden = true; $('#no-whatsapp').hidden = false; }
@@ -321,6 +340,39 @@ $('#vitrine').addEventListener('click', (event) => {
   }
 });
 
+// ---- Meu pedido: só a situação, sem dados pessoais ----
+const TRACK_STEPS = [['decidir', 'Recebido'], ['combinado', 'Combinado'], ['fazendo', 'Fazendo'], ['pronto', 'Pronto'], ['entregue', 'Entregue']];
+function trackText(view) {
+  const pickup = view.mode !== 'Entrega';
+  return { decidir: ['Esperando a confeitaria', 'Ela vai conferir a data e responder pelo WhatsApp. Ainda não está confirmado.'], combinado: ['Pedido combinado', 'Já está na agenda da confeitaria.'],
+    fazendo: ['Seu pedido está sendo feito', 'Falta pouco.'], pronto: ['Pronto!', pickup ? 'Já pode combinar a retirada.' : 'Logo sai para a entrega.'], entregue: ['Entregue', 'Obrigada pela encomenda!'],
+    cancelado: ['Pedido cancelado', 'Se tiver dúvida, fale com a confeitaria.'], recusado: ['Desta vez não vai dar', 'A confeitaria não vai conseguir atender este pedido.'] }[view.stage] || ['Seu pedido', ''];
+}
+async function showTracking() {
+  const box = $('#tracking');
+  try {
+    const view = await json(`${api}/pedido/${encodeURIComponent(TRACK)}`), [title, note] = trackText(view);
+    const at = TRACK_STEPS.findIndex(([key]) => key === view.stage), day = view.dueAt.slice(0, 10), time = view.dueAt.slice(11, 16);
+    const when = day ? `${brDate(day, { weekday: 'long', day: 'numeric', month: 'long' })}${time ? ` às ${time.replace(':00', 'h').replace(':', 'h')}` : ''}` : 'data a combinar';
+    const part = (text) => `<span>${esc(text)}</span>`;
+    const money = Number.isInteger(view.totalCents) ? `<p class="track-money">${part(`Total ${formatCents(view.totalCents)}`)} · ${part(`conferido ${formatCents(view.paidCents)}`)} · ${view.totalCents > view.paidCents ? part(`falta ${formatCents(view.totalCents - view.paidCents)}`) : part('tudo pago')}</p>` : '';
+    const steps = at >= 0 ? `<ol class="track-steps">${TRACK_STEPS.map(([key, label], i) => `<li class="${i < at ? 'is-done' : i === at ? 'is-now' : ''}"${i === at ? ' aria-current="step"' : ''}>${label}</li>`).join('')}</ol>` : '';
+    const talk = view.whatsapp ? `<a class="pill wa" target="_blank" rel="noopener" href="https://wa.me/${view.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(`Oi! Sobre o meu pedido ${view.code}:`)}">Falar com a confeitaria</a>` : '';
+    box.innerHTML = `<p class="track-shop">Seu pedido na ${esc(view.displayName)}</p><h1 id="track-title" class="d">${esc(title)}</h1><p>${esc(note)}</p>${steps}
+      <p class="track-what"><b>${esc(view.product)}</b><br>${esc(when)} · ${esc(view.mode === 'Entrega' ? 'entrega' : 'retirada')}</p>${money}
+      ${talk}<button class="pill soft" type="button" data-track-home>Ver a vitrine</button>
+      <p class="help">Código ${esc(view.code)}. Esta página só mostra a situação do pedido; quem tiver este link vê o mesmo.</p>`;
+  } catch {
+    box.innerHTML = '<h1 id="track-title" class="d">Pedido não encontrado</h1><p>Confira o link que a confeitaria mandou.</p><button class="pill soft" type="button" data-track-home>Ver a vitrine</button>';
+  }
+  $('#vitrine').hidden = true; box.hidden = false; box.focus();
+}
+$('#tracking').addEventListener('click', (event) => {
+  if (!event.target.closest('[data-track-home]')) return;
+  history.replaceState({ v: 'home' }, '', location.pathname);
+  $('#tracking').hidden = true; $('#vitrine').hidden = false; window.scrollTo(0, 0);
+});
+
 // ---- Início ----
 function readInjected() {
   // B3: o servidor da Cloudflare pode entregar a página já com os dados, sem esperar outra busca.
@@ -330,7 +382,7 @@ function readInjected() {
 }
 async function start() {
   try {
-    config = readInjected() || await json(api);
+    config = readInjected() || await json(TRACK ? `${api}?visita=0` : api);
     if (!config.active) {
       $('#loading').hidden = true; $('#unavailable').hidden = false;
       $('#unavailable-title').textContent = 'Encomendas pausadas'; $('#unavailable-message').textContent = config.message; return;
@@ -346,6 +398,7 @@ async function start() {
     $('#send-note').textContent = `Nenhum pagamento agora. Enviar não confirma nem reserva a data: ${config.displayName} responde pelo WhatsApp.`;
     $('#loading').hidden = true; $('#vitrine').hidden = false;
     history.replaceState({ v: 'home' }, '');
+    if (TRACK && !PREVIEW) await showTracking();
   } catch (error) {
     $('#loading').hidden = true; $('#unavailable').hidden = false;
     $('#unavailable-message').textContent = error.status === 404 ? 'Não encontramos esta página de encomenda. Confira o endereço do link.' : 'Não conseguimos abrir a confeitaria agora. Verifique a internet e tente de novo.';

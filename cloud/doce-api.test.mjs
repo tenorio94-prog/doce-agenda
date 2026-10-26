@@ -29,6 +29,15 @@ function makeHarness(options = {}) {
     return {
       auth: { async getUser() { throw new Error('Admin client must not verify callers.'); } },
       from(table) {
+        if (table === 'pilot_order_pages' && options.pages) {
+          // Métricas do link: sem a migração do funil, pedir "starts" dá erro de coluna.
+          let columns = '';
+          const pages = { select(value) { columns = value; return pages; }, eq() { return pages; },
+            maybeSingle: async () => (columns.includes('starts') && options.pages.starts === undefined
+              ? { data: null, error: { code: '42703', message: 'column does not exist' } }
+              : { data: { ...options.pages }, error: null }) };
+          return pages;
+        }
         assert.equal(table, 'pilot_agendas');
         const query = { operation: null, filters: [], payload: null, upsertOptions: null };
         const builder = {
@@ -323,4 +332,12 @@ test('a stale write is replayed on the newest state when what it touches did not
   const saved = await settings.send({ ...envelope('/api/availability', 'PUT', 3, { ...createEmptyState().availability, dailyOrderLimit: 4 }), base: { section: sameSection } });
   assert.equal(saved.status, 200, 'ajuste igual ao visto: reaplica');
   assert.equal(settings.row.state.availability.dailyOrderLimit, 4);
+});
+
+test('link metrics bring the funnel when the counter exists, and only visits before the migration', async () => {
+  const seeded = { owner_user_id: 'auth-user-id', revision: 2, state: createEmptyState() };
+  const withFunnel = makeHarness({ row: seeded, pages: { visits: 40, starts: 12 } });
+  assert.deepEqual(await (await withFunnel.send(envelope('/api/order-page/metrics'))).json(), { visits: 40, starts: 12 });
+  const before = makeHarness({ row: seeded, pages: { visits: 40 } });
+  assert.deepEqual(await (await before.send(envelope('/api/order-page/metrics'))).json(), { visits: 40, starts: null });
 });

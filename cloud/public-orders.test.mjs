@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createEmptyState,transactState } from './state-engine.js';
-import { availabilityDates,createPublicRequest,publicPageView } from './public-orders.js';
+import { availabilityDates,createPublicRequest,productSlots,publicPageView,trackView } from './public-orders.js';
 import { orderPageInput } from './order-link-model.js';
 const page={active:true,slug:'doces-da-ana',displayName:'Doces da Ana',welcome:'Bem-vinda',whatsapp:'+5511999999999',products:[{name:'Bolo',description:''}]};
 const initial=()=>({...createEmptyState(),orderPage:page});
@@ -81,4 +81,51 @@ test('cake details follow the product mark; old products still follow the name',
   assert.equal(ask([{name:'Bolo de pote',description:'',cakeFields:false}],'Bolo de pote'),null,'desmarcado: sem perguntas, mesmo com "bolo" no nome');
   assert.throws(()=>ask([{name:'Bolo',description:''}],'Bolo'),/[Ss]abor/,'sem marca: o nome com bolo ainda pede');
   assert.equal(ask([{name:'Torta',description:''}],'Torta'),null);
+});
+
+test('big products take more slots on the link: dates and requests follow',()=>{
+  assert.equal(orderPageInput({...page,products:[{name:'Bolo de casamento',description:'',slots:3}]}).products[0].slots,3);
+  assert.equal('slots' in orderPageInput({...page,products:[{name:'Bolo',description:'',slots:1}]}).products[0],false,'1 é o normal e não é guardado');
+  for(const slots of [0,11,2.5])assert.throws(()=>orderPageInput({...page,products:[{name:'Bolo',description:'',slots}]}),/Vagas/);
+  const s={...initial(),availability:{...createEmptyState().availability,dailyOrderLimit:3},orderPage:{...page,products:[{name:'Bolo',description:''},{name:'Bolo de casamento',description:'',slots:3}]}};
+  s.orders.push({id:'x',client:'A',product:'Doces',details:'',dueAt:'2099-01-31T10:00',mode:'Retirada',location:'',total:50,status:'Confirmado',nextAction:'',nextAt:'',pendingChange:'',contact:'',history:[]});
+  const day=(slots)=>availabilityDates(s,'2099-01-31','2099-01-31',slots)[0].available;
+  assert.equal(day(1),true);assert.equal(day(3),false,'1 vaga usada: casamento (3) não cabe');
+  assert.equal(productSlots(s.orderPage.products[1]),3);assert.equal(productSlots(undefined),1);
+  assert.throws(()=>createPublicRequest(s,{...body,product:'Bolo de casamento'},'DA-ABC234'),/indisponível/);
+  const made=createPublicRequest(s,{...body,product:'Bolo de casamento',date:'2099-02-01'},'DA-ABC234');
+  assert.equal(made.order.slots,3,'o pedido do link leva as vagas do doce');
+  assert.equal('slots' in createPublicRequest(s,body,'DA-ABC234').order,false);
+});
+
+test('special dates close the link for the limited product only',()=>{
+  const s={...initial(),availability:{...createEmptyState().availability,specialDates:[{id:'esp-1',name:'Páscoa',from:'2099-04-01',to:'2099-04-05',limits:[{product:'Ovo de colher',max:1}]}]},
+    orderPage:{...page,products:[{name:'Bolo',description:''},{name:'Ovo de colher',description:''}]}};
+  s.orders.push({id:'x',client:'A',product:'Ovo de colher',details:'',dueAt:'2099-04-02T10:00',mode:'Retirada',location:'',total:80,status:'Confirmado',nextAction:'',nextAt:'',pendingChange:'',contact:'',history:[]});
+  const open=(product,day)=>availabilityDates(s,day,day,1,product)[0].available;
+  assert.equal(open('Ovo de colher','2099-04-03'),false,'esgotado no período');
+  assert.equal(open('Ovo de colher','2099-04-06'),true,'depois do período volta');
+  assert.equal(open('Bolo','2099-04-03'),true,'outro doce segue livre');
+  assert.equal(open('','2099-04-03'),true,'sem doce, só as regras do dia');
+  assert.throws(()=>createPublicRequest(s,{...body,product:'Ovo de colher',date:'2099-04-03'},'DA-ABC234'),/indisponível/);
+  assert.equal(createPublicRequest(s,{...body,product:'Bolo',date:'2099-04-03'},'DA-ABC234').order.product,'Bolo');
+});
+
+test('my order page: a secret link shows only the situation, never personal data',()=>{
+  const token='abcdefghijkmnpqrstuvwxyz2';
+  const made=createPublicRequest(initial(),{...body,details:'Sem glúten'},'DA-ABC234',undefined,token);
+  assert.equal(made.order.trackToken,token);
+  assert.equal(made.confirmation.trackUrl,`https://lucast.app/p/doces-da-ana?pedido=${token}`);
+  assert.match(made.confirmation.summary,/Acompanhe o pedido: https:\/\/lucast\.app\/p\/doces-da-ana\?pedido=/);
+  assert.throws(()=>createPublicRequest(initial(),body,'DA-ABC234',undefined,'curto'),/acompanhamento/);
+  const s=made.state;
+  const view=trackView(s,token);
+  assert.deepEqual(Object.keys(view).sort(),['code','displayName','dueAt','mode','product','stage','whatsapp']);
+  assert.equal(view.stage,'decidir');assert.equal(view.code,'DA-ABC234');
+  assert.doesNotMatch(JSON.stringify(view),/Cliente fictícia|11988887777|Rua de teste|glúten/,'sem nome, WhatsApp, endereço nem detalhes');
+  const order=s.orders.find(o=>o.trackToken===token);
+  Object.assign(order,{status:'Em produção',total:200,totalKnown:true});
+  s.payments.push({id:'p1',orderId:order.id,amount:60,status:'Conferido',createdAt:'2099-01-01T10:00:00Z'},{id:'p2',orderId:order.id,amount:40,status:'Informado',createdAt:'2099-01-01T10:00:00Z'});
+  assert.deepEqual([trackView(s,token).stage,trackView(s,token).totalCents,trackView(s,token).paidCents],['fazendo',20000,6000],'só o conferido conta');
+  for(const bad of ['', 'abc', token.toUpperCase(), 'zzzzzzzzzzzzzzzzzzzzzzzz'])assert.equal(trackView(s,bad),null);
 });

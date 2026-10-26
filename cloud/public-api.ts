@@ -1,4 +1,4 @@
-import { availabilityDates, createPublicRequest, publicPageView } from './public-orders.js';
+import { availabilityDates, createPublicRequest, productSlots, publicPageView, trackView } from './public-orders.js';
 
 const origins = new Set(['https://lucast.app','https://www.lucast.app','https://doce-agenda-piloto.netlify.app','https://doce-agenda.doce-agenda-local.workers.dev','http://localhost:4173','http://127.0.0.1:4173']);
 export function createPublicHandler(deps:any={}) {
@@ -11,11 +11,34 @@ export function createPublicHandler(deps:any={}) {
     if(origin && !origins.has(origin))return reply({error:'Origem não permitida.'},403);
     if(request.method==='OPTIONS')return new Response(null,{status:204,headers});
     const url=new URL(request.url), path=url.pathname.replace(/^.*\/doce-public/,'');
-    const match=path.match(/^\/p\/([a-z0-9][a-z0-9-]{1,38}[a-z0-9])(\/(availability|requests))?$/);
-    if(!match || !['GET','POST'].includes(request.method) || (request.method==='POST' && match[3]!=='requests') || (request.method==='GET' && match[3]==='requests'))return reply({error:'Página não encontrada.'},404);
+    // Meu pedido: GET /p/<loja>/pedido/<código secreto> mostra só a situação daquele pedido.
+    const track=path.match(/^\/p\/([a-z0-9][a-z0-9-]{1,38}[a-z0-9])\/pedido\/([a-z0-9]{24,40})$/);
+    if(track){
+      if(request.method!=='GET')return reply({error:'Página não encontrada.'},404);
+      try{
+        const createClient=deps.createClient ?? (await import('npm:@supabase/supabase-js@2.117.3')).createClient;
+        const admin=createClient(env('SUPABASE_URL'),env('SUPABASE_SERVICE_ROLE_KEY'),{auth:{persistSession:false,autoRefreshToken:false}});
+        const found=await admin.from('pilot_order_pages').select('owner_user_id').eq('slug',track[1]).maybeSingle();
+        if(found.error)throw new Error('Serviço indisponível');
+        if(!found.data)return reply({error:'Pedido não encontrado.'},404);
+        const loaded=await admin.from('pilot_agendas').select('state').eq('owner_user_id',found.data.owner_user_id).single();
+        if(loaded.error||!loaded.data)throw new Error('Serviço indisponível');
+        const view=loaded.data.state?.orderPage?.slug===track[1]?trackView(loaded.data.state,track[2]):null;
+        return view?reply(view):reply({error:'Pedido não encontrado.'},404);
+      }catch{return reply({error:'Não foi possível abrir o pedido agora. Tente de novo.'},503);}
+    }
+    const match=path.match(/^\/p\/([a-z0-9][a-z0-9-]{1,38}[a-z0-9])(\/(availability|requests|inicio))?$/);
+    if(!match || !['GET','POST'].includes(request.method) || (request.method==='POST' && !['requests','inicio'].includes(match[3])) || (request.method==='GET' && ['requests','inicio'].includes(match[3])))return reply({error:'Página não encontrada.'},404);
     try{
       const createClient=deps.createClient ?? (await import('npm:@supabase/supabase-js@2.117.3')).createClient;
       const admin=createClient(env('SUPABASE_URL'),env('SUPABASE_SERVICE_ROLE_KEY'),{auth:{persistSession:false,autoRefreshToken:false}});
+      // Funil do link: "começou um pedido" só soma um número da página (sem corpo, sem dado pessoal).
+      // Sem a migração record_pilot_page_start, a chamada falha em silêncio e nada muda para a cliente.
+      if(match[3]==='inicio'){
+        const found=await admin.from('pilot_order_pages').select('owner_user_id').eq('slug',match[1]).maybeSingle();
+        if(found.data?.owner_user_id)await admin.rpc('record_pilot_page_start',{p_owner:found.data.owner_user_id});
+        return new Response(null,{status:204,headers});
+      }
       let body:any;
       if(request.method==='POST'){
         if(Number(request.headers.get('content-length'))>8192)return reply({error:'Solicitação muito grande.'},413);
@@ -38,7 +61,12 @@ export function createPublicHandler(deps:any={}) {
         if(state.orderPage.slug!==match[1])return reply({error:'Página não encontrada.'},404);
         if(!state.orderPage.active)return reply({error:'Esta confeitaria não está recebendo pedidos pelo link no momento'},403);
         if(request.method==='GET'){
-          if(match[3]==='availability')return reply(availabilityDates(state,url.searchParams.get('from'),url.searchParams.get('to')));
+          // ?produto=: as datas livres para aquele doce, pelas vagas que ele ocupa e pelos limites das datas especiais
+          // (o envio confere de novo). Doce que não está na vitrine conta como nenhum.
+          if(match[3]==='availability'){
+            const product=state.orderPage.products?.find((p:any)=>p.name===url.searchParams.get('produto'));
+            return reply(availabilityDates(state,url.searchParams.get('from'),url.searchParams.get('to'),productSlots(product),product?.name||''));
+          }
           // visita=0: robô de prévia do WhatsApp/Instagram, lido pelo código da Cloudflare; não conta como visita.
           if(url.searchParams.get('visita')!=='0')await admin.rpc('record_pilot_page_visit',{p_owner:owner});
           return reply(publicPageView(state.orderPage,state));
@@ -49,7 +77,8 @@ export function createPublicHandler(deps:any={}) {
         const digest=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(`${env('SUPABASE_SERVICE_ROLE_KEY')}:${ip}`));
         const hash=Array.from(new Uint8Array(digest),n=>n.toString(16).padStart(2,'0')).join('');
         const code=`DA-${Array.from(crypto.getRandomValues(new Uint8Array(6)),n=>'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[n%32]).join('')}`;
-        const created=createPublicRequest(state,body,code);
+        const token=Array.from(crypto.getRandomValues(new Uint8Array(24)),n=>'abcdefghijkmnpqrstuvwxyz23456789'[n%32]).join('');
+        const created=createPublicRequest(state,body,code,undefined,token);
         const committed=await admin.rpc('submit_pilot_request',{p_owner:owner,p_slug:match[1],p_expected_revision:Number(loaded.data.revision),p_state:created.state,p_ip_hash:hash});
         if(!committed.error)return reply(created.confirmation,201);
         if(committed.error.code==='40001')continue;

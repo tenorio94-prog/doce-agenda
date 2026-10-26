@@ -1,15 +1,19 @@
 import { checkCapacity, wallTimeEpoch } from './state-engine.js';
 import { limitedText, normalizeWhatsApp, linkError, requestSummary, usesCakeFields } from './order-link-model.js';
+// Vagas de um doce da vitrine (1 se não disser).
+export const productSlots = product => (Number.isSafeInteger(product?.slots) && product.slots >= 1 ? product.slots : 1);
 
 export function validPublicDay(day) { return typeof day === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(day) && Number.isFinite(Date.parse(`${day}T00:00:00Z`)) && new Date(`${day}T00:00:00Z`).toISOString().slice(0,10) === day; }
-export function availabilityDates(state, from, to) {
+// `slots`: vagas que o doce escolhido ocupa (capacidade por tamanho); `product`: o doce, para os limites das
+// datas especiais. Sem doce, 1 vaga e nenhum limite especial.
+export function availabilityDates(state, from, to, slots = 1, product = '') {
   if (!validPublicDay(from) || !validPublicDay(to)) linkError('Período inválido.');
   const start = Date.parse(`${from}T00:00:00Z`), end = Date.parse(`${to}T00:00:00Z`);
   if (end < start || (end-start)/86400000 >= 90) linkError('Consulte no máximo 90 dias por vez.');
   const dates = [];
   for (let time=start;time<=end;time+=86400000) {
     const date = new Date(time).toISOString().slice(0,10); let available = true;
-    try { checkCapacity({status:'Confirmado',dueAt:`${date}T23:59`},state,null); } catch { available = false; }
+    try { checkCapacity({status:'Confirmado',dueAt:`${date}T23:59`,slots,product},state,null); } catch { available = false; }
     dates.push({date,available});
   }
   return dates;
@@ -21,7 +25,23 @@ export function publicPageView(page, state) {
     style:page.style||'atelie',color:page.color||'',instagram:page.instagram||'',logo:page.logo||'',cover:page.cover||'',share:page.share||'',
     noticeHours:state.availability?.minimumNoticeHours||0,orderTemplate:state.orderTemplate,privacyUrl:'/privacidade/'};
 }
-export function createPublicRequest(state, input, code, now = new Date().toISOString()) {
+// Página "Meu pedido" (O10): cada solicitação pelo link ganha um endereço secreto (`trackToken`, 24 caracteres
+// aleatórios). Quem tem o endereço vê só a situação: código, doce, data, retirada/entrega e valores; nunca nome,
+// WhatsApp, endereço, detalhes ou histórico.
+export const TRACK_BASE = 'https://lucast.app/p/';
+export const TRACK_TOKEN = /^[a-z0-9]{24,40}$/;
+const STAGES = { 'Solicitação': 'decidir', 'Orçamento': 'decidir', 'Aguardando confirmação': 'decidir', 'Confirmado': 'combinado', 'Em produção': 'fazendo', 'Pronto': 'pronto', 'Entregue': 'entregue', 'Cancelado': 'cancelado', 'Recusado': 'recusado' };
+export function trackView(state, token) {
+  if (typeof token !== 'string' || !TRACK_TOKEN.test(token)) return null;
+  const order = state.orders.find(item => item.trackToken === token);
+  if (!order) return null;
+  const cents = value => Math.round(Number(value || 0) * 100);
+  const known = order.totalKnown !== false && cents(order.total) > 0 && order.status !== 'Solicitação';
+  const paid = state.payments.filter(payment => payment.orderId === order.id && payment.status === 'Conferido').reduce((sum, payment) => sum + cents(payment.amount), 0);
+  return { code: order.publicCode || '', displayName: state.orderPage?.displayName || '', whatsapp: state.orderPage?.whatsapp || '', product: order.product, dueAt: order.dueAt || '',
+    mode: order.mode || 'Retirada', stage: STAGES[order.status] || 'decidir', ...(known ? { totalCents: cents(order.total), paidCents: Math.min(paid, cents(order.total)) } : {}) };
+}
+export function createPublicRequest(state, input, code, now = new Date().toISOString(), token = '') {
   const page = state.orderPage;
   if (!page?.active) linkError('Esta confeitaria não está recebendo pedidos pelo link no momento',403,'LINK_DISABLED');
   if (!input || typeof input !== 'object' || Array.isArray(input)) linkError('Solicitação inválida.');
@@ -42,9 +62,10 @@ export function createPublicRequest(state, input, code, now = new Date().toISOSt
   const location = input.mode==='Entrega' ? limitedText(input.location,300,'Endereço',true) : '';
   const dueAt = `${input.date}T${input.time}`;
   if (wallTimeEpoch(dueAt)<Date.now()) linkError('Escolha uma data e horário futuros.',409,'DATE_UNAVAILABLE');
-  try {checkCapacity({status:'Confirmado',dueAt},state,null);} catch {linkError('Esta data ficou indisponível. Escolha outra data.',409,'DATE_UNAVAILABLE');}
+  const product = custom ? null : page.products.find(p=>p.name===productName), slots = productSlots(product);
+  try {checkCapacity({status:'Confirmado',dueAt,slots,product:productName},state,null);} catch {linkError('Esta data ficou indisponível. Escolha outra data.',409,'DATE_UNAVAILABLE');}
   let cake = null;
-  if (usesCakeFields(custom ? null : page.products.find(p=>p.name===productName), productName)) {
+  if (usesCakeFields(product, productName)) {
     const values = {}, labels = {};
     for (const field of state.orderTemplate.fields.filter(f=>f.enabled)) {
       const value = limitedText(input.cake?.[field.key] ?? '',field.key==='foodNotes'?500:200,field.label,field.required);
@@ -56,10 +77,14 @@ export function createPublicRequest(state, input, code, now = new Date().toISOSt
   const order = {id:crypto.randomUUID(),client,contact,product:productName,details,dueAt,mode:input.mode,location,total:0,totalKnown:false,status:'Solicitação',origin:'link',publicCode:code,
     consentAt:now,consentVersion:'2026-10-13',createdAt:now,updatedAt:now,cake,nextAction:'Revisar solicitação recebida pelo link',nextAt:'',pendingChange:'',
     history:[{at:now,text:'Solicitação recebida pelo link. Dados enviados com consentimento; aguardando revisão.'}]};
+  if (slots > 1) order.slots = slots;
+  if (token) { if (!TRACK_TOKEN.test(token)) linkError('Código de acompanhamento inválido.'); order.trackToken = token; }
   const next = structuredClone(state);
   const duplicates=next.orders.filter(o=>o.origin==='link'&&o.contact===contact&&o.product===productName&&o.dueAt.slice(0,10)===input.date&&Math.abs(Date.parse(now)-Date.parse(o.createdAt))<=600000);
   if(duplicates.length){order.possibleDuplicate=true;for(const previous of duplicates)previous.possibleDuplicate=true;}
   next.orders.push(order);
-  return {state:next,order,confirmation:{code,summary:requestSummary(order,page.displayName),whatsapp:page.whatsapp,
+  const trackUrl = token ? `${TRACK_BASE}${page.slug}?pedido=${token}` : '';
+  const summary = [requestSummary(order,page.displayName), ...(trackUrl ? ['', `Acompanhe o pedido: ${trackUrl}`] : [])].join('\n');
+  return {state:next,order,confirmation:{code,summary,whatsapp:page.whatsapp,...(trackUrl?{trackUrl}:{}),
     message:'Seu pedido ainda não está confirmado. A confeitaria vai responder pelo WhatsApp.'}};
 }

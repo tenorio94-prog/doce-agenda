@@ -28,7 +28,8 @@ async function vitrinePage(request, env, slug) {
   let config;
   try {
     const bot = PREVIEW_BOT.test(request.headers.get('User-Agent') || '');
-    const response = await fetch(`${base}/functions/v1/doce-public/p/${slug}${bot ? '?visita=0' : ''}`, { signal: AbortSignal.timeout(3000) });
+    // Robô de prévia e a página "Meu pedido" (?pedido=) não contam como visita da vitrine.
+    const response = await fetch(`${base}/functions/v1/doce-public/p/${slug}${bot || url.searchParams.has('pedido') ? '?visita=0' : ''}`, { signal: AbortSignal.timeout(3000) });
     if (!response.ok) return page;
     config = await response.json();
   } catch { return page; }

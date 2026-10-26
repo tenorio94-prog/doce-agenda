@@ -45,6 +45,8 @@ function productInput(p) {
   const category = limitedText(p?.category ?? '', 30, 'Categoria'); if (category) product.category = category;
   const price = priceFrom(p?.priceFromCents); if (price !== null) product.priceFromCents = price;
   if (p?.featured === true) product.featured = true;
+  // Vagas que o doce ocupa no dia (1 a 10); 1 é o normal e não é guardado.
+  if (p?.slots !== undefined && p.slots !== 1) { if (!Number.isSafeInteger(p.slots) || p.slots < 1 || p.slots > 10) linkError('Vagas no dia: use um número de 1 a 10.'); product.slots = p.slots; }
   if (p?.cakeFields !== undefined) { if (typeof p.cakeFields !== 'boolean') linkError('Detalhes do bolo: escolha sim ou não.'); product.cakeFields = p.cakeFields; }
   const photo = photoKey(p?.photo, 'Foto do produto'); if (photo) product.photo = photo;
   return product;
