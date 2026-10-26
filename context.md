@@ -1,10 +1,12 @@
 # Doce Agenda — contexto para continuar em outra sessão
 
-Atualizado em **19/10/2026**. Passagem de bastão: estado real, decisões e o que depende de autorização. Confira `git log` e o site antes de agir. Relatos completos de verificação (até 16/10) estão em `docs/historico/contexto-ate-2026-10-16.md`; abra só o trecho do assunto em andamento.
+Atualizado em **26/10/2026**. Passagem de bastão: estado real, decisões e o que depende de autorização. Confira `git log` e o site antes de agir. Relatos completos de verificação (até 16/10) estão em `docs/historico/contexto-ate-2026-10-16.md`; abra só o trecho do assunto em andamento.
 
 **Manter curto:** ao concluir uma etapa, reescreva a parte afetada aqui (estado + pendências, poucas linhas). Detalhes longos de verificação vão para o commit ou para `docs/historico/`, não para este arquivo.
 
 ## 1. Onde paramos
+
+- **Plano de melhorias RCD (26/10, pedido de Lucas):** `docs/PLANO_MELHORIAS_RCD.md` traduz a skill Revenue-Centric Design em melhorias concretas por fase (medir → ativação → landing/demo → retenção → preço), complementando a estratégia de 18/10 em `atualizaçao/`. Só documento; nada implementado. Recomendação: conversas com confeiteiras + teste de 5 s do G02; depois 1.1 (progresso iniciado) e 1.2 (cadastro sem confirmar senha). Aguardar escolha de Lucas.
 
 - **G02 — prévia publicada (19/10, autorização posterior de Lucas):** `https://lucast.app/previa-g02/?variante=combinado` (A) e `?variante=capacidade` (B). Fontes canônicos em `public/previa-g02/`; launcher local e README continuam em `atualizaçao/prototipo-g02/`. Solicitação fictícia, escolha de domingo só como rascunho, cadastro simulado, sem API/persistência/dados reais. Landing e app preservados: 127 arquivos anteriores idênticos antes e após build do deploy; só três assets e `_headers` adicionados. Código `b1bddb6` enviado à `main`; Cloudflare `b52a64ec-5d24-46c2-874d-62dc06524a16`, 100%. `npm run check` passou (64 regras + build + 12 suítes); no site real, sem interceptação, oito percursos A/B em 320/360/390/1280 + JS desligado passaram; JS/CSS iguais ao build, CSP/noindex efetivos só na prévia, redirect sem barra preserva variante, rotas existentes 5/5. Teste inicial leu a troca A/B antes do JavaScript terminar; diagnóstico confirmou navegação correta e teste ajustado para aguardar a renderização passou. Analytics existente da zona bloqueado pela CSP da prévia, sem alteração no painel. Evidências em `data/publicacao-g02-2026-10-19/` (ignorado). Sem Safari/aparelho físico, conta real, pesquisa ou validação comercial. Aguardar avaliação de Lucas; G03 e mudança da landing não autorizados.
 
