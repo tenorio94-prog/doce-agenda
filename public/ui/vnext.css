@@ -959,6 +959,10 @@ wa-input[aria-invalid="true"]::part(input-wrapper), wa-textarea[aria-invalid="tr
 .onboarding-demo { display: inline-flex; align-items: center; min-height: 44px; margin-top: 2px; font-size: var(--fs-sm); }
 .onboarding.is-complete { border-color: var(--pistache); background: var(--pistache); }
 .onboarding-end { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; margin-top: 12px; }
+/* Demo: depois de duas tarefas, o convite para guardar de verdade aparece no meio do caminho (plano RCD 2.2). */
+.onboarding-midcta { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; margin-top: 10px; padding-top: 12px; border-top: var(--hairline); }
+.onboarding-midcta p { flex: 1 1 220px; margin: 0; color: var(--ink-soft); font-size: var(--fs-sm); line-height: 1.45; }
+.onboarding-midcta .button { text-decoration: none; }
 /* Primeiro pedido de verdade: comemoração no topo da Agenda (plano RCD 1.4). */
 .first-order { display: flex; align-items: flex-start; gap: 14px; margin: 12px 0 16px; padding: 16px 18px; border: 1px solid var(--carimbo); border-radius: var(--r-m); background: var(--pistache); }
 .first-order-stamp { display: grid; flex: none; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: var(--carimbo); color: var(--branco); font-size: 22px; font-weight: 700; animation: first-order-pop .5s cubic-bezier(.3, 1.6, .5, 1) both; }

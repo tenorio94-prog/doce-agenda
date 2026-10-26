@@ -1,5 +1,5 @@
 // Boas-vindas: node scripts/build-cloudflare.mjs && node scripts/test-onboarding.mjs [pasta-de-capturas]
-// Demonstração: "Experimente em 1 minuto" com 4 tarefas feitas na tela de verdade, Pular e "Como funciona".
+// Demonstração: "Experimente em 1 minuto" com 4 tarefas feitas na tela de verdade, convite após 2, Pular e "Como funciona".
 // Conta nova: "Primeiros passos" com 4 tarefas, a conta criada já feita; sem pedido, pergunta se já tem encomenda. Dicas de uma frase nas abas, que somem ao fechar.
 import assert from 'node:assert/strict';
 import { mkdir } from 'node:fs/promises';
@@ -41,6 +41,7 @@ try {
     assert.equal(await page.locator('.story-overlay').count(), 0, 'sem stories');
     assert.match(await card.innerText(), /Experimente em 1 minuto/);
     assert.equal(await count(page), '0 de 4 feitas');
+    assert.equal(await card.locator('.onboarding-midcta').count(), 0, 'convite só depois de duas tarefas');
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), `sem rolagem lateral em ${width}px`);
     if (shots) await page.screenshot({ path: path.join(shots, `demo-inicio-${width}.png`) });
 
@@ -62,6 +63,9 @@ try {
     await page.locator('#toast').filter({ hasText: 'conferido' }).waitFor();
     await closeDetail(page);
     assert.equal(await count(page), '2 de 4 feitas');
+    const midInvite = card.locator('.onboarding-midcta a[href="/cadastro/"]');
+    assert.equal(await midInvite.innerText(), 'Criar minha conta grátis', 'no meio da demo, convite para guardar de verdade');
+    if (shots) await card.screenshot({ path: path.join(shots, `demo-meio-${width}.png`) });
 
     // 3. Avançar etapa: realça o próximo passo de um pedido de hoje.
     await card.locator('[data-task="advance"]').click();
