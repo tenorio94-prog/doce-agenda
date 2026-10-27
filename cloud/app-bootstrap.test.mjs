@@ -9,7 +9,7 @@ const bundled = await build({ entryPoints: ['cloud/app-bootstrap.js'], bundle: t
     builder.onLoad({ filter: /.*/, namespace: 'stub' }, () => ({ contents: 'export const createClient = () => window.testClient;', loader: 'js' }));
   } }],
 });
-async function harness(session) {
+async function harness(session, page = {}) {
   const requests = [], scripts = [], redirects = [], events = [], nodes = new Map();
   const element = id => nodes.get(id) || (nodes.set(id, { hidden: false, append() {}, addEventListener() {} }), nodes.get(id));
   let revision = 0, failWrite = false, jump = 0, stateBody = '{}';
@@ -18,6 +18,7 @@ async function harness(session) {
   } } };
   vm.runInNewContext(bundled.outputFiles[0].text, { window, document: {
     getElementById: element, querySelector: element, createElement: () => ({ addEventListener() {} }), body: { append: x => scripts.push(x.src) },
+    ...page,
   }, location: { replace: url => redirects.push(url), reload() {} }, Response, Event, setTimeout,
   fetch: async (url, options) => {
     const input = JSON.parse(options.body); requests.push(input);
@@ -69,4 +70,17 @@ test('writes carry what the app saw and announce writes made by others', async (
   assert.deepEqual(h.events, [], 'só as próprias gravações: nada a recarregar');
   h.setJump(1); await call('/api/orders/p1', 'PUT', { status: 'Entregue' });
   assert.deepEqual(h.events, ['doce:stale'], 'versão pulou: outra sessão ou o link gravou no meio');
+});
+
+test('a tela nova escolhe o próprio script e sai pelo DoceAccount, sem procurar o topo da versão atual', async () => {
+  const asked = [];
+  const h = await harness({ access_token: 'test-token' }, {
+    currentScript: { dataset: { app: '/nova/nova.js' } },
+    querySelector: (selector) => { asked.push(selector); return null; },
+  });
+  assert.deepEqual(h.scripts, ['/nova/nova.js']);
+  assert.deepEqual(asked, ['.topbar-actions']);
+  assert.equal(typeof h.window.DoceAccount.signOut, 'function');
+  assert.equal(await h.window.DoceAccount.signOut(), true);
+  assert.deepEqual(h.redirects, ['/cadastro/?mode=login']);
 });

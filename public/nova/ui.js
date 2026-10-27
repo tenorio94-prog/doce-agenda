@@ -21,7 +21,11 @@ export async function api(path, { method = 'GET', body } = {}) {
   try { data = await response.json(); } catch { /* resposta sem corpo */ }
   if (!response.ok) {
     const code = data?.code || '';
-    const message = code === 'DAILY_LIMIT' ? 'O limite de pedidos para esta data foi atingido.' : friendlyError(data?.error);
+    // Conta: outra sessão ou o link gravou antes. A agenda é recarregada já, e ela confere antes de repetir.
+    if (code === 'REVISION_CONFLICT') window.dispatchEvent(new Event('doce:stale'));
+    const message = code === 'DAILY_LIMIT' ? 'O limite de pedidos para esta data foi atingido.'
+      : code === 'REVISION_CONFLICT' ? 'Isto mudou em outro aparelho ou chegou pedido pelo link. A agenda foi atualizada: confira e tente de novo.'
+        : friendlyError(data?.error);
     throw Object.assign(new Error(message), { status: response.status, code, capacity: CAPACITY_CODES.includes(code) });
   }
   return data;

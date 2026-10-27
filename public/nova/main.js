@@ -6,7 +6,7 @@ import * as Ficha from './ficha.js';
 import * as Form from './form.js';
 import { renderMoney } from './dinheiro.js';
 import * as Menu from './menu.js';
-import { $, app, closeSheet, hideToast, reload, sheetOpen } from './ui.js';
+import { $, app, closeSheet, hideToast, reload, sheetOpen, toast } from './ui.js';
 
 app.week = M.weekStart(app.today);
 app.from = app.today;
@@ -66,6 +66,7 @@ const actions = {
   days: () => Menu.openDays(),
   reset: () => Menu.openReset(),
   'reset-confirm': () => Menu.resetDemo(),
+  'sign-out': (el) => Menu.signOut(el),
   close: () => closeSheet(),
   back: () => app.back?.(),
 };
@@ -105,11 +106,24 @@ async function start() {
     $('#load-state').textContent = `${error.message} Recarregue a página para tentar de novo.`;
   }
 }
-// Ao voltar para a aba, o "hoje" e os pedidos podem ter mudado (a versão completa usa o mesmo armazenamento).
-document.addEventListener('visibilitychange', async () => {
-  if (document.visibilityState !== 'visible' || !app.state || sheetOpen()) return;
-  app.today = M.todayKey();
-  $('#today-label').textContent = M.longDate(app.today);
-  try { await reload(); hideToast(); refresh(); } catch { /* fica o que está na tela */ }
-});
+// Agenda sempre em dia: ao voltar para a aba, a cada 2 minutos com a tela à vista e quando a conta avisa que
+// outra sessão ou o link gravou (doce:stale). Com a janela aberta, só a tela de trás muda; o que ela digita fica.
+const linkIds = () => new Set((app.state?.orders || []).filter((order) => order.origin === 'link' && order.status === 'Solicitação').map((order) => order.id));
+let syncing = false;
+async function sync() {
+  if (!app.state || syncing) return;
+  syncing = true;
+  const before = linkIds();
+  try {
+    app.today = M.todayKey();
+    $('#today-label').textContent = M.longDate(app.today);
+    await reload();
+    await refresh();
+    const arrived = [...linkIds()].filter((id) => !before.has(id)).length;
+    if (arrived) toast(arrived === 1 ? 'Chegou 1 pedido novo pelo link.' : `Chegaram ${arrived} pedidos novos pelo link.`);
+  } catch { /* fica o que está na tela */ } finally { syncing = false; }
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && !sheetOpen()) { hideToast(); sync(); } });
+window.addEventListener('doce:stale', () => sync());
+setInterval(() => { if (document.visibilityState === 'visible' && !sheetOpen()) sync(); }, 120_000);
 start();

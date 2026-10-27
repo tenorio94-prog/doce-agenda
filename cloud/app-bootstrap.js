@@ -2,6 +2,8 @@ import { createClient } from '@supabase/supabase-js';
 
 const config = window.DoceCloudConfig || {};
 const login = '/cadastro/?mode=login';
+// A página escolhe a tela que abre depois do login (data-app no próprio script); sem isso, a versão atual.
+const appScript = document.currentScript?.dataset?.app || '/cloud-app.js';
 const errorResponse = (message, status = 503, code) => new Response(JSON.stringify({ error: message, ...(code ? { code } : {}) }), {
   status, headers: { 'Content-Type': 'application/json' },
 });
@@ -33,6 +35,12 @@ function baseFor(path) {
   return stamp ? { order: stamp } : {};
 }
 function showFailure(message) {
+  // Tela nova: um só aviso de carregamento, sem a caixa de erro da versão atual.
+  if (!document.getElementById('error-notice')) {
+    const box = document.getElementById('load-state');
+    if (box) box.textContent = `${message} Recarregue a página para tentar de novo.`;
+    return;
+  }
   document.getElementById('loading-state').hidden = true;
   document.getElementById('error-notice').hidden = false;
   document.getElementById('error-message').textContent = message;
@@ -90,20 +98,30 @@ async function start() {
       return response;
     },
   });
-  const logout = document.createElement('button');
-  logout.type = 'button'; logout.className = 'button button-small button-quiet'; logout.textContent = 'Sair';
-  logout.addEventListener('click', async () => {
-    logout.disabled = true; signingOut = true;
+  // Sair: botão no topo da versão atual; a tela nova chama DoceAccount.signOut pelo menu.
+  async function signOut() {
+    signingOut = true;
     const { error } = await client.auth.signOut({ scope: 'local' });
-    if (error) { signingOut = false; logout.disabled = false; showFailure('Não foi possível sair. Tente novamente.'); return; }
+    if (error) { signingOut = false; return false; }
     location.replace(login);
-  });
-  document.querySelector('.topbar-actions').append(logout);
+    return true;
+  }
+  window.DoceAccount = Object.freeze({ signOut });
+  const actions = document.querySelector('.topbar-actions');
+  if (actions) {
+    const logout = document.createElement('button');
+    logout.type = 'button'; logout.className = 'button button-small button-quiet'; logout.textContent = 'Sair';
+    logout.addEventListener('click', async () => {
+      logout.disabled = true;
+      if (!await signOut()) { logout.disabled = false; showFailure('Não foi possível sair. Tente novamente.'); }
+    });
+    actions.append(logout);
+  }
   client.auth.onAuthStateChange((event) => {
     // SDK callbacks must not await other Auth calls within the internal lock.
     if (event === 'SIGNED_OUT') setTimeout(() => location.replace(login), 0);
   });
-  const script = document.createElement('script'); script.src = '/cloud-app.js';
+  const script = document.createElement('script'); script.src = appScript;
   script.onerror = () => showFailure('Não foi possível abrir a agenda. Recarregue a página.');
   document.body.append(script);
 }

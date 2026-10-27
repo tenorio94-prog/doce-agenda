@@ -28,8 +28,13 @@ export function openMenu() {
   openSheet(`<h2 id="sheet-title" tabindex="-1">Menu</h2><ul class="menu-list">
     <li><button class="menu-item" type="button" data-act="days">Dias e limite</button></li>
     <li><a class="menu-item" href="${fullVersion()}">Ver versão completa</a></li>
-    ${app.demo ? '<li><button class="menu-item" type="button" data-act="reset">Recomeçar exemplo</button></li><li><a class="menu-item" href="/cadastro/">Criar conta grátis</a></li>' : ''}
+    ${app.demo ? '<li><button class="menu-item" type="button" data-act="reset">Recomeçar exemplo</button></li><li><a class="menu-item" href="/cadastro/">Criar conta grátis</a></li>'
+      : '<li><button class="menu-item" type="button" data-act="sign-out">Sair</button></li>'}
   </ul>`);
+}
+export async function signOut(button) {
+  button.disabled = true;
+  if (!await window.DoceAccount?.signOut()) { button.disabled = false; toast('Não deu para sair. Tente de novo.'); }
 }
 
 // Dias em que ela não trabalha e quantos pedidos aceita por dia.
