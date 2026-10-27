@@ -245,9 +245,9 @@ try {
     assert.match(await page.locator('#notice-decide').innerText(), /Renata/);
     assert.equal(await page.locator('.order[data-id="DEMO-15"]').count(), 0, 'recusado fica fora da agenda');
     // Cobrar no WhatsApp: mensagem pronta, sem abrir nada.
-    await page.locator(`#d-${TODAY} .order[data-id="DEMO-07"] .order-open`).click();
+    await page.locator(`#d-${TODAY} .order[data-id="DEMO-08"] .order-open`).click();
     await sheet(page).locator('[data-act="charge"]').click();
-    assert.match(await page.locator('#message-text').innerText(), /Oi, Ana! .*falta R\$ 90/);
+    assert.match(await page.locator('#message-text').innerText(), /Oi, Marcos! .*falta R\$ 95/);
     await closeSheet(page);
     // Semana passada pelas setas, e de volta.
     await page.locator('[data-act="week"][data-step="-7"]').click();

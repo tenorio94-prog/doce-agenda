@@ -125,3 +125,26 @@ body{background:#fff8f8;color:#27171c;font-family:"Plus Jakarta Sans",Arial,sans
 /* Rodada 3: alvos de toque com pelo menos 44 px. */
 .reveal-password{top:2px;min-height:44px}
 .text-link{display:inline-flex;align-items:center;min-height:44px}
+/* Cara da landing acolhedora (27/10): creme, Bricolage, botões redondos, fio de glacê e selos. Formulário igual. */
+body{background:#fffaf2;color:#2a141b}
+.site-header{border-bottom-color:#eadfd2}
+.site-footer{border-top-color:#eadfd2}
+.header-link{color:#76213d;font-weight:700}
+.intro h1{color:#3a1220;letter-spacing:-.04em;line-height:1.12}
+.intro h1 .glace{display:inline-block;position:relative;color:inherit;white-space:nowrap}
+.intro h1 .glace::after{content:"";display:block;width:85%;height:18px;background:url(/previa-landing/fio.svg) left center/100% 100% no-repeat}
+.intro .eyebrow{color:#8d2948;font-size:14px;letter-spacing:0}
+.card-content h2{color:#3a1220}
+.account-card{border-color:#eadfd2;background:#fff}
+.mode-tab[aria-current="page"]{color:#a41f45}
+.mode-tab[aria-current="page"]::after{background:#a41f45}
+.button{min-height:50px;font-family:var(--font-body);font-weight:700;font-size:15px}
+.button-primary{background:#a41f45;border:2px solid #a41f45;box-shadow:none}
+.button-primary:hover:not(:disabled){background:#8d2948;border-color:#8d2948}
+.button-secondary{background:transparent;border:2px solid #8d2948;color:#76213d}
+.button-secondary:hover{background:#fff;border-color:#8d2948}
+.detail-icon{background:#f9ecd1;color:#8d2948}
+.checks{display:flex;flex-wrap:wrap;justify-content:center;gap:6px 16px;margin:14px 0 0;padding:0;list-style:none;font-size:13px;font-weight:700;color:#2a141b}
+.checks li::before{content:"✓";color:#1e6b47;margin-right:6px}
+#signup-form[hidden]+.checks{display:none}
+@media(max-width:760px){.intro h1{font-size:28px;line-height:1.2}.intro h1 .glace::after{margin-inline:auto;height:12px}}

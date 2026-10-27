@@ -18,7 +18,7 @@ const ORDERS = [
   ['04', -3, '14:00', 'Gabriela', 'Bolo de cenoura', 90, 'Cancelado', [], 6, { details: 'A festa foi adiada. Cliente avisou com antecedência.' }],
   ['05', -2, '11:00', 'Beatriz', 'Bolo de pote (10 un.)', 60, 'Entregue', [[60, 'Conferido']], 3],
   ['06', -1, '17:00', 'Roberta', 'Torta de limão', 110, 'Entregue', [[55, 'Conferido']], 4, { details: 'Pagou o sinal. O restante ficou para o Pix de sexta.' }],
-  ['07', 0, '10:00', 'Ana Clara', 'Bolo de pistache', 180, 'Pronto', [[90, 'Conferido']], 9, {
+  ['07', 0, '10:00', 'Ana Clara', 'Bolo de pistache', 180, 'Pronto', [[90, 'Conferido'], [90, 'Conferido']], 9, {
     details: 'Retirada na portaria. Caixa alta, sem laço.',
     cake: { size: '1,5 kg', flavor: 'Massa branca com pistache', filling: 'Brigadeiro de pistache', decoration: 'Chantininho verde-claro com flores', inscription: 'Feliz aniversário, Lu!' },
   }],
