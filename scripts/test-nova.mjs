@@ -100,6 +100,7 @@ try {
     const juliana = page.locator(`#d-${TODAY} .order[data-id="DEMO-09"]`);
     await juliana.locator('.order-done').click();
     await page.locator('#toast-undo:visible').waitFor();
+    assert.equal(await page.locator('#toast-text').innerText(), 'Pedido entregue: Docinhos sortidos (50 un.).', 'aviso sem errar o plural');
     assert.equal(await page.locator(`#d-${TODAY} .order`).last().getAttribute('data-id'), 'DEMO-09', 'entregue vai para o fim do dia');
     assert.equal((await order('DEMO-09')).status, 'Entregue');
     await page.locator('#toast-undo').click();
@@ -237,7 +238,7 @@ try {
     await page.locator('#refuse-form [name=reason]').fill('Agenda cheia no domingo');
     await page.locator('#refuse-form [type=submit]').click();
     await sheet(page).locator('[data-act="refuse-message"]').click();
-    assert.match(await page.locator('#message-text').innerText(), /Oi, Camila! .*não vou conseguir fazer o bolo de aniversário para domingo, 1\/11/);
+    assert.match(await page.locator('#message-text').innerText(), /Oi, Camila! .*não vou conseguir atender o pedido de bolo de aniversário para domingo, 1\/11/);
     await look('avisar recusa');
     await closeSheet(page);
     assert.equal((await order('DEMO-15')).status, 'Recusado');

@@ -102,6 +102,21 @@ test('Dinheiro: quem já levou e deve (qualquer mês) separado do que vai entrar
 test('Meu link e resposta ao pedido do link', () => {
   assert.equal(M.slugFrom('Doçuras da Rô!'), 'docuras-da-ro');
   assert.equal(M.slugFrom('  -- Ána  Bolo -- '), 'ana-bolo');
-  assert.equal(M.replyMessage({ client: 'Camila Souza', product: 'Bolo de aniversário', dueAt: '2026-11-01T11:00' }, '2026-10-27'), 'Oi, Camila! Vi seu pedido do bolo de aniversário para domingo, 1/11.');
-  assert.equal(M.replyMessage({ client: 'Bia', product: 'Pudim', dueAt: '' }, '2026-10-27'), 'Oi, Bia! Vi seu pedido do pudim.');
+  assert.equal(M.replyMessage({ client: 'Camila Souza', product: 'Bolo de aniversário', dueAt: '2026-11-01T11:00' }, '2026-10-27'), 'Oi, Camila! Vi seu pedido de bolo de aniversário para domingo, 1/11.');
+  assert.equal(M.replyMessage({ client: 'Bia', product: 'Pudim', dueAt: '' }, '2026-10-27'), 'Oi, Bia! Vi seu pedido de pudim.');
+});
+
+test('mensagens prontas dizem "pedido de <doce>": certo para torta, docinhos e bolo', () => {
+  const torta = { client: 'Roberta Lima', product: 'Torta de limão', dueAt: '2026-10-26T17:00' };
+  const docinhos = { client: 'Juliana', product: 'Docinhos sortidos (50 un.)', dueAt: '2026-10-31T18:00' };
+  const bolo = { client: 'Camila', product: 'Bolo de aniversário', dueAt: '2026-11-01T11:00' };
+  assert.match(M.chargeMessage(torta, 5500, '2026-10-27'), /Passando para lembrar do pedido de torta de limão \(ontem, 26\/10\): falta R\$ 55\./);
+  assert.match(M.chargeMessage(docinhos, 6000, '2026-10-27'), /lembrar do pedido de docinhos sortidos \(50 un\.\) \(sábado, 31\/10\)/);
+  assert.equal(M.replyMessage(bolo, '2026-10-27'), 'Oi, Camila! Vi seu pedido de bolo de aniversário para domingo, 1/11.');
+  assert.equal(M.replyMessage(torta, '2026-10-25'), 'Oi, Roberta! Vi seu pedido de torta de limão para amanhã.');
+  assert.match(M.refuseMessage(docinhos, '2026-10-27'), /Infelizmente não vou conseguir atender o pedido de docinhos sortidos \(50 un\.\) para sábado, 31\/10\./);
+  assert.match(M.refuseMessage(bolo, '2026-10-27'), /atender o pedido de bolo de aniversário para domingo, 1\/11\./);
+  for (const text of [torta, docinhos, bolo].flatMap((order) => [M.chargeMessage(order, 100, '2026-10-27'), M.replyMessage(order, '2026-10-27'), M.refuseMessage(order, '2026-10-27')])) {
+    assert.doesNotMatch(text, /\b(do|o) (torta|docinhos|bolo)/, `sem artigo antes do doce: ${text}`);
+  }
 });

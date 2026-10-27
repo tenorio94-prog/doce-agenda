@@ -128,7 +128,7 @@ try {
     }));
     await look('ficha do link');
     await ficha.locator('[data-act="reply"]').click();
-    assert.match(await page.locator('#message-text').innerText(), /^Oi, Camila! Vi seu pedido do bolo de aniversário para domingo, 1\/11\./);
+    assert.match(await page.locator('#message-text').innerText(), /^Oi, Camila! Vi seu pedido de bolo de aniversário para domingo, 1\/11\./);
     await look('responder no WhatsApp');
     await closeSheet(page);
     assert.equal((await api('/api/state')).orders.find((o) => o.id === 'DEMO-15').status, 'Solicitação', 'continua para decidir');

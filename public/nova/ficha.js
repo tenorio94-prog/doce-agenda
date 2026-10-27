@@ -159,7 +159,7 @@ export async function toggleDone(id) {
     app.previousStatus[id] = before;
     await api(`/orders/${encodeURIComponent(id)}`, { method: 'PUT', body: { status: 'Entregue' } });
     await reload(); await refresh(id);
-    toast(`${order.product} entregue.`, async () => {
+    toast(`Pedido entregue: ${order.product}.`, async () => {
       try {
         await api(`/orders/${encodeURIComponent(id)}`, { method: 'PUT', body: { status: before } });
         await reload(); await refresh(id);

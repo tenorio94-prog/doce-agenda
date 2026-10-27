@@ -138,18 +138,19 @@ export function decideSummary(order, today) {
     ? `${firstName(order.client)} pediu pelo link: ${lowerFirst(order.product)}${when}`
     : `${firstName(order.client)} espera sua resposta: ${lowerFirst(order.product)}${when}`;
 }
+// Mensagens prontas: "pedido de <doce>" serve para qualquer doce (torta, docinhos, bolo), sem errar o gênero.
 export function chargeMessage(order, dueCents, today) {
   const when = whenText(order, today);
-  return `Oi, ${firstName(order.client)}! Tudo bem? Passando para lembrar do ${lowerFirst(order.product)}${when ? ` (${when})` : ''}: falta ${brl(dueCents)}. Qualquer dúvida, é só me chamar. Obrigada!`;
+  return `Oi, ${firstName(order.client)}! Tudo bem? Passando para lembrar do pedido de ${lowerFirst(order.product)}${when ? ` (${when})` : ''}: falta ${brl(dueCents)}. Qualquer dúvida, é só me chamar. Obrigada!`;
 }
 // Pedido do link com dúvida ("pode ser de ninho?"): responder sem decidir ainda.
 export function replyMessage(order, today) {
   const when = whenText(order, today);
-  return `Oi, ${firstName(order.client)}! Vi seu pedido do ${lowerFirst(order.product)}${when ? ` para ${when}` : ''}.`;
+  return `Oi, ${firstName(order.client)}! Vi seu pedido de ${lowerFirst(order.product)}${when ? ` para ${when}` : ''}.`;
 }
 export function refuseMessage(order, today) {
   const when = whenText(order, today);
-  return `Oi, ${firstName(order.client)}! Obrigada por lembrar de mim. Infelizmente não vou conseguir fazer o ${lowerFirst(order.product)}${when ? ` para ${when}` : ''}. Espero poder te atender numa próxima!`;
+  return `Oi, ${firstName(order.client)}! Obrigada por lembrar de mim. Infelizmente não vou conseguir atender o pedido de ${lowerFirst(order.product)}${when ? ` para ${when}` : ''}. Espero poder te atender numa próxima!`;
 }
 export function whatsappLink(contact, text) {
   let digits = String(contact || '').replace(/\D/g, '');
