@@ -7,7 +7,9 @@ import { chromium, serveSite } from './lib/browser-test.mjs';
 const server = await serveSite();
 const browser = await chromium.launch();
 const results = [];
-const spToday = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo' }).format(new Date());
+// Relógio fixo no meio do mês: com a data real, hoje + 5 podia cair no mês seguinte, fora do calendário da vitrine.
+const NOW = new Date('2026-10-15T12:00:00-03:00');
+const spToday = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo' }).format(NOW);
 const day = (offset) => { const d = new Date(`${spToday}T12:00:00Z`); d.setUTCDate(d.getUTCDate() + offset); return d.toISOString().slice(0, 10); };
 const target = day(40);
 const setSlots = (page, value) => page.evaluate((v) => { const select = document.querySelector('#order-form wa-select[name="slots"]'); select.value = v; select.dispatchEvent(new Event('change', { bubbles: true })); }, value);
@@ -17,6 +19,7 @@ try {
     const errors = [];
     // 1. App (demo): limite de 3 por dia; um bolo de casamento de 3 vagas lota a data sozinho.
     const context = await browser.newContext({ viewport: { width, height }, locale: 'pt-BR', timezoneId: 'America/Sao_Paulo' });
+    await context.clock.setFixedTime(NOW);
     await context.addInitScript(() => localStorage.setItem('doce-agenda.onboarding.demo.v1', JSON.stringify({ dismissed: true, done: [] })));
     const page = await context.newPage();
     page.on('pageerror', (error) => errors.push(String(error)));
@@ -65,6 +68,7 @@ try {
 
     // 2. Vitrine: um doce de 3 vagas pede as datas livres para ele; um normal, não.
     const shop = await browser.newContext({ viewport: { width, height }, locale: 'pt-BR', timezoneId: 'America/Sao_Paulo' });
+    await shop.clock.setFixedTime(NOW);
     const asked = [];
     await shop.route('**/functions/v1/doce-public/**', (route) => {
       const url = new URL(route.request().url());
