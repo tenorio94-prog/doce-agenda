@@ -1924,7 +1924,18 @@ function attachEvents() {
 
 populateStatusOptions();
 attachEvents();
-loadState();
+loadState().then(openFromAddress);
+
+// Aberta pela tela nova em "Mudar doces e fotos" (/app/completa/#vitrine): já em Ajustes > Sua vitrine, com a edição
+// aberta. Sem esse endereço, nada muda.
+function openFromAddress() {
+  if (location.hash !== "#vitrine" || !$("#error-notice").hidden) return;
+  state.openSettings.add("link");
+  setActiveView("settings");
+  const card = $('.settings-card[data-settings="link"]');
+  card?.querySelector(".link-edit")?.setAttribute("open", "");
+  card?.scrollIntoView({ block: "start" });
+}
 // ---- Link de encomenda: passo a passo, lista de produtos e prévia ----
 const LINK_BASE = "lucast.app/p/";
 const LINK_PREVIEW_KEY = "doce-agenda.link-preview";
