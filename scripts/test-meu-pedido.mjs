@@ -98,7 +98,7 @@ try {
     await app.addInitScript(() => localStorage.setItem('doce-agenda.onboarding.demo.v1', JSON.stringify({ dismissed: true, done: [] })));
     const demo = await app.newPage();
     demo.on('pageerror', (error) => errors.push(String(error)));
-    await demo.goto(`${server.origin}/demo/`);
+    await demo.goto(`${server.origin}/demo/completa/`);
     await demo.locator('#today-title').waitFor();
     const id = await demo.evaluate((token) => {
       const k = 'doce-agenda.demo.v2', s = JSON.parse(localStorage.getItem(k)), order = s.orders.find((item) => item.origin === 'link' && item.contact);

@@ -36,7 +36,7 @@ try {
     const errors = [];
     page.on('pageerror', (error) => errors.push(String(error)));
     await page.clock.install();
-    await page.goto(`${server.origin}/demo/`);
+    await page.goto(`${server.origin}/demo/completa/`);
     await page.locator('#today-title').waitFor();
     const waiting = () => page.evaluate(() => JSON.parse(localStorage.getItem('doce-agenda.demo.v2')).orders.filter((order) => order.status === 'Solicitação').length);
     assert.equal(await page.title(), `(${await waiting()}) Doce Agenda — pedidos da sua confeitaria`, 'o título conta os pedidos do link');

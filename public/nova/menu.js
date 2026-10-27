@@ -1,7 +1,8 @@
 // Meu link e menu. A vitrine continua sendo montada na versão atual, com os mesmos dados.
 import { $, api, app, closeSheet, copy, esc, openSheet, reload, showError, toast } from './ui.js';
 
-const fullVersion = () => (app.demo ? '/demo/' : '/app/');
+// A versão completa (a anterior) fica por um tempo em /completa/, com os mesmos dados.
+const fullVersion = () => (app.demo ? '/demo/completa/' : '/app/completa/');
 const DAYS = [[1, 'Segunda'], [2, 'Terça'], [3, 'Quarta'], [4, 'Quinta'], [5, 'Sexta'], [6, 'Sábado'], [0, 'Domingo']];
 
 export function openLink() {

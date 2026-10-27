@@ -53,7 +53,7 @@ try {
     }, JSON.stringify(seed));
     const settings = await account.newPage();
     settings.on('pageerror', (error) => errors.push(String(error)));
-    await settings.goto(`${server.origin}/demo/`);
+    await settings.goto(`${server.origin}/demo/completa/`);
     await settings.locator('#today-title').waitFor();
     await settings.locator('[data-view="settings"]:visible').first().click();
     await settings.locator('.settings-card[data-settings="link"] > summary').click();

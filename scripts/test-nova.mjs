@@ -23,7 +23,7 @@ const browser = await chromium.launch();
 const results = [];
 const cents = (text) => Math.round(Number(text.replace(/[^\d,]/g, '').replace(',', '.')) * 100);
 
-async function open(width, height, url = '/demo/nova/') {
+async function open(width, height, url = '/demo/') {
   const context = await browser.newContext({ viewport: { width, height }, locale: 'pt-BR', timezoneId: 'America/Sao_Paulo', serviceWorkers: 'block', permissions: ['clipboard-read', 'clipboard-write'] });
   const page = await context.newPage();
   const errors = [], texts = [];
@@ -256,7 +256,7 @@ try {
     results.push('360: recusar, cobrar e semana passada');
   }
 
-  // 7. O mesmo armazenamento da demonstração atual, nos dois sentidos.
+  // 7. O mesmo armazenamento da versão completa (/demo/completa/), nos dois sentidos; /demo/nova/ continua abrindo a tela nova.
   {
     const { page, context, api, finish } = await open(360, 800);
     await page.locator('.bar [data-act="new"]').click();
@@ -269,7 +269,7 @@ try {
     await page.locator('.order', { hasText: 'Joana Sete' }).waitFor();
     const old = await context.newPage();
     await old.clock.setFixedTime(NOW);
-    await old.goto(`${server.origin}/demo/`);
+    await old.goto(`${server.origin}/demo/completa/`);
     await old.locator('#today-title').waitFor();
     await old.locator('[data-view="orders"]:visible').first().click();
     await old.locator('#view-orders', { hasText: 'Joana Sete' }).waitFor();
@@ -278,8 +278,10 @@ try {
     await page.reload();
     await page.locator('#d-2026-11-02 .order', { hasText: 'Rita Oito' }).waitFor();
     assert.ok((await api('/api/state')).orders.some((item) => item.client === 'Joana Sete'));
+    await page.goto(`${server.origin}/demo/nova/`);
+    await page.locator('#d-2026-11-02 .order', { hasText: 'Rita Oito' }).waitFor();
     await finish();
-    results.push('360: /demo/nova/ e /demo/ com os mesmos pedidos');
+    results.push('360: /demo/, /demo/nova/ e /demo/completa/ com os mesmos pedidos');
   }
 
   // Sem rolagem lateral em 320 px nas telas principais.

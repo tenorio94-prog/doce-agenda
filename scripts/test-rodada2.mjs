@@ -15,7 +15,7 @@ try {
     const page = await context.newPage();
     const errors = [];
     page.on('pageerror', (error) => errors.push(String(error)));
-    await page.goto(`${server.origin}/demo/`);
+    await page.goto(`${server.origin}/demo/completa/`);
     await page.locator('#today-title').waitFor();
 
     // Simplificação, etapa 2: Hoje responde "o que faço agora?". O título traz o número do que pede você,
@@ -149,7 +149,7 @@ try {
     await context.route('**/*', (route) => new URL(route.request().url()).origin === server.origin ? route.continue() : route.abort());
     await context.addInitScript((seed) => { localStorage.setItem('doce-agenda.onboarding.demo.v1', JSON.stringify({ dismissed: true, done: [] })); if (!localStorage.getItem('doce-agenda.demo.v2')) localStorage.setItem('doce-agenda.demo.v2', JSON.stringify(seed)); }, fixture);
     const page = await context.newPage();
-    await page.goto(`${server.origin}/demo/`);
+    await page.goto(`${server.origin}/demo/completa/`);
     await page.locator('#today-title').waitFor();
     await page.locator('[data-view="orders"]:visible').first().click();
     await page.locator('#view-orders .vn-closed-group').waitFor();

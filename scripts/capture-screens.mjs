@@ -30,15 +30,19 @@ const demoView = (view, ready) => async (page) => {
 // Com uma janela aberta, a captura da página inteira muda de posição entre rodadas; a tela visível não.
 const screens = [
   ['landing', '/'], ['cadastro', '/cadastro/'], ['privacidade', '/privacidade/'], ['previa-link', '/encomenda/?preview=1'],
-  ['demo-agenda', '/demo/', (page) => page.locator('#today-title').waitFor()],
-  ['demo-pedidos', '/demo/', demoView('orders', '#orders-title')],
-  ['demo-mes', '/demo/', demoView('month', '#month-title')],
-  ['demo-ajustes', '/demo/', demoView('settings', '#settings-title')],
-  ['demo-pedido', '/demo/', async (page) => {
+  // Desde a Etapa 3 a versão anterior fica em /demo/completa/; os nomes demo-* continuam para comparar com capturas antigas.
+  ['nova-agenda', '/demo/', (page) => page.locator('#days .order').first().waitFor()],
+  ['nova-dinheiro', '/demo/', async (page) => { await page.locator('.bar [data-tab="dinheiro"]').click(); await page.locator('#money-received').waitFor(); }],
+  ['nova-pedido', '/demo/', async (page) => { await page.locator('#days .order-open').first().click(); await page.locator('#sheet[open]').waitFor(); }, true],
+  ['demo-agenda', '/demo/completa/', (page) => page.locator('#today-title').waitFor()],
+  ['demo-pedidos', '/demo/completa/', demoView('orders', '#orders-title')],
+  ['demo-mes', '/demo/completa/', demoView('month', '#month-title')],
+  ['demo-ajustes', '/demo/completa/', demoView('settings', '#settings-title')],
+  ['demo-pedido', '/demo/completa/', async (page) => {
     await page.locator('[data-open-order]').first().click();
     await page.locator('dialog[open]').waitFor();
   }, true],
-  ['demo-novo', '/demo/', async (page) => {
+  ['demo-novo', '/demo/completa/', async (page) => {
     await page.locator('[data-action="new-order"]:visible').first().click();
     await page.locator('#order-dialog[open]').waitFor();
   }, true],

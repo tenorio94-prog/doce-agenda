@@ -17,7 +17,7 @@ async function open(data,width=360,inject='') {
  await context.addInitScript(s=>{localStorage.setItem('doce-agenda.demo.v2',JSON.stringify(s));},data);
  if(inject)await context.route('**/browser-store.js',async route=>route.fulfill({contentType:'text/javascript',body:(await readFile(path.join(root,'browser-store.js'),'utf8'))+inject}));
  const page=await context.newPage();page.setDefaultTimeout(12000);page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
- await page.clock.install({time:new Date('2026-10-13T12:00:00Z')});await page.goto(origin+'/demo/');await page.locator('#today-title').waitFor();
+ await page.clock.install({time:new Date('2026-10-13T12:00:00Z')});await page.goto(origin+'/demo/completa/');await page.locator('#today-title').waitFor();
  await page.locator('.nav-item[data-view="month"]').click();await page.locator('#view-month .month-content').waitFor();
  return {page,context};
 }

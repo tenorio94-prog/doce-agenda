@@ -23,7 +23,7 @@ try {
     await context.addInitScript(() => localStorage.setItem('doce-agenda.onboarding.demo.v1', JSON.stringify({ dismissed: true, done: [] })));
     const page = await context.newPage();
     page.on('pageerror', (error) => errors.push(String(error)));
-    await page.goto(`${server.origin}/demo/`);
+    await page.goto(`${server.origin}/demo/completa/`);
     await page.locator('#today-title').waitFor();
     await page.evaluate(() => { const k = 'doce-agenda.demo.v2', s = JSON.parse(localStorage.getItem(k)); s.availability.dailyOrderLimit = 3; localStorage.setItem(k, JSON.stringify(s)); });
     await page.reload();
@@ -100,7 +100,7 @@ try {
     await account.addInitScript(() => localStorage.setItem('doce-agenda.onboarding.demo.v1', JSON.stringify({ dismissed: true, done: [] })));
     const settings = await account.newPage();
     settings.on('pageerror', (error) => errors.push(String(error)));
-    await settings.goto(`${server.origin}/demo/`);
+    await settings.goto(`${server.origin}/demo/completa/`);
     await settings.locator('#today-title').waitFor();
     await settings.evaluate(() => { const k = 'doce-agenda.demo.v2', s = JSON.parse(localStorage.getItem(k)); s.orderPage.active = false; localStorage.setItem(k, JSON.stringify(s)); });
     await settings.reload();

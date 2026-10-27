@@ -27,7 +27,7 @@ try {
     const page = await context.newPage();
     const errors = [];
     page.on('pageerror', (error) => errors.push(String(error)));
-    await page.goto(`${server.origin}/demo/`);
+    await page.goto(`${server.origin}/demo/completa/`);
     await page.locator('#today-title').waitFor();
 
     const badge = page.locator('.nav-item[data-view="today"]:visible #nav-attention-count');
@@ -89,7 +89,7 @@ try {
     localStorage.setItem('doce-agenda.onboarding.demo.v1', JSON.stringify({ dismissed: true, done: [] }));
   }, calm);
   const page = await context.newPage();
-  await page.goto(`${server.origin}/demo/`);
+  await page.goto(`${server.origin}/demo/completa/`);
   await page.locator('#today-title').waitFor();
   assert.equal(await page.locator('#today-title').innerText(), 'Tudo em dia');
   assert.equal(await page.locator('#nav-attention-count').evaluate((el) => el.hidden), true, 'sem pendência, sem selo');

@@ -16,7 +16,7 @@ try {
     const page = await context.newPage();
     const errors = [];
     page.on('pageerror', (error) => errors.push(String(error)));
-    await page.goto(`${server.origin}/demo/`);
+    await page.goto(`${server.origin}/demo/completa/`);
     await page.locator('#today-title').waitFor();
     // O esperado sai do próprio armazenamento da demo, com a regra do Meu mês: só o conferido conta.
     const expected = await page.evaluate(() => {

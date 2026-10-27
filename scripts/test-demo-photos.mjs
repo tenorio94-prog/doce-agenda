@@ -33,7 +33,7 @@ try {
     page.on('console', (m) => { if (m.type() === 'error' && !m.text().includes('cloudflareinsights')) errors.push(`${width}: ${m.text()}`); });
     page.on('response', (r) => { if (r.status() >= 400 && r.url().includes('/encomenda/exemplos/')) errors.push(`${width}: ${r.status()} ${r.url()}`); });
     await page.clock.setFixedTime(new Date('2026-10-15T12:00:00-03:00'));
-    await page.goto(`${origin}/demo/`, { waitUntil: 'networkidle' });
+    await page.goto(`${origin}/demo/completa/`, { waitUntil: 'networkidle' });
     await page.locator('#today-title').waitFor();
     const agendaCLS = await page.evaluate(() => window.photoCLS);
     assert.match(await page.title(), /Doce Agenda/);

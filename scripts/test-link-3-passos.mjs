@@ -39,7 +39,7 @@ try {
     const page = await context.newPage();
     const errors = [];
     page.on('pageerror', (error) => errors.push(String(error)));
-    await page.goto(`${server.origin}/demo/`);
+    await page.goto(`${server.origin}/demo/completa/`);
     await page.locator('#view-today .onboarding [data-task="link"]').click();
     const dialog = page.locator('#link-wizard[open]');
     await dialog.waitFor();
@@ -103,7 +103,7 @@ try {
   const context = await browser.newContext({ viewport: { width: 360, height: 740 }, locale: 'pt-BR', timezoneId: 'America/Sao_Paulo' });
   await context.addInitScript(() => localStorage.setItem('doce-agenda.onboarding.demo.v1', JSON.stringify({ dismissed: true, done: [] })));
   const page = await context.newPage();
-  await page.goto(`${server.origin}/demo/`);
+  await page.goto(`${server.origin}/demo/completa/`);
   await page.locator('#today-title').waitFor();
   const before = JSON.stringify(await stored(page));
   await page.locator('.settings-button:visible, [data-view="settings"]:visible').first().click();

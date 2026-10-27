@@ -18,7 +18,7 @@ try {
     const page = await context.newPage();
     const errors = [];
     page.on('pageerror', (error) => errors.push(String(error)));
-    await page.goto(`${origin}/demo/`);
+    await page.goto(`${origin}/demo/completa/`);
     // Simplificação, etapa 2: a lista da semana saiu de Hoje e fica em Pedidos > Produção.
     await page.locator('#today-title').waitFor();
     assert.equal(await page.locator('#view-today [data-orders-mode], #view-today .production-week').count(), 0, 'Hoje não tem mais a lista da semana');

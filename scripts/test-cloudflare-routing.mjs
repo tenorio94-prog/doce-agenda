@@ -3,9 +3,11 @@ import assert from 'node:assert/strict';
 const origin = process.env.DOCE_TEST_ORIGIN || 'https://doce-agenda.doce-agenda-local.workers.dev';
 const checks = [
   ['/p/qa-routing-check', 'id="request-page"'],
-  ['/app/', '/cloud-bootstrap.js'],
+  ['/app/', 'data-app="/nova/nova.js"'],
+  ['/app/completa/', 'topbar-actions'],
   ['/cadastro/', 'id="login-submit"'],
-  ['/demo/', '/data-client.js'],
+  ['/demo/', '/nova/nova.js'],
+  ['/demo/completa/', '/app.js'],
   ['/privacidade/', 'Cloudflare para hospedar'],
 ];
 for (const [route, expected] of checks) {

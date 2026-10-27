@@ -35,7 +35,7 @@ try {
     const context = await browser.newContext({ viewport: { width, height }, locale: 'pt-BR', timezoneId: 'America/Sao_Paulo' });
     const page = await context.newPage();
     page.on('pageerror', (error) => errors.push(String(error)));
-    await page.goto(`${origin}/demo/`);
+    await page.goto(`${origin}/demo/completa/`);
     const card = page.locator('#view-today .onboarding');
     await card.waitFor();
     assert.equal(await page.locator('.story-overlay').count(), 0, 'sem stories');
@@ -97,7 +97,7 @@ try {
     const skip = await browser.newContext({ viewport: { width, height }, locale: 'pt-BR', timezoneId: 'America/Sao_Paulo' });
     const skipPage = await skip.newPage();
     skipPage.on('pageerror', (error) => errors.push(String(error)));
-    await skipPage.goto(`${origin}/demo/`);
+    await skipPage.goto(`${origin}/demo/completa/`);
     await skipPage.locator('#view-today .onboarding [data-action="onboarding-skip"]').click();
     await skipPage.locator('#toast').filter({ hasText: 'Como funciona' }).waitFor();
     assert.equal(await skipPage.locator('#view-today .onboarding').count(), 0);
@@ -118,7 +118,7 @@ try {
     });
     const accountPage = await account.newPage();
     accountPage.on('pageerror', (error) => errors.push(String(error)));
-    await accountPage.goto(`${origin}/demo/`);
+    await accountPage.goto(`${origin}/demo/completa/`);
     const steps = accountPage.locator('#view-today .onboarding');
     await steps.waitFor();
     const stepsText = await steps.innerText();
@@ -140,7 +140,7 @@ try {
       const fresh = await accountContext({ width, height }, true);
       const freshPage = await fresh.newPage();
       freshPage.on('pageerror', (error) => errors.push(String(error)));
-      await freshPage.goto(`${origin}/demo/`);
+      await freshPage.goto(`${origin}/demo/completa/`);
       const intent = freshPage.locator('#view-today .onboarding .onboarding-intent');
       await intent.waitFor();
       assert.match(await intent.innerText(), /Você já tem encomenda marcada\?/);

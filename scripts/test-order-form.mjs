@@ -44,7 +44,7 @@ try {
     const page = await context.newPage();
     const errors = [];
     page.on('pageerror', (error) => errors.push(String(error)));
-    await page.goto(`${origin}/demo/`);
+    await page.goto(`${origin}/demo/completa/`);
     await page.locator('#view-today h1').waitFor();
     await page.waitForFunction(() => customElements.get('wa-input') && customElements.get('wa-select'));
 
@@ -225,7 +225,7 @@ try {
       })), payments: [] }));
     });
     const page = await context.newPage();
-    await page.goto(`${origin}/demo/`);
+    await page.goto(`${origin}/demo/completa/`);
     await page.locator('#view-today h1').waitFor();
     for (const [i, status] of ['Pronto', 'Entregue'].entries()) {
       await page.locator('[data-view="orders"]:visible').first().click();

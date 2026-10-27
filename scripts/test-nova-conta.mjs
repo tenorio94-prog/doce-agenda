@@ -1,4 +1,4 @@
-// Tela nova na conta (/app/nova/): node scripts/build-cloudflare.mjs && node scripts/test-nova-conta.mjs
+// Tela nova na conta (/app/, também em /app/nova/): node scripts/build-cloudflare.mjs && node scripts/test-nova-conta.mjs
 // Sem conta real: a sessão é simulada no navegador e o servidor é simulado aqui, com as mesmas regras do
 // doce-api (transactState, revisão otimista e canRebaseWrite). Prova o caminho cloud-bootstrap → /nova/nova.js,
 // não a integração com o Supabase de verdade.
@@ -21,7 +21,7 @@ const server = await serveSite();
 const browser = await chromium.launch();
 const results = [];
 
-async function open(width, height, url = '/app/nova/') {
+async function open(width, height, url = '/app/') {
   const backend = { state: demoSeedState(new Date(2026, 9, 27, 12)), revision: 1, calls: [] };
   const context = await browser.newContext({ viewport: { width, height }, locale: 'pt-BR', timezoneId: 'America/Sao_Paulo', serviceWorkers: 'block' });
   await context.route('**/account/config.js', (route) => route.fulfill({ contentType: 'text/javascript', body: config }));
@@ -133,7 +133,7 @@ try {
     results.push(`${width}: conta abre a tela nova, grava, recebe pedido do link, conflito, Dinheiro e Sair`);
   }
 
-  // Sem login, vai para a entrada; a versão atual (/app/) continua abrindo a tela antiga com "Sair" no topo.
+  // Sem login, vai para a entrada; a versão completa (/app/completa/) abre a tela anterior com "Sair" no topo.
   {
     const context = await browser.newContext({ viewport: { width: 360, height: 740 } });
     await context.route('**/account/config.js', (route) => route.fulfill({ contentType: 'text/javascript', body: config }));
@@ -141,12 +141,12 @@ try {
     await page.goto(`${server.origin}/app/nova/`);
     await landsOnLogin(page);
     await context.close();
-    const old = await open(360, 740, '/app/');
+    const old = await open(360, 740, '/app/completa/');
     await old.page.locator('#today-title').waitFor();
     assert.equal(await old.page.locator('.topbar-actions button', { hasText: 'Sair' }).count(), 1);
     assert.equal(await old.page.evaluate(() => !!document.querySelector('script[src="/cloud-app.js"]')), true);
     await old.context.close();
-    results.push('sem login vai para a entrada; /app/ continua na versão atual');
+    results.push('sem login vai para a entrada; /app/completa/ abre a versão anterior');
   }
 } finally {
   await browser.close();

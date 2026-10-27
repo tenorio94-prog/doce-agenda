@@ -54,7 +54,7 @@ try {
     page.on('pageerror', (error) => errors.push(String(error)));
 
     // Vindo da landing: cartão do pedido da Camila, endereço limpo.
-    await page.goto(`${origin}/demo/?de=landing`);
+    await page.goto(`${origin}/demo/completa/?de=landing`);
     await page.locator('#today-title').waitFor();
     const card = page.locator('#view-today .request-banner');
     await card.waitFor();
@@ -75,7 +75,7 @@ try {
     const many = await browser.newContext({ viewport: { width, height }, locale: 'pt-BR', timezoneId: 'America/Sao_Paulo' });
     const manyPage = await many.newPage();
     manyPage.on('pageerror', (error) => errors.push(String(error)));
-    await manyPage.goto(`${origin}/demo/`);
+    await manyPage.goto(`${origin}/demo/completa/`);
     await manyPage.locator('#view-today .request-banner').waitFor();
     await manyPage.evaluate(() => {
       const key = 'doce-agenda.demo.v2';

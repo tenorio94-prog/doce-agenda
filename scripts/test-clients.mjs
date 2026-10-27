@@ -21,7 +21,7 @@ try {
     const page = await context.newPage();
     page.on('pageerror', (error) => errors.push(String(error)));
     page.on('dialog', (dialog) => dialog.accept());
-    await page.goto(`${origin}/demo/`);
+    await page.goto(`${origin}/demo/completa/`);
     await page.locator('#today-title').waitFor();
     await page.locator('.nav-item[data-view="clients"]').click();
     await page.locator('#clients-title').waitFor();

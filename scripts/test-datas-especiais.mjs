@@ -18,7 +18,7 @@ try {
     const page = await context.newPage();
     const errors = [];
     page.on('pageerror', (error) => errors.push(String(error)));
-    await page.goto(`${server.origin}/demo/`);
+    await page.goto(`${server.origin}/demo/completa/`);
     await page.locator('#today-title').waitFor();
 
     // 1. Ajustes: Páscoa, de daqui a 30 a 34 dias, ovo de colher até 1 pedido.

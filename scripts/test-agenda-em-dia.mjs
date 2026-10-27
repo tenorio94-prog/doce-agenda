@@ -26,7 +26,7 @@ try {
     const errors = [];
     page.on('pageerror', (error) => errors.push(String(error)));
     await page.clock.install();
-    await page.goto(`${server.origin}/demo/`);
+    await page.goto(`${server.origin}/demo/completa/`);
     await page.locator('#today-title').waitFor();
     // Pedidos monta a lista inteira; o texto existe mesmo com a aba escondida.
     const listed = () => page.evaluate(() => document.querySelector('#view-orders').textContent);
@@ -72,7 +72,7 @@ try {
   const context = await browser.newContext({ viewport: { width: 360, height: 800 }, locale: 'pt-BR', timezoneId: 'America/Sao_Paulo' });
   const page = await context.newPage();
   await page.clock.install();
-  await page.goto(`${server.origin}/demo/`);
+  await page.goto(`${server.origin}/demo/completa/`);
   await page.locator('#today-title').waitFor();
   let reads = 0;
   await page.exposeFunction('countRead', () => { reads += 1; });

@@ -46,7 +46,7 @@ try {
   const page = await context.newPage();page.setDefaultTimeout(12000);
   page.on('pageerror', e => errors.push(e.message));
   await page.clock.install({time: new Date('2026-10-13T12:00:00-03:00')});
-  await page.goto(origin + '/demo/', {waitUntil: 'networkidle'});
+  await page.goto(origin + '/demo/completa/', {waitUntil: 'networkidle'});
   await page.locator('#view-today h1').waitFor();
   await page.locator('.nav-item[data-view="orders"]').click();
   for (const [id, stamp] of Object.entries(expected)) {

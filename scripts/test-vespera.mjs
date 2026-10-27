@@ -39,7 +39,7 @@ async function open(viewport, when) {
   }, stored);
   const page = await context.newPage();
   await page.clock.setFixedTime(when);
-  await page.goto(`${server.origin}/demo/`);
+  await page.goto(`${server.origin}/demo/completa/`);
   await page.locator('#today-title').waitFor();
   return { context, page };
 }

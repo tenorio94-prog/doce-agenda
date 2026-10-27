@@ -76,11 +76,11 @@ try {
     page.on('pageerror', e => errors.push(String(e)));
     page.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });
     page.on('response', r => { if(r.status() >= 400) errors.push(`${r.status()} ${r.url()}`); });
-    await page.goto(`${server.origin}/demo/`);
+    await page.goto(`${server.origin}/demo/completa/`);
     await page.locator('#today-title').waitFor();
     await loadFixture(page, fixture());
     assert.match(await page.title(), /Doce Agenda/);
-    assert.equal(new URL(page.url()).pathname, '/demo/');
+    assert.equal(new URL(page.url()).pathname, '/demo/completa/');
     assert.match(await page.locator('.vn-inbox-counts').textContent(), /3 pelo link · 2 orçamentos/);
     assert.equal(await section(page, 'review').locator('.vn-order').count(), 3);
     assert.equal(await section(page, 'negotiation').locator('.vn-order').count(), 2);

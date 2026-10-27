@@ -5,9 +5,9 @@ import { build } from 'esbuild';
 
 // Builds the whole published site into deploy-cloud/public; it does not publish.
 // /          landing, /landing/ its assets
-// /demo/     app saved only in this browser (browser-store.js + app.js)
-// /demo/nova/, /app/nova/  new screens (public/nova/ → /nova/nova.js), same data as /demo/ and /app/
-// /app/, /agenda.html, /cadastro/  account version (cloud-bootstrap.js + cloud-app.js)
+// /demo/     new screens saved only in this browser (browser-store.js + /nova/nova.js); also /demo/nova/
+// /app/, /agenda.html  account version of the new screens (cloud-bootstrap.js + /nova/nova.js); also /app/nova/
+// /demo/completa/, /app/completa/  the full previous app (app.js, cloud-app.js), kept for a while; /cadastro/
 // app.js and cloud-app.js are the same bundle of public/app.js; it reads DoceApi.mode at run time.
 // /encomenda/, /p/<slug>  public order link; /privacidade/
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -83,30 +83,35 @@ demoHtml = swap(demoHtml, 'Não foi possível atualizar seus pedidos.', 'Não de
 // A faixa da demonstração já nasce visível: sem ela aparecer depois e empurrar a tela (CLS).
 demoHtml = swap(demoHtml, '<div class="demo-bar" id="demo-bar" role="note" hidden>', '<div class="demo-bar" id="demo-bar" role="note">');
 demoHtml = swap(demoHtml, 'data-action="reset-demo" hidden>', 'data-action="reset-demo">');
-await mkdir(path.join(output, 'demo'), { recursive: true });
-await writeFile(path.join(output, 'demo', 'index.html'), demoHtml);
+// Etapa 3: a versão completa (antiga) fica por um tempo em /demo/completa/ e /app/completa/, sem índice.
+const noindex = (page) => swap(page, '<meta name="viewport" content="width=device-width, initial-scale=1">', '<meta name="viewport" content="width=device-width, initial-scale=1">\n    <meta name="robots" content="noindex, nofollow">');
+await mkdir(path.join(output, 'demo', 'completa'), { recursive: true });
+await writeFile(path.join(output, 'demo', 'completa', 'index.html'), noindex(demoHtml));
 await bundle('public/app.js', path.join(output, 'app.js'));
-// Versão nova das telas da confeiteira: arquivos em /nova/, páginas em /demo/nova/ (mesmo armazenamento da /demo/)
-// e /app/nova/ (conta: o mesmo cloud-bootstrap abre /nova/nova.js depois do login).
+// Tela nova das confeiteiras, o padrão desde a Etapa 3: arquivos em /nova/; /demo/ (armazenamento do navegador) e
+// /app/ (conta: o mesmo cloud-bootstrap abre /nova/nova.js depois do login). /demo/nova/ e /app/nova/ seguem como
+// endereços antigos da prévia, sem índice.
 await mkdir(path.join(output, 'nova'), { recursive: true });
 await copyFile(path.join(source, 'nova', 'nova.css'), path.join(output, 'nova', 'nova.css'));
 await bundle('public/nova/main.js', path.join(output, 'nova', 'nova.js'));
 const novaHtml = await readFile(path.join(source, 'nova', 'index.html'), 'utf8');
-await mkdir(path.join(output, 'demo', 'nova'), { recursive: true });
-await writeFile(path.join(output, 'demo', 'nova', 'index.html'), novaHtml);
+const indexed = (page) => swap(page, '<meta name="robots" content="noindex, nofollow">\n', '');
 let novaCloudHtml = swap(novaHtml, '<script src="/browser-store.js" defer></script>\n<script src="/data-client.js" defer></script>\n', '');
 novaCloudHtml = swap(novaCloudHtml, '<script src="/nova/nova.js" defer></script>', '<script src="/account/config.js" defer></script>\n<script src="/cloud-bootstrap.js" data-app="/nova/nova.js" defer></script>');
-await mkdir(path.join(output, 'app', 'nova'), { recursive: true });
-await writeFile(path.join(output, 'app', 'nova', 'index.html'), novaCloudHtml);
+for (const [dir, page] of [['demo', novaHtml], ['app', novaCloudHtml]]) {
+  await mkdir(path.join(output, dir, 'nova'), { recursive: true });
+  await writeFile(path.join(output, dir, 'index.html'), indexed(page));
+  await writeFile(path.join(output, dir, 'nova', 'index.html'), page);
+}
+await writeFile(path.join(output, 'agenda.html'), indexed(novaCloudHtml));
 
 // Account version: the bootstrap checks the session, then loads cloud-app.js.
 let cloudHtml = swap(html, /\s*<script src="\/data-client\.js" defer><\/script>/, '');
 cloudHtml = swap(cloudHtml, /\s*<script src="\/app\.js" defer><\/script>/, '');
 cloudHtml = swap(cloudHtml, '</head>', '<script src="/account/config.js" defer></script>\n<script src="/cloud-bootstrap.js" defer></script>\n</head>');
 cloudHtml = swap(cloudHtml, 'dados deste dispositivo', 'dados da sua conta');
-await mkdir(path.join(output, 'app'), { recursive: true });
-await writeFile(path.join(output, 'app', 'index.html'), cloudHtml);
-await writeFile(path.join(output, 'agenda.html'), cloudHtml);
+await mkdir(path.join(output, 'app', 'completa'), { recursive: true });
+await writeFile(path.join(output, 'app', 'completa', 'index.html'), noindex(cloudHtml));
 await copyFile(path.join(output, 'app.js'), path.join(output, 'cloud-app.js'));
 await bundle('cloud/app-bootstrap.js', path.join(output, 'cloud-bootstrap.js'));
 
@@ -127,5 +132,5 @@ await writeFile(path.join(output, '_headers'), previews.flatMap((preview) => [
   '  Content-Security-Policy: default-src \'none\'; script-src \'self\'; style-src \'self\'; font-src \'self\'; img-src \'self\'; connect-src \'none\'; form-action \'none\'; base-uri \'none\'; frame-ancestors \'none\'',
   '  X-Robots-Tag: noindex, nofollow',
   '',
-]).concat(['/demo/nova/*', '  X-Robots-Tag: noindex, nofollow', '', '/app/nova/*', '  X-Robots-Tag: noindex, nofollow', '']).join('\n'));
+]).concat(['/demo/nova/*', '/app/nova/*', '/demo/completa/*', '/app/completa/*'].flatMap((route) => [route, '  X-Robots-Tag: noindex, nofollow', ''])).join('\n'));
 console.log('Site pronto em deploy-cloud/public (não publica). Rota /p/<slug> preservada.');

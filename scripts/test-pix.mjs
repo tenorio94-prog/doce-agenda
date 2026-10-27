@@ -19,7 +19,7 @@ try {
   // Sem o aviso de teste: nenhum Pix na tela.
   {
     const page = await browser.newPage();
-    await page.goto(`${origin}/demo/`);
+    await page.goto(`${origin}/demo/completa/`);
     await page.locator('#today-title').waitFor();
     await page.locator('.settings-button, [data-view="settings"]').first().click();
     await page.locator('#settings-title').waitFor();
@@ -36,7 +36,7 @@ try {
     await context.addInitScript(() => localStorage.setItem('doce-agenda.onboarding.demo.v1', JSON.stringify({ dismissed: true, done: [] })));
     const page = await context.newPage();
     page.on('pageerror', (error) => errors.push(String(error)));
-    await page.goto(`${origin}/demo/?pix=teste`);
+    await page.goto(`${origin}/demo/completa/?pix=teste`);
     await page.locator('#today-title').waitFor();
     assert.equal(new URL(page.url()).search, '', 'o aviso sai do endereço');
 
