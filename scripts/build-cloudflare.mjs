@@ -46,6 +46,7 @@ const copy = (from, to = from) => cp(path.join(source, from), path.join(output, 
 for (const name of ['browser-store.js', 'data-client.js', 'favicon.svg', 'logo.svg', 'tokens.css', 'manifest.webmanifest', 'aviso-sw.js']) await copy(name);
 for (const name of ['fonts', 'icons', 'encomenda', 'privacidade']) await copy(name);
 await copy('landing/index.html', 'index.html');
+await copy('previa-landing');
 await cp(path.join(source, 'landing'), path.join(output, 'landing'), {
   recursive: true, filter: (file) => !['index.html', 'main.js'].some((name) => path.resolve(file) === path.join(source, 'landing', name)),
 });
@@ -132,5 +133,5 @@ await writeFile(path.join(output, '_headers'), previews.flatMap((preview) => [
   '  Content-Security-Policy: default-src \'none\'; script-src \'self\'; style-src \'self\'; font-src \'self\'; img-src \'self\'; connect-src \'none\'; form-action \'none\'; base-uri \'none\'; frame-ancestors \'none\'',
   '  X-Robots-Tag: noindex, nofollow',
   '',
-]).concat(['/demo/nova/*', '/app/nova/*', '/demo/completa/*', '/app/completa/*'].flatMap((route) => [route, '  X-Robots-Tag: noindex, nofollow', ''])).join('\n'));
+]).concat(['/previa-landing/*', '/demo/nova/*', '/app/nova/*', '/demo/completa/*', '/app/completa/*'].flatMap((route) => [route, '  X-Robots-Tag: noindex, nofollow', ''])).join('\n'));
 console.log('Site pronto em deploy-cloud/public (não publica). Rota /p/<slug> preservada.');
