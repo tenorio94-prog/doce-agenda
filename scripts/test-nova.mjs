@@ -132,7 +132,8 @@ try {
     await page.locator('#sheet[open]').waitFor({ state: 'detached' }).catch(() => {});
     const ana = page.locator(`#d-${SATURDAY} .order`, { hasText: 'Ana' });
     await ana.waitFor();
-    assert.match(await ana.innerText(), /15h[\s\S]*Bolo de cenoura[\s\S]*Ana · Retirada[\s\S]*Falta R\$ 120/);
+    assert.match(await ana.innerText(), /15h[\s\S]*Bolo de cenoura[\s\S]*Ana[\s\S]*Falta R\$ 120/);
+    assert.doesNotMatch(await ana.innerText(), /Retirada/, 'retirada é o normal e não aparece');
     results.push(`${width}: anotar no sábado`);
 
     // 3. Recebi R$ 50 → Falta R$ 70, e o Dinheiro soma R$ 50.
@@ -148,10 +149,10 @@ try {
     const after = await received(page);
     assert.equal(after - before, 5000, 'Recebido soma R$ 50');
     await tab(page, 'dinheiro');
-    await page.locator('#money-list').waitFor();
+    await page.locator('#coming-list').waitFor();
     await look('dinheiro');
     if (shots) await page.screenshot({ path: path.join(shots, `nova-dinheiro-${width}.png`) });
-    assert.match(await page.locator('#money-list').innerText(), /Ana[\s\S]*Falta R\$ 70/);
+    assert.match(await page.locator('#coming-list').innerText(), /Ana[\s\S]*Falta R\$ 70/, 'confirmado com saldo: ainda vai entrar');
     await tab(page, 'agenda');
     results.push(`${width}: recebi e Dinheiro`);
 
@@ -215,7 +216,7 @@ try {
 
     // Meu link (inativo no exemplo) e menu.
     await page.locator('[data-act="link"]').click();
-    await sheet(page).locator('text=No exemplo, o link não está ligado.').waitFor();
+    await page.locator('#link-wizard').waitFor();
     await look('meu link');
     await closeSheet(page);
     await page.locator('[data-act="menu"]').click();
@@ -295,7 +296,7 @@ try {
     await look('novo 320');
     await closeSheet(page);
     await tab(page, 'dinheiro');
-    await page.locator('#money-list').waitFor();
+    await page.locator('#coming-list').waitFor();
     await look('dinheiro 320');
     await finish();
     results.push('320: sem rolagem lateral');
