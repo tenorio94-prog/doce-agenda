@@ -1,5 +1,6 @@
 import { createEmptyState } from './state-engine.js';
 import { DEMO_COVER_PHOTO, DEMO_PHOTO_CATALOG } from './demo-photos.js';
+import { saoPauloDay } from './monthly-summary.js';
 
 // Fictitious bakery for the /demo/ page only. Dates are relative to the visit, so Agenda,
 // Pedidos and Meu mês always have something to show. Nothing here reaches a real account.
@@ -8,7 +9,10 @@ const CAKE_LABELS = { size: 'Tamanho', flavor: 'Sabor', filling: 'Recheio', deco
 // Fictitious WhatsApp numbers: Clientes groups the orders by them.
 const CONTACTS = { Fernanda: '(11) 90000-0101', Paula: '(11) 90000-0102', 'Lúcia': '(11) 90000-0103', Gabriela: '(11) 90000-0104', Beatriz: '(11) 90000-0105',
   Roberta: '(11) 90000-0106', 'Ana Clara': '(11) 90000-0107', Marcos: '(11) 90000-0108', Juliana: '(11) 90000-0109', Carla: '(11) 90000-0110', Bia: '(11) 90000-0111',
-  'Sônia': '(11) 90000-0112', 'Patrícia': '(11) 90000-0113', Renata: '(11) 90000-0114', Helena: '(11) 90000-0115' };
+  'Sônia': '(11) 90000-0112', 'Patrícia': '(11) 90000-0113', Renata: '(11) 90000-0114', Helena: '(11) 90000-0115',
+  Rita: '(11) 90000-0116', Rose: '(11) 90000-0117', Denise: '(11) 90000-0118', Marina: '(11) 90000-0119',
+  Viviane: '(11) 90000-0120', 'Fátima': '(11) 90000-0121', 'Cíntia': '(11) 90000-0122', Yara: '(11) 90000-0123',
+  Iracema: '(11) 90000-0124', Raquel: '(11) 90000-0125', Mirela: '(11) 90000-0126', Talita: '(11) 90000-0127', Vera: '(11) 90000-0128', 'Lívia': '(11) 90000-0129' };
 
 // [id, offset in days, time, client, product, total, status, payments [[amount, status]], notice days, extra]
 const ORDERS = [
@@ -42,9 +46,29 @@ const ORDERS = [
   ['H6', -190, '14:00', 'Helena', 'Torta de limão', 110, 'Entregue', [[110, 'Conferido']], 8],
 ];
 
+// Uma agenda que parece usada, com espaço para novas encomendas e dois dias livres.
+// O dia da Camila (+5) permanece com capacidade para aceitar sua solicitação.
+const FUTURE_ORDERS = [
+  ['16', 3, '15:00', 'Rita', 'Bolo de cenoura', 140, 'Confirmado', [[70, 'Conferido']], 6],
+  ['29', 3, '17:00', 'Lívia', 'Torta de limão', 110, 'Confirmado', [], 5],
+  ['17', 4, '11:00', 'Rose', 'Pão de mel (20 un.)', 120, 'Pronto', [[120, 'Conferido']], 7],
+  ['18', 5, '14:00', 'Denise', 'Kit festa (bolo + doces)', 0, 'Confirmado', [], 5, { totalKnown: false, mode: 'Entrega', location: 'Rua das Acácias, 45' }],
+  ['19', 6, '10:00', 'Marina', 'Torta de limão', 110, 'Em produção', [[55, 'Conferido']], 5],
+  ['20', 6, '16:00', 'Viviane', 'Kit festa (bolo + doces)', 260, 'Confirmado', [[260, 'Conferido']], 12],
+  ['21', 7, '14:00', 'Fátima', 'Bolo de aniversário', 0, 'Confirmado', [], 7, { totalKnown: false }],
+  ['22', 8, '11:00', 'Cíntia', 'Docinhos sortidos (50 un.)', 120, 'Confirmado', [[120, 'Conferido']], 6],
+  ['23', 9, '09:00', 'Yara', 'Torta de morango', 160, 'Confirmado', [], 7, { mode: 'Entrega', location: 'Avenida das Palmeiras, 180' }],
+  ['24', 9, '15:00', 'Iracema', 'Bolo de chocolate', 180, 'Confirmado', [[90, 'Conferido']], 8],
+  ['25', 10, '10:00', 'Raquel', 'Kit festa (bolo + doces)', 280, 'Confirmado', [[140, 'Conferido']], 10],
+  ['26', 11, '15:00', 'Mirela', 'Brigadeiro (cento)', 170, 'Confirmado', [[170, 'Conferido']], 6],
+  ['27', 12, '11:00', 'Talita', 'Torta de limão', 110, 'Confirmado', [], 5],
+  ['28', 13, '14:00', 'Vera', 'Bolo de cenoura', 90, 'Confirmado', [[45, 'Conferido']], 6],
+];
+
 function localDay(now, offset) {
-  const date = new Date(now.getFullYear(), now.getMonth(), now.getDate() + offset);
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+  const date = new Date(`${saoPauloDay(now)}T00:00:00Z`);
+  date.setUTCDate(date.getUTCDate() + offset);
+  return date.toISOString().slice(0, 10);
 }
 
 export function demoSeedState(now = new Date()) {
@@ -64,7 +88,11 @@ export function demoSeedState(now = new Date()) {
       { name: 'Pudim de leite', description: 'Calda de caramelo. Forma de 22 cm.', category: 'Tortas', priceFromCents: 7000, photo: 'exemplo/pudim-de-leite-960.webp' },
     ],
   };
-  for (const [id, offset, time, client, product, total, status, payments, notice, extra = {}] of ORDERS) {
+  const today = localDay(now, 0);
+  const weekday = new Date(`${today}T00:00:00Z`).getUTCDay();
+  const lastDay = 13 - ((weekday + 6) % 7); // Fim da semana que vem, de segunda a domingo.
+  const orders = [...ORDERS, ...FUTURE_ORDERS.filter((order) => order[1] <= lastDay - 2)];
+  for (const [id, offset, time, client, product, total, status, payments, notice, extra = {}] of orders) {
     const orderId = `DEMO-${id}`;
     const created = `${localDay(now, offset - notice)}T12:00:00.000Z`;
     const { cake, ...rest } = extra;

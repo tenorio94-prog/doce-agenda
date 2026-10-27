@@ -4,6 +4,7 @@ import { demoSeedState } from './demo-seed.js';
 import { createEmptyState, transactState } from './state-engine.js';
 import { monthlySummary } from './monthly-summary.js';
 import { clientsSummary } from './clients.js';
+import { addDays, balance, dayMark, dayOrders, todayKey } from '../public/nova/model.js';
 
 const request = (state, url, method = 'GET', body) => transactState(state, url, { method, headers: { 'Content-Type': 'application/json' }, body: body && JSON.stringify(body) });
 
@@ -11,7 +12,41 @@ test('demo bakery passes the same validation as a restored backup', () => {
   const seed = demoSeedState(new Date(2026, 9, 14, 9, 0));
   const result = request(createEmptyState(), '/api/import', 'POST', seed);
   assert.equal(result.status, 200, JSON.stringify(result.body));
-  assert.equal(result.body.orders, 21);
+  assert.equal(result.body.orders, 31);
+});
+
+test('agenda do exemplo ocupa as duas semanas sem alterar os pedidos conhecidos', () => {
+  for (let date = 19; date <= 25; date++) {
+    const now = new Date(`2026-10-${date}T15:00:00Z`);
+    const state = demoSeedState(now), today = todayKey(now);
+    const weekday = new Date(`${today}T00:00:00Z`).getUTCDay();
+    const last = 13 - ((weekday + 6) % 7);
+    const visibleDays = Array.from({ length: last + 1 }, (_, offset) => addDays(today, offset));
+    const sizes = visibleDays.map((day) => dayOrders(state, day).length);
+    assert.equal(sizes.filter((n) => n === 0).length, 2, `${today}: dois dias livres`);
+    assert.ok(sizes.filter((n) => n === 3).length >= 2, `${today}: pelo menos dois dias cheios`);
+    assert.ok(sizes.every((n) => n <= 3), `${today}: limite diário respeitado`);
+    assert.ok(sizes.filter((n) => n === 1 || n === 2).length > sizes.filter((n) => n === 0).length, `${today}: maioria ocupada`);
+    assert.equal(dayMark(state, today), 'cheio');
+    const extra = state.orders.filter((order) => /^DEMO-(?:1[6-9]|2[0-9])$/.test(order.id));
+    assert.ok(extra.every((order) => ['Confirmado', 'Em produção', 'Pronto'].includes(order.status)));
+    assert.ok(extra.every((order) => order.contact && !['Paula', 'Helena', 'Ana Clara'].includes(order.client)));
+    assert.ok(extra.some((order) => order.mode === 'Entrega' && order.location));
+    assert.ok(extra.some((order) => order.totalKnown === false));
+    assert.ok(extra.some((order) => order.totalKnown && balance(state, order).due === 0));
+    assert.ok(extra.some((order) => order.totalKnown && balance(state, order).received === 0));
+    assert.equal(balance(state, extra.find((order) => order.client === 'Rita')).due, 7000);
+    assert.equal(balance(state, extra.find((order) => order.client === 'Rose')).due, 0);
+    assert.equal(state.orders.find((order) => order.id === 'DEMO-15').dueAt.slice(0, 10), addDays(today, 5));
+    assert.deepEqual(state.orders.filter((order) => order.status === 'Entregue' && balance(state, order).due > 0).map((order) => order.client), ['Roberta']);
+  }
+});
+
+test('datas da demo usam o dia de São Paulo na virada da meia-noite', () => {
+  for (const [instant, day] of [['2026-10-28T02:59:59Z', '2026-10-27'], ['2026-10-28T03:00:00Z', '2026-10-28']]) {
+    const state = demoSeedState(new Date(instant));
+    assert.equal(state.orders.find((order) => order.id === 'DEMO-07').dueAt, `${day}T10:00`);
+  }
 });
 
 test('demo covers every stage the tour explains', () => {
