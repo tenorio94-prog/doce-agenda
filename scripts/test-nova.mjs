@@ -85,7 +85,7 @@ try {
     for (const box of await today.evaluateAll((rows) => rows.map((row) => row.getBoundingClientRect().bottom))) assert.ok(box <= barTop, `pedido de hoje sem rolar (${box} ≤ ${barTop})`);
     assert.match(await page.locator(`#d-${TODAY} .day-meta`).innerText(), /3 pedidos · cheio/);
     assert.match(await page.locator('#notice-decide').innerText(), /2 pedidos para decidir/);
-    assert.match(await page.locator('#demo-line').innerText(), /Exemplo de uma semana de encomendas\./);
+    assert.match(await page.locator('#demo-line').innerText(), /Exemplo: a semana da Lu, da Doces da Lu\./);
     assert.match(await page.locator('#days').innerText(), /nada marcado/, 'dia vazio em linha curta');
     results.push(`${width}: hoje à vista`);
 
