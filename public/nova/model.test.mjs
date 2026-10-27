@@ -84,3 +84,24 @@ test('mensagens prontas e palavras que a tela não usa', () => {
   assert.equal(M.friendlyError('Este pedido ocupa 2 vagas.', 'outra'), 'outra');
   assert.equal(M.friendlyError('Esta data está marcada como fechada.'), 'Esta data está marcada como fechada.');
 });
+
+test('Dinheiro: quem já levou e deve (qualquer mês) separado do que vai entrar; pedido sem valor fica fora', () => {
+  const state = { payments: [{ orderId: 'r', amount: 55, status: 'Conferido' }, { orderId: 'j', amount: 60, status: 'Informado' }], orders: [
+    { id: 'r', status: 'Entregue', dueAt: '2026-10-26T17:00', total: 110 }, { id: 'old', status: 'Entregue', dueAt: '2026-08-02T10:00', total: 40 },
+    { id: 'paid', status: 'Entregue', dueAt: '2026-10-20T10:00', total: 30, totalKnown: true }, { id: 'j', status: 'Confirmado', dueAt: '2026-10-27T18:00', total: 120 },
+    { id: 'p', status: 'Pronto', dueAt: '2026-10-27T10:00', total: 90 }, { id: 'open', status: 'Confirmado', dueAt: '2026-10-28T10:00', total: 0, totalKnown: false },
+    { id: 'x', status: 'Cancelado', dueAt: '2026-10-28T10:00', total: 99 },
+  ] };
+  state.payments.push({ orderId: 'paid', amount: 30, status: 'Conferido' });
+  assert.deepEqual(M.owedOrders(state).map((o) => o.id), ['old', 'r']);
+  assert.deepEqual(M.comingOrders(state).map((o) => o.id), ['p', 'j']);
+  assert.equal(M.sumDue(state, M.owedOrders(state)), 9500);
+  assert.equal(M.sumDue(state, M.comingOrders(state)), 21000, 'o Pix só avisado não desconta');
+});
+
+test('Meu link e resposta ao pedido do link', () => {
+  assert.equal(M.slugFrom('Doçuras da Rô!'), 'docuras-da-ro');
+  assert.equal(M.slugFrom('  -- Ána  Bolo -- '), 'ana-bolo');
+  assert.equal(M.replyMessage({ client: 'Camila Souza', product: 'Bolo de aniversário', dueAt: '2026-11-01T11:00' }, '2026-10-27'), 'Oi, Camila! Vi seu pedido do bolo de aniversário para domingo, 1/11.');
+  assert.equal(M.replyMessage({ client: 'Bia', product: 'Pudim', dueAt: '' }, '2026-10-27'), 'Oi, Bia! Vi seu pedido do pudim.');
+});

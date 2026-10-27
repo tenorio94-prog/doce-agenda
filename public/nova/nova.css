@@ -94,7 +94,8 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
 }
 .o-time { flex: none; width: 44px; font-family: var(--font-title); font-weight: 700; font-size: 17px; }
 .o-main { flex: 1; min-width: 0; display: grid; gap: 2px; }
-.o-what { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* O nome do doce quebra em até 2 linhas, sem cortar com reticências. */
+.o-what { font-weight: 700; line-height: 1.3; overflow-wrap: anywhere; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; }
 .o-line { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .o-who { flex: 1; min-width: 0; font-size: 14px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tag { flex: none; padding: 2px 8px; border-radius: var(--radius-pill); font-size: 13px; font-weight: 700; white-space: nowrap; }
@@ -109,6 +110,11 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
 .order.is-done { background: transparent; box-shadow: none; }
 .order.is-done .o-what, .order.is-done .o-time { text-decoration: line-through; color: var(--muted); }
 
+/* Conta nova: convite no lugar da faixa e da lista */
+.empty-start { display: grid; justify-items: start; gap: 12px; margin-top: 20px; padding: 24px 20px; border-radius: var(--r-l); background: var(--branco); border: var(--hairline); box-shadow: var(--shadow-s); }
+.empty-start h2 { font-size: 24px; }
+.empty-start .link-btn { padding-left: 0; text-align: left; font-weight: 600; }
+
 /* Barra de baixo */
 .bar {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; background: var(--branco); border-top: var(--hairline);
@@ -122,6 +128,11 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
 .bar-tab[aria-current="page"] { color: var(--ink); font-weight: 800; }
 .bar-tab[aria-current="page"] svg { color: var(--link); }
 .bar-new { padding: 0 18px; }
+.bar-tab { position: relative; }
+.bar-badge {
+  position: absolute; top: 0; left: calc(50% + 6px); display: grid; place-items: center; min-width: 20px; height: 20px; padding: 0 5px;
+  border-radius: var(--radius-pill); background: var(--link); color: #fff; font-size: 12px; font-weight: 800; line-height: 1;
+}
 
 /* Dinheiro */
 .month-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-top: 12px; }
@@ -133,8 +144,10 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
 .money-big strong { font-family: var(--font-title); font-size: clamp(22px, 7vw, 32px); white-space: nowrap; }
 .section-title { font-size: 19px; margin: 22px 0 8px; }
 .due-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
-.due-row { display: flex; align-items: center; gap: 8px; padding-right: 8px; background: var(--branco); border: var(--hairline); border-radius: var(--r-s); }
-.due-open { flex: 1; min-width: 0; display: grid; gap: 2px; min-height: 60px; padding: 8px 12px; border: 0; background: none; text-align: left; font-size: 14px; }
+/* Os botões descem para uma segunda linha quando não cabem ao lado (Recebi e Cobrar no celular). */
+.due-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; margin-left: auto; padding: 4px 0; }
+.due-row { display: flex; flex-wrap: wrap; align-items: center; gap: 0 8px; padding-right: 8px; background: var(--branco); border: var(--hairline); border-radius: var(--r-s); }
+.due-open { flex: 1 1 200px; min-width: 0; display: grid; gap: 2px; min-height: 60px; padding: 8px 12px; border: 0; background: none; text-align: left; font-size: 14px; }
 .due-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 16px; }
 .due-open .muted { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
@@ -216,3 +229,14 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
   .top-date { font-size: 24px; }
   .wk-day { min-height: 76px; }
 }
+
+/* Meu link: assistente de 3 passos e prévia */
+.lw-step { font-size: 14px; font-weight: 700; color: var(--link); margin-bottom: -8px; }
+.slug-field { display: flex; align-items: stretch; min-width: 0; border: 1.5px solid var(--border-input); border-radius: var(--r-s); background: var(--branco); overflow: hidden; }
+.slug-field:focus-within { outline: 3px solid var(--focus); outline-offset: 2px; }
+.slug-prefix { display: flex; align-items: center; padding: 0 0 0 12px; color: var(--muted); font-size: 14px; white-space: nowrap; }
+.field .slug-field input { min-width: 0; border: 0; border-radius: 0; padding-left: 2px; }
+.field .slug-field input:focus-visible { outline: none; }
+.lw-product { display: grid; grid-template-columns: minmax(0, 1fr) 96px; gap: 8px; }
+.lw-summary { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
+.preview-frame { width: 100%; height: min(70dvh, 640px); border: var(--hairline); border-radius: var(--r-m); background: var(--branco); }

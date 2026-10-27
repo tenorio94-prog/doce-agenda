@@ -1,29 +1,9 @@
-// Meu link e menu. A vitrine continua sendo montada na versão atual, com os mesmos dados.
-import { $, api, app, closeSheet, copy, esc, openSheet, reload, showError, toast } from './ui.js';
+// Menu: Dias e limite, versão completa e, na demo, Recomeçar exemplo. Meu link fica em link.js.
+import { api, app, closeSheet, openSheet, reload, showError, toast } from './ui.js';
 
 // A versão completa (a anterior) fica por um tempo em /completa/, com os mesmos dados.
 const fullVersion = () => (app.demo ? '/demo/completa/' : '/app/completa/');
 const DAYS = [[1, 'Segunda'], [2, 'Terça'], [3, 'Quarta'], [4, 'Quinta'], [5, 'Sexta'], [6, 'Sábado'], [0, 'Domingo']];
-
-export function openLink() {
-  const page = app.state.orderPage || {};
-  if (page.active && page.slug) {
-    const url = `${location.origin}/p/${page.slug}`;
-    openSheet(`<h2 id="sheet-title" tabindex="-1">Meu link</h2><p>Mande este endereço para a cliente escolher o doce e a data.</p>
-      <p class="link-url" id="link-url">${esc(url.replace(/^https?:\/\//, ''))}</p>
-      <button class="btn btn-primary" type="button" data-act="copy-link">Copiar link</button>
-      <a class="btn btn-outline" href="/p/${esc(page.slug)}" target="_blank" rel="noopener">Ver como a cliente vê</a>
-      <p class="muted">Para mudar doces, fotos e textos, use a versão completa.</p>`);
-    return;
-  }
-  openSheet(`<h2 id="sheet-title" tabindex="-1">Meu link</h2>
-    <p>Com o link, a cliente escolhe o doce e a data sozinha, e o pedido chega aqui para você decidir.</p>
-    <p class="muted">${app.demo ? 'No exemplo, o link não está ligado.' : 'Seu link ainda não está ligado.'} Ele se monta em Ajustes, na versão completa.</p>
-    <a class="btn btn-primary" href="${fullVersion()}">Montar meu link</a>`);
-}
-export async function copyLink() {
-  toast(await copy(`${location.origin}/p/${app.state.orderPage.slug}`) ? 'Link copiado.' : 'Não deu para copiar. Selecione o endereço e copie.');
-}
 
 export function openMenu() {
   openSheet(`<h2 id="sheet-title" tabindex="-1">Menu</h2><ul class="menu-list">

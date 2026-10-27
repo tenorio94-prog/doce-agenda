@@ -89,6 +89,8 @@ export function parseMoney(text) {
   if (!/^\d+(\.\d{1,2})?$/.test(value)) return NaN;
   return Math.round(Number(value) * 100);
 }
+// Endereço do link a partir do nome: sem acento, minúsculas e hífens (igual ao app.js).
+export const slugFrom = (text) => String(text || '').normalize('NFD').replace(/\p{M}/gu, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40).replace(/-+$/g, '');
 export const centsInput = (cents) => (cents % 100 ? (cents / 100).toFixed(2).replace('.', ',') : String(cents / 100));
 
 // Dia fechado ou cheio. "Cheio" é a regra do servidor: não cabe mais um pedido de tamanho 1.
@@ -115,10 +117,12 @@ export function dayOrders(state, day) {
 export const decideOrders = (state) => (state.orders || []).filter((order) => group(order.status) === 'decide')
   .sort((a, b) => (orderDay(a) || '9999').localeCompare(orderDay(b) || '9999') || byTime(a, b));
 export const lateOrders = (state, today) => (state.orders || []).filter((order) => group(order.status) === 'confirmed' && orderDay(order) && orderDay(order) < today).sort(byTime);
-// Dinheiro do mês: confirmados ou entregues daquele mês com saldo, os mais antigos primeiro.
-export const dueOrders = (state, month) => (state.orders || [])
-  .filter((order) => ['confirmed', 'delivered'].includes(group(order.status)) && orderDay(order).slice(0, 7) === month && balance(state, order).due > 0)
-  .sort(byTime);
+// Dinheiro: quem já levou e ainda deve (de qualquer mês, os mais antigos primeiro) separado do que ainda vai entrar
+// (confirmados não entregues com saldo, por data). Pedido sem valor não entra em nenhuma das duas.
+const withBalance = (state, kind) => (state.orders || []).filter((order) => group(order.status) === kind && balance(state, order).due > 0).sort(byTime);
+export const owedOrders = (state) => withBalance(state, 'delivered');
+export const comingOrders = (state) => withBalance(state, 'confirmed');
+export const sumDue = (state, orders) => orders.reduce((total, order) => total + balance(state, order).due, 0);
 
 const firstName = (name) => String(name || '').trim().split(/\s+/)[0] || '';
 const lowerFirst = (text) => String(text || '').trim().replace(/^./, (c) => c.toLocaleLowerCase('pt-BR'));
@@ -137,6 +141,11 @@ export function decideSummary(order, today) {
 export function chargeMessage(order, dueCents, today) {
   const when = whenText(order, today);
   return `Oi, ${firstName(order.client)}! Tudo bem? Passando para lembrar do ${lowerFirst(order.product)}${when ? ` (${when})` : ''}: falta ${brl(dueCents)}. Qualquer dúvida, é só me chamar. Obrigada!`;
+}
+// Pedido do link com dúvida ("pode ser de ninho?"): responder sem decidir ainda.
+export function replyMessage(order, today) {
+  const when = whenText(order, today);
+  return `Oi, ${firstName(order.client)}! Vi seu pedido do ${lowerFirst(order.product)}${when ? ` para ${when}` : ''}.`;
 }
 export function refuseMessage(order, today) {
   const when = whenText(order, today);

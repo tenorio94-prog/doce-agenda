@@ -35,7 +35,8 @@ function weekStrip() {
 
 function orderRow(order) {
   const tag = M.moneyTag(app.state, order), done = order.status === 'Entregue';
-  const who = `${order.client} · ${order.mode === 'Entrega' ? 'Entrega' : 'Retirada'}`;
+  // Retirada é o normal e não aparece; Entrega, sim.
+  const who = order.mode === 'Entrega' ? `${order.client} · Entrega` : order.client;
   return `<li class="order${done ? ' is-done' : ''}" data-id="${esc(order.id)}">
     <button class="order-open" type="button" data-act="open" data-id="${esc(order.id)}">
       <span class="o-time">${esc(M.hourLabel(order))}</span>
@@ -64,8 +65,15 @@ function dayList() {
   return html;
 }
 
+// Conta nova (ou só cancelados e recusados): um convite no lugar da faixa e de duas semanas de "nada marcado".
+const emptyStart = () => `<section class="empty-start" id="empty-start" aria-labelledby="empty-title">
+  <h2 id="empty-title">Anote sua primeira encomenda</h2><p>Quem pediu, o quê, quando e o valor. Leva um minuto.</p>
+  <button class="btn btn-outline" type="button" data-act="new">Anotar encomenda</button>
+  <button class="link-btn" type="button" data-act="link">Ou monte seu link para as clientes pedirem sozinhas</button></section>`;
+
 export function renderAgenda() {
   const view = $('#view-agenda');
+  if (!app.state.orders.some((order) => M.group(order.status) !== 'out')) { view.innerHTML = emptyStart(); return; }
   view.innerHTML = `${notices()}${weekStrip()}<div class="days" id="days">${dayList()}</div>`;
 }
 

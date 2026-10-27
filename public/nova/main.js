@@ -4,8 +4,9 @@ import * as M from './model.js';
 import { renderAgenda, scrollToDay } from './agenda.js';
 import * as Ficha from './ficha.js';
 import * as Form from './form.js';
-import { renderMoney } from './dinheiro.js';
+import { renderMoney, updateMoneyBadge } from './dinheiro.js';
 import * as Menu from './menu.js';
+import * as Link from './link.js';
 import { $, app, closeSheet, hideToast, reload, sheetOpen, toast } from './ui.js';
 
 app.week = M.weekStart(app.today);
@@ -16,6 +17,7 @@ app.month = app.today.slice(0, 7);
 async function refresh(focusId = null, dayToShow = null) {
   if (app.tab === 'agenda') {
     renderAgenda();
+    updateMoneyBadge();
     if (dayToShow) scrollToDay(dayToShow);
     if (focusId) document.querySelector(`.order-done[data-id="${CSS.escape(focusId)}"]`)?.focus({ preventScroll: true });
   } else await renderMoney();
@@ -42,6 +44,8 @@ const actions = {
   'received-money': (el) => Ficha.openReceived(el.dataset.id, true),
   seen: (el) => Ficha.markSeen(el.dataset.payment, el.dataset.id),
   charge: (el) => Ficha.openCharge(el.dataset.id),
+  'charge-money': (el) => Ficha.openCharge(el.dataset.id, true),
+  reply: (el) => Ficha.openReply(el.dataset.id),
   'copy-message': () => Ficha.copyMessage(),
   done: (el) => Ficha.toggleDone(el.dataset.id),
   deliver: (el) => Ficha.deliverFromFicha(el.dataset.id),
@@ -59,9 +63,10 @@ const actions = {
   'force-save': () => Form.submitForm($('#order-form'), true),
   day: (el) => scrollToDay(el.dataset.day),
   week: (el) => { app.week = M.addDays(app.week, Number(el.dataset.step)); renderAgenda(); $(`[data-act="week"][data-step="${el.dataset.step}"]`)?.focus(); },
-  month: (el) => { app.month = M.addMonths(app.month, Number(el.dataset.step)); renderMoney().then(() => $(`[data-act="month"][data-step="${el.dataset.step}"]:not([disabled])`)?.focus()); },
-  link: () => Menu.openLink(),
-  'copy-link': () => Menu.copyLink(),
+  month: (el) => { app.month = M.addMonths(app.month, Number(el.dataset.step)); renderMoney({ keep: true }).then(() => $(`[data-act="month"][data-step="${el.dataset.step}"]:not([disabled])`)?.focus()); },
+  link: () => Link.openLink(),
+  'copy-link': () => Link.copyLink(),
+  'preview-link': () => Link.previewSaved(),
   menu: () => Menu.openMenu(),
   days: () => Menu.openDays(),
   reset: () => Menu.openReset(),
@@ -85,8 +90,10 @@ document.addEventListener('submit', async (event) => {
   else if (form.id === 'accept-form') Ficha.submitAccept(form);
   else if (form.id === 'refuse-form') Ficha.submitRefuse(form);
   else if (form.id === 'confirm-form') Ficha.confirmQuote(form.dataset.id, form.dataset.anyway === 'true');
+  else if (form.id === 'link-wizard') Link.wizardNext(event.submitter?.value || 'next');
   else if (form.id === 'days-form') { if (await Menu.submitDays(form)) refresh(); }
 });
+document.addEventListener('input', (event) => { if (event.target.closest('#link-wizard')) Link.onWizardInput(event.target); });
 document.addEventListener('change', (event) => {
   if (event.target.name === 'mode' && event.target.form?.id === 'order-form') Form.syncMode(event.target.form);
 });
@@ -102,6 +109,7 @@ async function start() {
     $('#load-state').hidden = true;
     $('#views').hidden = false;
     renderAgenda();
+    updateMoneyBadge();
   } catch (error) {
     $('#load-state').textContent = `${error.message} Recarregue a página para tentar de novo.`;
   }

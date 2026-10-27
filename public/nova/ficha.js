@@ -18,7 +18,8 @@ function agreed(order) {
   const cake = order.cake?.values || {}, labels = order.cake?.labels || {};
   const rows = Object.entries(cake).filter(([, value]) => String(value || '').trim())
     .map(([key, value]) => `<div><dt>${esc(labels[key] || key)}</dt><dd>${esc(value)}</dd></div>`).join('');
-  return `<section class="f-block" aria-labelledby="f-agreed"><h3 id="f-agreed">O combinado</h3>
+  // Pedido do link: o que a cliente pediu, nas palavras dela; nos outros, o que foi combinado.
+  return `<section class="f-block" aria-labelledby="f-agreed"><h3 id="f-agreed">${order.origin === 'link' ? 'O que ela pediu' : 'O combinado'}</h3>
     <p class="f-notes">${order.details ? esc(order.details) : '<span class="muted">Nada anotado.</span>'}</p>
     ${rows ? `<dl class="f-cake">${rows}</dl>` : ''}</section>`;
 }
@@ -56,7 +57,7 @@ function fichaHtml(order) {
     <p class="f-who"><button class="link-btn" type="button" data-act="client" data-id="${esc(order.id)}">${esc(order.client)}</button> · ${esc(modeText(order))}</p>
     <p class="f-state"><span class="pill pill-${kind}">${M.GROUP_LABEL[kind] || order.status}</span>${order.origin === 'link' && request ? ' <span class="muted">Chegou pelo link</span>' : ''}</p>
     ${agreed(order)}
-    ${request ? `<section class="f-block"><h3>Contato</h3><p>${order.contact ? `WhatsApp ${esc(order.contact)}` : '<span class="muted">Sem WhatsApp.</span>'}</p></section>` : money(order)}
+    ${request ? `<section class="f-block"><h3>Contato</h3><p>${order.contact ? `WhatsApp ${esc(order.contact)}` : '<span class="muted">Sem WhatsApp.</span>'}</p>${order.contact ? `<div class="f-actions"><button class="btn btn-outline" type="button" data-act="reply" data-id="${esc(order.id)}">Responder no WhatsApp</button></div>` : ''}</section>` : money(order)}
     ${mainActions(order)}
     ${footer ? `<div class="f-footer">${footer}</div>` : ''}
   </article>`;
@@ -130,9 +131,13 @@ function messageSheet(title, text, contact, back) {
     ${link ? `<a class="btn btn-primary" href="${esc(link)}" target="_blank" rel="noopener">Abrir conversa</a><button class="btn btn-outline" type="button" data-act="copy-message">Copiar mensagem</button>`
       : `<button class="btn btn-primary" type="button" data-act="copy-message">Copiar mensagem</button><p class="muted">No exemplo, a conversa não abre.</p>`}`, back);
 }
-export function openCharge(id) {
+export function openCharge(id, fromMoney = false) {
   const order = findOrder(id), { due } = M.balance(app.state, order);
-  messageSheet('Cobrar no WhatsApp', M.chargeMessage(order, due, app.today), order.contact, backToFicha(id));
+  messageSheet('Cobrar no WhatsApp', M.chargeMessage(order, due, app.today), order.contact, fromMoney ? null : backToFicha(id));
+}
+export function openReply(id) {
+  const order = findOrder(id);
+  messageSheet('Responder no WhatsApp', M.replyMessage(order, app.today), order.contact, backToFicha(id));
 }
 export async function copyMessage() {
   toast(await copy($('#message-text').textContent) ? 'Mensagem copiada.' : 'Não deu para copiar. Selecione o texto e copie.');
