@@ -2,3 +2,4 @@
 .screen-shot{margin-top:20px;width:100%;max-width:360px;border:1px solid #e5d7d2;border-radius:18px;box-shadow:0 8px 20px #3a12200d}
 h1 span:after{border:0;border-radius:0;transform:none;width:85%;height:18px;background:url(fio.svg) left center/100% 100% no-repeat}.story .wrap:before{content:"";display:block;width:110px;height:22px;background:url(fio.svg) center/contain no-repeat;margin-bottom:24px}
 [hidden]{display:none!important}
+.link-visual .ld-switch{display:flex;width:fit-content;margin:0 auto 16px}.link-visual .ld-stage[data-side="client"] .ld-baker,.link-visual .ld-stage[data-side="baker"] .ld-client{display:none}.link-visual .ld-stage{grid-template-columns:1fr}
