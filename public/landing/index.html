@@ -41,7 +41,7 @@
         <div class="hero-copy">
           <p class="hero-kicker">Para quem vende doces por encomenda</p>
           <h1 id="hero-title">Saiba o que fazer, entregar e cobrar <em>em cada dia da semana.</em></h1>
-          <p class="hero-lede">Anote cada encomenda, veja quando um dia lota, marque o sinal que você conferiu e receba pedidos das clientes por um link. Tudo no celular.</p>
+          <p class="hero-lede">Anote cada encomenda, veja quando um dia lota, anote o que recebeu e receba pedidos das clientes por um link. Tudo no celular.</p>
           <div class="hero-actions">
             <wa-button class="btn-cta" href="/demo/?de=landing" variant="brand" pill size="l">Experimentar sem cadastro</wa-button>
             <wa-button class="btn-conta" href="/cadastro/" appearance="outlined" pill size="l">Criar conta grátis</wa-button>
@@ -58,9 +58,9 @@
           <figure class="bench">
             <img src="/encomenda/exemplos/bolo-pistache-960.webp" srcset="/encomenda/exemplos/bolo-pistache-480.webp 480w, /encomenda/exemplos/bolo-pistache-960.webp 960w" sizes="(max-width: 820px) 92vw, 480px" width="960" height="960" fetchpriority="high" alt="Bolo de pistache com chantininho verde-claro, pronto sobre a bancada.">
             <figcaption class="bench-order">
-              <span class="bo-when"><b>10h</b><small>retirada</small></span>
+              <span class="bo-when"><b>10h</b><small>hoje</small></span>
               <span class="bo-body"><strong>Bolo de pistache</strong><span><b>Ana Clara</b>, 1,5 kg, “Feliz aniversário, Lu!”</span></span>
-              <span class="stamp-mini bo-stamp">Sinal <small>conferido</small></span>
+              <span class="stamp-mini bo-stamp">Pago</span>
             </figcaption>
           </figure>
         </div>
@@ -73,19 +73,18 @@
     <section class="pains" aria-labelledby="pains-title">
       <div class="pains-head">
         <h2 id="pains-title">Seu caderno não te avisa que o bolo é amanhã.</h2>
-        <p class="lede">Quem vende por encomenda conhece esse frio na barriga. Com o Doce Agenda, cada pedido fica no dia da entrega, com o combinado e o sinal juntos, e a agenda avisa quando a data lota.</p>
+        <p class="lede">Quem vende por encomenda conhece esse frio na barriga. Com o Doce Agenda, cada pedido fica no dia da entrega, com o combinado e o que falta receber juntos, e a agenda avisa quando o dia enche.</p>
       </div>
       <div class="pains-body">
         <figure class="hero-photo">
           <img loading="lazy" decoding="async" src="/landing/assets/cozinha-caderno.jpg" srcset="/landing/assets/cozinha-caderno-640.jpg 640w, /landing/assets/cozinha-caderno.jpg 1122w" sizes="(max-width: 820px) 100vw, 460px" width="1122" height="1402" alt="Imagem ilustrativa: bancada de confeitaria com glacê rosa, um caderno de encomendas cheio de rabiscos, datas riscadas e “sinal?? pagou?” na margem, e ao lado um celular com as encomendas do dia organizadas.">
           <div class="photo-screen" aria-hidden="true">
             <span class="ps-top">Sexta, 16 de outubro</span>
-            <span class="ps-count"><b>2</b>coisas pedem você</span>
-            <span class="ps-label">Entregas de hoje</span>
-            <span class="ps-row"><b>10h</b>Ana Clara<i class="ps-stamp">Sinal ✓</i></span>
-            <span class="ps-row is-pending"><b>15h</b>Marcos<i class="ps-stamp is-due">Sem sinal</i></span>
-            <span class="ps-label">Sábado, lotado</span>
-            <span class="ps-row"><b>9h</b>Carla<i class="ps-stamp">Sinal ✓</i></span>
+            <span class="ps-label">Hoje · 2 pedidos</span>
+            <span class="ps-row"><b>10h</b>Ana Clara<i class="ps-stamp">Pago</i></span>
+            <span class="ps-row is-pending"><b>15h</b>Marcos<i class="ps-stamp is-due">Falta R$ 95</i></span>
+            <span class="ps-label">Sábado · cheio</span>
+            <span class="ps-row"><b>9h</b>Carla<i class="ps-stamp">Pago</i></span>
           </div>
         </figure>
       </div>
@@ -97,8 +96,8 @@
         <p class="lede">Mande o link no WhatsApp ou deixe na bio do Instagram. A cliente faz o pedido sozinha, sem baixar nada, e você não precisa copiar a conversa.</p>
         <ol class="link-flow">
           <li><b>Ela escolhe o doce e uma data livre</b>O calendário só deixa escolher os dias em que você atende.</li>
-          <li><b>Chega para você em Para decidir</b>Aparece no topo de Hoje e ainda não ocupa vaga na agenda.</li>
-          <li><b>Você confere e decide</b>Aceite, diga que ainda vai passar o preço ou recuse.</li>
+          <li><b>Chega para você em Para decidir</b>Aparece no topo da Agenda e só entra no dia quando você aceita.</li>
+          <li><b>Você confere e decide</b>Tem dúvida? Responda no WhatsApp. Depois, aceite ou recuse.</li>
         </ol>
         <p class="link-note">Nenhum pagamento é pedido pelo link. Nada é confirmado sem você.</p>
       </div>
@@ -107,7 +106,7 @@
           <button type="button" data-side="client" aria-pressed="true">Cliente</button>
           <button type="button" data-side="baker" aria-pressed="false">Você</button>
         </div>
-        <div class="ld-stage s1 s2 s3 s5 s6" data-side="client" role="img" aria-label="Demonstração: na vitrine da Doces da Lu, a cliente escolhe Bolo de aniversário e um sábado livre e envia o pedido. Ele chega para a confeiteira em Para decidir, com os botões Aceitar pedido, Ainda vou passar o preço e Recusar.">
+        <div class="ld-stage s1 s2 s3 s5 s6" data-side="client" role="img" aria-label="Demonstração: na vitrine da Doces da Lu, a cliente escolhe Bolo de aniversário e um sábado livre e envia o pedido. Ele chega no topo da Agenda da confeiteira: Camila pediu pelo link. Na ficha, O que ela pediu vem antes de Responder no WhatsApp, Aceitar e Recusar.">
           <div class="ld-col ld-client">
             <p class="ld-label">Como a cliente vê</p>
             <div class="mock-phone">
@@ -132,12 +131,13 @@
           <div class="ld-col ld-baker">
             <p class="ld-label">Como chega para você</p>
             <div class="mock-phone">
-              <div class="m-head"><img src="/logo.svg" alt="" width="80" height="21"><span>Ajustes</span></div>
+              <div class="m-head"><b class="m-date">Terça, 20 de outubro</b><span class="m-chip">Meu link</span></div>
               <div class="m-body">
-                <b class="m-title">4 coisas pedem você</b>
-                <span class="m-banner"><b>Pedido novo pelo link</b>Camila quer Bolo de aniversário para sábado. Ainda não ocupa vaga: você decide se aceita.<span class="m-btn m-btn-s m-tonal">Revisar</span></span>
-                <span class="m-review"><b>Pedido pelo link DA-7K2M4Q</b><span class="m-who">Camila, bolo de aniversário, sábado às 11h</span>Ainda não confirmado. Confira data, detalhes e valor antes de aceitar.<span class="m-btn m-btn-s">Aceitar pedido</span><span class="m-btn m-btn-s m-quiet">Ainda vou passar o preço</span><span class="m-refuse">Recusar</span></span>
-                <span class="m-order"><b>10h</b><span><strong>Bolo de pistache</strong>Ana Clara, retirada</span></span>
+                <span class="m-banner"><span><b>Camila pediu pelo link:</b> bolo de aniversário, sáb 24/10</span><span class="m-btn m-see">Ver</span></span>
+                <span class="m-review"><small class="m-when">11h · Sábado, 24/10</small><b>Bolo de aniversário</b><span class="m-who">Camila</span><span class="m-asked"><b>O que ela pediu</b>Para 20 pessoas. Pode ser de ninho com morango?</span><span class="m-btn m-btn-s m-quiet">Responder no WhatsApp</span><span class="m-btn m-btn-s">Aceitar</span><span class="m-refuse">Recusar</span></span>
+                <span class="m-day">Hoje · 2 pedidos</span>
+                <span class="m-order"><b>10h</b><span><strong>Bolo de pistache</strong>Ana Clara</span><i class="m-tag is-paid">Pago</i></span>
+                <span class="m-order"><b>15h</b><span><strong>Brigadeiro (cento)</strong>Marcos</span><i class="m-tag">Falta R$ 95</i></span>
               </div>
             </div>
           </div>
@@ -162,37 +162,36 @@
         <div class="step-copy">
           <p class="step-eyebrow"><span class="step-num">2</span>Organize a semana</p>
           <h3>Antes de aceitar, veja se o dia ainda cabe.</h3>
-          <p>Você diz quantas encomendas aceita por dia e quais dias não atende. O app avisa quando uma data lota e, com um toque, leva o pedido para a próxima etapa.</p>
+          <p>Você diz quantas encomendas aceita por dia e quais dias não atende. O app avisa quando um dia enche e, na hora da entrega, um toque no ✓ marca o pedido como entregue.</p>
         </div>
-        <div class="step-visual mock-visual" role="img" aria-label="Demonstração: a semana com limite de 3 encomendas por dia, quinta e sábado lotados e domingo fechado. Abaixo, um pedido de brigadeiro passa de Combinado para Fazendo, Pronto e Entregue, um toque de cada vez.">
+        <div class="step-visual mock-visual" role="img" aria-label="Demonstração: a semana com limite de 3 encomendas por dia, quinta e sábado cheios e domingo fechado. Abaixo, o pedido de brigadeiro do Marcos recebe um toque no ✓ e fica riscado como entregue.">
           <div class="mock-card week-mock">
-            <b class="mk-title">Sua semana</b>
-            <span class="wm-days"><span><small>Seg</small><b>13</b><i>1</i></span><span><small>Ter</small><b>14</b><i>2</i></span><span><small>Qua</small><b>15</b><i>1</i></span><span class="is-full"><small>Qui</small><b>16</b><i>3/3</i></span><span><small>Sex</small><b>17</b><i>2</i></span><span class="is-full"><small>Sáb</small><b>18</b><i>3/3</i></span><span class="is-closed"><small>Dom</small><b>19</b><i>—</i></span></span>
-            <span class="wm-keys"><span class="wm-key is-full">Lotado</span><span class="wm-key is-closed">Fechado</span><small>Limite: 3 por dia</small></span>
+            <b class="mk-title">Esta semana</b>
+            <span class="wm-days"><span><small>Seg</small><b>13</b><i>1</i></span><span><small>Ter</small><b>14</b><i>2</i></span><span><small>Qua</small><b>15</b><i>1</i></span><span class="is-full"><small>Qui</small><b>16</b><i>3</i></span><span><small>Sex</small><b>17</b><i>2</i></span><span class="is-full"><small>Sáb</small><b>18</b><i>3</i></span><span class="is-closed"><small>Dom</small><b>19</b><i>—</i></span></span>
+            <span class="wm-keys"><span class="wm-key is-full">Cheio</span><span class="wm-key is-closed">Fechado</span><small>Limite: 3 por dia</small></span>
           </div>
-          <div class="mock-card order-mock" data-status="1">
+          <div class="mock-card order-mock" data-done="true">
             <b class="om-time">15h</b>
-            <span class="om-what"><strong>Brigadeiro (cento)</strong>Marcos, retirada</span>
-            <span class="om-pill">Fazendo</span>
-            <span class="om-btn">Ficou pronto</span>
+            <span class="om-what"><strong>Brigadeiro (cento)</strong><span>Marcos <i class="m-tag">Falta R$ 95</i></span></span>
+            <span class="om-check">✓</span>
           </div>
         </div>
       </article>
       <article class="step step-pistache">
         <div class="step-copy">
           <p class="step-eyebrow"><span class="step-num">3</span>Confira o dinheiro</p>
-          <h3>Só conta como recebido o que você conferiu.</h3>
-          <p>A cliente disse que fez o Pix? Fica como informado até você conferir no banco. Conferiu, o pedido ganha o carimbo, e o Meu mês soma só o que tem carimbo.</p>
+          <h3>Só conta como recebido o que você viu na conta.</h3>
+          <p>Viu o dinheiro na conta? Toque em Recebi. O Dinheiro mostra quanto entrou e quem já levou e ainda deve.</p>
         </div>
-        <div class="step-visual mock-visual" role="img" aria-label="Demonstração: o pedido de docinhos da Juliana está amarelo porque falta o sinal. O Pix de R$ 60,00 foi informado pela cliente; ao marcar conferido, o pedido ganha o selo Sinal conferido e o Meu mês passa de R$ 1.010 para R$ 1.070 recebidos.">
+        <div class="step-visual mock-visual" role="img" aria-label="Demonstração: o pedido de docinhos da Juliana mostra Falta R$ 120. Ela toca em Recebi, anota R$ 60, o pedido passa para Falta R$ 60 e o Dinheiro passa de R$ 1.010 para R$ 1.070 recebidos no mês.">
           <div class="mock-card pay-mock">
-            <span class="pm-top"><b class="om-time">18h</b><span class="om-what"><strong>Docinhos (50 un.)</strong>Juliana, R$ 120,00</span><em class="pm-flag stamp-due">Pix R$ 60 <small>falta conferir</small></em><span class="stamp-mini pm-stamp">Sinal <small>conferido</small></span></span>
-            <span class="pm-pay"><span class="pm-amount">Pix de R$ 60,00</span><small class="pm-state"><span class="pm-wait">Informado pela cliente, ainda não conferido</span><span class="pm-ok">Conferido</span></small><span class="om-btn pm-btn">Marcar conferido</span></span>
+            <span class="pm-top"><b class="om-time">18h</b><span class="om-what"><strong>Docinhos (50 un.)</strong>Juliana</span><i class="m-tag pm-flag">Falta R$ 120</i><i class="m-tag pm-stamp">Falta R$ 60</i></span>
+            <span class="pm-pay"><small class="pm-state"><span class="pm-wait">Total R$ 120 · Recebido R$ 0</span><span class="pm-ok">Total R$ 120 · Recebido R$ 60</span></small><span class="om-btn pm-btn">Recebi</span></span>
           </div>
           <div class="mock-card month-mock">
-            <b class="mk-title">Meu mês</b>
-            <span class="mm-tiles"><span><small>Vendido</small><b>R$ 1.800</b></span><span class="is-in"><small>Recebido</small><b data-from="1010" data-to="1070">R$ 1.070</b></span><span class="is-due"><small>A receber</small><b data-from="790" data-to="730">R$ 730</b></span></span>
-            <small class="wm-note">Só conta o que você conferiu.</small>
+            <b class="mk-title">Dinheiro</b>
+            <span class="mm-tiles"><span class="is-in"><small>Recebido no mês</small><b data-from="1010" data-to="1070">R$ 1.070</b></span><span class="is-due"><small>Entregue, falta receber</small><b>R$ 55</b></span><span><small>Ainda vai entrar</small><b data-from="790" data-to="730">R$ 730</b></span></span>
+            <small class="wm-note">Só conta o que você viu na conta.</small>
           </div>
         </div>
       </article>
@@ -204,7 +203,7 @@
         <wa-details name="faq" summary="Quanto custa?"><p>Nada. O Doce Agenda é um projeto acadêmico e gratuito, sem cartão.</p></wa-details>
         <wa-details name="faq" summary="Preciso instalar alguma coisa?"><p>Não. Abra pelo navegador do celular, entre com sua conta e pronto.</p></wa-details>
         <wa-details name="faq" summary="Minha cliente precisa baixar algo para usar o link?"><p>Não. Ela abre o link, escolhe o doce e a data, e você revisa antes de confirmar.</p></wa-details>
-        <wa-details name="faq" summary="Sou avisada quando chega um pedido pelo link?"><p>Com o app aberto no celular ou no computador, mesmo em outra aba, ele avisa: ligue em Ajustes, Aviso de pedido novo. Com o app fechado ainda não avisa; o pedido espera em Para decidir e no topo de Hoje.</p></wa-details>
+        <wa-details name="faq" summary="Sou avisada quando chega um pedido pelo link?"><p>Com o app aberto, aparece um aviso quando chega um pedido. Com o app fechado, o pedido espera no aviso do topo da Agenda.</p></wa-details>
         <wa-details name="faq" summary="A demonstração guarda meus pedidos?"><p>Só neste aparelho, enquanto você não limpar o navegador. Para guardar de verdade, crie sua conta grátis.</p></wa-details>
       </div>
     </section>

@@ -394,3 +394,27 @@ h1 em{color:inherit}
 @media (max-width:820px){.pains-body{display:none}}
 @media (max-width:820px){.faq-list{gap:8px}.hero{gap:20px}}
 @media (max-width:820px){.bench>img{aspect-ratio:5/4;object-position:50% 40%}}
+
+/* Tela nova (27/10): agenda por dia, "Falta R$ X"/"Pago", ✓ de entregue e a ficha com "O que ela pediu". */
+.m-date{font-family:var(--font-title);font-size:13px;font-weight:600}
+.m-chip{padding:3px 8px;border:1.5px solid var(--ameixa);border-radius:999px;font-size:11px;font-weight:700;white-space:nowrap}
+.m-banner{flex-direction:row;align-items:center;justify-content:space-between;gap:8px;background:var(--baunilha)}
+.m-banner>span:first-child{font-weight:600}
+.m-banner>span:first-child b{font-family:var(--font-body);font-size:12px;font-weight:800}
+.m-see{margin:0;padding:4px 12px;background:var(--branco);color:var(--ink);border:1px solid var(--border-input)}
+.m-review{gap:6px;background:var(--branco);border:var(--hairline)}
+.m-when{color:var(--link);font-family:var(--font-title);font-size:12px;font-weight:600}
+.m-asked{display:flex;flex-direction:column;gap:2px;padding:8px;border-radius:10px;background:var(--papel)}
+.m-asked b{font-size:12px}
+.s6 .m-day,.s6 .m-order{display:none}
+.m-day{margin-top:6px;color:var(--ink);font-family:var(--font-title);font-weight:600}
+.m-order>span{flex:1;min-width:0}
+.m-tag{flex:none;padding:2px 7px;border-radius:999px;background:var(--baunilha);color:var(--ink-soft);font-size:11px;font-style:normal;font-weight:700;white-space:nowrap}
+.m-tag.is-paid{background:var(--pistache);color:var(--carimbo)}
+.order-mock{grid-template-columns:auto minmax(0,1fr) auto}
+.order-mock .om-what>span{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px}
+.om-check{display:grid;place-items:center;width:40px;height:40px;border:2px solid var(--border-input);border-radius:50%;background:var(--branco);color:var(--border-input);font-weight:800;transition:background-color .3s,color .3s,border-color .3s}
+.order-mock[data-done="true"] .om-check{border-color:var(--carimbo);background:var(--carimbo);color:#fff}
+.order-mock[data-done="true"] strong,.order-mock[data-done="true"] .om-time{color:var(--muted);text-decoration:line-through}
+.pm-flag,.pm-stamp{background:var(--baunilha)}
+.pay-mock .pm-stamp{border:1px solid #e7cf7a}

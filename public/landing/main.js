@@ -27,7 +27,7 @@ function tap(el) {
   if (el) animate(el, { scale: [1, 0.92, 1] }, { duration: 0.32 });
 }
 
-// Topo: a foto entra e o carimbo bate uma vez no pedido preso na bancada. É o único movimento do topo.
+// Topo: a foto entra e o "Pago" bate uma vez no pedido preso na bancada. É o único movimento do topo.
 function revealHero() {
   const bench = document.querySelector('.hero-bench .bench');
   if (!bench) return;
@@ -45,8 +45,8 @@ function revealStep(step) {
   animate(visuals, { y: [40, 0] }, { type: 'spring', bounce: 0.2, duration: 0.8, delay: stagger(0.1, { startDelay: 0.05 }) });
 }
 
-// Link de encomenda: a cliente escolhe e envia; a solicitação passa para o lado da confeiteira,
-// que revisa e decide. Legendas da lista acompanham cada parte.
+// Link de encomenda: a cliente escolhe e envia; o pedido chega no topo da Agenda da confeiteira,
+// que abre a ficha ("O que ela pediu") e decide. Legendas da lista acompanham cada parte.
 function setupLinkDemo(root) {
   const stage = root.querySelector('.ld-stage');
   const flyer = stage.querySelector('.ld-flyer');
@@ -143,35 +143,28 @@ function setupLinkDemo(root) {
   }, { amount: 0.4 });
 }
 
-// Semana: um pedido avança uma etapa a cada toque, enquanto está na tela.
-const ORDER_STEPS = [['Combinado', 'Começar a fazer'], ['Fazendo', 'Ficou pronto'], ['Pronto', 'Marcar entregue'], ['Entregue', '']];
+// Semana: na hora da entrega, um toque no ✓ risca o pedido como entregue; depois ele volta, enquanto está na tela.
 function setupWeekDemo(visual) {
   const card = visual.querySelector('.order-mock');
-  const pill = card.querySelector('.om-pill');
-  const button = card.querySelector('.om-btn');
-  const show = (n) => {
-    card.dataset.status = n;
-    pill.textContent = ORDER_STEPS[n][0];
-    button.textContent = ORDER_STEPS[n][1] || ORDER_STEPS[2][1];
-    button.style.visibility = ORDER_STEPS[n][1] ? '' : 'hidden';
-  };
+  const check = card.querySelector('.om-check');
+  const show = (done) => { card.dataset.done = String(done); };
   inView(visual, () => {
-    let n = 0;
-    show(n);
+    let done = false;
+    show(done);
     animate(visual.querySelectorAll('.wm-days .is-full, .wm-days .is-closed'), { scale: [1, 1.12, 1] }, { duration: 0.5, delay: stagger(0.15, { startDelay: 0.7 }) });
     const timer = setInterval(() => {
-      if (n < 3) tap(button);
+      if (!done) tap(check);
       setTimeout(() => {
-        n = (n + 1) % ORDER_STEPS.length;
-        show(n);
-        animate(pill, { scale: [0.7, 1] }, { type: 'spring', bounce: 0.5, duration: 0.5 });
-      }, n < 3 ? 280 : 0);
+        done = !done;
+        show(done);
+        if (done) animate(check, { scale: [0.7, 1] }, { type: 'spring', bounce: 0.5, duration: 0.5 });
+      }, done ? 0 : 280);
     }, 1700);
-    return () => clearInterval(timer);
+    return () => { clearInterval(timer); show(true); };
   }, { amount: 0.5 });
 }
 
-// Dinheiro: o Pix informado vira conferido, o pedido ganha o carimbo e o Meu mês soma.
+// Dinheiro: um toque em Recebi, o pedido passa a dever menos e o Recebido do mês soma.
 function setupMoneyDemo(visual) {
   const pay = visual.querySelector('.pay-mock');
   const button = pay.querySelector('.pm-btn');
