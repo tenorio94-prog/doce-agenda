@@ -4,7 +4,8 @@ import { fileURLToPath } from 'node:url';
 import { build } from 'esbuild';
 
 // Builds the whole published site into deploy-cloud/public; it does not publish.
-// /          landing, /landing/ its assets
+// /          landing acolhedora, /previa-landing/ seus recursos e prévia
+// /landing-anterior/  landing anterior preservada, sem indexação
 // /demo/     new screens saved only in this browser (browser-store.js + /nova/nova.js); also /demo/nova/
 // /app/, /agenda.html  account version of the new screens (cloud-bootstrap.js + /nova/nova.js); also /app/nova/
 // /demo/completa/, /app/completa/  the full previous app (app.js, cloud-app.js), kept for a while; /cadastro/
@@ -45,8 +46,20 @@ const copy = (from, to = from) => cp(path.join(source, from), path.join(output, 
 
 for (const name of ['browser-store.js', 'data-client.js', 'favicon.svg', 'logo.svg', 'tokens.css', 'manifest.webmanifest', 'aviso-sw.js']) await copy(name);
 for (const name of ['fonts', 'icons', 'encomenda', 'privacidade']) await copy(name);
-await copy('landing/index.html', 'index.html');
 await copy('previa-landing');
+// A mesma fonte da prévia é publicada na raiz; recursos relativos continuam na pasta da prévia.
+const warmPreview = await readFile(path.join(source, 'previa-landing', 'index.html'), 'utf8');
+let warmLanding = swap(warmPreview, '<meta name="robots" content="noindex, nofollow">', '');
+warmLanding = warmLanding.replace(/\b(src|href)="(?!\/|#|https?:|data:)([^"]+)"/g, '$1="/previa-landing/$2"');
+warmLanding = warmLanding.replace(/\bsrcset="([^"]+)"/g, (_, value) => `srcset="${value.split(',').map((entry) => `/previa-landing/${entry.trim()}`).join(', ')}"`);
+warmLanding = swap(warmLanding, '</head>', '<meta name="description" content="Anote encomendas, veja sua semana e receba pedidos por um link. Experimente o Doce Agenda sem cadastro."><link rel="canonical" href="https://lucast.app/"><meta property="og:type" content="website"><meta property="og:locale" content="pt_BR"><meta property="og:site_name" content="Doce Agenda"><meta property="og:title" content="Sua semana de encomendas, sem susto."><meta property="og:description" content="Anote encomendas, veja sua semana e receba pedidos por um link. Tudo no celular."><meta property="og:image" content="https://lucast.app/landing/assets/og.jpg"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta name="twitter:card" content="summary_large_image"></head>');
+await writeFile(path.join(output, 'index.html'), warmLanding);
+// Preserva a página anterior para comparação e reversão, com sua própria rota fora do índice.
+let previousLanding = await readFile(path.join(source, 'landing', 'index.html'), 'utf8');
+previousLanding = swap(previousLanding, '<meta name="viewport" content="width=device-width, initial-scale=1">', '<meta name="viewport" content="width=device-width, initial-scale=1">\n  <meta name="robots" content="noindex, nofollow">');
+previousLanding = swap(previousLanding, '<link rel="canonical" href="https://lucast.app/">', '');
+await mkdir(path.join(output, 'landing-anterior'), { recursive: true });
+await writeFile(path.join(output, 'landing-anterior', 'index.html'), previousLanding);
 await cp(path.join(source, 'landing'), path.join(output, 'landing'), {
   recursive: true, filter: (file) => !['index.html', 'main.js'].some((name) => path.resolve(file) === path.join(source, 'landing', name)),
 });
@@ -133,5 +146,5 @@ await writeFile(path.join(output, '_headers'), previews.flatMap((preview) => [
   '  Content-Security-Policy: default-src \'none\'; script-src \'self\'; style-src \'self\'; font-src \'self\'; img-src \'self\'; connect-src \'none\'; form-action \'none\'; base-uri \'none\'; frame-ancestors \'none\'',
   '  X-Robots-Tag: noindex, nofollow',
   '',
-]).concat(['/previa-landing/*', '/demo/nova/*', '/app/nova/*', '/demo/completa/*', '/app/completa/*'].flatMap((route) => [route, '  X-Robots-Tag: noindex, nofollow', ''])).join('\n'));
+]).concat(['/landing-anterior/*', '/previa-landing/*', '/demo/nova/*', '/app/nova/*', '/demo/completa/*', '/app/completa/*'].flatMap((route) => [route, '  X-Robots-Tag: noindex, nofollow', ''])).join('\n'));
 console.log('Site pronto em deploy-cloud/public (não publica). Rota /p/<slug> preservada.');

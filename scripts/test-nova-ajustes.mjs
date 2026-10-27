@@ -243,13 +243,13 @@ try {
     await finish();
     results.push(`${width}: Mudar doces e fotos abre Sua vitrine`);
 
-    // 3. Landing com a tela nova; Experimentar sem cadastro continua indo para /demo/.
+    // 3. A landing anterior continua disponível com seus exemplos e CTA originais.
     {
       const context = await browser.newContext({ viewport: { width, height }, locale: 'pt-BR', reducedMotion: 'reduce' });
       const landing = await context.newPage();
       const errors = [];
       landing.on('pageerror', (error) => errors.push(String(error)));
-      await landing.goto(`${server.origin}/`);
+      await landing.goto(`${server.origin}/landing-anterior/`);
       await landing.waitForFunction(() => customElements.get('wa-button'));
       const text = (await landing.evaluate(() => [document.body.innerText, ...[...document.querySelectorAll('[aria-label]')].map((el) => el.getAttribute('aria-label'))].join('\n'))).toLocaleLowerCase('pt-BR');
       assert.deepEqual(LANDING_OLD.filter((word) => text.includes(word)), [], 'landing sem palavras do app antigo');
@@ -264,7 +264,7 @@ try {
       assert.equal(new URL(landing.url()).pathname, '/demo/');
       assert.deepEqual(errors, []);
       await context.close();
-      results.push(`${width}: landing com a tela nova`);
+      results.push(`${width}: landing anterior com a tela nova`);
     }
   }
 } finally {

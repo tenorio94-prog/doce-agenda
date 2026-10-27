@@ -13,20 +13,20 @@ const { origin } = server;
 const browser = await chromium.launch();
 const results = [];
 try {
-  // A landing aponta para a entrada com o aviso.
+  // A landing anterior continua acessível com seus botões e linguagem originais.
   {
     const page = await browser.newPage();
-    await page.goto(`${origin}/`);
+    await page.goto(`${origin}/landing-anterior/`);
     const hrefs = await page.locator('.btn-cta').evaluateAll((items) => items.map((item) => item.getAttribute('href')));
     assert.ok(hrefs.length >= 2 && hrefs.every((href) => href === '/demo/?de=landing'), `botões da landing: ${hrefs}`);
     await page.close();
-    results.push('landing aponta para /demo/?de=landing');
+    results.push('landing anterior aponta para /demo/?de=landing');
   }
 
-  // Topo da landing: experimentar (cheio) e criar conta (contorno) à vista sem rolar; nada do app antigo.
+  // Topo da landing anterior preservado.
   for (const [width, height] of [[360, 740], [1280, 800]]) {
     const page = await browser.newPage({ viewport: { width, height } });
-    await page.goto(`${origin}/`);
+    await page.goto(`${origin}/landing-anterior/`);
     await page.waitForFunction(() => customElements.get('wa-button'));
     const actions = page.locator('.hero-actions');
     const demo = actions.locator('.btn-cta'), account = actions.locator('.btn-conta');
@@ -44,7 +44,7 @@ try {
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), `landing sem rolagem lateral em ${width}px`);
     if (shots) await page.screenshot({ path: path.join(shots, `landing-topo-${width}.png`) });
     await page.close();
-    results.push(`${width}px: landing com experimentar e criar conta à vista, sem palavras antigas`);
+    results.push(`${width}px: landing anterior preservada`);
   }
 
   for (const [width, height] of [[360, 800], [1280, 900]]) {
