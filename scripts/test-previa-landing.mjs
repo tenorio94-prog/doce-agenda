@@ -19,6 +19,25 @@ try {
     // Coordinates of the phone's black screen in the approved photograph, measured against the whole image.
     assert.ok(photo.cardLeft >= 0.605 && photo.cardRight <= 0.84 && photo.cardTop >= 0.145 && photo.cardBottom <= 0.93, `${width}: agenda deve caber na tela do celular`);
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, `${width}: sem rolagem lateral`);
+    if (width < 700) {
+      const inView = await page.locator('.hero-image').evaluate((e) => { const r = e.getBoundingClientRect(); return Math.max(0, Math.min(innerHeight, r.bottom) - Math.max(0, r.top)) / r.height; });
+      assert.ok(inView >= 0.5, `${width}: ao menos metade da foto aparece na primeira tela`);
+    }
+    assert.equal(await page.locator('.example-label').count(), 3, 'as três imagens são identificadas como exemplos');
+    for (const img of await page.locator('.screen-shot').all()) {
+      assert.ok((await img.boundingBox()).height <= 260, 'os exemplos de tela são curtos');
+    }
+    for (const side of ['client', 'baker']) {
+      await page.locator(`.ld-switch button[data-side="${side}"]`).click();
+      const phone = page.locator(`.ld-${side} .mock-phone`);
+      const hasCut = await phone.evaluate((e) => e.scrollHeight > e.clientHeight + 1);
+      assert.equal(hasCut, false, `${width}: demonstração de ${side} sem corte`);
+      if (side === 'client') {
+        const within = await phone.evaluate((e) => { const r = e.getBoundingClientRect(), button = e.querySelector('.m-form .m-btn').getBoundingClientRect(); return button.bottom <= r.bottom && button.top >= r.top; });
+        assert.ok(within, `${width}: botão de envio da cliente visível`);
+      }
+    }
+
     await page.goto(`${server.origin}/demo/`, { waitUntil: 'networkidle' });
     assert.equal(await page.locator('#demo-line').innerText(), 'Exemplo: a semana da Lu, da Doces da Lu.');
     await page.close();
