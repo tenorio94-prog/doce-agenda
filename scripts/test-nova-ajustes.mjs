@@ -27,7 +27,7 @@ const results = [];
 
 async function open(width, height, { state = null, url = '/demo/' } = {}) {
   const context = await browser.newContext({ viewport: { width, height }, locale: 'pt-BR', timezoneId: 'America/Sao_Paulo', serviceWorkers: 'block', permissions: ['clipboard-read', 'clipboard-write'] });
-  if (state) await context.addInitScript(([key, value]) => { if (!sessionStorage.getItem('seeded')) { localStorage.setItem(key, value); sessionStorage.setItem('seeded', '1'); } }, [KEY, JSON.stringify(state)]);
+  if (state) await context.addInitScript(([key, value]) => { if (!sessionStorage.getItem('seeded')) { localStorage.setItem(key, value); localStorage.setItem(`${key}.dia`, '2026-10-27'); sessionStorage.setItem('seeded', '1'); } }, [KEY, JSON.stringify(state)]);
   const page = await context.newPage();
   const errors = [], texts = [];
   page.on('pageerror', (error) => errors.push(String(error)));

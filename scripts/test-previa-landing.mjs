@@ -55,7 +55,12 @@ try {
 
       if (width === 360) {
         assert.equal(videoRequests, 0, `${route}: vídeo não carrega antes do toque`);
-        await page.locator('.video-open').click();
+        // Aguarda a requisição iniciada pelo clique antes de abrir a próxima rota.
+        // Assim uma requisição tardia da primeira página não contamina a contagem da segunda.
+        await Promise.all([
+          page.waitForRequest((request) => request.url().endsWith('/previa-landing/historia.mp4')),
+          page.locator('.video-open').click(),
+        ]);
         assert.equal(await page.locator('video source').getAttribute('src'), '/previa-landing/historia.mp4');
         assert.equal(await page.locator('video track').getAttribute('src'), '/previa-landing/legendas.vtt');
       }

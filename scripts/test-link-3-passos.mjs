@@ -33,6 +33,7 @@ try {
     await context.route('**/data-client.js', (route) => route.fulfill({ contentType: 'text/javascript', body: cloudClient }));
     await context.addInitScript((state) => {
       if (!localStorage.getItem('doce-agenda.demo.v2')) localStorage.setItem('doce-agenda.demo.v2', state);
+      localStorage.setItem('doce-agenda.demo.v2.dia', new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date()));
       localStorage.setItem('doce-agenda.onboarding.conta.v1', JSON.stringify({ dismissed: false, done: [], intent: 'sem-pedido' }));
       let store; Object.defineProperty(window, 'DoceStore', { configurable: true, get: () => store, set: (value) => { store = { ...value, isDemo: false }; } });
     }, fresh);

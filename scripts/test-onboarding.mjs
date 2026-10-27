@@ -22,6 +22,7 @@ async function accountContext(viewport, empty = false) {
   const emptyState = empty ? JSON.stringify({ ...seed, orders: [], payments: [], availability: createEmptyState().availability, orderPage: { ...seed.orderPage, active: false } }) : null;
   await context.addInitScript((seed) => {
     if (seed && !localStorage.getItem('doce-agenda.demo.v2')) localStorage.setItem('doce-agenda.demo.v2', seed);
+    if (seed) localStorage.setItem('doce-agenda.demo.v2.dia', new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date()));
     let store;
     Object.defineProperty(window, 'DoceStore', { configurable: true, get: () => store, set: (value) => { store = { ...value, isDemo: false }; } });
   }, emptyState);

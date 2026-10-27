@@ -86,6 +86,7 @@ try {
   const context = await browser.newContext({ viewport: { width: 360, height: 800 }, locale: 'pt-BR', timezoneId: 'America/Sao_Paulo' });
   await context.addInitScript((state) => {
     localStorage.setItem('doce-agenda.demo.v2', state);
+    localStorage.setItem('doce-agenda.demo.v2.dia', new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date()));
     localStorage.setItem('doce-agenda.onboarding.demo.v1', JSON.stringify({ dismissed: true, done: [] }));
   }, calm);
   const page = await context.newPage();

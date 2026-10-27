@@ -1,10 +1,14 @@
 import { createEmptyState, transactState } from './state-engine.js';
 import { demoSeedState } from './demo-seed.js';
+import { prepareDemoState, stampNewDemo } from './demo-clock.js';
+import { saoPauloDay } from './monthly-summary.js';
 // /demo/ gets its own key and a full fictitious bakery; the browser-only pilot keeps one example.
 const IS_DEMO=location.pathname.startsWith('/demo');
 const KEY=IS_DEMO?'doce-agenda.demo.v2':'doce-agenda.pilot.v1', BACKUP_KEY=KEY+'.pre-import';
-function initialState(){
-  if(IS_DEMO)return demoSeedState(new Date());
+const DEMO_DAY_KEY='doce-agenda.demo.v2.dia';
+let demoPrepared=false;
+function initialState(seedNow=new Date()){
+  if(IS_DEMO)return stampNewDemo(demoSeedState(seedNow),seedNow);
   const state=createEmptyState(), day=new Date();day.setDate(day.getDate()+1);
   const dueAt=`${day.getFullYear()}-${String(day.getMonth()+1).padStart(2,'0')}-${String(day.getDate()).padStart(2,'0')}T16:00`,now=new Date().toISOString();
   state.orders.push({id:'EXEMPLO-001',client:'Marina',product:'Bolo de chocolate • 1,5 kg',details:'Cobertura rosa e nome na decoração. Dados fictícios para conhecer a aplicação.',dueAt,total:150,status:'Confirmado',mode:'Retirada',origin:'manual',isSample:true,createdAt:now,updatedAt:now,history:[{at:now,text:'Exemplo fictício criado para demonstração.'}]});
@@ -12,8 +16,15 @@ function initialState(){
 }
 function execute(url,options={}){
   try{
-    let raw=localStorage.getItem(KEY);if(raw===null){raw=JSON.stringify(initialState());localStorage.setItem(KEY,raw);}
+    let raw=localStorage.getItem(KEY);
+    if(raw===null){const now=new Date();raw=JSON.stringify(initialState(now));localStorage.setItem(KEY,raw);if(IS_DEMO){localStorage.setItem(DEMO_DAY_KEY,saoPauloDay(now));demoPrepared=true;}}
     let state;try{state=JSON.parse(raw);}catch{return new Response(JSON.stringify({error:'Os dados deste navegador não puderam ser lidos. Não limpe o armazenamento antes de guardar uma cópia.'}),{status:500});}
+    if(IS_DEMO&&!demoPrepared){
+      const result=prepareDemoState(state,localStorage.getItem(DEMO_DAY_KEY));
+      if(result.changed){state=result.state;raw=JSON.stringify(state);localStorage.setItem(KEY,raw);}
+      if(result.day&&localStorage.getItem(DEMO_DAY_KEY)!==result.day)localStorage.setItem(DEMO_DAY_KEY,result.day);
+      demoPrepared=true;
+    }
     // Demos created before the example link existed get it once, if the link was never filled in.
     const page=state.orderPage;
     // Demos with the untouched pre-vitrine example also get the new example (photos, categories, style).
@@ -28,5 +39,5 @@ window.DoceStore={
   isDemo:IS_DEMO,
   fetch:(url,options)=>navigator.locks?navigator.locks.request(KEY,()=>execute(url,options)):Promise.resolve(execute(url,options)),
   // Only the demonstration can be reset; the browser pilot may hold someone's real orders.
-  ...(IS_DEMO?{resetDemo(){localStorage.removeItem(KEY);localStorage.removeItem(BACKUP_KEY);}}:{}),
+  ...(IS_DEMO?{resetDemo(){localStorage.removeItem(KEY);localStorage.removeItem(BACKUP_KEY);localStorage.removeItem(DEMO_DAY_KEY);demoPrepared=false;}}:{}),
 };

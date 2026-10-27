@@ -147,7 +147,7 @@ try {
     ].map(([orderId, amount, status], i) => ({ id: `p-${i}`, orderId, amount, status, createdAt: '2026-10-02T12:00:00.000Z' })) };
     const context = await browser.newContext({ viewport: { width: 360, height: 800 }, locale: 'pt-BR', timezoneId: 'America/Sao_Paulo', reducedMotion: 'reduce', serviceWorkers: 'block' });
     await context.route('**/*', (route) => new URL(route.request().url()).origin === server.origin ? route.continue() : route.abort());
-    await context.addInitScript((seed) => { localStorage.setItem('doce-agenda.onboarding.demo.v1', JSON.stringify({ dismissed: true, done: [] })); if (!localStorage.getItem('doce-agenda.demo.v2')) localStorage.setItem('doce-agenda.demo.v2', JSON.stringify(seed)); }, fixture);
+    await context.addInitScript((seed) => { localStorage.setItem('doce-agenda.onboarding.demo.v1', JSON.stringify({ dismissed: true, done: [] })); if (!localStorage.getItem('doce-agenda.demo.v2')) localStorage.setItem('doce-agenda.demo.v2', JSON.stringify(seed)); localStorage.setItem('doce-agenda.demo.v2.dia', new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date())); }, fixture);
     const page = await context.newPage();
     await page.goto(`${server.origin}/demo/completa/`);
     await page.locator('#today-title').waitFor();

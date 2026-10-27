@@ -219,6 +219,7 @@ try {
     const context = await browser.newContext({ viewport: { width, height: 900 }, locale: 'pt-BR', timezoneId: 'America/Sao_Paulo' });
     await context.addInitScript(() => {
       localStorage.setItem('doce-agenda.onboarding.demo.v1', JSON.stringify({ dismissed: true, done: [] }));
+      localStorage.setItem('doce-agenda.demo.v2.dia', new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date()));
       localStorage.setItem('doce-agenda.demo.v2', JSON.stringify({ version: 1, orders: ['Pronto', 'Entregue'].map((status, i) => ({
         id: `qa-edit-${i}`, client: `QA fictícia ${i}`, product: 'Doce de teste', status, total: 100, mode: 'Retirada',
         dueAt: '2026-10-15T15:00', createdAt: '2026-10-12T12:00:00.000Z', history: [],
