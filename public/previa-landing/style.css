@@ -2,7 +2,7 @@
 .screen-shot{margin-top:20px;width:100%;max-width:360px;border:1px solid #e5d7d2;border-radius:18px;box-shadow:0 8px 20px #3a12200d}
 h1 span:after{border:0;border-radius:0;transform:none;width:85%;height:18px;background:url(fio.svg) left center/100% 100% no-repeat}.story .wrap:before{content:"";display:block;width:110px;height:22px;background:url(fio.svg) center/contain no-repeat;margin-bottom:24px}
 [hidden]{display:none!important}
-.link-visual .ld-switch{display:flex;width:fit-content;margin:0 auto 16px}.link-visual .ld-stage[data-side="client"] .ld-baker,.link-visual .ld-stage[data-side="baker"] .ld-client{display:none}.link-visual .ld-stage{grid-template-columns:1fr}
+.link-visual .ld-switch{display:none;width:fit-content;margin:0 auto 16px}.link-visual.is-live .ld-switch{display:flex}.link-visual.is-live .ld-stage[data-side="client"] .ld-baker,.link-visual.is-live .ld-stage[data-side="baker"] .ld-client{display:none}.link-visual .ld-stage{grid-template-columns:1fr}
 .hero-image{container-type:inline-size}.hero-image .agenda-card{left:61.2%;top:16%;bottom:auto;width:22.3%;height:75%;border-radius:7% / 4%;padding:3% 2%;gap:2%;display:flex;flex-direction:column;background:#fffaf2;box-shadow:none;font-size:clamp(5px,1.8cqw,10px);line-height:1.25;overflow:hidden}.agenda-head{display:block;font-weight:700;font-family:var(--font-title);font-size:1.25em}.agenda-date{display:block;text-align:center;font-weight:700;margin:8% 0 4%}.agenda-order{display:flex;gap:6%;background:white;padding:8% 5%;border:1px solid #eadfe2;border-radius:8%;line-height:1.25}.agenda-order small{font-size:.9em}.agenda-order strong{color:#1e6b47}
 .visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 /* Ajustes da prévia: fotografia mais cedo, imagens curtas e vitrine inteira. */
@@ -80,3 +80,61 @@ h1 span:after{border:0;border-radius:0;transform:none;width:85%;height:18px;back
   .anima .how-grid h3{font-size:30px}
   .anima .how-grid p{font-size:18px}
 }
+
+/* Experimente aqui (Fase 2): Dia cheio e Recebi. Os controles só aparecem com a classe is-live, que o script põe
+   quando a demonstração está pronta; sem ela, fica o retrato parado da semana e do dinheiro. */
+.try h2{margin-bottom:28px;text-wrap:balance}
+.try-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;align-items:start}
+.try-card{background:#fff;border:1px solid #eadfe2;border-radius:22px;padding:22px;box-shadow:0 8px 20px #3a12200d}
+.try-card h3{margin:0 0 6px}
+.try-lead{margin:0 0 14px}
+.try-hint,.week-tray{display:none}
+.try-status{min-height:1.5em;margin:12px 0 0;font-weight:700;color:#76213d}
+.try-reset{min-height:44px;margin-top:12px;padding:0 20px;border:2px solid #8d2948;border-radius:999px;background:transparent;color:#76213d;font-weight:700;cursor:pointer}
+.week-demo.is-live .try-hint{display:block;margin:0 0 12px;font-size:15px;color:#6f5a61}
+.week-demo.is-live .week-tray{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+.sweet{min-height:44px;padding:0 16px;border:2px solid #8d2948;border-radius:999px;background:#fff;color:#76213d;font-weight:700;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none}
+.sweet[aria-pressed="true"]{background:#3a1220;border-color:#3a1220;color:#fff}
+.sweet.is-lifted{opacity:.35}
+.sweet-ghost{position:fixed;left:0;top:0;z-index:50;margin:0;pointer-events:none;box-shadow:0 12px 26px #3a122040;cursor:grabbing}
+.week-days{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px}
+.wk-day{display:flex;flex-direction:column;align-items:center;gap:8px;min-width:0;padding:10px 2px;border:2px solid #e5d7d2;border-radius:14px;background:#fffaf2;color:#2a141b;cursor:pointer;transition:transform .2s ease}
+.wk-day:disabled{cursor:default}
+.wk-name{font-weight:700;font-size:14px}
+.wk-slots{display:flex;flex-direction:column-reverse;gap:4px;width:min(70%,34px)}
+.wk-slots i{position:relative;height:18px;overflow:hidden;border-radius:6px;background:#f1e4de}
+.wk-slots i:after{content:"";position:absolute;inset:0;background:#b0244a;transform:scaleY(0);transform-origin:bottom;transition:transform .35s cubic-bezier(.2,.8,.3,1.2)}
+.wk-slots i.is-on:after{transform:none}
+.wk-state{min-height:2.4em;font-size:12px;font-weight:700;line-height:1.2;text-align:center;color:#6f5a61;font-variant-numeric:tabular-nums}
+.wk-day.is-full{border-color:#a3341a;background:#fdebe5}
+.wk-day.is-full .wk-state{color:#a3341a}
+.wk-day.is-full .wk-slots i:after{background:#a3341a}
+.week-demo.is-choosing .wk-day:not(.is-full),.wk-day.is-over:not(.is-full){border-color:#b0244a;border-style:dashed}
+.wk-day.is-over{transform:translateY(-4px)}
+.wk-day.just-full .wk-state{animation:try-pop .45s cubic-bezier(.2,.8,.3,1.3)}
+.wk-day.is-shake{animation:try-shake .4s ease}
+@keyframes try-pop{from{opacity:0;transform:scale(.5)}}
+@keyframes try-shake{25%{transform:translateX(-5px)}50%{transform:translateX(5px)}75%{transform:translateX(-3px)}}
+.money-total{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin:0 0 12px;padding:14px 16px;border-radius:16px;background:#fffaf2;border:1px solid #eadfe2;font-weight:700}
+.money-sum{font-family:var(--font-title);font-size:30px;font-variant-numeric:tabular-nums;color:#3a1220}
+.money-total.is-done .money-sum{color:#1e6b47}
+.money-list{display:grid;gap:10px;margin:0;padding:0;list-style:none}
+.money-card{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border:1px solid #eadfe2;border-radius:14px;background:#fff;transition:background-color .3s}
+.mc-info{display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-width:0}
+.mc-info small{color:#6f5a61;font-size:14px}
+.mc-info .t-tag{display:inline-block;margin-top:4px}
+.mc-btn{display:none;flex:none;min-height:44px;padding:0 18px;border:2px solid #2a141b;border-radius:999px;background:#fff;color:#2a141b;font-weight:700;cursor:pointer}
+.money-demo.is-live .mc-btn{display:block}
+.money-demo.is-live .money-card.is-paid .mc-btn{display:none}
+.money-card.is-paid{background:#f3f9ee}
+.money-card.is-paid .t-tag{animation:try-stamp .5s cubic-bezier(.2,.8,.3,1.3)}
+@keyframes try-stamp{from{opacity:0;transform:scale(1.9) rotate(-10deg)}}
+/* Link da cliente: o botão de enviar e o Ver viram botões de verdade; o pedido voa até o lado da confeiteira. */
+.link-visual .m-send,.link-visual .m-see{width:100%;border:0;font:inherit;font-weight:700;color:#fff;cursor:pointer}
+.link-visual .m-see{width:auto;min-height:44px;margin:0;padding:4px 14px;color:var(--ink);border:1px solid var(--border-input)}
+.link-visual button.m-btn:disabled{cursor:default}
+.m-decide{display:block;font-size:10px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:#76213d}
+.ld-flyer.is-flying{display:flex}
+@media (max-width:860px){.try-grid{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:700px){.try-card{padding:16px}.week-days{gap:4px}.wk-name{font-size:13px}}
+@media (prefers-reduced-motion:reduce){.try *,.link-visual *{transition:none!important;animation:none!important}}
