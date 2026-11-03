@@ -176,3 +176,24 @@ h1 span:after{border:0;border-radius:0;transform:none;width:85%;height:18px;back
 @keyframes try-thump{from{opacity:0;transform:translateY(-50%) scale(2.4) rotate(-22deg)}}
 .granulado{position:absolute;left:50%;top:50%;z-index:4;width:5px;height:14px;margin:-7px 0 0 -2.5px;border-radius:3px;pointer-events:none}
 .closing-new h2{font-size:clamp(42px,10vw,88px);line-height:1;letter-spacing:-.04em;text-wrap:balance}
+
+/* Fase 3: bolo em camadas logo abaixo do topo. Parado (sem JavaScript ou com movimento reduzido) ele aparece aberto,
+   cada camada com uma parte do pedido ao lado. Com movimento começa montado e abre conforme a rolagem; o script
+   mede o bolo aberto e só escreve transform/opacity. As camadas são SVGs em bolo/ para trocar depois. */
+.cake-sec{padding:40px 0 56px}
+.cake-sec h2{max-width:14ch;margin-bottom:10px;font-size:clamp(38px,9.4vw,68px);line-height:1.02;letter-spacing:-.035em;text-wrap:balance}
+.cake-lead{max-width:34ch;margin:0;font-size:17px}
+.cake{position:relative;display:grid;gap:8px;max-width:640px;margin:28px 0 0;padding:0;list-style:none}
+.cake-layer{position:relative;display:grid;grid-template-columns:minmax(0,52%) minmax(0,1fr);align-items:center;gap:14px}
+.cake-layer:nth-child(1){z-index:6}.cake-layer:nth-child(2){z-index:5}.cake-layer:nth-child(3){z-index:4}.cake-layer:nth-child(4){z-index:3}.cake-layer:nth-child(5){z-index:2}.cake-layer:nth-child(6){z-index:1}
+.cake-layer img{display:block;width:100%;height:auto}
+.cake-label{position:relative;padding-left:24px;font-weight:700;font-size:15px;line-height:1.3;color:#2a141b}
+.cake-label:before{content:"";position:absolute;left:0;top:.62em;width:16px;border-top:2px solid #b0244a}
+.cake-label b{display:block;font-size:13px;font-weight:600;color:#66536a}
+@media (min-width:701px){.cake{margin-inline:auto}.cake-layer{grid-template-columns:300px minmax(0,1fr);gap:22px}.cake-label{font-size:19px}.cake-label b{font-size:14px}}
+.anima .cake-sec{padding-bottom:0}
+.anima .cake-track{height:250vh;height:250svh}
+.anima .cake-stage{position:sticky;top:0;display:flex;flex-direction:column;min-height:100vh;min-height:100svh;padding-bottom:24px}
+.anima .cake{gap:clamp(8px,2.2svh,22px);margin-block:auto}
+@media (max-width:700px){.anima .cake-layer{grid-template-columns:minmax(0,56%) minmax(0,1fr);gap:12px}}
+.anima .cake-label{opacity:0}

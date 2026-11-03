@@ -78,6 +78,23 @@ try {
       assert.equal(shown, true, `${width}: ${selector} visível sem animação`);
     }
 
+    // Bolo (Fase 3): começa montado, sem legendas, e abre em camadas com a rolagem, parado no topo da tela.
+    const cake = await page.locator('.cake-track').evaluate((e) => ({ top: e.getBoundingClientRect().top + scrollY, height: e.offsetHeight }));
+    const cakeAt = async (part) => {
+      await goTo(page, cake.top + (cake.height - height) * part); await wait(page, 300);
+      return page.evaluate(() => {
+        const images = [...document.querySelectorAll('.cake-layer img')].map((img) => img.getBoundingClientRect());
+        return { spread: images.at(-1).bottom - images[0].top, labels: [...document.querySelectorAll('.cake-label')].map((label) => Number(getComputedStyle(label).opacity)),
+          stageTop: Math.round(document.querySelector('.cake-stage').getBoundingClientRect().top) };
+      });
+    };
+    const shut = await cakeAt(0.02), open = await cakeAt(0.9);
+    assert.ok(shut.labels.every((o) => o < 0.05), `${width}: bolo montado sem legendas`);
+    assert.ok(open.labels.every((o) => o > 0.95), `${width}: bolo aberto com as 5 legendas`);
+    assert.ok(open.spread > shut.spread * 1.3, `${width}: bolo abre em camadas (${Math.round(shut.spread)} → ${Math.round(open.spread)} px)`);
+    assert.equal(open.stageTop, 0, `${width}: bolo parado no topo enquanto abre`);
+    assert.equal(await noSideScroll(page), true, `${width}: sem rolagem lateral no bolo`);
+
     // Letreiro corre, pausa no botão e no toque, e a cópia que fecha o laço fica escondida do leitor de tela.
     assert.equal(await page.locator('.ticker-list[aria-hidden="true"]').count(), 1);
     const state = () => page.locator('.ticker-move').evaluate((e) => e.getAnimations()[0]?.playState);
@@ -146,6 +163,13 @@ try {
       assert.match(await figure.locator('figcaption').innerText(), /^Sexta, 23h: |^Ela anota/);
     }
     assert.equal(await page.locator('.story-meta').isVisible(), false);
+    // Bolo parado: aberto, as 5 legendas à vista e as 6 camadas como imagens com tamanho e carregamento adiado.
+    for (const caption of await page.locator('.cake-label').all()) {
+      await caption.scrollIntoViewIfNeeded();
+      assert.equal(await caption.evaluate((e) => getComputedStyle(e).opacity), '1', `${label}: legendas do bolo à vista`);
+    }
+    assert.equal(await page.locator('.cake-label').count(), 5);
+    assert.equal(await page.locator('.cake-layer img[loading="lazy"][width="240"][height]').count(), 6);
     assert.equal(await page.locator('.how-rail').isVisible(), false, `${label}: celular animado fora`);
     for (const shot of await page.locator('.how-grid .screen-shot').all()) assert.equal(await shot.isVisible(), true, `${label}: imagens dos passos à vista`);
     assert.equal(await page.locator('.ticker-list').count(), options.javaScriptEnabled === false ? 1 : 2);

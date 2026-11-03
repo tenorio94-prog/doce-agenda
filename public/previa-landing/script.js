@@ -27,7 +27,12 @@ try {
   const sky = document.querySelector('.story-sky');
   const clock = storyTrack.querySelector('.story-clock');
   const bar = storyTrack.querySelector('.story-bar i');
-  const painted = [...scenes, sky, clock, bar];
+  const cakeTrack = document.querySelector('.cake-track');
+  const cakeRows = [...cakeTrack.querySelectorAll('.cake-layer')];
+  const cakeLabels = cakeRows.map((row) => row.querySelector('.cake-label'));
+  const cakeList = cakeTrack.querySelector('.cake');
+  let cakeShift = cakeRows.map(() => [0, 0]);
+  const painted = [...scenes, sky, clock, bar, ...cakeRows, ...cakeLabels.filter(Boolean), cakeList];
   const steps = [...document.querySelectorAll('.how-grid article')];
   const screens = [...document.querySelectorAll('.how-screen img')];
   const stage = document.querySelector('.how-stage');
@@ -61,6 +66,37 @@ try {
     bar.style.transform = `scaleX(${progress.toFixed(3)})`;
     showScene(third >= 0.5 ? 2 : second >= 0.5 ? 1 : 0);
   }
+  // Bolo: mede o bolo aberto (como ele fica parado) e calcula quanto cada camada anda para encostar na de baixo,
+  // pelo topo e pela base de cada desenho (data-top/data-base, em unidades do desenho de 240 de largura).
+  function measureCake() {
+    const images = cakeRows.map((row) => row.querySelector('img'));
+    const scale = images[0].clientWidth / 240;
+    const tops = images.map((img, i) => cakeRows[i].offsetTop + img.offsetTop);
+    const closed = [];
+    for (let i = cakeRows.length - 1; i >= 0; i--) {
+      closed[i] = i === cakeRows.length - 1 ? tops[i] : closed[i + 1] + (Number(cakeRows[i + 1].dataset.top) - Number(cakeRows[i].dataset.base)) * scale;
+    }
+    // Montado, o bolo fica no meio do espaço que ele ocupa aberto: abre do centro para cima e para baixo.
+    const lift = ((tops.at(-1) - tops[0]) - (closed.at(-1) - closed[0])) / 2;
+    const center = cakeRows[0].parentElement.clientWidth / 2 - (images[0].offsetLeft + images[0].clientWidth / 2);
+    cakeShift = cakeRows.map((row, i) => [center, closed[i] - tops[i] - lift]);
+  }
+  function paintCake(progress) {
+    const open = between(progress, 0.08, 0.62), shut = 1 - open, last = cakeRows.length - 1;
+    // Montado ele aparece maior e encolhe enquanto abre.
+    cakeList.style.transform = `scale(${(1 + shut * 0.3).toFixed(3)})`;
+    cakeRows.forEach((row, i) => {
+      const [dx, dy] = cakeShift[i];
+      const tilt = i === last ? 0 : Math.sin(open * Math.PI) * (i % 2 ? 2.5 : -2.5);
+      row.style.transform = `translate3d(${(dx * shut).toFixed(1)}px, ${(dy * shut).toFixed(1)}px, 0) rotate(${tilt.toFixed(2)}deg)`;
+    });
+    cakeLabels.forEach((label, i) => {
+      if (!label) return;
+      const shown = between(open, 0.45 + i * 0.09, 0.75 + i * 0.06);
+      label.style.opacity = shown.toFixed(3);
+      label.style.transform = `translate3d(${((1 - shown) * 18).toFixed(1)}px, 0, 0)`;
+    });
+  }
   function update() {
     queued = false;
     const box = storyTrack.getBoundingClientRect();
@@ -68,6 +104,11 @@ try {
     const progress = range > 0 ? Math.min(1, Math.max(0, -box.top / range)) : 0;
     if (!root.classList.contains('anima')) return;
     if (box.top < innerHeight * 1.5 && box.bottom > -innerHeight / 2) paintStory(progress);
+    const cakeBox = cakeTrack.getBoundingClientRect();
+    if (cakeBox.top < innerHeight * 1.5 && cakeBox.bottom > -innerHeight / 2) {
+      const cakeRange = cakeBox.height - innerHeight;
+      paintCake(cakeRange > 0 ? Math.min(1, Math.max(0, -cakeBox.top / cakeRange)) : 0);
+    }
     // No celular o passo vale quando o topo passa de 70% da tela; no computador, quando o meio passa de 60%.
     let current = 0;
     steps.forEach((article, i) => {
@@ -77,7 +118,10 @@ try {
     showStep(current);
   }
   // No celular, o aparelho solta junto com o último passo, que fica à vista logo abaixo dele.
-  const measure = () => stage.style.setProperty('--how-tail', wide.matches ? '0px' : `${steps.at(-1).offsetHeight}px`);
+  const measure = () => {
+    stage.style.setProperty('--how-tail', wide.matches ? '0px' : `${steps.at(-1).offsetHeight}px`);
+    if (root.classList.contains('anima')) measureCake();
+  };
   const queue = () => { if (!queued) { queued = true; requestAnimationFrame(update); } };
   addEventListener('scroll', queue, { passive: true });
   addEventListener('resize', () => { measure(); queue(); });
@@ -91,6 +135,9 @@ try {
   };
   reduce.addEventListener('change', apply);
   apply();
+  // As letras chegam depois e mudam a altura das legendas: mede de novo.
+  document.fonts?.ready.then(() => { measure(); queue(); });
+  addEventListener('load', () => { measure(); queue(); });
 } catch (error) {
   document.documentElement.classList.remove('anima');
 }
