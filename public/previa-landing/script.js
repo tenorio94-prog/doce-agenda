@@ -24,6 +24,10 @@ try {
   const storyTrack = document.querySelector('.story-track');
   const scenes = [...storyTrack.querySelectorAll('figure')];
   const count = storyTrack.querySelector('.story-count');
+  const sky = document.querySelector('.story-sky');
+  const clock = storyTrack.querySelector('.story-clock');
+  const bar = storyTrack.querySelector('.story-bar i');
+  const painted = [...scenes, sky, clock, bar];
   const steps = [...document.querySelectorAll('.how-grid article')];
   const screens = [...document.querySelectorAll('.how-screen img')];
   const stage = document.querySelector('.how-stage');
@@ -39,14 +43,31 @@ try {
     if (index === step) return;
     step = index;
     steps.forEach((article, i) => article.classList.toggle('is-active', i === index));
-    screens.forEach((img, i) => img.classList.toggle('is-active', i === index));
+    screens.forEach((img, i) => { img.classList.toggle('is-active', i === index); img.classList.toggle('is-past', i < index); });
+  }
+  // As cenas acompanham o dedo: cada troca ocupa um trecho da rolagem e o céu clareia na última.
+  const between = (p, a, b) => { const t = Math.min(1, Math.max(0, (p - a) / (b - a))); return t * t * (3 - 2 * t); };
+  function paintStory(progress) {
+    const second = between(progress, 0.2, 0.38), third = between(progress, 0.56, 0.74);
+    // Como uma tira de filme: a cena seguinte entra pela direita, inclinada, e a anterior sai pela esquerda.
+    const position = second + third;
+    scenes.forEach((figure, i) => {
+      const offset = i - position;
+      figure.style.opacity = Math.max(0, 1 - Math.abs(offset) * 0.6).toFixed(3);
+      figure.style.transform = `translate3d(${(offset * 112).toFixed(2)}%, 0, 0) rotate(${(offset * 5).toFixed(2)}deg)`;
+    });
+    sky.style.opacity = third.toFixed(3);
+    clock.style.transform = `translate3d(0, ${(progress * -18).toFixed(1)}px, 0)`;
+    bar.style.transform = `scaleX(${progress.toFixed(3)})`;
+    showScene(third >= 0.5 ? 2 : second >= 0.5 ? 1 : 0);
   }
   function update() {
     queued = false;
     const box = storyTrack.getBoundingClientRect();
     const range = box.height - innerHeight;
     const progress = range > 0 ? Math.min(1, Math.max(0, -box.top / range)) : 0;
-    showScene(Math.min(scenes.length - 1, Math.floor(progress * scenes.length)));
+    if (!root.classList.contains('anima')) return;
+    if (box.top < innerHeight * 1.5 && box.bottom > -innerHeight / 2) paintStory(progress);
     // No celular o passo vale quando o topo passa de 70% da tela; no computador, quando o meio passa de 60%.
     let current = 0;
     steps.forEach((article, i) => {
@@ -63,6 +84,7 @@ try {
 
   const apply = () => {
     root.classList.toggle('anima', !reduce.matches);
+    if (reduce.matches) for (const element of painted) element.removeAttribute('style');
     tickerTrack.tabIndex = reduce.matches ? 0 : -1;
     measure();
     update();
@@ -90,6 +112,21 @@ try {
   const start = days.map((day) => Number(day.dataset.count));
   // Depois de um arraste, o navegador ainda manda um clique no mesmo doce: esse é ignorado.
   let chosen = null, dragged = null, draggedAt = 0;
+  // O carimbo "Dia cheio" bate sobre a coluna que lotou e some; o texto da coluna continua dizendo.
+  const stamp = demo.querySelector('.wk-stamp');
+  const thump = (day) => {
+    if (still()) return;
+    const grid = stamp.parentElement.getBoundingClientRect(), cell = day.getBoundingClientRect(), half = stamp.offsetWidth / 2;
+    const x = Math.min(Math.max(cell.left - grid.left + cell.width / 2, half), grid.width - half) - half;
+    const at = (scale, turn) => `translate(${x.toFixed(1)}px, -50%) scale(${scale}) rotate(${turn}deg)`;
+    for (const running of stamp.getAnimations()) running.cancel();
+    stamp.animate([
+      { opacity: 0, transform: at(2.3, -20) },
+      { opacity: 1, transform: at(1, -9), offset: 0.2 },
+      { opacity: 1, transform: at(1, -9), offset: 0.8 },
+      { opacity: 0, transform: at(1, -9) },
+    ], { duration: 1700, easing: 'ease-out' });
+  };
 
   const paint = (day, count, fresh) => {
     const full = count >= LIMIT;
@@ -98,7 +135,7 @@ try {
     day.classList.toggle('is-full', full);
     day.querySelector('.wk-state').textContent = full ? 'Dia cheio' : `${count}/${LIMIT}`;
     day.setAttribute('aria-label', `${day.dataset.day}: ${full ? 'dia cheio' : `${count} de ${LIMIT} pedidos`}`);
-    if (fresh && full) replay(day, 'just-full');
+    if (fresh && full) { replay(day, 'just-full'); thump(day); }
   };
   const choose = (sweet) => {
     chosen = sweet;
@@ -211,13 +248,33 @@ try {
     countTo(left);
     total.classList.toggle('is-done', left === 0);
     status.textContent = left ? `Falta receber: ${brl(left)}.` : 'Tudo recebido.';
+    return left;
+  };
+  // Granulado nas cores da marca, saindo do total, só quando tudo foi recebido.
+  const sprinkles = ['#f7c5d0', '#b0244a', '#fbe9a9', '#d3e7c1', '#3a1220', '#e98aa3'];
+  const celebrate = () => {
+    if (still()) return;
+    for (let i = 0; i < 30; i++) {
+      const bit = document.createElement('i');
+      bit.className = 'granulado';
+      bit.setAttribute('aria-hidden', 'true');
+      bit.style.background = sprinkles[i % sprinkles.length];
+      total.append(bit);
+      const angle = -Math.PI * (0.08 + Math.random() * 0.84), reach = 70 + Math.random() * 110;
+      const dx = Math.cos(angle) * reach, dy = Math.sin(angle) * reach, spin = Math.random() * 540 - 270;
+      bit.animate([
+        { transform: 'translate(0, 0) rotate(0deg)', opacity: 1 },
+        { transform: `translate(${dx.toFixed(1)}px, ${dy.toFixed(1)}px) rotate(${spin.toFixed(0)}deg)`, opacity: 1, offset: 0.55 },
+        { transform: `translate(${(dx * 1.2).toFixed(1)}px, ${(dy + 130).toFixed(1)}px) rotate(${(spin * 1.5).toFixed(0)}deg)`, opacity: 0 },
+      ], { duration: 1100 + Math.random() * 500, easing: 'cubic-bezier(.2,.75,.35,1)' }).finished.then(() => bit.remove(), () => bit.remove());
+    }
   };
   cards.forEach((card) => card.querySelector('.mc-btn').addEventListener('click', () => {
     card.classList.add('is-paid');
     card.querySelector('.t-tag').textContent = 'Pago';
     card.querySelector('.t-tag').classList.add('is-paid');
     reset.hidden = false;
-    settle();
+    if (settle() === 0) celebrate();
     (cards.find((item) => !item.classList.contains('is-paid'))?.querySelector('.mc-btn') ?? reset).focus({ preventScroll: true });
   }));
   reset.addEventListener('click', () => {
