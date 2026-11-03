@@ -8,6 +8,9 @@ import { demoSeedState } from '../cloud/demo-seed.js';
 import { chromium, serveSite } from './lib/browser-test.mjs';
 
 const NOW = new Date('2026-10-27T12:00:00-03:00');
+// O servidor simulado roda aqui no Node e confere a antecedência com Date.now(); enquanto ele decide, o relógio
+// fica no mesmo dia fixado na página. Sem isso o teste envelhece: depois de 31/10 o pedido do teste vira passado.
+const atTestTime = (decide) => { const real = Date.now; Date.now = () => NOW.getTime(); try { return decide(); } finally { Date.now = real; } };
 const API = 'https://doce-teste.invalid';
 const FORBIDDEN = ['vaga', 'informado', 'solicitação', 'carimbo', 'etapa', 'fazendo', 'em produção', 'aguardando confirmação'];
 const config = `window.DoceCloudConfig = Object.freeze({ url: '${API}', publishableKey: 'chave-publica-de-teste', emailReady: true, emailDeliveryReady: false });`;
@@ -34,10 +37,10 @@ async function open(width, height, url = '/app/') {
     const write = envelope.method !== 'GET';
     backend.calls.push({ ...envelope, auth: request.headers().authorization });
     const reply = (body, status) => route.fulfill({ status, headers: { ...cors, 'Content-Type': 'application/json', 'X-Agenda-Revision': String(backend.revision) }, body: JSON.stringify(body) });
-    if (write && envelope.expectedRevision !== backend.revision && !canRebaseWrite(backend.state, envelope.path, envelope.method, envelope.base || {})) {
+    if (write && envelope.expectedRevision !== backend.revision && !atTestTime(() => canRebaseWrite(backend.state, envelope.path, envelope.method, envelope.base || {}))) {
       return reply({ error: 'O estado mudou em outra sessão. Atualize e tente novamente.', code: 'REVISION_CONFLICT' }, 409);
     }
-    const transaction = transactState(backend.state, envelope.path, { method: envelope.method, body: envelope.body === undefined ? undefined : JSON.stringify(envelope.body) });
+    const transaction = atTestTime(() => transactState(backend.state, envelope.path, { method: envelope.method, body: envelope.body === undefined ? undefined : JSON.stringify(envelope.body) }));
     if (write && transaction.mutated) { backend.state = transaction.state; backend.revision += 1; }
     return reply(transaction.body, transaction.status);
   });
