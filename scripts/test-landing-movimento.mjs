@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { chromium, serveSite } from './lib/browser-test.mjs';
 
-// Movimento da landing (Fase 1): letreiro, sexta-feira da Lu parada e celular do Como funciona.
+// Movimento da landing (Fase 1): sexta-feira da Lu parada e celular do Como funciona.
 // Também confere que, sem JavaScript ou com movimento reduzido, tudo continua à vista e parado.
 const server = await serveSite();
 const browser = await chromium.launch();
@@ -95,16 +95,6 @@ try {
     assert.equal(open.stageTop, 0, `${width}: bolo parado no topo enquanto abre`);
     assert.equal(await noSideScroll(page), true, `${width}: sem rolagem lateral no bolo`);
 
-    // Letreiro corre, pausa no botão e no toque, e a cópia que fecha o laço fica escondida do leitor de tela.
-    assert.equal(await page.locator('.ticker-list[aria-hidden="true"]').count(), 1);
-    const state = () => page.locator('.ticker-move').evaluate((e) => e.getAnimations()[0]?.playState);
-    assert.equal(await state(), 'running', `${width}: letreiro correndo`);
-    await page.locator('.ticker-pause').click();
-    assert.equal(await page.locator('.ticker-pause').getAttribute('aria-pressed'), 'true');
-    assert.equal(await state(), 'paused', `${width}: letreiro pausado pelo botão`);
-    await page.locator('.ticker-track').click({ position: { x: 20, y: 10 } });
-    assert.equal(await page.locator('.ticker-pause').getAttribute('aria-pressed'), 'false', `${width}: toque no letreiro retoma`);
-
     // Semana da Lu: a cena fica parada e troca 01 → 02 → 03; o dia gigante vai de segunda a sábado e anoitece no fim.
     const story = await page.locator('.story-track').evaluate((e) => ({ top: e.getBoundingClientRect().top + scrollY, height: e.offsetHeight }));
     const range = story.height - height;
@@ -159,6 +149,8 @@ try {
     assert.equal(await ctaShown(), width <= 700, `${width}: barra ${width <= 700 ? 'aparece' : 'não existe'} depois do topo`);
     await at('.story-track', height * 0.5);
     assert.equal(await ctaShown(), false, `${width}: barra some na semana da Lu`);
+    await at('.story', -height * 0.2);
+    assert.equal(await ctaShown(), false, `${width}: barra some já na entrada da semana (não cobre "Ver o vídeo")`);
     await at('.closing-new', -height * 0.4);
     assert.equal(await ctaShown(), false, `${width}: barra some no convite do fim`);
 
@@ -169,7 +161,8 @@ try {
     assert.equal(await page.evaluate(() => document.activeElement.className), 'video-close', `${width}: foco no Fechar`);
     await page.keyboard.press('Escape');
     assert.equal(await page.locator('.video-dialog').evaluate((d) => d.open), false, `${width}: Esc fecha o vídeo`);
-    assert.equal(await page.locator('.video-dialog video').evaluate((v) => v.paused), true);
+    // O evento "close" do diálogo chega numa tarefa seguinte; espera a pausa em vez de olhar no mesmo instante.
+    await page.waitForFunction(() => document.querySelector('.video-dialog video').paused, null, { timeout: 2000 });
     assert.deepEqual(errors, [], `${width}: sem erros`);
     await page.close();
   }
@@ -196,10 +189,6 @@ try {
     assert.equal(await page.locator('.cake-layer img[loading="lazy"][width="240"][height]').count(), 6);
     assert.equal(await page.locator('.how-rail').isVisible(), false, `${label}: celular animado fora`);
     for (const shot of await page.locator('.how-grid .screen-shot').all()) assert.equal(await shot.isVisible(), true, `${label}: imagens dos passos à vista`);
-    assert.equal(await page.locator('.ticker-list').count(), options.javaScriptEnabled === false ? 1 : 2);
-    assert.equal(await page.locator('.ticker-list').first().locator('li').count(), 6);
-    assert.equal(await page.locator('.ticker-list[aria-hidden]').isVisible(), false, `${label}: sem cópia do letreiro`);
-    assert.equal(await page.locator('.ticker-pause').isVisible(), false);
     assert.equal(await noSideScroll(page), true, `${label}: sem rolagem lateral`);
     if (options.reducedMotion) {
       await checkDemos(page, label);

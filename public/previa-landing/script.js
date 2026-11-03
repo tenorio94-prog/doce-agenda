@@ -33,17 +33,6 @@ try {
   const reduce = matchMedia('(prefers-reduced-motion: reduce)');
   const wide = matchMedia('(min-width: 701px)');
 
-  const ticker = document.querySelector('.ticker');
-  const tickerTrack = ticker.querySelector('.ticker-track');
-  const tickerList = ticker.querySelector('.ticker-list');
-  const tickerCopy = tickerList.cloneNode(true);
-  tickerCopy.setAttribute('aria-hidden', 'true');
-  tickerList.after(tickerCopy);
-  const pause = ticker.querySelector('.ticker-pause');
-  const togglePause = () => pause.setAttribute('aria-pressed', String(ticker.classList.toggle('is-paused')));
-  pause.addEventListener('click', togglePause);
-  tickerTrack.addEventListener('click', () => { if (root.classList.contains('anima')) togglePause(); });
-
   const storyTrack = document.querySelector('.story-track');
   const scenes = [...storyTrack.querySelectorAll('figure')];
   const captions = scenes.map((figure) => figure.querySelector('figcaption'));
@@ -128,18 +117,22 @@ try {
       label.style.transform = `translate3d(${(-(1 - shown) * 14).toFixed(1)}px, 0, 0)`;
     });
   }
-  // Barra fixa no celular: aparece quando os botões do topo saem da tela e some nas cenas paradas (bolo e semana
-  // da Lu) e quando chega o convite do fim. Escondida, fica fora do teclado e do leitor de tela.
+  // Barra fixa no celular: aparece enquanto o botão principal do topo não está à vista (em celular baixo ele fica
+  // abaixo da foto, então a barra já vem na primeira tela) e some no bolo parado, em toda a semana da Lu (o botão do
+  // vídeo fica no pé da cena) e quando chega o convite do fim. Escondida, fica fora do teclado e do leitor de tela.
   const cta = document.querySelector('.float-cta');
-  const heroActions = document.querySelector('.hero-end .actions');
+  const heroPrimary = document.querySelector('.hero-end .primary');
   const closing = document.querySelector('.closing-new');
   const narrow = matchMedia('(max-width: 700px)');
   let ctaShown = null;
   cta.hidden = false;
   function placeCta() {
     const pinned = (box) => box.top <= 1 && box.bottom >= innerHeight - 1;
-    const show = narrow.matches && heroActions.getBoundingClientRect().bottom < 0 && closing.getBoundingClientRect().top > innerHeight
-      && !pinned(storyTrack.getBoundingClientRect()) && !pinned(cakeTrack.getBoundingClientRect());
+    const inView = (box) => box.top < innerHeight && box.bottom > 0;
+    const primary = heroPrimary.getBoundingClientRect();
+    const heroHidden = primary.bottom < 0 || primary.top > innerHeight - cta.offsetHeight;
+    const show = narrow.matches && heroHidden && closing.getBoundingClientRect().top > innerHeight
+      && !inView(storyTrack.getBoundingClientRect()) && !pinned(cakeTrack.getBoundingClientRect());
     if (show === ctaShown) return;
     ctaShown = show;
     cta.classList.toggle('is-shown', show);
@@ -178,7 +171,6 @@ try {
   const apply = () => {
     root.classList.toggle('anima', !reduce.matches);
     if (reduce.matches) for (const element of painted) element.removeAttribute('style');
-    tickerTrack.tabIndex = reduce.matches ? 0 : -1;
     measure();
     update();
   };

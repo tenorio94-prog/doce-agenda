@@ -4,7 +4,7 @@ import { chromium, serveSite } from './lib/browser-test.mjs';
 const server = await serveSite();
 const browser = await chromium.launch();
 try {
-  for (const [width, height] of [[320, 640], [360, 640], [360, 800], [390, 844], [1280, 800]]) {
+  for (const [width, height] of [[320, 640], [360, 560], [360, 640], [360, 800], [390, 844], [1280, 800]]) {
     const page = await browser.newPage({ viewport: { width, height }, reducedMotion: 'reduce' });
     for (const route of ['/', '/previa-landing/']) {
       let videoRequests = 0;
@@ -32,7 +32,9 @@ try {
           actionBottom: document.querySelector('.hero-end .primary').getBoundingClientRect().bottom,
         }));
         assert.ok(intro.titleHeight < 150, 'título sem linha isolada em celular estreito');
-        assert.ok(intro.photoBottom <= height && intro.actionBottom <= height, `foto inteira e ação principal à vista em ${width} × ${height}`);
+        // Celular baixo (até 600 px úteis): a foto fica no lugar e a barra fixa traz os botões já na primeira tela.
+        if (height <= 600) assert.equal(await page.locator('.float-cta.is-shown').isVisible(), true, `barra com a ação principal à vista em ${width} × ${height}`);
+        else assert.ok(intro.photoBottom <= height && intro.actionBottom <= height, `foto inteira e ação principal à vista em ${width} × ${height}`);
       }
       if (width < 700) {
         const inView = await page.locator('.hero-image').evaluate((e) => { const r = e.getBoundingClientRect(); return Math.max(0, Math.min(innerHeight, r.bottom) - Math.max(0, r.top)) / r.height; });
