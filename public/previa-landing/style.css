@@ -18,3 +18,65 @@ h1 span:after{border:0;border-radius:0;transform:none;width:85%;height:18px;back
   .hero-image { margin-top: 12px; }
   .hero-end .actions { margin-top: 14px; }
 }
+/* Movimento da landing. Só vale com a classe .anima no <html>, que o script.js põe quando roda e a pessoa não pediu
+   menos movimento. Sem ela (sem JavaScript ou com movimento reduzido) tudo aparece parado, como antes.
+   Anima apenas transform e opacity. */
+.ticker{display:flex;align-items:center;gap:8px;background:#3a1220;color:#fffaf2;padding:6px 12px 6px 0;font-size:15px}
+.ticker-track{flex:1;min-width:0;overflow-x:auto;scrollbar-width:none}
+.ticker-track::-webkit-scrollbar{display:none}
+.ticker-track:focus-visible{outline:3px solid #f4b9c9;outline-offset:-3px}
+.ticker-move{display:flex;width:max-content}
+.ticker-list{display:flex;list-style:none;margin:0;padding:0;white-space:nowrap}
+.ticker-list li{display:flex;align-items:center;gap:8px;padding:10px 0 10px 20px;margin-right:12px}
+.ticker-list li:before{content:"";width:6px;height:6px;border-radius:50%;background:#f4b9c9;margin-right:4px}
+.ticker-list b{font-weight:700}
+.t-tag{padding:2px 10px;border-radius:999px;background:var(--baunilha);color:var(--ink-soft);font-size:13px;font-weight:700}
+.t-tag.is-paid{background:var(--pistache);color:var(--carimbo)}.t-tag.is-new{background:#f8d7e0;color:#76213d}
+.ticker-list[aria-hidden],.ticker-pause,.story-meta,.how-rail{display:none}
+.anima .ticker-track{overflow:hidden;-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent)}
+.anima .ticker-list[aria-hidden]{display:flex}
+.anima .ticker-move{animation:ticker 48s linear infinite}
+.anima .ticker.is-paused .ticker-move{animation-play-state:paused}
+@media (hover:hover){.anima .ticker-track:hover .ticker-move{animation-play-state:paused}}
+@keyframes ticker{to{transform:translateX(-50%)}}
+.anima .ticker-pause{display:grid;place-items:center;flex:none;width:44px;height:44px;border-radius:50%;border:2px solid #fffaf2;background:transparent;cursor:pointer}
+.ticker-pause:before{content:"";width:10px;height:12px;border-inline:3.5px solid #fffaf2}
+.ticker-pause[aria-pressed="true"]:before{width:0;height:0;border:0;border-left:12px solid #fffaf2;border-block:7px solid transparent;margin-left:3px}
+.ticker-pause:focus-visible{outline-color:#f4b9c9}
+
+/* A sexta-feira da Lu: a cena fica parada e as três telas trocam conforme a rolagem. */
+.anima .story-track{height:280vh;height:280svh}
+.anima .story-stage{position:sticky;top:0;height:100vh;height:100svh;display:flex;flex-direction:column;justify-content:center;gap:14px;--scene:min(100%,calc(56svh * 1.256))}
+.anima .story-meta{display:flex;justify-content:space-between;align-items:baseline;width:var(--scene);margin:0 auto;font-family:var(--font-title);font-weight:700;font-size:22px;color:#76213d}
+.anima .story-count{font-size:16px;font-variant-numeric:tabular-nums;color:#6f5a61}
+.anima .story-grid{display:grid;grid-template-columns:minmax(0,1fr);margin:0}
+.anima .story figure{grid-area:1/1;display:block;opacity:0;transform:translateY(28px) scale(.97);transition:opacity .25s ease,transform .45s ease}
+.anima .story figure.is-past{transform:translateY(-28px) scale(.97)}
+.anima .story figure.is-active{opacity:1;transform:none;transition:opacity .55s ease .2s,transform .75s cubic-bezier(.2,.75,.25,1) .1s}
+.anima .story figure img{width:var(--scene);margin-inline:auto}
+.anima .story figcaption{width:var(--scene);margin:14px auto 0;font-size:18px;text-align:center}
+.anima .story-prefix{display:none}
+.anima .story figcaption::first-letter{text-transform:uppercase}
+
+/* Como funciona: o celular fica parado e a tela troca conforme cada passo passa. */
+.how-screen{position:relative;overflow:hidden;margin-inline:auto;background:#fffaf2;border:7px solid #2a141b;border-radius:26px;box-shadow:0 14px 30px #3a122026;--tall:min(46svh,400px);height:var(--tall);width:calc(var(--tall) * .5625)}
+.how-screen img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top;opacity:0;transform:scale(1.04);transition:opacity .5s ease,transform .6s ease}
+.how-screen img.is-active{opacity:1;transform:none}
+.how-note{margin:8px 0 0;font-size:13px;color:#6f5a61;text-align:center}
+.anima .how-stage{position:relative}
+.anima .how-rail{display:block;position:absolute;inset:0 0 var(--how-tail,0px);z-index:1;pointer-events:none}
+.anima .how-phone{position:sticky;top:0;padding:16px 0 14px;background:linear-gradient(#fffaf2 88%,#fffaf200)}
+.anima .how-grid{grid-template-columns:minmax(0,1fr);gap:0;padding-top:calc(min(46svh,400px) + 70px)}
+.anima .how-grid article{min-height:40svh;opacity:.75;transition:opacity .4s ease}.anima .how-grid article:last-child{min-height:0;padding-bottom:8px}
+.anima .how-grid article.is-active{opacity:1}
+.anima .how-grid .example-label,.anima .how-grid .screen-shot{display:none}
+@media (min-width:701px){
+  .anima .how-rail{inset:0 auto 0 0;width:46%}
+  .anima .how-grid article:last-child{min-height:80vh}
+  .anima .how-phone{top:calc(50vh - 290px);background:none}
+  .anima .how-screen{--tall:min(70vh,520px)}
+  .anima .how-grid{padding-top:0;margin-left:52%}
+  .anima .how-grid article{min-height:70vh;display:flex;flex-direction:column;justify-content:center}
+  .anima .how-grid h3{font-size:30px}
+  .anima .how-grid p{font-size:18px}
+}
