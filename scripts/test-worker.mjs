@@ -61,6 +61,24 @@ try {
   }
   results.push('resto do site continua estático');
 
+  // Vídeo da landing: inteiro ou em pedaços (o iPhone pede bytes=0-1 primeiro e só toca se vier 206).
+  const videoUrl = `${origin}/previa-landing/a-semana-da-lu.mp4`;
+  const whole = await fetch(videoUrl);
+  assert.equal(whole.status, 200); assert.equal(whole.headers.get('accept-ranges'), 'bytes'); assert.equal(whole.headers.get('content-type'), 'video/mp4');
+  const full = new Uint8Array(await whole.arrayBuffer());
+  const size = full.length;
+  assert.ok(size > 9_000_000, 'vídeo original inteiro');
+  for (const [range, start, end] of [['bytes=0-1', 0, 1], ['bytes=1000-4999', 1000, 4999], ['bytes=-100', size - 100, size - 1], [`bytes=${size - 10}-`, size - 10, size - 1]]) {
+    const part = await fetch(videoUrl, { headers: { Range: range } });
+    assert.equal(part.status, 206, range);
+    assert.equal(part.headers.get('content-range'), `bytes ${start}-${end}/${size}`, range);
+    const bytes = new Uint8Array(await part.arrayBuffer());
+    assert.equal(bytes.length, end - start + 1, range);
+    assert.deepEqual(bytes, full.subarray(start, end + 1), `${range}: mesmos bytes do arquivo`);
+  }
+  assert.equal((await fetch(videoUrl, { headers: { Range: `bytes=${size}-` } })).status, 416);
+  results.push('vídeo inteiro ou em pedaços (206), como o iPhone pede');
+
   // No navegador: abre a vitrine com os dados embutidos, sem buscar a vitrine de novo.
   const browser = await chromium.launch();
   try {

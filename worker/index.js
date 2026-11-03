@@ -1,8 +1,10 @@
-// Código da Cloudflare que roda só em /p/* e /fotos/* (wrangler.jsonc, run_worker_first). Todo o resto do site
-// continua sendo arquivo estático. Se algo aqui falhar, a cliente recebe a página de sempre.
+// Código da Cloudflare que roda só em /p/*, /fotos/* e nos vídeos .mp4 (wrangler.jsonc, run_worker_first). Todo o
+// resto do site continua sendo arquivo estático. Se algo aqui falhar, a cliente recebe a página de sempre.
 //   /p/<slug>  vitrine com nome, frase e imagem da confeitaria na prévia do WhatsApp/Instagram, e os dados já na
 //              página (abre sem esperar outra busca; a visita é contada uma vez, aqui).
 //   /fotos/... fotos da vitrine guardadas no Supabase, entregues pelo nosso endereço e guardadas em cache.
+//   *.mp4      o mesmo arquivo publicado, inteiro ou no pedaço pedido (Range): os arquivos estáticos ignoram Range,
+//              e o Safari do iPhone só toca vídeo de servidor que entrega pedaços.
 // VITRINE_SUPABASE só existe no teste local (scripts/test-worker.mjs), para usar um Supabase simulado.
 const SUPABASE = 'https://khvhnbopdluthpcduhqm.supabase.co';
 const SLUG = /^\/p\/([a-z0-9][a-z0-9-]{1,38}[a-z0-9])\/?$/;
@@ -66,6 +68,51 @@ async function photo(request, env, ctx, key) {
   return response;
 }
 
+// Entrega o vídeo inteiro (200) ou só os bytes pedidos (206), lendo o arquivo publicado aos poucos, sem guardar tudo.
+export function byteRange(header, size) {
+  const match = /^bytes=(\d*)-(\d*)$/.exec((header || '').trim());
+  if (!match || (match[1] === '' && match[2] === '')) return null;
+  if (match[1] === '') return { start: Math.max(0, size - Number(match[2])), end: size - 1 };
+  return { start: Number(match[1]), end: match[2] === '' ? size - 1 : Math.min(Number(match[2]), size - 1) };
+}
+// O arquivo publicado chega aqui sem Content-Length: o tamanho é medido uma vez por versão (ETag) e guardado.
+const videoSizes = new Map();
+async function video(request, env) {
+  const asset = await env.ASSETS.fetch(new Request(request.url));
+  if (!asset.ok) return asset;
+  const headers = new Headers(asset.headers);
+  headers.set('Accept-Ranges', 'bytes');
+  const header = request.headers.get('Range');
+  if (!header) return new Response(request.method === 'HEAD' ? null : asset.body, { status: 200, headers });
+  const tag = asset.headers.get('ETag') || request.url;
+  let size = Number(asset.headers.get('Content-Length')) || videoSizes.get(tag), whole = null;
+  if (!size) {
+    whole = new Uint8Array(await asset.arrayBuffer());
+    size = whole.byteLength;
+    videoSizes.set(tag, size);
+  }
+  const range = byteRange(header, size);
+  if (!range) return new Response(request.method === 'HEAD' ? null : whole ?? asset.body, { status: 200, headers });
+  if (range.start >= size || range.start > range.end) {
+    if (!whole) asset.body?.cancel();
+    return new Response(null, { status: 416, headers: { 'Content-Range': `bytes */${size}` } });
+  }
+  headers.set('Content-Range', `bytes ${range.start}-${range.end}/${size}`);
+  headers.set('Content-Length', String(range.end - range.start + 1));
+  if (request.method === 'HEAD') { if (!whole) asset.body?.cancel(); return new Response(null, { status: 206, headers }); }
+  if (whole) return new Response(whole.subarray(range.start, range.end + 1), { status: 206, headers });
+  let offset = 0;
+  const body = asset.body.pipeThrough(new TransformStream({
+    transform(chunk, controller) {
+      const from = Math.max(range.start - offset, 0), to = Math.min(range.end + 1 - offset, chunk.byteLength);
+      if (from < to) controller.enqueue(chunk.subarray(from, to));
+      offset += chunk.byteLength;
+      if (offset > range.end) controller.terminate();
+    },
+  }));
+  return new Response(body, { status: 206, headers });
+}
+
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
@@ -73,6 +120,7 @@ export default {
     const photoKey = url.pathname.match(PHOTO)?.[1];
     if (photoKey) return photo(request, env, ctx, photoKey);
     if (url.pathname.startsWith('/fotos/')) return new Response('Foto não encontrada.', { status: 404 });
+    if (url.pathname.endsWith('.mp4')) return video(request, env);
     const slug = url.pathname.match(SLUG)?.[1];
     if (slug) {
       try { return await vitrinePage(request, env, slug); } catch { /* cai na página de sempre */ }
