@@ -149,6 +149,27 @@ try {
       assert.ok(last.stepTop >= last.phoneBottom - 2 && last.stepBottom <= height, `${width}: último passo visível abaixo do celular`);
     }
     await checkDemos(page, String(width));
+
+    // Barra fixa (só no celular): escondida no topo, nas cenas paradas e no convite do fim; aparece entre elas.
+    const ctaShown = () => page.locator('.float-cta').evaluate((e) => getComputedStyle(e).display !== 'none' && e.classList.contains('is-shown') && !e.inert);
+    const at = async (selector, offset = 0) => { await goTo(page, await page.locator(selector).evaluate((e) => e.getBoundingClientRect().top + scrollY) + offset); await wait(page, 500); };
+    await goTo(page, 0); await wait(page, 300);
+    assert.equal(await ctaShown(), false, `${width}: barra escondida no topo`);
+    await at('.how');
+    assert.equal(await ctaShown(), width <= 700, `${width}: barra ${width <= 700 ? 'aparece' : 'não existe'} depois do topo`);
+    await at('.story-track', height * 0.5);
+    assert.equal(await ctaShown(), false, `${width}: barra some na semana da Lu`);
+    await at('.closing-new', -height * 0.4);
+    assert.equal(await ctaShown(), false, `${width}: barra some no convite do fim`);
+
+    // Vídeo numa janela do tamanho da tela; Esc fecha e pausa.
+    await page.locator('.video-open').evaluate((e) => e.click());
+    await page.locator('.video-dialog[open] video').waitFor({ timeout: 3000 });
+    assert.equal(await page.locator('.video-dialog video source').getAttribute('src'), '/previa-landing/a-semana-da-lu.mp4');
+    assert.equal(await page.evaluate(() => document.activeElement.className), 'video-close', `${width}: foco no Fechar`);
+    await page.keyboard.press('Escape');
+    assert.equal(await page.locator('.video-dialog').evaluate((d) => d.open), false, `${width}: Esc fecha o vídeo`);
+    assert.equal(await page.locator('.video-dialog video').evaluate((v) => v.paused), true);
     assert.deepEqual(errors, [], `${width}: sem erros`);
     await page.close();
   }

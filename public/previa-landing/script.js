@@ -1,7 +1,30 @@
 const switches = document.querySelectorAll('.ld-switch button');
 const showSide = (side) => { document.querySelector('.ld-stage').dataset.side = side; for (const item of switches) item.setAttribute('aria-pressed', String(item.dataset.side === side)); };
 for (const button of switches) button.addEventListener('click', () => showSide(button.dataset.side));
-document.querySelector('.video-open').addEventListener('click', event => { const video = document.createElement('video'); video.controls = true; video.preload = 'none'; video.width = 1080; video.height = 1920; video.setAttribute('playsinline', ''); video.setAttribute('aria-describedby', 'video-roteiro'); const source = document.createElement('source'); source.src = '/previa-landing/a-semana-da-lu.mp4'; source.type = 'video/mp4'; video.append(source); document.querySelector('.video-holder').append(video); event.currentTarget.hidden = true; video.play().catch(() => {}); });
+// Vídeo em pé: abre numa janela por cima da página, do tamanho da tela, e pausa ao fechar.
+document.querySelector('.video-open').addEventListener('click', () => {
+  let dialog = document.querySelector('.video-dialog');
+  if (!dialog) {
+    dialog = document.createElement('dialog');
+    dialog.className = 'video-dialog';
+    dialog.setAttribute('aria-label', 'Vídeo: a semana da Lu');
+    const close = document.createElement('button');
+    close.type = 'button'; close.className = 'video-close'; close.textContent = 'Fechar';
+    const video = document.createElement('video');
+    video.controls = true; video.preload = 'none'; video.width = 1080; video.height = 1920;
+    video.setAttribute('playsinline', ''); video.setAttribute('aria-describedby', 'video-roteiro');
+    const source = document.createElement('source');
+    source.src = '/previa-landing/a-semana-da-lu.mp4'; source.type = 'video/mp4';
+    video.append(source);
+    dialog.append(close, video);
+    document.body.append(dialog);
+    close.addEventListener('click', () => dialog.close());
+    dialog.addEventListener('click', (event) => { if (event.target === dialog) dialog.close(); });
+    dialog.addEventListener('close', () => video.pause());
+  }
+  dialog.showModal();
+  dialog.querySelector('video').play().catch(() => {});
+});
 
 // Movimento: a classe .anima só entra no fim, depois que tudo foi preparado. Se algo falhar antes,
 // ou se a pessoa pediu menos movimento, a página fica parada e com todo o conteúdo à vista.
@@ -99,11 +122,29 @@ try {
       if (!label) return;
       const shown = between(open, 0.45 + i * 0.09, 0.75 + i * 0.06);
       label.style.opacity = shown.toFixed(3);
-      label.style.transform = `translate3d(${((1 - shown) * 18).toFixed(1)}px, 0, 0)`;
+      label.style.transform = `translate3d(${(-(1 - shown) * 14).toFixed(1)}px, 0, 0)`;
     });
+  }
+  // Barra fixa no celular: aparece quando os botões do topo saem da tela e some nas cenas paradas (bolo e semana
+  // da Lu) e quando chega o convite do fim. Escondida, fica fora do teclado e do leitor de tela.
+  const cta = document.querySelector('.float-cta');
+  const heroActions = document.querySelector('.hero-end .actions');
+  const closing = document.querySelector('.closing-new');
+  const narrow = matchMedia('(max-width: 700px)');
+  let ctaShown = null;
+  cta.hidden = false;
+  function placeCta() {
+    const pinned = (box) => box.top <= 1 && box.bottom >= innerHeight - 1;
+    const show = narrow.matches && heroActions.getBoundingClientRect().bottom < 0 && closing.getBoundingClientRect().top > innerHeight
+      && !pinned(storyTrack.getBoundingClientRect()) && !pinned(cakeTrack.getBoundingClientRect());
+    if (show === ctaShown) return;
+    ctaShown = show;
+    cta.classList.toggle('is-shown', show);
+    cta.inert = !show;
   }
   function update() {
     queued = false;
+    placeCta();
     const box = storyTrack.getBoundingClientRect();
     const range = box.height - innerHeight;
     const progress = range > 0 ? Math.min(1, Math.max(0, -box.top / range)) : 0;

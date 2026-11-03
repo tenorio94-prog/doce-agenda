@@ -53,7 +53,11 @@ h1 span:after{border:0;border-radius:0;transform:none;width:85%;height:18px;back
    transform e opacity a cada quadro; o dia muda o texto do marcador. */
 .anima .story{position:relative;overflow-x:clip;background:#f9e6dc}
 .anima .story>.wrap{position:relative;z-index:1}
-.anima .story-sky{display:block;position:absolute;inset:0;background:#3b2a4c;opacity:0}
+/* A noite cobre só a área das cenas: o título acima nunca fica escuro sobre escuro. */
+.anima .story{padding-bottom:0}
+.anima .story-track{position:relative}
+.anima .story-sky{display:block;position:absolute;top:0;bottom:0;left:50%;width:100vw;margin-left:-50vw;background:#3b2a4c;opacity:0}
+.anima .story-stage{z-index:1}
 .anima .story-track{height:330vh;height:330svh}
 .anima .story-stage{position:sticky;top:0;height:100vh;height:100svh;display:flex;flex-direction:column;justify-content:center;gap:12px;--scene:min(100%,44svh)}
 .anima .story-meta{position:relative;display:flex;align-items:flex-end;gap:10px;width:var(--scene);margin:0 auto}
@@ -198,3 +202,30 @@ h1 span:after{border:0;border-radius:0;transform:none;width:85%;height:18px;back
 .anima .cake{gap:clamp(8px,2.2svh,22px);margin-block:auto}
 @media (max-width:700px){.anima .cake-layer{grid-template-columns:minmax(0,56%) minmax(0,1fr);gap:12px}}
 .anima .cake-label{opacity:0}
+
+/* Iteração para celular (03/11): títulos do mesmo tamanho, vídeo em tela cheia, barra fixa com os dois botões,
+   perguntas com marcador próprio e o bolo sem passar da borda. */
+h2{font-size:clamp(34px,8.4vw,52px);line-height:1.04;letter-spacing:-.03em;text-wrap:balance}
+.cake-sec{overflow-x:clip}
+.video-open:before{content:"";width:0;height:0;margin-right:10px;border-left:11px solid currentColor;border-block:7px solid transparent}
+.anima .story .video-open{align-self:center;min-height:46px;margin-top:2px;padding:8px 20px}
+.video-dialog{width:100vw;max-width:none;height:100vh;height:100svh;max-height:none;margin:0;padding:12px;border:0;background:#1f0f18;overflow:hidden}
+.video-dialog[open]{display:grid;place-items:center}
+.video-dialog::backdrop{background:#1f0f18}
+.video-dialog[open]{animation:video-in .3s cubic-bezier(.2,.8,.3,1)}
+@keyframes video-in{from{opacity:0;transform:scale(.94)}}
+.video-dialog video{display:block;width:auto;max-width:100%;height:auto;max-height:calc(100svh - 24px);border-radius:18px;background:#000}
+.video-close{position:absolute;top:calc(12px + env(safe-area-inset-top));right:12px;z-index:1;min-height:44px;padding:0 18px;border:0;border-radius:999px;background:#fffaf2;color:#3a1220;font-weight:700;cursor:pointer}
+.float-cta{display:none}
+@media (max-width:700px){
+  .float-cta{position:fixed;left:0;right:0;bottom:0;z-index:40;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;padding:10px 12px calc(10px + env(safe-area-inset-bottom));background:#fffaf2f5;border-top:1px solid #eadfe2;box-shadow:0 -10px 30px -18px #3a122059;transform:translateY(130%);opacity:0;transition:transform .35s cubic-bezier(.2,.8,.2,1),opacity .25s ease}
+  .float-cta[hidden]{display:none}
+  .float-cta.is-shown{transform:none;opacity:1}
+  .float-cta .primary,.float-cta .outline{min-height:48px;padding:8px 18px}
+}
+.faq-list summary{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:56px;list-style:none;font-size:17px;line-height:1.35}
+.faq-list summary::-webkit-details-marker{display:none}
+.faq-list summary:after{content:"";flex:none;width:30px;height:30px;border-radius:50%;background:linear-gradient(#3a1220,#3a1220) center/12px 2px no-repeat,linear-gradient(#3a1220,#3a1220) center/2px 12px no-repeat,#f7e3e8;transition:transform .25s ease}
+.faq-list details[open] summary:after{transform:rotate(45deg)}
+.faq-list p{max-width:60ch;color:#4a3550}
+@media (prefers-reduced-motion:reduce){.float-cta,.faq-list summary:after{transition:none}.video-dialog[open]{animation:none}}
