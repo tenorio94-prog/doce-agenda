@@ -105,12 +105,15 @@ try {
     await page.locator('.ticker-track').click({ position: { x: 20, y: 10 } });
     assert.equal(await page.locator('.ticker-pause').getAttribute('aria-pressed'), 'false', `${width}: toque no letreiro retoma`);
 
-    // Sexta-feira da Lu: a cena fica parada e troca 01 → 02 → 03.
+    // Semana da Lu: a cena fica parada e troca 01 → 02 → 03; o dia gigante vai de segunda a sábado e anoitece no fim.
     const story = await page.locator('.story-track').evaluate((e) => ({ top: e.getBoundingClientRect().top + scrollY, height: e.offsetHeight }));
     const range = story.height - height;
-    for (const [part, count] of [[0.05, '01/03'], [0.5, '02/03'], [0.95, '03/03']]) {
+    for (const [part, count, today, moment] of [[0.05, '01/03', 'seg', 'de manhã'], [0.5, '02/03', 'sáb', '11h'], [0.95, '03/03', 'sáb', 'à noite']]) {
       await goTo(page, story.top + range * part); await wait(page);
       assert.equal(await page.locator('.story-count').innerText(), count, `${width}: contador ${count}`);
+      assert.equal(await page.locator('.story-day').getAttribute('data-day'), today, `${width}: dia ${today}`);
+      assert.equal(await page.locator('.story-when').innerText(), moment);
+      assert.equal(await page.locator('.story-sky').evaluate((e) => Number(getComputedStyle(e).opacity) > 0.95), count === '03/03', `${width}: anoitece só na última cena`);
       const active = await page.locator('.story figure').evaluateAll((list) => list.map((f) => f.classList.contains('is-active')));
       assert.deepEqual(active, [0, 1, 2].map((i) => i === Number(count[1]) - 1), `${width}: cena ${count} em destaque`);
       assert.equal(await page.locator('.story-stage').evaluate((e) => Math.round(e.getBoundingClientRect().top)), 0, `${width}: cena parada no topo`);
@@ -160,7 +163,7 @@ try {
     for (const figure of await page.locator('.story figure').all()) {
       await figure.scrollIntoViewIfNeeded();
       assert.equal(await figure.evaluate((e) => getComputedStyle(e).opacity), '1', `${label}: cenas à vista`);
-      assert.match(await figure.locator('figcaption').innerText(), /^Sexta, 23h: |^Ela anota/);
+      assert.match(await figure.locator('figcaption').innerText(), /^(Segunda de manhã|Sábado, 11h|Sábado à noite): /);
     }
     assert.equal(await page.locator('.story-meta').isVisible(), false);
     // Bolo parado: aberto, as 5 legendas à vista e as 6 camadas como imagens com tamanho e carregamento adiado.

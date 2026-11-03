@@ -8,7 +8,7 @@ try {
     const page = await browser.newPage({ viewport: { width, height }, reducedMotion: 'reduce' });
     for (const route of ['/', '/previa-landing/']) {
       let videoRequests = 0;
-      page.on('request', (request) => { if (request.url().endsWith('/previa-landing/historia.mp4')) videoRequests++; });
+      page.on('request', (request) => { if (request.url().endsWith('/previa-landing/a-semana-da-lu.mp4')) videoRequests++; });
       await page.goto(`${server.origin}${route}`, { waitUntil: 'networkidle' });
       assert.equal(await page.locator('h1').innerText(), 'Sua semana de encomendas, sem susto.');
       assert.equal(await page.locator('meta[name="robots"]').count(), route === '/' ? 0 : 1);
@@ -58,11 +58,14 @@ try {
         // Aguarda a requisição iniciada pelo clique antes de abrir a próxima rota.
         // Assim uma requisição tardia da primeira página não contamina a contagem da segunda.
         await Promise.all([
-          page.waitForRequest((request) => request.url().endsWith('/previa-landing/historia.mp4')),
+          page.waitForRequest((request) => request.url().endsWith('/previa-landing/a-semana-da-lu.mp4')),
           page.locator('.video-open').click(),
         ]);
-        assert.equal(await page.locator('video source').getAttribute('src'), '/previa-landing/historia.mp4');
-        assert.equal(await page.locator('video track').getAttribute('src'), '/previa-landing/legendas.vtt');
+        assert.equal(await page.locator('video source').getAttribute('src'), '/previa-landing/a-semana-da-lu.mp4');
+        // O texto do vídeo já está na imagem; para leitor de tela, o roteiro fica em texto ligado ao vídeo.
+        assert.equal(await page.locator('video track').count(), 0);
+        assert.equal(await page.locator('video').getAttribute('aria-describedby'), 'video-roteiro');
+        assert.match(await page.locator('#video-roteiro').textContent(), /Segunda de manhã[\s\S]*Camila veio buscar[\s\S]*sem susto/);
       }
 
     }

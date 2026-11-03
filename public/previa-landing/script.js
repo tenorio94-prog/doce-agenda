@@ -1,7 +1,7 @@
 const switches = document.querySelectorAll('.ld-switch button');
 const showSide = (side) => { document.querySelector('.ld-stage').dataset.side = side; for (const item of switches) item.setAttribute('aria-pressed', String(item.dataset.side === side)); };
 for (const button of switches) button.addEventListener('click', () => showSide(button.dataset.side));
-document.querySelector('.video-open').addEventListener('click', event => { const video = document.createElement('video'); video.controls = true; video.preload = 'none'; video.setAttribute('playsinline', ''); const source = document.createElement('source'); source.src = '/previa-landing/historia.mp4'; source.type = 'video/mp4'; const track = document.createElement('track'); track.kind = 'captions'; track.srclang = 'pt-BR'; track.label = 'Português'; track.src = '/previa-landing/legendas.vtt'; track.default = true; video.append(source, track); document.querySelector('.video-holder').append(video); event.currentTarget.hidden = true; video.play().catch(() => {}); });
+document.querySelector('.video-open').addEventListener('click', event => { const video = document.createElement('video'); video.controls = true; video.preload = 'none'; video.width = 1080; video.height = 1920; video.setAttribute('playsinline', ''); video.setAttribute('aria-describedby', 'video-roteiro'); const source = document.createElement('source'); source.src = '/previa-landing/a-semana-da-lu.mp4'; source.type = 'video/mp4'; video.append(source); document.querySelector('.video-holder').append(video); event.currentTarget.hidden = true; video.play().catch(() => {}); });
 
 // Movimento: a classe .anima só entra no fim, depois que tudo foi preparado. Se algo falhar antes,
 // ou se a pessoa pediu menos movimento, a página fica parada e com todo o conteúdo à vista.
@@ -25,14 +25,15 @@ try {
   const scenes = [...storyTrack.querySelectorAll('figure')];
   const count = storyTrack.querySelector('.story-count');
   const sky = document.querySelector('.story-sky');
-  const clock = storyTrack.querySelector('.story-clock');
+  const day = storyTrack.querySelector('.story-day');
+  const when = storyTrack.querySelector('.story-when');
   const bar = storyTrack.querySelector('.story-bar i');
   const cakeTrack = document.querySelector('.cake-track');
   const cakeRows = [...cakeTrack.querySelectorAll('.cake-layer')];
   const cakeLabels = cakeRows.map((row) => row.querySelector('.cake-label'));
   const cakeList = cakeTrack.querySelector('.cake');
   let cakeShift = cakeRows.map(() => [0, 0]);
-  const painted = [...scenes, sky, clock, bar, ...cakeRows, ...cakeLabels.filter(Boolean), cakeList];
+  const painted = [...scenes, sky, day, bar, ...cakeRows, ...cakeLabels.filter(Boolean), cakeList];
   const steps = [...document.querySelectorAll('.how-grid article')];
   const screens = [...document.querySelectorAll('.how-screen img')];
   const stage = document.querySelector('.how-stage');
@@ -43,6 +44,7 @@ try {
     scene = index;
     scenes.forEach((figure, i) => { figure.classList.toggle('is-active', i === index); figure.classList.toggle('is-past', i < index); });
     count.textContent = `0${index + 1}/0${scenes.length}`;
+    when.textContent = ['de manhã', '11h', 'à noite'][index];
   }
   function showStep(index) {
     if (index === step) return;
@@ -50,7 +52,7 @@ try {
     steps.forEach((article, i) => article.classList.toggle('is-active', i === index));
     screens.forEach((img, i) => { img.classList.toggle('is-active', i === index); img.classList.toggle('is-past', i < index); });
   }
-  // As cenas acompanham o dedo: cada troca ocupa um trecho da rolagem e o céu clareia na última.
+  // As cenas acompanham o dedo: cada troca ocupa um trecho da rolagem e anoitece na última.
   const between = (p, a, b) => { const t = Math.min(1, Math.max(0, (p - a) / (b - a))); return t * t * (3 - 2 * t); };
   function paintStory(progress) {
     const second = between(progress, 0.2, 0.38), third = between(progress, 0.56, 0.74);
@@ -62,7 +64,10 @@ try {
       figure.style.transform = `translate3d(${(offset * 112).toFixed(2)}%, 0, 0) rotate(${(offset * 5).toFixed(2)}deg)`;
     });
     sky.style.opacity = third.toFixed(3);
-    clock.style.transform = `translate3d(0, ${(progress * -18).toFixed(1)}px, 0)`;
+    // O dia gigante vira de segunda a sábado enquanto a semana passa entre a primeira e a segunda cena.
+    const today = ['seg', 'ter', 'qua', 'qui', 'sex', 'sáb'][third > 0 ? 5 : Math.round(second * 5)];
+    if (day.dataset.day !== today) day.dataset.day = today;
+    day.style.transform = `translate3d(0, ${(progress * -18).toFixed(1)}px, 0)`;
     bar.style.transform = `scaleX(${progress.toFixed(3)})`;
     showScene(third >= 0.5 ? 2 : second >= 0.5 ? 1 : 0);
   }
