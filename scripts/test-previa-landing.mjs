@@ -4,7 +4,7 @@ import { chromium, serveSite } from './lib/browser-test.mjs';
 const server = await serveSite();
 const browser = await chromium.launch();
 try {
-  for (const [width, height] of [[320, 640], [360, 800], [390, 844], [1280, 800]]) {
+  for (const [width, height] of [[320, 640], [360, 640], [360, 800], [390, 844], [1280, 800]]) {
     const page = await browser.newPage({ viewport: { width, height }, reducedMotion: 'reduce' });
     for (const route of ['/', '/previa-landing/']) {
       let videoRequests = 0;
@@ -25,14 +25,14 @@ try {
       // Coordinates of the phone's black screen in the approved photograph, measured against the whole image.
       assert.ok(photo.cardLeft >= 0.605 && photo.cardRight <= 0.84 && photo.cardTop >= 0.145 && photo.cardBottom <= 0.93, `${width}: agenda deve caber na tela do celular`);
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, `${width}: sem rolagem lateral`);
-      if (width === 320 && height === 640) {
+      if (width < 700 && height <= 760) {
         const intro = await page.evaluate(() => ({
           titleHeight: document.querySelector('h1').getBoundingClientRect().height,
           photoBottom: document.querySelector('.hero-image').getBoundingClientRect().bottom,
           actionBottom: document.querySelector('.hero-end .primary').getBoundingClientRect().bottom,
         }));
         assert.ok(intro.titleHeight < 150, 'título sem linha isolada em celular estreito');
-        assert.ok(intro.photoBottom <= height && intro.actionBottom <= height, 'foto inteira e ação principal à vista em 320 × 640');
+        assert.ok(intro.photoBottom <= height && intro.actionBottom <= height, `foto inteira e ação principal à vista em ${width} × ${height}`);
       }
       if (width < 700) {
         const inView = await page.locator('.hero-image').evaluate((e) => { const r = e.getBoundingClientRect(); return Math.max(0, Math.min(innerHeight, r.bottom) - Math.max(0, r.top)) / r.height; });

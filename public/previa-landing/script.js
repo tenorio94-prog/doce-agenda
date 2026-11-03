@@ -46,6 +46,7 @@ try {
 
   const storyTrack = document.querySelector('.story-track');
   const scenes = [...storyTrack.querySelectorAll('figure')];
+  const captions = scenes.map((figure) => figure.querySelector('figcaption'));
   const count = storyTrack.querySelector('.story-count');
   const sky = document.querySelector('.story-sky');
   const day = storyTrack.querySelector('.story-day');
@@ -56,7 +57,7 @@ try {
   const cakeLabels = cakeRows.map((row) => row.querySelector('.cake-label'));
   const cakeList = cakeTrack.querySelector('.cake');
   let cakeShift = cakeRows.map(() => [0, 0]);
-  const painted = [...scenes, sky, day, bar, ...cakeRows, ...cakeLabels.filter(Boolean), cakeList];
+  const painted = [...scenes, ...captions, sky, day, bar, ...cakeRows, ...cakeLabels.filter(Boolean), cakeList];
   const steps = [...document.querySelectorAll('.how-grid article')];
   const screens = [...document.querySelectorAll('.how-screen img')];
   const stage = document.querySelector('.how-stage');
@@ -72,7 +73,7 @@ try {
   function showStep(index) {
     if (index === step) return;
     step = index;
-    steps.forEach((article, i) => article.classList.toggle('is-active', i === index));
+    steps.forEach((article, i) => { article.classList.toggle('is-active', i === index); article.classList.toggle('is-past', i < index); });
     screens.forEach((img, i) => { img.classList.toggle('is-active', i === index); img.classList.toggle('is-past', i < index); });
   }
   // As cenas acompanham o dedo: cada troca ocupa um trecho da rolagem e anoitece na última.
@@ -85,6 +86,8 @@ try {
       const offset = i - position;
       figure.style.opacity = Math.max(0, 1 - Math.abs(offset) * 0.6).toFixed(3);
       figure.style.transform = `translate3d(${(offset * 112).toFixed(2)}%, 0, 0) rotate(${(offset * 5).toFixed(2)}deg)`;
+      // Só a legenda da cena atual fica legível; as vizinhas somem antes de chegar à borda da tela.
+      captions[i].style.opacity = Math.max(0, 1 - Math.abs(offset) * 2.5).toFixed(3);
     });
     sky.style.opacity = third.toFixed(3);
     // O dia gigante vira de segunda a sábado enquanto a semana passa entre a primeira e a segunda cena.
