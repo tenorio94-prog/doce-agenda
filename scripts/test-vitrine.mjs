@@ -83,7 +83,10 @@ try {
     assert.match(await page.locator('#chosen').innerText(), /Bolo de aniversário/);
     await page.locator('[data-next="2"]').click();
     assert.ok(await page.locator('.step[data-step="1"]').isVisible(), 'sabor obrigatório segura no passo 1');
+    assert.equal(await page.locator('#cake-flavor-error').innerText(), 'Escolha uma opção.', 'o erro aparece junto do campo, não no balão do navegador');
+    assert.equal(await page.locator('#cake-flavor').getAttribute('aria-invalid'), 'true');
     await page.locator('#cake-flavor').selectOption('Ninho');
+    assert.equal(await page.locator('#cake-flavor-error').count(), 0, 'o erro some quando ela escolhe');
     await page.locator('[data-extra="Brigadeiro (cento)"]').click();
     await page.locator('[data-next="2"]').click();
     await page.locator('.step[data-step="2"]:not([hidden])').waitFor();
@@ -97,15 +100,24 @@ try {
     assert.ok(await page.locator('.step[data-step="2"]').isVisible(), 'endereço obrigatório na entrega');
     await page.locator('#location').fill('Rua de teste, 10');
     await page.locator('[data-next="3"]').click();
+    // Antes de enviar ela revê o pedido, com a data por extenso.
+    assert.match(await page.locator('#review').innerText(), /Bolo de aniversário \+ Brigadeiro \(cento\)[\s\S]*Sabor: Ninho[\s\S]*às 15h[\s\S]*Entrega: Rua de teste, 10/);
+    assert.equal(await page.locator('#review [data-edit-step]').count(), 4);
     await page.locator('#client').fill('Cliente Fictícia');
-    await page.locator('#contact').fill('11988887777');
+    await page.locator('#contact').fill('1234');
     await page.locator('#consent').check();
+    await page.locator('#send').click();
+    assert.match(await page.locator('#contact-error').innerText(), /DDD, por exemplo \(11\) 98765-4321/, 'WhatsApp conferido antes de enviar');
+    assert.equal(sent.length, 0, 'nada enviado com WhatsApp inválido');
+    await page.locator('#contact').fill('11988887777');
     if (shots) await page.screenshot({ path: path.join(shots, `pedido-passo3-${width}.png`), fullPage: true });
     await page.locator('#send').click();
     // A data lotou no envio: volta ao passo 2 com o aviso e a data riscada.
     await page.locator('.step[data-step="2"]:not([hidden])').waitFor();
-    assert.match(await page.locator('#step2-error').innerText(), /indisponível/);
+    assert.match(await page.locator('#step2-error').innerText(), /indisponível[\s\S]*Escolha outra data/);
     assert.ok(await page.locator(`#calendar-days [data-date="${day(3)}"]`).isDisabled());
+    assert.equal(await page.locator('#calendar-days [aria-pressed="true"]').count(), 0, 'a data recusada sai marcada');
+    assert.ok(await page.evaluate(() => { const r = document.querySelector('#step2-error').getBoundingClientRect(); return r.top >= 0 && r.bottom <= innerHeight; }), 'o aviso aparece na tela');
     await page.locator('#quick-dates button').first().click();
     await page.locator('[data-next="3"]').click();
     await page.locator('#send').click();

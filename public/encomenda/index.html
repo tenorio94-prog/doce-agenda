@@ -47,12 +47,13 @@ if (/[?&]preview=/.test(location.search) && window.top === window) document.writ
         <div id="chosen" class="chosen"></div>
         <div class="field" id="other-field" hidden><label for="other-product">Qual doce você quer?</label><input id="other-product" maxlength="80" placeholder="Ex.: bolo de dois andares tema jardim"><small>Conte o resto no campo de detalhes, no último passo.</small></div>
         <fieldset id="cake-fields" class="group" hidden><legend>Detalhes do bolo</legend><div id="cake-content" class="group-body"></div></fieldset>
-        <fieldset id="extras-field" class="group" hidden><legend>Incluir mais alguma coisa? <span class="opt">(opcional)</span></legend><div id="extras" class="addons"></div></fieldset>
+        <fieldset id="extras-field" class="group" hidden><legend>Incluir mais alguma coisa? <span class="opt">(opcional)</span></legend><div id="extras" class="addons"></div><p id="extras-note" class="help" aria-live="polite" hidden>Dá para incluir até 5 itens. Os outros você conta em Mais detalhes, no último passo.</p></fieldset>
         <button class="next" type="button" data-next="2">Escolher a data</button>
       </fieldset>
 
       <fieldset class="step" data-step="2" hidden>
         <h2 id="step-title-2" class="step-title" tabindex="-1">Para quando?</h2>
+        <p id="step2-error" class="error" role="alert" tabindex="-1" hidden></p>
         <fieldset class="group" id="quick-field" hidden><legend>Próximas datas livres</legend><div id="quick-dates" class="quick" role="group" aria-label="Próximas datas livres"></div></fieldset>
         <fieldset class="group calendar"><legend id="calendar-legend">Escolha no calendário</legend>
           <div class="calendar-nav"><button id="previous-month" type="button" aria-label="Mês anterior">‹</button><h3 id="month-title" aria-live="polite"></h3><button id="next-month" type="button" aria-label="Próximo mês">›</button></div>
@@ -66,12 +67,12 @@ if (/[?&]preview=/.test(location.search) && window.top === window) document.writ
           <div class="field"><span class="label" id="mode-label">Como recebe</span><div class="seg" role="radiogroup" aria-labelledby="mode-label"><label><input type="radio" name="mode" value="Retirada" checked><span>Retirada</span></label><label><input type="radio" name="mode" value="Entrega"><span>Entrega</span></label></div></div>
         </div>
         <div class="field" id="address-field" hidden><label for="location">Endereço para entrega</label><input id="location" maxlength="300" autocomplete="street-address"></div>
-        <p id="step2-error" class="error" role="alert" hidden></p>
         <button class="next" type="button" data-next="3">Continuar</button>
       </fieldset>
 
       <fieldset class="step" data-step="3" hidden>
         <h2 id="step-title-3" class="step-title" tabindex="-1">Quase lá</h2>
+        <section id="review" class="review" aria-labelledby="review-title"></section>
         <div class="field"><label for="client">Seu nome</label><input id="client" maxlength="120" autocomplete="name" required></div>
         <div class="field"><label for="contact">Seu WhatsApp com DDD</label><input id="contact" type="tel" maxlength="30" autocomplete="tel" required placeholder="(11) 99999-9999"><small>A confeitaria usa este número para responder.</small></div>
         <div class="field"><label for="details">Mais detalhes <span class="opt">(opcional)</span></label><textarea id="details" maxlength="900" rows="3" placeholder="Sabores, cores, quantidade ou algo importante."></textarea></div>
@@ -92,7 +93,7 @@ if (/[?&]preview=/.test(location.search) && window.top === window) document.writ
     <pre id="summary"></pre>
     <a id="whatsapp-link" class="pill wa" target="_blank" rel="noopener" hidden><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.3-.7-2.8-1.1-4.5-3.9-4.7-4.1-.1-.2-1.1-1.5-1.1-2.9s.7-2 1-2.3c.2-.3.6-.4.8-.4h.6c.2 0 .4 0 .6.5l.9 2.1c.1.2.1.4 0 .5l-.4.6-.4.4c-.1.2-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.3 2.4 1.5.3.1.5.1.6-.1l.9-1c.2-.3.4-.2.6-.1l2 .9c.3.2.5.2.5.4.1.1.1.7-.1 1.3Z"/></svg>Avisar no WhatsApp</a>
     <p id="no-whatsapp" class="help" hidden>Guarde o código e aguarde o contato da confeitaria.</p>
-    <p id="track-link" class="track-link" hidden>Acompanhe seu pedido por <a id="track-url" href="#">este link</a>. Guarde: é só seu.</p>
+    <p id="track-link" class="track-link" hidden>Acompanhe a situação do pedido na <a id="track-url" href="#">página do seu pedido</a>. Guarde o endereço: é só seu.</p>
     <button id="back-home" class="pill soft" type="button">Voltar à vitrine</button>
   </section>
 

@@ -1,7 +1,7 @@
 // Vitrine da confeitaria e pedido em 3 passos. Empacotado pelo esbuild em /encomenda/order.js.
 // O pedido enviado é o mesmo de antes (mesmos campos e regras no servidor), mais os itens extras opcionais.
 import { VITRINE_STYLE_INFO, vitrinePalette, photoUrl, photoAttrs, initials, formatCents } from '../../cloud/vitrine-theme.js';
-import { usesCakeFields } from '../../cloud/order-link-model.js';
+import { normalizeWhatsApp, usesCakeFields } from '../../cloud/order-link-model.js';
 
 const $ = (s, root = document) => root.querySelector(s), $$ = (s, root = document) => [...root.querySelectorAll(s)];
 const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -97,12 +97,14 @@ function renderHome() {
   // Categories only when they help: enough products and no near-empty groups.
   const grouped = groups.length >= 2 && rest.length >= 6 && rest.length / groups.length >= 2, chips = grouped && rest.length >= 8;
   const anyPrice = all.some((p) => Number.isInteger(p.priceFromCents));
-  let body = `<p class="notice">${ICON.info}<span>${anyPrice ? 'Os valores são a partir de. O valor final é combinado com a confeitaria.' : 'O valor é combinado com a confeitaria depois do pedido.'} Nada é cobrado por este link.</span></p>`;
-  if (featured.length) body += `<section class="sec" aria-labelledby="sec-feat"><h2 id="sec-feat">Mais pedidos</h2><div class="feat">${featured.map((p) => cardHtml(p, 'Mais pedido')).join('')}</div></section>`;
+  let body = `<p class="notice">${ICON.info}<span>${anyPrice ? 'Os preços mostrados são valores iniciais. O valor final é combinado com a confeitaria.' : 'O valor é combinado com a confeitaria depois do pedido.'} Nada é cobrado por este link.</span></p>`;
+  // Mais pedidos: carrossel de toque; no computador, setas para quem usa mouse. O título já diz "mais pedidos", sem etiqueta repetida.
+  const arrow = (dir, label, path) => `<button type="button" class="feat-nav" data-feat="${dir}" aria-label="${label}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${path}"/></svg></button>`;
+  if (featured.length) body += `<section class="sec" aria-labelledby="sec-feat"><h2 id="sec-feat">Mais pedidos</h2><div class="feat-wrap">${arrow(-1, 'Ver os anteriores', 'M15 18l-6-6 6-6')}<div class="feat">${featured.map((p) => cardHtml(p)).join('')}</div>${arrow(1, 'Ver os próximos', 'M9 6l6 6-6 6')}</div></section>`;
   if (chips) body += `<nav class="chips" aria-label="Categorias">${groups.map(([c], i) => `<button type="button" data-jump="${i}" aria-pressed="${i === 0}">${esc(c)}</button>`).join('')}</nav>`;
   if (!all.length) body += `<section class="sec"><p class="empty-products">${esc(config.displayName)} ainda está montando o cardápio. Descreva o que você quer logo abaixo.</p></section>`;
   else if (grouped) body += groups.map(([c, list], i) => `<section class="sec" data-group="${i}" aria-labelledby="sec-${i}"><h2 id="sec-${i}">${esc(c)}</h2><div class="grid">${list.map((p) => cardHtml(p)).join('')}</div></section>`).join('');
-  else if (rest.length) body += `<section class="sec">${featured.length ? '<h2>Todos os doces</h2>' : ''}<div class="grid ${rest.length <= 3 && !featured.length ? 'one' : ''}">${rest.map((p) => cardHtml(p)).join('')}</div></section>`;
+  else if (rest.length) body += `<section class="sec"><h2>${featured.length ? 'Todos os doces' : 'Cardápio'}</h2><div class="grid ${rest.length <= 3 && !featured.length ? 'one' : ''}">${rest.map((p) => cardHtml(p)).join('')}</div></section>`;
   body += `<section class="sec" aria-labelledby="sec-how"><h2 id="sec-how">Como funciona</h2><ol class="how"><li><div><b>Escolha e conte os detalhes</b>Data, sabor, tema. Leva uns 2 minutos.</div></li><li><div><b>${esc(config.displayName)} confere a agenda</b>Seu pedido só vale depois que a confeitaria confirmar.</div></li><li><div><b>Combinem pelo WhatsApp</b>Valor final, sinal e entrega. Nada é pago por este link.</div></li></ol></section>`;
   body += `<section class="sec"><div class="other"><h3>${all.length ? 'Não achou o que queria?' : 'Faça seu pedido'}</h3><p>Descreva o doce e a confeitaria responde se consegue fazer.</p><button type="button" class="pill soft" data-other>Descrever meu pedido</button></div></section>`;
   $('#vitrine').innerHTML = headerHtml() + body;
@@ -176,6 +178,7 @@ function resumeDraft() {
   startOrder(product);
   if (!product) { $('#other-product').value = draft.other || draft.product; renderCake(); }
   for (const el of $$('[data-cake]')) if (draft.cake?.[el.dataset.cake] !== undefined) el.value = draft.cake[el.dataset.cake];
+  if ($$('.more-cake [data-cake]').some((el) => el.value)) $('.more-cake').open = true;
   if (draft.time) $('#time').value = draft.time;
   const mode = draft.mode && $(`input[name=mode][value="${CSS.escape(draft.mode)}"]`);
   if (mode) { mode.checked = true; mode.dispatchEvent(new Event('change', { bubbles: true })); }
@@ -207,13 +210,25 @@ function chosenName() { return chosen ? chosen.name : $('#other-product').value.
 function renderExtras() {
   const others = config.products.filter((p) => p !== chosen).sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0)).slice(0, 6);
   $('#extras-field').hidden = !others.length;
-  $('#extras').innerHTML = others.map((p) => `<button type="button" data-extra="${esc(p.name)}" aria-pressed="${extras.has(p.name)}">+ ${esc(p.name)}</button>`).join('');
+  $('#extras').innerHTML = others.map((p) => `<button type="button" data-extra="${esc(p.name)}" aria-pressed="${extras.has(p.name)}">+ ${esc(p.name)}${Number.isInteger(p.priceFromCents) ? `<small>a partir de ${esc(formatCents(p.priceFromCents))}</small>` : ''}</button>`).join('');
+  $('#extras-note').hidden = true;
+}
+// Exemplos por campo: a cliente entende o que escrever (Inscrição é o texto escrito no bolo).
+const CAKE_HINTS = { size: 'Ex.: para 20 pessoas ou 2 kg', flavor: 'Ex.: chocolate', filling: 'Ex.: brigadeiro com morango', decoration: 'Ex.: tema jardim, tons de rosa',
+  inscription: 'O que vai escrito no bolo. Ex.: Feliz 8 anos, Ana', foodNotes: 'Ex.: sem lactose, alergia a amendoim' };
+function cakeField(f) {
+  const hint = CAKE_HINTS[f.key] || '';
+  return `<div class="field"><label for="cake-${esc(f.key)}">${esc(f.label)} <span class="opt">${f.required ? '(obrigatório)' : '(opcional)'}</span></label>${f.options.length ? `<select id="cake-${esc(f.key)}" data-cake="${esc(f.key)}" ${f.required ? 'required' : ''}><option value="">Selecione</option>${f.options.map((o) => `<option>${esc(o)}</option>`).join('')}</select>` : `<input id="cake-${esc(f.key)}" data-cake="${esc(f.key)}" maxlength="${f.key === 'foodNotes' ? 500 : 200}" ${f.required ? 'required' : ''}${hint ? ` placeholder="${esc(hint)}"` : ''}>`}</div>`;
 }
 function renderCake() {
   const show = usesCakeFields(chosen, chosenName()); $('#cake-fields').hidden = !show;
   if (!show) { $('#cake-content').innerHTML = ''; return; }
   if ($('#cake-content').children.length) return;
-  $('#cake-content').innerHTML = config.orderTemplate.fields.filter((f) => f.enabled).map((f) => `<div class="field"><label for="cake-${esc(f.key)}">${esc(f.label)} <span class="opt">${f.required ? '(obrigatório)' : '(opcional)'}</span></label>${f.options.length ? `<select id="cake-${esc(f.key)}" data-cake="${esc(f.key)}" ${f.required ? 'required' : ''}><option value="">Selecione</option>${f.options.map((o) => `<option>${esc(o)}</option>`).join('')}</select>` : `<input id="cake-${esc(f.key)}" data-cake="${esc(f.key)}" maxlength="${f.key === 'foodNotes' ? 500 : 200}" ${f.required ? 'required' : ''}>`}</div>`).join('');
+  // Com muitos campos, ficam à vista Tamanho, Sabor e os obrigatórios; os outros em "Mais detalhes do bolo".
+  const fields = config.orderTemplate.fields.filter((f) => f.enabled), many = fields.length >= 4;
+  const main = many ? fields.filter((f) => f.required || ['size', 'flavor'].includes(f.key)) : fields, more = many ? fields.filter((f) => !main.includes(f)) : [];
+  $('#cake-content').innerHTML = main.map(cakeField).join('')
+    + (more.length ? `<details class="more-cake"><summary>Mais detalhes do bolo <span class="opt">(opcional)</span></summary><div class="group-body">${more.map(cakeField).join('')}</div></details>` : '');
 }
 function showStep(n) {
   $$('.step').forEach((s) => { s.hidden = Number(s.dataset.step) !== n; });
@@ -223,15 +238,53 @@ function showStep(n) {
     renderQuick(); renderCalendar();
     if (datesFor !== (chosen?.name || '')) refreshDates().then(() => { renderQuick(); renderCalendar(); }).catch(() => {});
   }
+  if (n === 3) {
+    renderReview();
+    $('#details').placeholder = $('#cake-fields').hidden ? 'Quantidade, sabores ou algo importante.' : 'Algo que ainda não contou, como cores ou o tema da festa.';
+  }
   window.scrollTo(0, 0);
   $(`#step-title-${n}`).focus({ preventScroll: true });
+}
+// Revisão no último passo: o que vai para a confeitaria, com "Alterar" em cada parte (volta ao passo, sem perder nada).
+const hourText = (time) => (/^\d{2}:\d{2}$/.test(time) ? `${Number(time.slice(0, 2))}h${time.slice(3) === '00' ? '' : time.slice(3)}` : '');
+function renderReview() {
+  const labels = Object.fromEntries((config.orderTemplate?.fields || []).map((f) => [f.key, f.label]));
+  const cake = $$('[data-cake]').filter((el) => el.value.trim()).map((el) => `${labels[el.dataset.cake] || el.dataset.cake}: ${el.value.trim()}`);
+  const what = [chosenName(), ...extras].filter(Boolean).join(' + ');
+  const when = selected ? `${brDate(selected, { weekday: 'long', day: 'numeric', month: 'long' })}${$('#time').value ? `, às ${hourText($('#time').value)}` : ''}` : 'Data a escolher';
+  const mode = $('input[name=mode]:checked')?.value || 'Retirada', where = mode === 'Entrega' ? `Entrega${$('#location').value.trim() ? `: ${$('#location').value.trim()}` : ''}` : 'Retirada';
+  const row = (term, value, step, label) => `<div><dt>${term}</dt><dd>${esc(value)}</dd><button type="button" class="link" data-edit-step="${step}" aria-label="Alterar ${label}">Alterar</button></div>`;
+  $('#review').innerHTML = `<h3 id="review-title">Confira seu pedido</h3><dl>${row('Doce', what, 1, 'o doce')}${cake.length ? row('Detalhes', cake.join(' · '), 1, 'os detalhes do bolo') : ''}${row('Quando', when, 2, 'a data')}${row('Como recebe', where, 2, 'como recebe')}</dl>`;
+}
+
+// Um jeito só de mostrar erro: a mensagem fica logo abaixo do campo, ligada a ele, e o foco vai para o campo.
+const FIELD_MESSAGES = { time: 'Escolha o horário.', location: 'Escreva o endereço da entrega.', client: 'Escreva seu nome.', contact: 'Escreva seu WhatsApp com DDD.',
+  consent: 'Marque a autorização para poder enviar.', 'other-product': 'Escreva qual doce você quer.' };
+function fieldError(field, message) {
+  const holder = field.closest('.field, .consent') || field.parentElement, id = `${field.id || 'campo'}-error`;
+  let box = holder.querySelector(':scope > .field-error');
+  if (!box) { box = document.createElement('span'); box.className = 'error field-error'; box.id = id; box.setAttribute('role', 'alert'); holder.append(box); }
+  box.textContent = message;
+  field.setAttribute('aria-invalid', 'true');
+  if (!(field.getAttribute('aria-describedby') || '').includes(id)) field.setAttribute('aria-describedby', `${field.getAttribute('aria-describedby') || ''} ${id}`.trim());
+  field.focus({ preventScroll: true });
+  holder.scrollIntoView({ block: 'center', behavior: REDUCED ? 'auto' : 'smooth' });
+}
+function clearFieldError(field) {
+  const holder = field.closest('.field, .consent') || field.parentElement;
+  holder?.querySelector(':scope > .field-error')?.remove();
+  field.removeAttribute('aria-invalid');
 }
 function stepValid(n) {
   const step = $(`.step[data-step="${n}"]`);
   if (n === 2 && !selected) { const e = $('#step2-error'); e.textContent = 'Escolha uma data disponível.'; e.hidden = false; e.scrollIntoView({ block: 'center', behavior: REDUCED ? 'auto' : 'smooth' }); return false; }
   for (const field of $$('input,select,textarea', step)) {
     if (field.closest('[hidden]') || field.type === 'hidden') continue;
-    if (!field.checkValidity()) { field.reportValidity(); return false; }
+    if (!field.checkValidity()) { fieldError(field, FIELD_MESSAGES[field.id] || (field.tagName === 'SELECT' ? 'Escolha uma opção.' : 'Preencha este campo.')); return false; }
+  }
+  // WhatsApp conferido antes de enviar, com a mesma regra do servidor.
+  if (n === 3) {
+    try { normalizeWhatsApp($('#contact').value, true); } catch { fieldError($('#contact'), 'Confira o WhatsApp: escreva com DDD, por exemplo (11) 98765-4321.'); return false; }
   }
   return true;
 }
@@ -240,18 +293,23 @@ $('#request-page').addEventListener('click', (event) => {
   if (next) { const target = Number(next.dataset.next); if (stepValid(target - 1)) go({ v: 'order', s: target }); return; }
   if (event.target.closest('#step-back')) { history.back(); return; }
   if (event.target.closest('[data-change]')) { history.go(-(history.state?.s || 1)); return; }
+  const edit = event.target.closest('[data-edit-step]');
+  if (edit) { const back = Number(edit.dataset.editStep) - (history.state?.s || 3); if (back < 0) history.go(back); else go({ v: 'order', s: Number(edit.dataset.editStep) }); return; }
   const extra = event.target.closest('[data-extra]');
   if (extra) {
     const name = extra.dataset.extra;
     if (extras.has(name)) extras.delete(name); else if (extras.size < 5) extras.add(name);
+    else { $('#extras-note').hidden = false; return; }
+    $('#extras-note').hidden = true;
     extra.setAttribute('aria-pressed', String(extras.has(name))); saveDraft(); return;
   }
   const day = event.target.closest('[data-date]');
   if (day && !day.disabled) pickDate(day.dataset.date);
 });
 $('#other-product').addEventListener('input', renderCake);
-$('#request-form').addEventListener('input', saveDraft);
+$('#request-form').addEventListener('input', (event) => { if (event.target.matches('[aria-invalid]')) clearFieldError(event.target); saveDraft(); });
 $('#request-form').addEventListener('change', (event) => {
+  if (event.target.matches('[aria-invalid]')) clearFieldError(event.target);
   if (event.target.name === 'mode') { const delivery = event.target.value === 'Entrega'; $('#address-field').hidden = !delivery; $('#location').required = delivery; }
   saveDraft();
 });
@@ -313,8 +371,10 @@ $('#request-form').addEventListener('submit', async (event) => {
   } catch (failure) {
     if (failure.code === 'DATE_UNAVAILABLE') {
       await refreshDates().catch(() => {});
+      selected = ''; $('#date').value = ''; saveDraft();
+      $('#chosen-date').textContent = 'Riscado: fechado, lotado ou sem antecedência. A vaga é conferida de novo no envio.';
       go({ v: 'order', s: 2 });
-      const e = $('#step2-error'); e.textContent = failure.message; e.hidden = false;
+      const e = $('#step2-error'); e.textContent = /outra data/i.test(failure.message) ? failure.message : `${failure.message} Escolha outra data.`; e.hidden = false; e.focus({ preventScroll: true });
     } else { error.textContent = failure.message; error.hidden = false; }
   } finally { send.disabled = false; send.textContent = 'Enviar pedido'; }
 });
@@ -332,6 +392,12 @@ $('#vitrine').addEventListener('click', (event) => {
   if (event.target.closest('[data-other]')) { startOrder(null); return; }
   const draft = event.target.closest('[data-draft]');
   if (draft) { if (draft.dataset.draft === 'resume') resumeDraft(); else { clearDraft(); $('.draft-banner')?.remove(); } return; }
+  const arrowButton = event.target.closest('[data-feat]');
+  if (arrowButton) {
+    const strip = arrowButton.parentElement.querySelector('.feat'), card = strip.querySelector('.card');
+    strip.scrollBy({ left: Number(arrowButton.dataset.feat) * ((card?.offsetWidth || 280) + 12), behavior: REDUCED ? 'auto' : 'smooth' });
+    return;
+  }
   const jump = event.target.closest('[data-jump]');
   if (jump) {
     $$('.chips button').forEach((b) => b.setAttribute('aria-pressed', String(b === jump)));

@@ -129,3 +129,12 @@ test('my order page: a secret link shows only the situation, never personal data
   assert.deepEqual([trackView(s,token).stage,trackView(s,token).totalCents,trackView(s,token).paidCents],['fazendo',20000,6000],'só o conferido conta');
   for(const bad of ['', 'abc', token.toUpperCase(), 'zzzzzzzzzzzzzzzzzzzzzzzz'])assert.equal(trackView(s,bad),null);
 });
+
+test('o resumo do pedido mostra a data por extenso, também na mensagem do WhatsApp', async () => {
+  const { requestSummary, readableDueAt } = await import('./order-link-model.js');
+  assert.equal(readableDueAt('2026-11-07T15:00'), 'sábado, 7 de novembro, às 15h');
+  assert.equal(readableDueAt('2026-11-10T09:30'), 'terça-feira, 10 de novembro, às 9h30');
+  const summary = requestSummary({ publicCode: 'DA-ABC123', product: 'Bolo', dueAt: '2026-11-07T15:00', mode: 'Retirada', client: 'Ana', contact: '11999999999' }, 'Doces da Lu');
+  assert.match(summary, /Data desejada: sábado, 7 de novembro, às 15h/);
+  assert.doesNotMatch(summary, /2026-11-07/);
+});

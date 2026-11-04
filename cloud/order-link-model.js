@@ -14,7 +14,7 @@ export function normalizeWhatsApp(value, required = false) {
   if (!text && !required) return '';
   const digits = text.replace(/[\s()+.-]/g, '');
   const international = text.startsWith('+') ? digits : /^[1-9]\d{9,10}$/.test(digits) ? `55${digits}` : digits;
-  if (!/^[1-9]\d{7,14}$/.test(international)) linkError('Informe um WhatsApp com DDD e código do país.');
+  if (!/^[1-9]\d{7,14}$/.test(international)) linkError('Confira o WhatsApp: escreva com DDD, por exemplo (11) 98765-4321.');
   return `+${international}`;
 }
 // Photo keys: "<account folder>/<uuid>.webp|jpg" in Storage, or a bundled example ("exemplo/<name>.svg|webp").
@@ -71,6 +71,15 @@ export function orderPageInput(value) {
 export function pagePhotoKeys(page) {
   return [page?.logo, page?.cover, page?.share, ...(page?.products || []).map(p => p.photo)].filter(Boolean);
 }
+const SUMMARY_WEEKDAYS = ['domingo', 'segunda-feira', 'terça-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sábado'];
+const SUMMARY_MONTHS = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+// "2026-11-07T15:00" (horário de parede de São Paulo) → "sábado, 7 de novembro, às 15h". Vai no resumo e no WhatsApp.
+export function readableDueAt(dueAt) {
+  const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(String(dueAt || ''));
+  if (!match) return String(dueAt || '');
+  const [, year, month, day, hour, minute] = match, weekday = new Date(Date.UTC(+year, +month - 1, +day)).getUTCDay();
+  return `${SUMMARY_WEEKDAYS[weekday]}, ${+day} de ${SUMMARY_MONTHS[+month - 1]}, às ${+hour}h${minute === '00' ? '' : minute}`;
+}
 export function requestSummary(order, businessName) {
-  return [`Solicitação ${order.publicCode} — ${businessName}`, `${order.product}`, `Data desejada: ${order.dueAt.replace('T', ' às ')}`, `${order.mode}${order.location ? `: ${order.location}` : ''}`, `Cliente: ${order.client}`, `WhatsApp: ${order.contact}`, order.details, ...Object.entries(order.cake?.values || {}).filter(([,v]) => v).map(([k,v]) => `${order.cake.labels[k] || k}: ${v}`), 'Ainda não confirmado. Aguardo a revisão da confeitaria.'].filter(Boolean).join('\n');
+  return [`Solicitação ${order.publicCode} — ${businessName}`, `${order.product}`, `Data desejada: ${readableDueAt(order.dueAt)}`, `${order.mode}${order.location ? `: ${order.location}` : ''}`, `Cliente: ${order.client}`, `WhatsApp: ${order.contact}`, order.details, ...Object.entries(order.cake?.values || {}).filter(([,v]) => v).map(([k,v]) => `${order.cake.labels[k] || k}: ${v}`), 'Ainda não confirmado. Aguardo a revisão da confeitaria.'].filter(Boolean).join('\n');
 }
