@@ -142,7 +142,9 @@ try {
     // 3. Recebi R$ 50 → Falta R$ 70, e o Dinheiro soma R$ 50.
     await ana.locator('.order-open').click();
     await sheet(page).locator('[data-act="received"]').click();
-    assert.equal(await page.locator('#pay-form [name=amount]').inputValue(), '120', 'sugere o que falta');
+    assert.equal(await page.locator('#pay-form [name=amount]').inputValue(), '', 'vem vazio: caiu só o sinal? ela escreve');
+    await page.locator('#pay-form [data-act="fill-due"]', { hasText: 'Tudo que falta: R$ 120' }).click();
+    assert.equal(await page.locator('#pay-form [name=amount]').inputValue(), '120', 'o atalho preenche o que falta');
     await page.locator('#pay-form [name=amount]').fill('50');
     await look('recebi');
     await page.locator('#pay-form [type=submit]').click();
@@ -180,7 +182,7 @@ try {
     assert.match(await page.locator(`#d-${SUNDAY} .order[data-id="DEMO-15"]`).innerText(), /Sem sinal/);
     results.push(`${width}: aceitar pelo link`);
 
-    // Dia cheio: a mensagem do servidor e "Salvar mesmo assim".
+    // Dia cheio: um bloco só junto do dia, com "Salvar mesmo assim" e "Trocar o dia" lado a lado.
     await page.locator('.bar [data-act="new"]').click();
     await form.locator('[name=client]').fill('Lia Nove');
     await form.locator('[name=product]').fill('Pudim');
@@ -189,12 +191,13 @@ try {
     assert.match(await page.locator('#day-note').innerText(), /já está cheio/, 'dia cheio aparece ao escolher a data');
     await form.locator('[name=time]').fill('19:00');
     await form.locator('[type=submit]').click();
-    await page.locator('#form-error', { hasText: 'O limite de pedidos para esta data foi atingido.' }).waitFor();
-    assert.ok(await page.evaluate(() => document.querySelector('.when-fields').nextElementSibling?.contains(document.querySelector('#form-error'))
-      || document.querySelector('.when-fields').parentElement.contains(document.querySelector('#form-error'))), 'o aviso fica junto do dia');
-    await page.locator('[data-act="change-day"]:visible').waitFor();
+    await page.locator('#conflict-text', { hasText: 'já está cheio' }).waitFor();
+    assert.ok(await page.evaluate(() => document.querySelector('.when-fields').parentElement.contains(document.querySelector('#conflict'))), 'o aviso fica junto do dia');
+    assert.equal(await form.locator('[type=submit]').isVisible(), false, 'o botão de baixo, que repetiria o erro, some');
+    assert.equal(await page.locator('#day-note').isVisible(), false, 'uma mensagem só');
+    await page.locator('#conflict [data-act="change-day"]:visible').waitFor();
     await look('dia cheio');
-    await form.locator('[type=submit]', { hasText: 'Salvar mesmo assim' }).click();
+    await form.locator('[data-act="force-save"]', { hasText: 'Salvar mesmo assim' }).click();
     await page.locator(`#d-${TODAY} .order`, { hasText: 'Lia Nove' }).waitFor();
     assert.match(await page.locator(`#d-${TODAY} .order`, { hasText: 'Lia Nove' }).innerText(), /Valor a combinar/);
     results.push(`${width}: salvar mesmo assim`);

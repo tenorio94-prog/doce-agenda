@@ -17,6 +17,7 @@
 <script src="/nova/nova.js" defer></script>
 </head>
 <body>
+<a class="skip-link" href="#main" data-act="skip">Ir para os pedidos</a>
 <header class="top">
   <div class="wrap top-row">
     <h1 class="top-date" id="today-label">Agenda</h1>
@@ -28,7 +29,7 @@
   <p class="wrap demo-line" id="demo-line" hidden>Exemplo: a semana da Lu, da Doces da Lu.</p>
 </header>
 
-<main class="wrap" id="main">
+<main class="wrap" id="main" tabindex="-1">
   <p class="load-state" id="load-state" role="status">Abrindo a agenda…</p>
   <div id="views" hidden>
     <section id="view-agenda" aria-label="Agenda"></section>

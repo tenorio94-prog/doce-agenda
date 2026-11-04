@@ -14,6 +14,9 @@ h1, h2, h3 { font-family: var(--font-title); line-height: 1.2; margin: 0; }
 p { margin: 0; }
 svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
 .wrap { width: 100%; max-width: 680px; margin: 0 auto; padding: 0 16px; }
+#main:focus { outline: none; }
+.skip-link { position: absolute; left: 8px; top: -64px; z-index: 10; padding: 12px 16px; border-radius: var(--r-s); background: var(--ameixa); color: #fff; font-weight: 700; }
+.skip-link:focus { top: 8px; }
 .muted { color: var(--muted); }
 
 /* Botões */
@@ -24,6 +27,8 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
 .btn-primary { background: var(--ameixa); color: #fff; }
 .btn-outline { background: var(--branco); color: var(--ameixa); }
 .btn-small { min-height: 44px; padding: 0 14px; font-size: 15px; }
+/* Cancelar e recusar: tijolo, para não parecer a mesma coisa que confirmar. */
+.btn-danger { background: var(--error); border-color: var(--error); color: #fff; }
 .btn:disabled { opacity: .6; cursor: default; }
 .icon-btn {
   display: inline-grid; place-items: center; width: 48px; height: 48px; border: 0; border-radius: var(--radius-pill);
@@ -148,14 +153,11 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
 /* Dinheiro: o cartão do mês leva as setas (só o Recebido muda com elas); o resto é de todos os meses. */
 .money-month { display: grid; justify-items: center; gap: 2px; margin-top: 12px; padding: 4px 4px 16px; border-radius: var(--r-m); background: var(--pistache); text-align: center; }
 .month-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; }
-.month-head h1 { font-size: 20px; text-align: center; }
+.month-head h2 { font-size: 20px; text-align: center; }
 .mm-label { font-size: 15px; font-weight: 600; color: var(--ink-soft); }
 .money-month strong { font-family: var(--font-title); font-size: clamp(30px, 10vw, 40px); line-height: 1.1; white-space: nowrap; }
 .mm-note { max-width: 32ch; font-size: 14px; color: var(--ink-soft); }
-.money-total { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 10px; padding: 12px 14px; border-radius: var(--r-m); background: var(--branco); border: var(--hairline); }
-.money-total span { display: grid; font-weight: 600; color: var(--ink-soft); }
-.money-total small { font-size: 13px; font-weight: 500; color: var(--muted); }
-.money-total strong { font-family: var(--font-title); font-size: 24px; white-space: nowrap; }
+.money-month .link-btn { min-height: 44px; color: var(--carimbo); }
 .section-note { margin: -4px 0 8px; font-size: 14px; }
 .due-pix { justify-self: start; margin-top: 4px; }
 .section-title { font-size: 19px; margin: 22px 0 8px; }
@@ -204,8 +206,19 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
 .f-pay .link-btn { min-height: 44px; font-weight: 600; }
 .f-pay.is-undone { color: var(--muted); }
 .f-pay.is-undone strong { text-decoration: line-through; }
-.f-actions, .f-main, .conflict { display: flex; flex-wrap: wrap; gap: 8px; }
+.f-actions, .f-main, .conflict-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .f-main .btn { flex: 1 1 140px; }
+/* Rótulos longos ("Salvar mesmo assim", "Continuar anotando"): no celular um embaixo do outro, sem quebrar em 3 linhas. */
+.conflict-actions .btn, .discard .btn { flex: 1 1 170px; }
+/* Na ficha, a ação principal (Entregue, Aceitar…) fica presa ao pé da janela em celular baixo. */
+.ficha .f-main { position: sticky; bottom: 0; z-index: 1; margin: 0 -20px; padding: 10px 20px calc(10px + env(safe-area-inset-bottom)); background: var(--papel); box-shadow: 0 -1px 0 var(--line); }
+/* Dia cheio ou fechado: a frase e as duas saídas juntas, logo abaixo do dia. */
+.conflict { display: grid; gap: 10px; margin-top: 8px; padding: 12px; border-radius: var(--r-s); background: var(--error-soft); }
+.conflict-text { color: var(--error); font-weight: 700; }
+/* Pedido pela metade: a pergunta aparece no alto da janela. */
+.discard { display: grid; gap: 10px; padding: 14px; border-radius: var(--r-m); background: var(--baunilha); }
+.discard p { font-weight: 700; }
+.discard p:focus { outline: none; }
 .f-footer { display: flex; justify-content: space-between; gap: 12px; padding-top: 4px; border-top: var(--hairline); }
 .list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
 .list-row { display: grid; gap: 2px; width: 100%; min-height: 56px; padding: 8px 14px; border: var(--hairline); border-radius: var(--r-s); background: var(--branco); text-align: left; }

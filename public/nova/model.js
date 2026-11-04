@@ -118,14 +118,32 @@ export function dayMark(state, day) {
   }
 }
 
+// Texto do conflito de agenda, com o dia ("Sexta, 7/11, já está cheio."). Antecedência e limite de doce vêm do servidor.
+export function conflictMessage(error, day) {
+  const when = /^\d{4}-\d{2}-\d{2}$/.test(day || '') ? `${weekdayName(day)}, ${shortDate(day)}` : 'Este dia';
+  if (error.code === 'DAILY_LIMIT') return `${when}, já está cheio.`;
+  if (error.code === 'DATE_CLOSED') return `${when}, é um dia em que você não trabalha.`;
+  return error.message;
+}
+
 const byTime = (a, b) => String(a.dueAt).localeCompare(String(b.dueAt));
-// Pedidos do dia: confirmados pela hora e, no fim, os entregues (riscados, não somem).
-export function dayOrders(state, day) {
+// Pedidos do dia: confirmados pela hora e, no fim, os entregues (riscados, não somem). O que ela acabou de marcar
+// (`hold`) fica no lugar até o aviso sumir, para a lista não pular debaixo do dedo.
+export function dayOrders(state, day, hold = null) {
   const orders = (state.orders || []).filter((order) => orderDay(order) === day);
+  const held = (order) => order.id === hold && group(order.status) === 'delivered';
   return [
-    ...orders.filter((order) => group(order.status) === 'confirmed').sort(byTime),
-    ...orders.filter((order) => group(order.status) === 'delivered').sort(byTime),
+    ...orders.filter((order) => group(order.status) === 'confirmed' || held(order)).sort(byTime),
+    ...orders.filter((order) => group(order.status) === 'delivered' && !held(order)).sort(byTime),
   ];
+}
+// Pagamentos conferidos no mês (pelo dia em que foram conferidos), de pedidos de verdade: a lista que soma o Recebido.
+const isSample = (order) => order.isSample || order.isDemo || order.sample;
+export function monthPayments(state, month) {
+  const orders = new Map((state.orders || []).filter((order) => !isSample(order)).map((order) => [String(order.id), order]));
+  return (state.payments || []).filter((payment) => payment.status === 'Conferido' && orders.has(String(payment.orderId)) && paymentDay(payment).slice(0, 7) === month)
+    .map((payment) => ({ payment, order: orders.get(String(payment.orderId)), day: paymentDay(payment), cents: toCents(payment.amount) }))
+    .sort((a, b) => b.day.localeCompare(a.day));
 }
 export const decideOrders = (state) => (state.orders || []).filter((order) => group(order.status) === 'decide')
   .sort((a, b) => (orderDay(a) || '9999').localeCompare(orderDay(b) || '9999') || byTime(a, b));

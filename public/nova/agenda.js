@@ -30,7 +30,7 @@ function weekStrip() {
   const start = app.week, current = start === M.weekStart(app.today);
   const title = current ? 'Esta semana' : `${M.shortDate(start)} a ${M.shortDate(M.addDays(start, 6))}`;
   const days = Array.from({ length: 7 }, (_, index) => M.addDays(start, index)).map((day) => {
-    const count = M.dayOrders(app.state, day).length, mark = M.dayMark(app.state, day);
+    const count = M.dayOrders(app.state, day).length, mark = day < app.today ? '' : M.dayMark(app.state, day);
     const label = `${M.weekdayName(day)}, ${M.shortDate(day)}: ${count ? countText(count) : 'nada marcado'}${mark ? `, ${mark}` : ''}`;
     return `<li><button class="wk-day${day === app.today ? ' is-today' : ''}${mark ? ` is-${mark}` : ''}" type="button" data-act="day" data-day="${day}" aria-label="${esc(label)}"${day === app.today ? ' aria-current="date"' : ''}>
       <span class="wk-name">${M.weekdayShort(day)}</span><span class="wk-num">${Number(day.slice(8))}</span>
@@ -69,7 +69,7 @@ function dayList() {
     run = [];
   };
   for (let day = start; day <= end; day = M.addDays(day, 1)) {
-    const orders = M.dayOrders(app.state, day), mark = M.dayMark(app.state, day), label = M.dayLabel(day, app.today);
+    const orders = M.dayOrders(app.state, day, app.hold), mark = day < app.today ? '' : M.dayMark(app.state, day), label = M.dayLabel(day, app.today);
     if (!orders.length && !mark) { run.push(day); continue; }
     flush();
     if (!orders.length) {
@@ -85,14 +85,14 @@ function dayList() {
 }
 
 // Conta nova (ou só cancelados e recusados): um convite no lugar da faixa e de duas semanas de "nada marcado".
-const emptyStart = () => `<section class="empty-start" id="empty-start" aria-labelledby="empty-title">
-  <h2 id="empty-title">Anote sua primeira encomenda</h2><p>Quem pediu, o quê, quando e o valor. Leva um minuto.</p>
+const emptyStart = (fresh) => `<section class="empty-start" id="empty-start" aria-labelledby="empty-title">
+  <h2 id="empty-title">${fresh ? 'Anote sua primeira encomenda' : 'Nada na agenda agora'}</h2><p>${fresh ? 'Quem pediu, o quê, quando e o valor. Leva um minuto.' : 'Os pedidos cancelados e recusados ficam no histórico de cada cliente. Anote a próxima encomenda: leva um minuto.'}</p>
   <button class="btn btn-outline" type="button" data-act="new">Anotar encomenda</button>
   <button class="link-btn" type="button" data-act="link">Ou monte seu link para as clientes pedirem sozinhas</button></section>`;
 
 export function renderAgenda() {
   const view = $('#view-agenda');
-  if (!app.state.orders.some((order) => M.group(order.status) !== 'out')) { view.innerHTML = emptyStart(); return; }
+  if (!app.state.orders.some((order) => M.group(order.status) !== 'out')) { view.innerHTML = emptyStart(!app.state.orders.length); return; }
   view.innerHTML = `${notices()}${weekStrip()}<div class="days" id="days">${dayList()}</div>`;
 }
 

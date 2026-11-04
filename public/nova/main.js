@@ -4,10 +4,10 @@ import * as M from './model.js';
 import { renderAgenda, scrollToDay } from './agenda.js';
 import * as Ficha from './ficha.js';
 import * as Form from './form.js';
-import { renderMoney, updateMoneyBadge } from './dinheiro.js';
+import { openMonthPayments, renderMoney, updateMoneyBadge } from './dinheiro.js';
 import * as Menu from './menu.js';
 import * as Link from './link.js';
-import { $, app, closeSheet, hideToast, placeToast, reload, sheetOpen, toast } from './ui.js';
+import { $, app, changeDay, closeSheet, hasUnsavedForm, hideConflict, hideToast, keepEditing, placeToast, reload, requestClose, sheetOpen, toast } from './ui.js';
 
 app.week = M.weekStart(app.today);
 app.from = app.today;
@@ -37,7 +37,8 @@ function setTab(tab) {
 }
 
 const actions = {
-  open: (el) => Ficha.openFicha(el.dataset.id),
+  // Da lista de avisos ou dos pagamentos do mês, a ficha ganha Voltar para a lista.
+  open: (el) => Ficha.openFicha(el.dataset.id, el.dataset.back === 'month' ? () => openMonthPayments(app.month) : el.dataset.back ? () => Ficha.openList(el.dataset.back) : null),
   list: (el) => Ficha.openList(el.dataset.list),
   client: (el) => Ficha.openClient(el.dataset.id),
   received: (el) => Ficha.openReceived(el.dataset.id),
@@ -52,17 +53,22 @@ const actions = {
   done: (el) => Ficha.toggleDone(el.dataset.id),
   deliver: (el) => Ficha.deliverFromFicha(el.dataset.id),
   accept: (el) => Ficha.openAccept(el.dataset.id),
-  'change-date': () => { $('#when-fields').hidden = false; $('#accept-form [name=date]').focus(); },
   'accept-anyway': () => Ficha.submitAccept($('#accept-form'), true),
+  'confirm-anyway': () => Ficha.confirmQuote($('#confirm-form').dataset.id, true),
   refuse: (el) => Ficha.openRefuse(el.dataset.id),
   'refuse-message': (el) => Ficha.openRefuseMessage(el.dataset.id),
+  unrefuse: (el) => Ficha.unrefuse(el.dataset.id),
   confirm: (el) => Ficha.confirmQuote(el.dataset.id),
   'cancel-order': (el) => Ficha.openCancel(el.dataset.id),
   'cancel-confirm': (el) => Ficha.cancelOrder(el.dataset.id),
   edit: (el) => Form.openForm(el.dataset.id),
   new: () => Form.openForm(),
   quick: (el) => Form.quickDay(el.dataset.days),
-  'change-day': () => $('#order-form [name=date]').focus(),
+  'force-save': () => Form.submitForm($('#order-form'), true),
+  'change-day': () => changeDay(),
+  'fill-due': (el) => { const input = $('#pay-form [name=amount]'); input.value = el.dataset.value; input.focus(); Ficha.resetReceived($('#pay-form')); },
+  'month-payments': () => openMonthPayments(app.month),
+  skip: () => (document.querySelector('.order-open') || $('#main')).focus(),
   day: (el) => scrollToDay(el.dataset.day),
   week: (el) => { app.week = M.addDays(app.week, Number(el.dataset.step)); renderAgenda(); $(`[data-act="week"][data-step="${el.dataset.step}"]`)?.focus(); },
   month: (el) => { app.month = M.addMonths(app.month, Number(el.dataset.step)); renderMoney({ keep: true }).then(() => $(`[data-act="month"][data-step="${el.dataset.step}"]:not([disabled])`)?.focus()); },
@@ -74,7 +80,9 @@ const actions = {
   reset: () => Menu.openReset(),
   'reset-confirm': () => Menu.resetDemo(),
   'sign-out': (el) => Menu.signOut(el),
-  close: () => closeSheet(),
+  close: () => requestClose(),
+  discard: () => closeSheet(),
+  'keep-editing': () => keepEditing(),
   back: () => app.back?.(),
 };
 
@@ -87,11 +95,11 @@ document.addEventListener('click', (event) => {
 document.addEventListener('submit', async (event) => {
   event.preventDefault();
   const form = event.target;
-  if (form.id === 'order-form') Form.submitForm(form, form.dataset.force === '1');
+  if (form.id === 'order-form') Form.submitForm(form);
   else if (form.id === 'pay-form') Ficha.submitReceived(form);
   else if (form.id === 'accept-form') Ficha.submitAccept(form);
   else if (form.id === 'refuse-form') Ficha.submitRefuse(form);
-  else if (form.id === 'confirm-form') Ficha.confirmQuote(form.dataset.id, form.dataset.anyway === 'true');
+  else if (form.id === 'confirm-form') Ficha.confirmQuote(form.dataset.id);
   else if (form.id === 'link-wizard') Link.wizardNext(event.submitter?.value || 'next');
   else if (form.id === 'days-form') { if (await Menu.submitDays(form)) refresh(); }
 });
@@ -101,10 +109,14 @@ document.addEventListener('input', (event) => {
 });
 document.addEventListener('change', (event) => {
   if (event.target.name === 'mode' && event.target.form?.id === 'order-form') Form.syncMode(event.target.form);
-  if (['date', 'time'].includes(event.target.name) && event.target.form?.id === 'order-form') Form.syncDay(event.target.form);
+  if (['date', 'time'].includes(event.target.name)) {
+    if (event.target.form?.id === 'order-form') Form.syncDay(event.target.form);
+    else if (event.target.form) hideConflict(event.target.form);
+  }
 });
-// Fechar a janela tocando fora dela.
-$('#sheet').addEventListener('click', (event) => { if (event.target === event.currentTarget) closeSheet(); });
+// Fechar a janela tocando fora dela ou com Esc. Pedido pela metade pergunta antes (requestClose).
+$('#sheet').addEventListener('click', (event) => { if (event.target === event.currentTarget) requestClose(); });
+$('#sheet').addEventListener('cancel', (event) => { if (hasUnsavedForm()) { event.preventDefault(); requestClose(); } });
 $('#sheet').addEventListener('close', () => { app.back = null; placeToast(); });
 
 async function start() {

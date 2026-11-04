@@ -1,7 +1,7 @@
 // Ficha do pedido e o que se faz nela: receber, cobrar, aceitar ou recusar o pedido do link,
 // confirmar o orçamento, marcar entregue e cancelar. Tudo pelas rotas /api que já existem.
 import * as M from './model.js';
-import { $, api, app, closeSheet, copy, esc, findOrder, openSheet, reload, showError, toast } from './ui.js';
+import { $, api, app, closeSheet, conflictHtml, copy, esc, findOrder, hideConflict, openSheet, reload, showConflict, showError, toast } from './ui.js';
 
 let refresh = async () => {};
 export const setRefresh = (fn) => { refresh = fn; };
@@ -46,7 +46,7 @@ function money(order) {
   // Entregue com saldo tem "Recebi o resto" como ação principal, embaixo; aqui fica só o Cobrar.
   const owing = kind === 'delivered' && due > 0;
   const receive = !reported.length && due !== 0 && !owing ? `<button class="btn btn-outline" type="button" data-act="received" data-id="${esc(order.id)}">Recebi</button>` : '';
-  const charge = !reported.length && due && order.contact && kind !== 'decide' ? `<button class="btn btn-outline" type="button" data-act="charge" data-id="${esc(order.id)}">Cobrar no WhatsApp</button>` : '';
+  const charge = !reported.length && due && order.contact && kind !== 'decide' ? `<button class="btn btn-outline" type="button" data-act="charge" data-id="${esc(order.id)}">Cobrar ${esc(M.brl(due))}</button>` : '';
   return `<section class="f-block" aria-labelledby="f-money"><h3 id="f-money">Dinheiro</h3>
     <p class="money-line" id="money-line">${line}</p>${reportedHtml}${paymentList(order)}
     ${receive || charge ? `<div class="f-actions">${receive}${charge}</div>` : ''}</section>`;
@@ -80,10 +80,10 @@ function fichaHtml(order) {
   </article>`;
 }
 
-export function openFicha(id) {
+export function openFicha(id, back = null) {
   const order = findOrder(id);
   if (!order) { closeSheet(); return; }
-  openSheet(fichaHtml(order));
+  openSheet(fichaHtml(order), back);
 }
 const backToFicha = (id) => () => openFicha(id);
 
@@ -91,7 +91,7 @@ export function openList(kind) {
   const orders = kind === 'late' ? M.lateOrders(app.state, app.today) : kind === 'pix' ? M.reportedOrders(app.state) : M.decideOrders(app.state);
   const items = orders.map((order) => {
     const day = M.orderDay(order);
-    return `<li><button class="list-row" type="button" data-act="open" data-id="${esc(order.id)}"><strong>${esc(order.client)}</strong><span>${esc(order.product)}${day ? ` · ${esc(M.shortDayLabel(day))}` : ''}</span></button></li>`;
+    return `<li><button class="list-row" type="button" data-act="open" data-id="${esc(order.id)}" data-back="${esc(kind)}"><strong>${esc(order.client)}</strong><span>${esc(order.product)}${day ? ` · ${esc(M.shortDayLabel(day))}` : ''}</span></button></li>`;
   }).join('');
   const title = { late: 'Ficaram para trás', pix: 'Pix para conferir' }[kind] || 'Para decidir';
   openSheet(`<h2 id="sheet-title" tabindex="-1">${title}</h2><ul class="list">${items}</ul>`);
@@ -102,24 +102,28 @@ export async function openClient(id) {
   const order = findOrder(id);
   let client = null;
   try { client = (await api('/clientes')).clients.find((item) => item.orderIds.includes(id)); } catch { /* mostra só o pedido */ }
+  // Cancelados e recusados aparecem também, marcados: é aqui que ela acha o pedido se a cliente pedir o sinal de volta.
   const others = (client?.orderIds || []).filter((other) => other !== id).map(findOrder)
-    .filter((item) => item && M.group(item.status) !== 'out').sort((a, b) => String(b.dueAt).localeCompare(String(a.dueAt))).slice(0, 6);
+    .filter(Boolean).sort((a, b) => String(b.dueAt).localeCompare(String(a.dueAt))).slice(0, 6);
+  const outText = (item) => (item.status === 'Recusado' ? ' · recusado' : item.status === 'Cancelado' ? ' · cancelado' : '');
   const phone = order.contact || client?.phone || '';
   const link = !app.demo && phone ? M.whatsappLink(phone, `Oi, ${firstName(order)}!`) : '';
   openSheet(`<h2 id="sheet-title" tabindex="-1">${esc(order.client)}</h2>
     <p>${phone ? `WhatsApp ${esc(phone)}` : '<span class="muted">Sem WhatsApp anotado.</span>'}</p>
     ${link ? `<p><a class="btn btn-outline" href="${esc(link)}" target="_blank" rel="noopener">Abrir conversa</a></p>` : ''}
     <h3>Pedidos anteriores</h3>
-    ${others.length ? `<ul class="list">${others.map((item) => `<li><button class="list-row" type="button" data-act="open" data-id="${esc(item.id)}"><strong>${esc(M.orderDay(item) ? M.pastDayLabel(M.orderDay(item), app.today) : 'Sem dia')}</strong><span>${esc(item.product)}</span></button></li>`).join('')}</ul>` : '<p class="muted">Este é o primeiro pedido dela aqui.</p>'}`, backToFicha(id));
+    ${others.length ? `<ul class="list">${others.map((item) => `<li><button class="list-row" type="button" data-act="open" data-id="${esc(item.id)}"><strong>${esc(M.orderDay(item) ? M.pastDayLabel(M.orderDay(item), app.today) : 'Sem dia')}</strong><span>${esc(item.product + outText(item))}</span></button></li>`).join('')}</ul>` : '<p class="muted">Este é o primeiro pedido dela aqui.</p>'}`, backToFicha(id));
 }
 
-// Recebi: o valor sugerido é o que falta; ela pode mudar. Todo pagamento novo é Conferido.
+// Recebi: o campo vem vazio (caiu só o sinal? ela escreve o sinal) com o atalho "Tudo que falta". Depois de entregue,
+// "Recebi o resto" já sugere o resto. Todo pagamento novo é Conferido.
 // Valor acima do que falta pede uma segunda confirmação ("950" no lugar de "95" não vira Pago sem querer).
 export function openReceived(id, fromMoney = false) {
-  const order = findOrder(id), { due } = M.balance(app.state, order);
+  const order = findOrder(id), { due } = M.balance(app.state, order), rest = order.status === 'Entregue';
   openSheet(`<form id="pay-form" data-id="${esc(id)}" data-from="${fromMoney ? 'money' : 'ficha'}" novalidate>
-    <h2 id="sheet-title" tabindex="-1">Recebi</h2><p class="muted">${esc(order.product)} · ${esc(order.client)}${due ? ` · falta ${esc(M.brl(due))}` : ''}</p>
-    <label class="field"><span>Quanto você viu na conta?</span><input name="amount" inputmode="decimal" autocomplete="off" value="${due ? esc(M.centsInput(due)) : ''}" placeholder="Ex.: 50" aria-describedby="pay-error"></label>
+    <h2 id="sheet-title" tabindex="-1">${rest ? 'Recebi o resto' : 'Recebi'}</h2><p class="muted">${esc(order.product)} · ${esc(order.client)}${due ? ` · falta ${esc(M.brl(due))}` : ''}</p>
+    <label class="field"><span>Quanto você viu na conta?</span><input name="amount" inputmode="decimal" autocomplete="off" value="${rest && due ? esc(M.centsInput(due)) : ''}" placeholder="Ex.: 50" aria-describedby="pay-error"></label>
+    ${!rest && due ? `<div class="quick"><button class="chip" type="button" data-act="fill-due" data-value="${esc(M.centsInput(due))}">Tudo que falta: ${esc(M.brl(due))}</button></div>` : ''}
     <p class="form-error" id="pay-error" role="alert" hidden></p>
     <button class="btn btn-primary" type="submit">Registrar</button></form>`, fromMoney ? null : backToFicha(id));
 }
@@ -165,14 +169,15 @@ export function openUndoPayment(paymentId, id) {
     <p>${reported ? 'O aviso da cliente sai da ficha. Se o dinheiro cair depois, use Recebi.' : 'Ele deixa de contar como recebido.'} Fica anotado no histórico do pedido como desfeito.</p>
     <p class="form-error" id="undo-error" role="alert" hidden></p>
     <div class="f-main"><button class="btn btn-primary" type="button" data-act="undo-confirm" data-payment="${esc(paymentId)}" data-id="${esc(id)}">${reported ? 'Não caiu' : 'Desfazer pagamento'}</button>
-    <button class="btn btn-outline" type="button" data-act="open" data-id="${esc(id)}">Voltar</button></div>`, backToFicha(id));
+    <button class="btn btn-outline" type="button" data-act="open" data-id="${esc(id)}">${reported ? 'Manter o aviso' : 'Manter o pagamento'}</button></div>`, backToFicha(id));
 }
 export async function undoPayment(paymentId, id, fromMoney = false) {
+  const reported = app.state.payments.find((item) => item.id === paymentId)?.status === 'Informado';
   try {
     await api(`/payments/${encodeURIComponent(paymentId)}`, { method: 'PUT', body: { status: 'Desfeito' } });
     await reload(); await refresh();
     if (!fromMoney) openFicha(id);
-    toast('Pagamento desfeito.');
+    toast(reported ? 'Anotado: o Pix não caiu.' : 'Pagamento desfeito.');
   } catch (error) { if ($('#undo-error')) showError('#undo-error', error.message); else toast(error.message); }
 }
 
@@ -196,9 +201,23 @@ export async function copyMessage() {
 }
 
 // Entregue: um toque, com Desfazer. Ao desfazer volta à situação de antes (ou Confirmado, se ela não é conhecida).
+// Enquanto grava, um segundo toque não faz nada; a linha marcada fica no lugar até o aviso sumir (7 s).
+const busy = new Set();
+let holdTimer = 0;
+function holdRow(id) {
+  app.hold = id;
+  clearTimeout(holdTimer);
+  holdTimer = setTimeout(() => {
+    if (app.hold !== id) return;
+    app.hold = null;
+    const focused = document.activeElement?.closest?.('.order-done')?.dataset.id || null;
+    if (app.tab === 'agenda' && !$('#sheet').open) refresh(focused);
+  }, 7000);
+}
 export async function toggleDone(id) {
   const order = findOrder(id);
-  if (!order) return;
+  if (!order || busy.has(id)) return;
+  busy.add(id);
   try {
     if (order.status === 'Entregue') {
       await api(`/orders/${encodeURIComponent(id)}`, { method: 'PUT', body: { status: app.previousStatus[id] || 'Confirmado' } });
@@ -210,6 +229,7 @@ export async function toggleDone(id) {
     const before = order.status;
     app.previousStatus[id] = before;
     await api(`/orders/${encodeURIComponent(id)}`, { method: 'PUT', body: { status: 'Entregue' } });
+    holdRow(id);
     await reload(); await refresh(id);
     toast(`Pedido entregue: ${order.product}.`, async () => {
       try {
@@ -218,7 +238,7 @@ export async function toggleDone(id) {
         toast('Desfeito.');
       } catch (error) { toast(error.message); }
     });
-  } catch (error) { toast(error.message); }
+  } catch (error) { toast(error.message); } finally { busy.delete(id); }
 }
 export async function deliverFromFicha(id) {
   closeSheet();
@@ -238,8 +258,8 @@ export function openAccept(id) {
     <p class="muted">${esc(order.product)} · ${esc(whenText(order))}</p>
     ${noValue ? '<label class="field"><span>Valor combinado <small>(opcional)</small></span><input name="total" inputmode="decimal" autocomplete="off" placeholder="Ex.: 150" aria-describedby="accept-error"></label>' : ''}
     ${dateFields(order, noDay)}
+    ${conflictHtml('accept-anyway', 'Aceitar mesmo assim')}
     <p class="form-error" id="accept-error" role="alert" hidden></p>
-    <div class="conflict" id="accept-conflict" hidden><button class="btn btn-outline" type="button" data-act="change-date">Mudar a data</button><button class="btn btn-outline" type="button" data-act="accept-anyway">Aceitar mesmo assim</button></div>
     <button class="btn btn-primary" type="submit">Aceitar</button></form>`, backToFicha(id));
 }
 function acceptBody(form) {
@@ -270,8 +290,13 @@ export async function submitAccept(form, anyway = false) {
     const saved = findOrder(id), day = M.orderDay(saved);
     toast(`Pedido de ${firstName(saved)} confirmado${day ? `: ${M.dayLabel(day, app.today).toLocaleLowerCase('pt-BR')}` : ''}.`);
   } catch (error) {
-    showError('#accept-error', error.message);
-    $('#accept-conflict').hidden = !error.capacity;
+    if (error.capacity) {
+      showError('#accept-error', '');
+      showConflict(form, M.conflictMessage(error, form.elements.date?.value || M.orderDay(findOrder(id))));
+    } else {
+      hideConflict(form);
+      showError('#accept-error', error.message);
+    }
     if (/data e horário/i.test(error.message)) $('#when-fields').hidden = false;
     if (anyway) { await reload(); await refresh(); }
   }
@@ -284,7 +309,7 @@ export function openRefuse(id) {
     <h2 id="sheet-title" tabindex="-1">Recusar o pedido de ${esc(firstName(order))}?</h2><p class="muted">${esc(order.product)} · ${esc(whenText(order))}</p>
     <label class="field"><span>Motivo <small>(opcional, fica só com você)</small></span><textarea name="reason" rows="2" maxlength="500"></textarea></label>
     <p class="form-error" id="refuse-error" role="alert" hidden></p>
-    <button class="btn btn-primary" type="submit">Recusar pedido</button></form>`, backToFicha(id));
+    <button class="btn btn-danger" type="submit">Recusar pedido</button></form>`, backToFicha(id));
 }
 export async function submitRefuse(form) {
   const id = form.dataset.id;
@@ -294,8 +319,18 @@ export async function submitRefuse(form) {
     const order = findOrder(id);
     openSheet(`<h2 id="sheet-title" tabindex="-1">Pedido recusado</h2><p>Ele saiu da agenda.${order.contact ? ' Quer avisar a cliente?' : ''}</p>
       ${order.contact ? `<button class="btn btn-primary" type="button" data-act="refuse-message" data-id="${esc(id)}">Avisar no WhatsApp</button>` : ''}
-      <button class="btn btn-outline" type="button" data-act="close">Fechar</button>`);
+      <button class="btn btn-outline" type="button" data-act="close">Fechar</button>
+      <button class="link-btn" type="button" data-act="unrefuse" data-id="${esc(id)}">Desfazer a recusa</button>`);
   } catch (error) { showError('#refuse-error', error.message); }
+}
+// Recusou sem querer: o pedido volta para decidir, como chegou.
+export async function unrefuse(id) {
+  try {
+    await api(`/orders/${encodeURIComponent(id)}`, { method: 'PUT', body: { status: 'Solicitação' } });
+    await reload(); await refresh();
+    openFicha(id);
+    toast('Recusa desfeita: o pedido voltou para decidir.');
+  } catch (error) { toast(error.message); }
 }
 export function openRefuseMessage(id) {
   const order = findOrder(id);
@@ -323,25 +358,41 @@ export async function confirmQuote(id, anyway = false) {
       if (form) return showError('#confirm-error', error.message);
       return toast(error.message);
     }
-    openSheet(`<form id="confirm-form" data-id="${esc(id)}" data-anyway="true" novalidate><h2 id="sheet-title" tabindex="-1">Confirmar mesmo assim?</h2>
-      <p class="form-error" role="alert">${esc(error.message)}</p>${dateFields({ ...order, dueAt }, true)}
-      <p class="form-error" id="confirm-error" role="alert" hidden></p>
-      <button class="btn btn-primary" type="submit">Confirmar mesmo assim</button></form>`, backToFicha(id));
+    if (!form) {
+      openSheet(`<form id="confirm-form" data-id="${esc(id)}" novalidate><h2 id="sheet-title" tabindex="-1">Confirmar o pedido de ${esc(firstName(order))}</h2>
+        <p class="muted">${esc(order.product)} · ${esc(whenText({ ...order, dueAt }))}</p>${dateFields({ ...order, dueAt }, false)}
+        ${conflictHtml('confirm-anyway', 'Confirmar mesmo assim')}
+        <p class="form-error" id="confirm-error" role="alert" hidden></p><button class="btn btn-primary" type="submit">Confirmar</button></form>`, backToFicha(id));
+    } else if (!$('#conflict', form)) form.querySelector('[type=submit]').insertAdjacentHTML('beforebegin', conflictHtml('confirm-anyway', 'Confirmar mesmo assim'));
+    showError('#confirm-error', '');
+    showConflict($('#confirm-form'), M.conflictMessage(error, dueAt.slice(0, 10)));
   }
 }
 
+// Cancelar: a confirmação diz quanto ela já pagou (continua no Recebido); o aviso tem Desfazer, como o Entregue.
 export function openCancel(id) {
-  const order = findOrder(id);
-  openSheet(`<h2 id="sheet-title" tabindex="-1">Cancelar o pedido de ${esc(firstName(order))}?</h2><p>${esc(order.product)}. Ele sai da agenda; o que já foi recebido continua anotado.</p>
+  const order = findOrder(id), { received } = M.balance(app.state, order);
+  const paid = received ? ` Ela já pagou ${M.brl(received)}: esse valor continua contando no Recebido.` : '';
+  openSheet(`<h2 id="sheet-title" tabindex="-1">Cancelar o pedido de ${esc(firstName(order))}?</h2><p>${esc(order.product)}. Ele sai da agenda e fica no histórico da cliente.${esc(paid)}</p>
     <p class="form-error" id="cancel-error" role="alert" hidden></p>
-    <div class="f-main"><button class="btn btn-primary" type="button" data-act="cancel-confirm" data-id="${esc(id)}">Cancelar pedido</button>
-    <button class="btn btn-outline" type="button" data-act="open" data-id="${esc(id)}">Voltar</button></div>`, backToFicha(id));
+    <div class="f-main"><button class="btn btn-danger" type="button" data-act="cancel-confirm" data-id="${esc(id)}">Cancelar pedido</button>
+    <button class="btn btn-outline" type="button" data-act="open" data-id="${esc(id)}">Manter o pedido</button></div>`, backToFicha(id));
 }
 export async function cancelOrder(id) {
+  const before = findOrder(id)?.status;
   try {
     await api(`/orders/${encodeURIComponent(id)}`, { method: 'PUT', body: { status: 'Cancelado' } });
     await reload(); await refresh();
     closeSheet();
-    toast('Pedido cancelado.');
+    $('#main').focus({ preventScroll: true });
+    toast('Pedido cancelado.', async () => {
+      // A vaga era dele segundos antes: volta mesmo que o dia tenha enchido nesse meio-tempo.
+      const back = M.group(before) === 'confirmed' ? { capacityOverride: { allowed: true, reason: 'Cancelamento desfeito.' } } : {};
+      try {
+        await api(`/orders/${encodeURIComponent(id)}`, { method: 'PUT', body: { status: before, ...back } });
+        await reload(); await refresh();
+        toast('Cancelamento desfeito.');
+      } catch (error) { toast(error.message); }
+    });
   } catch (error) { showError('#cancel-error', error.message); }
 }

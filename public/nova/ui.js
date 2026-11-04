@@ -23,7 +23,7 @@ export async function api(path, { method = 'GET', body } = {}) {
     const code = data?.code || '';
     // Conta: outra sessão ou o link gravou antes. A agenda é recarregada já, e ela confere antes de repetir.
     if (code === 'REVISION_CONFLICT') window.dispatchEvent(new Event('doce:stale'));
-    const message = code === 'DAILY_LIMIT' ? 'O limite de pedidos para esta data foi atingido.'
+    const message = code === 'DAILY_LIMIT' ? 'Este dia já está cheio.'
       : code === 'REVISION_CONFLICT' ? 'Isto mudou em outro aparelho ou chegou pedido pelo link. A agenda foi atualizada: confira e tente de novo.'
         : friendlyError(data?.error);
     throw Object.assign(new Error(message), { status: response.status, code, capacity: CAPACITY_CODES.includes(code) });
@@ -36,8 +36,10 @@ export async function reload() {
 }
 
 // Uma janela só: a ficha e os passos dela trocam o conteúdo. `back` volta ao passo anterior.
+// O aviso de um pedido não fica por cima da ficha de outro: abrir a janela some com ele (quem cria aviso, cria depois).
 export function openSheet(html, back = null) {
   const dialog = $('#sheet');
+  hideToast();
   app.back = back;
   $('#sheet-body').innerHTML = html;
   $('#sheet-back').hidden = !back;
@@ -49,6 +51,53 @@ export function openSheet(html, back = null) {
 }
 export const closeSheet = () => { const dialog = $('#sheet'); if (dialog.open) dialog.close(); app.back = null; };
 export const sheetOpen = () => $('#sheet').open;
+
+// Pedido pela metade: tocar fora, Esc ou o X perguntam antes de jogar fora o que ela já digitou.
+const snapshot = (form) => new URLSearchParams(new FormData(form)).toString();
+export const markClean = (form) => { form.dataset.initial = snapshot(form); };
+export function hasUnsavedForm() {
+  const form = $('#order-form');
+  return !!form && form.dataset.initial !== undefined && snapshot(form) !== form.dataset.initial;
+}
+export function requestClose() {
+  if (!hasUnsavedForm()) { closeSheet(); return; }
+  if (!$('#discard')) {
+    $('#sheet-body').insertAdjacentHTML('afterbegin', `<div class="discard" id="discard" role="group" aria-labelledby="discard-text">
+      <p id="discard-text" tabindex="-1">Descartar o pedido que você está anotando?</p>
+      <div class="f-main"><button class="btn btn-outline" type="button" data-act="discard">Descartar</button><button class="btn btn-outline" type="button" data-act="keep-editing">Continuar anotando</button></div></div>`);
+  }
+  $('#sheet').scrollTop = 0;
+  $('#discard-text').focus({ preventScroll: true });
+}
+export function keepEditing() {
+  $('#discard')?.remove();
+  $('#order-form [name=client]')?.focus();
+}
+
+// Dia cheio ou fechado: um bloco só, logo abaixo do dia, com as duas saídas lado a lado. É o mesmo no novo pedido, no
+// aceitar do link e no confirmar orçamento; enquanto ele aparece, o botão de baixo (que repetiria o erro) some.
+export const conflictHtml = (anywayAct, anywayLabel) => `<div class="conflict" id="conflict" role="alert" hidden><p class="conflict-text" id="conflict-text"></p>
+  <div class="conflict-actions"><button class="btn btn-primary" type="button" data-act="${anywayAct}">${anywayLabel}</button><button class="btn btn-outline" type="button" data-act="change-day">Trocar o dia</button></div></div>`;
+export function showConflict(form, message) {
+  const box = $('#conflict', form);
+  $('#conflict-text', form).textContent = message;
+  box.hidden = false;
+  form.querySelector('[type=submit]').hidden = true;
+  box.scrollIntoView({ block: 'center', behavior: reducedMotion() ? 'auto' : 'smooth' });
+}
+export function hideConflict(form) {
+  const box = form && $('#conflict', form);
+  if (!box || box.hidden) return;
+  box.hidden = true;
+  form.querySelector('[type=submit]').hidden = false;
+}
+export function changeDay() {
+  const form = $('#conflict')?.closest('form');
+  if (!form) return;
+  const fields = form.querySelector('.when-fields');
+  if (fields) fields.hidden = false;
+  form.elements.date?.focus();
+}
 
 let toastTimer = 0;
 // O aviso fica na camada de cima (popover). Com a ficha aberta, o resto da página fica travado pelo navegador; por isso o

@@ -75,7 +75,7 @@ try {
       const { page, look, finish } = await open(width, height, { state: empty });
       const start = page.locator('#empty-start');
       await start.waitFor();
-      assert.match(await start.innerText(), /Anote sua primeira encomenda[\s\S]*Quem pediu, o quê, quando e o valor\. Leva um minuto\./);
+      assert.match(await start.innerText(), /Nada na agenda agora[\s\S]*histórico de cada cliente/, 'só cancelado: não é a primeira encomenda');
       assert.equal(await page.locator('#week').count(), 0, 'sem faixa da semana');
       assert.doesNotMatch(await page.locator('#view-agenda').innerText(), /nada marcado/);
       assert.equal(await start.locator('.btn-primary').count(), 0, 'o convite é de contorno; o cheio é o da barra');
