@@ -151,7 +151,7 @@ try {
     const thursday = (await api('/api/state')).orders.filter((o) => o.dueAt.startsWith('2026-10-29') && o.status === 'Confirmado').map((o) => o.client);
     assert.ok(thursday.length >= 2);
     for (const name of thursday) assert.match(await coming.innerText(), new RegExp(name));
-    const sum = async (list) => (await list.locator('.tag-due').allInnerTexts()).reduce((total, text) => total + cents(text), 0);
+    const sum = async (list) => (await list.locator('.due-amount').allInnerTexts()).reduce((total, text) => total + cents(text), 0);
     assert.equal(cents(await page.locator('#money-delivered-due').innerText()), await sum(owed), 'número grande = soma da lista 1');
     assert.equal(cents((await page.locator('#coming-title').innerText()).split('·').pop()), await sum(coming), 'título da lista 2 = soma dela');
     const comingDays = await coming.locator('li').evaluateAll((items) => items.map((li) => li.dataset.day));

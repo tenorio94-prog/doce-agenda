@@ -16,11 +16,25 @@ test('dinheiro em centavos: só Conferido entra no recebido', () => {
   ] };
   const order = { id: 'a', total: 120.2, totalKnown: true };
   assert.deepEqual(M.balance(state, order), { total: 12020, received: 5010, due: 7010 });
-  assert.deepEqual(M.moneyTag(state, order), { kind: 'due', text: 'Falta R$ 70,10' });
+  assert.deepEqual(M.moneyTag(state, order), { kind: 'check', text: 'Pix a conferir' }, 'Pix avisado aparece na linha');
   assert.equal(M.moneyTag(state, { id: 'b', total: 99 }).text, 'Pago');
   assert.equal(M.moneyTag(state, { id: 'c', total: 0, totalKnown: false }).text, 'Valor a combinar');
   assert.equal(M.moneyTag(state, { id: 'c', total: 0 }).text, 'Valor a combinar');
   assert.equal(M.reportedPayments(state, order).length, 1);
+  assert.equal(M.reportedCents(state, order), 6000);
+});
+
+test('selo da linha: com sinal, sem sinal, entregue devendo; conferido de zero não é sinal e desfeito não conta', () => {
+  const state = { payments: [
+    { orderId: 'sinal', amount: 40, status: 'Conferido' }, { orderId: 'zero', amount: 0, status: 'Conferido' },
+    { orderId: 'errado', amount: 950, status: 'Desfeito' }, { orderId: 'dev', amount: 30, status: 'Conferido' },
+  ] };
+  assert.deepEqual(M.moneyTag(state, { id: 'sinal', total: 100, status: 'Confirmado' }), { kind: 'paid', text: 'Com sinal' });
+  assert.deepEqual(M.moneyTag(state, { id: 'zero', total: 100, status: 'Confirmado' }), { kind: 'due', text: 'Sem sinal' });
+  assert.deepEqual(M.moneyTag(state, { id: 'errado', total: 100, status: 'Confirmado' }), { kind: 'due', text: 'Sem sinal' });
+  assert.deepEqual(M.moneyTag(state, { id: 'dev', total: 95, status: 'Entregue' }), { kind: 'late', text: 'Falta R$ 65' });
+  assert.equal(M.pastDayLabel('2025-11-04', '2026-11-03'), 'ter 4/11/25');
+  assert.equal(M.pastDayLabel('2026-10-14', '2026-11-03'), 'qua 14/10');
 });
 
 test('valores digitados e escritos', () => {

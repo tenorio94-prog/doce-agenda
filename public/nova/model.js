@@ -53,6 +53,8 @@ export function fullDayLabel(day, today) {
   return ['Hoje', 'Amanhã', 'Ontem'].includes(label) ? `${label}, ${SHORT[weekday(day)]} ${shortDate(day)}` : label;
 }
 export const shortDayLabel = (day) => `${SHORT[weekday(day)]} ${shortDate(day)}`;
+// Pedidos de outro ano ganham o ano curto: "qua 4/11/25".
+export const pastDayLabel = (day, today) => `${shortDayLabel(day)}${day.slice(0, 4) !== today.slice(0, 4) ? `/${day.slice(2, 4)}` : ''}`;
 export const longDate = (day) => `${WEEKDAYS[weekday(day)]}, ${Number(day.slice(8, 10))} de ${MONTHS[Number(day.slice(5, 7)) - 1]}`;
 export const monthLabel = (month) => `${MONTHS[Number(month.slice(5, 7)) - 1].replace(/^./, (c) => c.toUpperCase())} de ${month.slice(0, 4)}`;
 
@@ -63,19 +65,30 @@ export function totalCents(order) {
   const cents = toCents(order.total);
   return cents > 0 ? cents : null;
 }
-const paymentsOf = (state, order) => (state.payments || []).filter((payment) => payment.orderId === order.id);
-// Só Conferido é dinheiro recebido. Informado é só um aviso da cliente.
+export const paymentsOf = (state, order) => (state.payments || []).filter((payment) => payment.orderId === order.id);
+// Só Conferido é dinheiro recebido. Informado é só um aviso da cliente. Desfeito (lançado errado) não conta para nada.
 export const receivedCents = (state, order) => paymentsOf(state, order).filter((p) => p.status === 'Conferido').reduce((sum, p) => sum + toCents(p.amount), 0);
 export const reportedPayments = (state, order) => paymentsOf(state, order).filter((p) => p.status === 'Informado');
+export const reportedCents = (state, order) => reportedPayments(state, order).reduce((sum, p) => sum + toCents(p.amount), 0);
 export function balance(state, order) {
   const total = totalCents(order), received = receivedCents(state, order);
   return { total, received, due: total === null ? null : Math.max(0, total - received) };
 }
+// Selo pequeno da linha (direção Comanda, BRAND.md): na véspera a pergunta é "quem pagou o sinal?"; o valor exato fica na
+// ficha e no Dinheiro. Sinal é dinheiro conferido acima de zero. Entregue com saldo nunca parece resolvido: tijolo, com o valor.
 export function moneyTag(state, order) {
-  const { due } = balance(state, order);
-  if (due === null) return { kind: 'open', text: 'Valor a combinar' };
-  return due === 0 ? { kind: 'paid', text: 'Pago' } : { kind: 'due', text: `Falta ${brl(due)}` };
+  const { total, received, due } = balance(state, order);
+  if (total !== null && due === 0) return { kind: 'paid', text: 'Pago' };
+  if (reportedCents(state, order)) return { kind: 'check', text: 'Pix a conferir' };
+  if (total === null) return { kind: 'open', text: 'Valor a combinar' };
+  if (order.status === 'Entregue') return { kind: 'late', text: `Falta ${brl(due)}` };
+  return received > 0 ? { kind: 'paid', text: 'Com sinal' } : { kind: 'due', text: 'Sem sinal' };
 }
+// Pix que a cliente avisou e você ainda não conferiu, dos pedidos que estão na agenda ou para decidir.
+export const reportedOrders = (state) => (state.orders || []).filter((order) => group(order.status) !== 'out' && reportedCents(state, order) > 0)
+  .sort((a, b) => (orderDay(a) || '9999').localeCompare(orderDay(b) || '9999'));
+// Dia em que o pagamento foi conferido (ou lançado já conferido), no fuso de São Paulo.
+export const paymentDay = (payment) => todayKey(new Date(payment.undoneAt || payment.confirmedAt || payment.createdAt));
 export function brl(cents) {
   const whole = Math.floor(cents / 100), rest = cents % 100;
   return `R$ ${whole.toLocaleString('pt-BR')}${rest ? `,${String(rest).padStart(2, '0')}` : ''}`;

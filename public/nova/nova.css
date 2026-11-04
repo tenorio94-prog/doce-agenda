@@ -30,6 +30,8 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
   background: transparent; color: var(--ink); font-size: 26px; line-height: 1;
 }
 .icon-btn:disabled { color: var(--placeholder); cursor: default; }
+.icon-btn svg { width: 24px; height: 24px; }
+.sheet-back { display: inline-flex; align-items: center; gap: 2px; padding-left: 0; }
 .link-btn {
   min-height: 48px; padding: 0 4px; border: 0; background: none; color: var(--link); font-weight: 700;
   text-decoration: underline; text-underline-offset: 3px;
@@ -54,6 +56,7 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
 .notice p { padding: 8px 0; }
 .notice .link-btn { color: var(--ink); flex: none; padding: 0 10px; }
 .notice-late { background: var(--error-soft); }
+.notice-pix { background: var(--branco); border: 1.5px dashed var(--gold); }
 
 /* Faixa da semana */
 .week { margin-top: 12px; }
@@ -67,7 +70,7 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
 .wk-name { font-size: 12px; color: var(--muted); }
 .wk-num { font-family: var(--font-title); font-size: 19px; font-weight: 700; }
 .wk-count { min-height: 15px; font-size: 12px; font-weight: 700; }
-.wk-mark { font-size: 11px; font-weight: 700; color: var(--error); }
+.wk-mark { font-size: 12px; font-weight: 700; color: var(--error); }
 .wk-day.is-fechado .wk-mark { color: var(--muted); }
 .wk-day.is-today { background: var(--ameixa); color: #fff; }
 .wk-day.is-today .wk-name, .wk-day.is-today .wk-mark { color: #fff; }
@@ -83,6 +86,7 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
 .mark-full { color: var(--error); }
 .day-empty p { padding: 10px 0; color: var(--muted); font-size: 15px; border-bottom: var(--hairline); }
 .day-empty strong { color: var(--ink); font-weight: 600; }
+.day-anchor { display: block; scroll-margin-top: 8px; }
 .day.is-flash { animation: flash 1.2s ease-out; }
 @keyframes flash { from { background: var(--glace); } to { background: transparent; } }
 @media (prefers-reduced-motion: reduce) { .day.is-flash { animation: none; } }
@@ -97,11 +101,14 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
 /* O nome do doce quebra em até 2 linhas, sem cortar com reticências. */
 .o-what { font-weight: 700; line-height: 1.3; overflow-wrap: anywhere; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; }
 .o-line { display: flex; align-items: center; gap: 8px; min-width: 0; }
-.o-who { flex: 1; min-width: 0; font-size: 14px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.o-who { flex: 0 1 auto; min-width: 0; font-size: 14px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tag { flex: none; padding: 2px 8px; border-radius: var(--radius-pill); font-size: 13px; font-weight: 700; white-space: nowrap; }
 .tag-due { background: var(--baunilha); color: var(--ink-soft); }
 .tag-paid { background: var(--pistache); color: var(--carimbo); }
 .tag-open { background: var(--segmented); color: var(--muted); }
+/* Pix avisado e ainda não conferido: tracejado caramelo. Entregue devendo: tijolo, nunca verde. */
+.tag-check { padding: 1px 7px; border: 1.5px dashed var(--gold); background: var(--branco); color: var(--gold); }
+.tag-late { background: var(--error-soft); color: var(--error); }
 .order-done {
   flex: none; display: grid; place-items: center; width: 48px; height: 48px; margin-right: 6px; border-radius: 50%;
   border: 2px solid var(--border-input); background: var(--branco); color: var(--border-input);
@@ -109,6 +116,10 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
 .order-done[aria-pressed="true"] { background: var(--carimbo); border-color: var(--carimbo); color: #fff; }
 .order.is-done { background: transparent; box-shadow: none; }
 .order.is-done .o-what, .order.is-done .o-time { text-decoration: line-through; color: var(--muted); }
+/* Entregue com saldo ainda pede atenção: nada riscado e o ✓ só contornado até o dinheiro entrar. */
+.order.is-done.has-due { background: var(--branco); box-shadow: var(--shadow-s); }
+.order.is-done.has-due .o-what, .order.is-done.has-due .o-time { text-decoration: none; color: var(--ink); }
+.order.has-due .order-done[aria-pressed="true"] { background: var(--branco); color: var(--carimbo); }
 
 /* Conta nova: convite no lugar da faixa e da lista */
 .empty-start { display: grid; justify-items: start; gap: 12px; margin-top: 20px; padding: 24px 20px; border-radius: var(--r-l); background: var(--branco); border: var(--hairline); box-shadow: var(--shadow-s); }
@@ -134,14 +145,19 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
   border-radius: var(--radius-pill); background: var(--link); color: #fff; font-size: 12px; font-weight: 800; line-height: 1;
 }
 
-/* Dinheiro */
-.month-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-top: 12px; }
-.month-head h1 { font-size: 22px; text-align: center; }
-.money-big { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
-.money-big div { display: grid; gap: 4px; padding: 14px; border-radius: var(--r-m); background: var(--branco); border: var(--hairline); }
-.money-big div:first-child { background: var(--pistache); border-color: transparent; }
-.money-big span { font-size: 14px; color: var(--ink-soft); font-weight: 600; }
-.money-big strong { font-family: var(--font-title); font-size: clamp(22px, 7vw, 32px); white-space: nowrap; }
+/* Dinheiro: o cartão do mês leva as setas (só o Recebido muda com elas); o resto é de todos os meses. */
+.money-month { display: grid; justify-items: center; gap: 2px; margin-top: 12px; padding: 4px 4px 16px; border-radius: var(--r-m); background: var(--pistache); text-align: center; }
+.month-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; }
+.month-head h1 { font-size: 20px; text-align: center; }
+.mm-label { font-size: 15px; font-weight: 600; color: var(--ink-soft); }
+.money-month strong { font-family: var(--font-title); font-size: clamp(30px, 10vw, 40px); line-height: 1.1; white-space: nowrap; }
+.mm-note { max-width: 32ch; font-size: 14px; color: var(--ink-soft); }
+.money-total { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 10px; padding: 12px 14px; border-radius: var(--r-m); background: var(--branco); border: var(--hairline); }
+.money-total span { display: grid; font-weight: 600; color: var(--ink-soft); }
+.money-total small { font-size: 13px; font-weight: 500; color: var(--muted); }
+.money-total strong { font-family: var(--font-title); font-size: 24px; white-space: nowrap; }
+.section-note { margin: -4px 0 8px; font-size: 14px; }
+.due-pix { justify-self: start; margin-top: 4px; }
 .section-title { font-size: 19px; margin: 22px 0 8px; }
 .due-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
 /* Os botões descem para uma segunda linha quando não cabem ao lado (Recebi e Cobrar no celular). */
@@ -171,7 +187,7 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
 .f-who .link-btn { padding-left: 0; font-size: 17px; }
 .pill { display: inline-block; padding: 3px 10px; border-radius: var(--radius-pill); font-size: 13px; font-weight: 700; background: var(--segmented); }
 .pill-decide { background: var(--baunilha); color: var(--ink-soft); }
-.pill-confirmed { background: var(--glace); }
+.pill-confirmed { background: var(--branco); border: 1px solid var(--line); }
 .pill-delivered { background: var(--pistache); color: var(--carimbo); }
 .f-block { display: grid; gap: 8px; padding: 14px; border-radius: var(--r-m); background: var(--branco); border: var(--hairline); }
 .f-notes { white-space: pre-wrap; }
@@ -182,7 +198,12 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
 .money-line { font-weight: 700; }
 .money-line span { white-space: nowrap; }
 .f-reported { display: grid; gap: 8px; padding: 10px 12px; border-radius: var(--r-s); background: var(--baunilha); color: var(--ink-soft); }
-.f-reported .btn { justify-self: start; }
+.f-reported .f-actions .btn { flex: 1 1 130px; }
+.f-pays { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; font-size: 15px; }
+.f-pay { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 44px; border-top: var(--hairline); }
+.f-pay .link-btn { min-height: 44px; font-weight: 600; }
+.f-pay.is-undone { color: var(--muted); }
+.f-pay.is-undone strong { text-decoration: line-through; }
 .f-actions, .f-main, .conflict { display: flex; flex-wrap: wrap; gap: 8px; }
 .f-main .btn { flex: 1 1 140px; }
 .f-footer { display: flex; justify-content: space-between; gap: 12px; padding-top: 4px; border-top: var(--hairline); }
@@ -205,13 +226,17 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
 .field input::placeholder, .field textarea::placeholder { color: var(--placeholder); }
 .quick { display: flex; gap: 8px; margin-bottom: 2px; }
 .chip { min-height: 44px; padding: 0 16px; border: 1.5px solid var(--border-input); border-radius: var(--radius-pill); background: var(--branco); font-weight: 600; }
+.chip[aria-pressed="true"] { border-color: var(--ameixa); background: var(--ameixa); color: #fff; }
+.field-note { margin-top: 2px; font-size: 14px; color: var(--muted); }
+.field-note.is-full { color: var(--error); font-weight: 600; }
+[aria-invalid="true"] { border-color: var(--error) !important; }
 .when-fields { display: grid; grid-template-columns: 1.4fr 1fr; gap: 8px; }
 .when-fields .field > span { font-weight: 500; font-size: 14px; color: var(--muted); }
 .seg { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .seg label { position: relative; }
 .seg input { position: absolute; opacity: 0; inset: 0; margin: 0; }
 .seg span { display: grid; place-items: center; min-height: 48px; border: 1.5px solid var(--border-input); border-radius: var(--r-s); background: var(--branco); font-weight: 600; }
-.seg input:checked + span { border: 2px solid var(--ameixa); background: var(--glace); }
+.seg input:checked + span { border: 2px solid var(--ameixa); background: var(--ameixa); color: #fff; }
 .seg input:focus-visible + span { outline: 3px solid var(--focus); outline-offset: 2px; }
 .check { display: flex; align-items: center; gap: 10px; min-height: 48px; font-weight: 600; }
 .check input { width: 22px; height: 22px; accent-color: var(--ameixa); flex: none; }
@@ -224,6 +249,8 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
   display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 6px 8px 6px 16px; border: 0; border-radius: var(--r-m);
   background: var(--ameixa); color: #fff; font-weight: 600; box-shadow: var(--shadow-m);
 }
+/* Com a ficha aberta, o aviso sobe para o alto: embaixo ficam Entregue e Recebi. */
+body:has(#sheet[open]) .toast { inset: calc(12px + env(safe-area-inset-top)) 12px auto 12px; }
 .toast-undo { min-height: 44px; padding: 0 14px; border: 0; border-radius: var(--radius-pill); background: transparent; color: #fff; font-weight: 800; text-decoration: underline; text-underline-offset: 3px; }
 @media (min-width: 1000px) {
   .top-date { font-size: 24px; }

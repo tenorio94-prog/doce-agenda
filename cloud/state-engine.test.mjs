@@ -51,6 +51,24 @@ test('payment confirmation is idempotent and records one confirmation event', ()
   assert.equal(repeated.state.orders[0].history.length, before + 1);
 });
 
+test('a wrong payment can be undone: it stays in the history as Desfeito, never counts and survives a backup', () => {
+  const created = request(createEmptyState(), '/api/orders', 'POST', orderBody());
+  const paid = request(created.state, `/api/orders/${created.body.id}/payments`, 'POST', { amount: 950, status: 'Conferido', note: 'Recebi' });
+  const undone = request(paid.state, `/api/payments/${paid.body.id}`, 'PUT', { status: 'Desfeito' });
+  assert.equal(undone.status, 200);
+  assert.equal(undone.body.status, 'Desfeito');
+  assert.ok(undone.body.undoneAt);
+  assert.match(undone.state.orders[0].history.at(-1).text, /Pagamento desfeito: R\$ 950\.00 \(estava conferido\)/);
+  const again = request(undone.state, `/api/payments/${paid.body.id}`, 'PUT', { status: 'Desfeito' });
+  assert.equal(again.state.orders[0].history.length, undone.state.orders[0].history.length, 'desfazer de novo não repete o histórico');
+  assert.equal(request(undone.state, `/api/payments/${paid.body.id}`, 'PUT', { status: 'Conferido' }).status, 400);
+  assert.equal(request(undone.state, `/api/orders/${created.body.id}/payments`, 'POST', { amount: 5, status: 'Desfeito' }).status, 400);
+  const exported = request(undone.state, '/api/export').body;
+  const restored = request(createEmptyState(), '/api/import', 'POST', exported);
+  assert.equal(restored.status, 200);
+  assert.equal(restored.state.payments[0].status, 'Desfeito');
+});
+
 test('closed days and full dates block confirmation unless a reasoned exception is supplied', () => {
   let state = createEmptyState();
   const day = '2099-06-18';

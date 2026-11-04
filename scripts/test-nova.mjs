@@ -98,6 +98,8 @@ try {
 
     // 6. Entregue com Desfazer; o pedido entregue fica riscado no fim do dia.
     const juliana = page.locator(`#d-${TODAY} .order[data-id="DEMO-09"]`);
+    assert.match(await juliana.innerText(), /Pix a conferir/, 'Pix avisado aparece na linha, fora da ficha');
+    assert.match(await page.locator(`#d-${TODAY} .order[data-id="DEMO-08"]`).innerText(), /Sem sinal/);
     await juliana.locator('.order-done').click();
     await page.locator('#toast-undo:visible').waitFor();
     assert.equal(await page.locator('#toast-text').innerText(), 'Pedido entregue: Docinhos sortidos (50 un.).', 'aviso sem errar o plural');
@@ -133,7 +135,7 @@ try {
     await page.locator('#sheet[open]').waitFor({ state: 'detached' }).catch(() => {});
     const ana = page.locator(`#d-${SATURDAY} .order`, { hasText: 'Ana' });
     await ana.waitFor();
-    assert.match(await ana.innerText(), /15h[\s\S]*Bolo de cenoura[\s\S]*Ana[\s\S]*Falta R\$ 120/);
+    assert.match(await ana.innerText(), /15h[\s\S]*Bolo de cenoura[\s\S]*Ana[\s\S]*Sem sinal/);
     assert.doesNotMatch(await ana.innerText(), /Retirada/, 'retirada é o normal e não aparece');
     results.push(`${width}: anotar no sábado`);
 
@@ -146,7 +148,7 @@ try {
     await page.locator('#pay-form [type=submit]').click();
     await page.locator('#money-line', { hasText: 'Falta R$ 70' }).waitFor();
     await closeSheet(page);
-    assert.match(await ana.innerText(), /Falta R\$ 70/);
+    assert.match(await ana.innerText(), /Com sinal/, 'sinal conferido aparece na linha');
     const after = await received(page);
     assert.equal(after - before, 5000, 'Recebido soma R$ 50');
     await tab(page, 'dinheiro');
@@ -175,7 +177,7 @@ try {
     assert.equal((await order('DEMO-15')).status, 'Confirmado');
     assert.doesNotMatch(await page.locator('#notice-decide').innerText(), /Camila/);
     assert.match(await page.locator('#notice-decide').innerText(), /Renata espera sua resposta/);
-    assert.match(await page.locator(`#d-${SUNDAY} .order[data-id="DEMO-15"]`).innerText(), /Falta R\$ 150/);
+    assert.match(await page.locator(`#d-${SUNDAY} .order[data-id="DEMO-15"]`).innerText(), /Sem sinal/);
     results.push(`${width}: aceitar pelo link`);
 
     // Dia cheio: a mensagem do servidor e "Salvar mesmo assim".
@@ -183,11 +185,16 @@ try {
     await form.locator('[name=client]').fill('Lia Nove');
     await form.locator('[name=product]').fill('Pudim');
     await form.locator('[data-act="quick"][data-days="0"]').click();
+    assert.equal(await form.locator('[data-act="quick"][data-days="0"]').getAttribute('aria-pressed'), 'true', 'Hoje mostra que foi escolhido');
+    assert.match(await page.locator('#day-note').innerText(), /já está cheio/, 'dia cheio aparece ao escolher a data');
     await form.locator('[name=time]').fill('19:00');
     await form.locator('[type=submit]').click();
     await page.locator('#form-error', { hasText: 'O limite de pedidos para esta data foi atingido.' }).waitFor();
+    assert.ok(await page.evaluate(() => document.querySelector('.when-fields').nextElementSibling?.contains(document.querySelector('#form-error'))
+      || document.querySelector('.when-fields').parentElement.contains(document.querySelector('#form-error'))), 'o aviso fica junto do dia');
+    await page.locator('[data-act="change-day"]:visible').waitFor();
     await look('dia cheio');
-    await page.locator('[data-act="force-save"]').click();
+    await form.locator('[type=submit]', { hasText: 'Salvar mesmo assim' }).click();
     await page.locator(`#d-${TODAY} .order`, { hasText: 'Lia Nove' }).waitFor();
     assert.match(await page.locator(`#d-${TODAY} .order`, { hasText: 'Lia Nove' }).innerText(), /Valor a combinar/);
     results.push(`${width}: salvar mesmo assim`);
@@ -248,6 +255,29 @@ try {
     await page.locator(`#d-${TODAY} .order[data-id="DEMO-08"] .order-open`).click();
     await sheet(page).locator('[data-act="charge"]').click();
     assert.match(await page.locator('#message-text').innerText(), /Oi, Marcos! .*falta R\$ 95/);
+    await closeSheet(page);
+    // Valor acima do que falta pede confirmação; o pagamento lançado errado se desfaz e fica no histórico como desfeito.
+    await page.locator(`#d-${TODAY} .order[data-id="DEMO-08"] .order-open`).click();
+    await sheet(page).locator('[data-act="received"]').click();
+    await page.locator('#pay-form [name=amount]').fill('950');
+    await page.locator('#pay-form [type=submit]').click();
+    await page.locator('#pay-error', { hasText: 'passa do total em R$ 855' }).waitFor();
+    assert.equal(await page.locator('#pay-form [type=submit]').innerText(), 'Registrar mesmo assim');
+    await look('recebi a mais');
+    await page.locator('#pay-form [type=submit]').click();
+    await page.locator('#money-line', { hasText: 'Pago' }).waitFor();
+    await page.locator('#toast-undo:visible').click();
+    await page.locator('#money-line', { hasText: 'Falta R$ 95' }).waitFor();
+    assert.match(await sheet(page).locator('.f-pays').innerText(), /R\$ 950[\s\S]*desfeito/);
+    assert.equal((await order('DEMO-08')).history.at(-1).text, 'Pagamento desfeito: R$ 950.00 (estava conferido).');
+    await look('pagamento desfeito');
+    await closeSheet(page);
+    // Entregue com saldo não parece resolvido: nada riscado e o valor em tijolo.
+    await page.locator(`#d-${TODAY} .order[data-id="DEMO-08"] .order-done`).click();
+    await page.locator(`#d-${TODAY} .order.has-due[data-id="DEMO-08"]`).waitFor();
+    assert.match(await page.locator(`#d-${TODAY} .order[data-id="DEMO-08"] .tag-late`).innerText(), /Falta R\$ 95/);
+    await page.locator(`#d-${TODAY} .order[data-id="DEMO-08"] .order-open`).click();
+    assert.equal(await sheet(page).locator('.f-main .btn-primary').innerText(), 'Recebi o resto');
     await closeSheet(page);
     // Semana passada pelas setas, e de volta.
     await page.locator('[data-act="week"][data-step="-7"]').click();

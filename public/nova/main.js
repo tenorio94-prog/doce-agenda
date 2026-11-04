@@ -7,7 +7,7 @@ import * as Form from './form.js';
 import { renderMoney, updateMoneyBadge } from './dinheiro.js';
 import * as Menu from './menu.js';
 import * as Link from './link.js';
-import { $, app, closeSheet, hideToast, reload, sheetOpen, toast } from './ui.js';
+import { $, app, closeSheet, hideToast, placeToast, reload, sheetOpen, toast } from './ui.js';
 
 app.week = M.weekStart(app.today);
 app.from = app.today;
@@ -43,6 +43,8 @@ const actions = {
   received: (el) => Ficha.openReceived(el.dataset.id),
   'received-money': (el) => Ficha.openReceived(el.dataset.id, true),
   seen: (el) => Ficha.markSeen(el.dataset.payment, el.dataset.id),
+  'undo-payment': (el) => Ficha.openUndoPayment(el.dataset.payment, el.dataset.id),
+  'undo-confirm': (el) => Ficha.undoPayment(el.dataset.payment, el.dataset.id),
   charge: (el) => Ficha.openCharge(el.dataset.id),
   'charge-money': (el) => Ficha.openCharge(el.dataset.id, true),
   reply: (el) => Ficha.openReply(el.dataset.id),
@@ -60,7 +62,7 @@ const actions = {
   edit: (el) => Form.openForm(el.dataset.id),
   new: () => Form.openForm(),
   quick: (el) => Form.quickDay(el.dataset.days),
-  'force-save': () => Form.submitForm($('#order-form'), true),
+  'change-day': () => $('#order-form [name=date]').focus(),
   day: (el) => scrollToDay(el.dataset.day),
   week: (el) => { app.week = M.addDays(app.week, Number(el.dataset.step)); renderAgenda(); $(`[data-act="week"][data-step="${el.dataset.step}"]`)?.focus(); },
   month: (el) => { app.month = M.addMonths(app.month, Number(el.dataset.step)); renderMoney({ keep: true }).then(() => $(`[data-act="month"][data-step="${el.dataset.step}"]:not([disabled])`)?.focus()); },
@@ -85,7 +87,7 @@ document.addEventListener('click', (event) => {
 document.addEventListener('submit', async (event) => {
   event.preventDefault();
   const form = event.target;
-  if (form.id === 'order-form') Form.submitForm(form);
+  if (form.id === 'order-form') Form.submitForm(form, form.dataset.force === '1');
   else if (form.id === 'pay-form') Ficha.submitReceived(form);
   else if (form.id === 'accept-form') Ficha.submitAccept(form);
   else if (form.id === 'refuse-form') Ficha.submitRefuse(form);
@@ -93,13 +95,17 @@ document.addEventListener('submit', async (event) => {
   else if (form.id === 'link-wizard') Link.wizardNext(event.submitter?.value || 'next');
   else if (form.id === 'days-form') { if (await Menu.submitDays(form)) refresh(); }
 });
-document.addEventListener('input', (event) => { if (event.target.closest('#link-wizard')) Link.onWizardInput(event.target); });
+document.addEventListener('input', (event) => {
+  if (event.target.closest('#link-wizard')) Link.onWizardInput(event.target);
+  if (event.target.name === 'amount' && event.target.form?.id === 'pay-form' && event.target.form.dataset.over) Ficha.resetReceived(event.target.form);
+});
 document.addEventListener('change', (event) => {
   if (event.target.name === 'mode' && event.target.form?.id === 'order-form') Form.syncMode(event.target.form);
+  if (['date', 'time'].includes(event.target.name) && event.target.form?.id === 'order-form') Form.syncDay(event.target.form);
 });
 // Fechar a janela tocando fora dela.
 $('#sheet').addEventListener('click', (event) => { if (event.target === event.currentTarget) closeSheet(); });
-$('#sheet').addEventListener('close', () => { app.back = null; });
+$('#sheet').addEventListener('close', () => { app.back = null; placeToast(); });
 
 async function start() {
   $('#today-label').textContent = M.longDate(app.today);

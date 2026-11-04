@@ -5,6 +5,8 @@ import { anonymizeClient, clientsSummary } from './clients.js';
 const STATUSES = ['Solicitação', 'Orçamento', 'Aguardando confirmação', 'Confirmado', 'Em produção', 'Pronto', 'Entregue', 'Cancelado', 'Recusado'];
 const DRAFT_STATUSES = ['Solicitação', 'Orçamento', 'Aguardando confirmação', 'Cancelado', 'Recusado'];
 const COMMITTED_STATUSES = ['Confirmado', 'Em produção', 'Pronto', 'Entregue'];
+// Desfeito (03/11/2026): pagamento lançado errado; fica no histórico e nunca conta como recebido nem como Pix a conferir.
+const PAYMENT_STATUSES = ['Informado', 'Conferido', 'Desfeito'];
 const CAKE_KEYS = ['size', 'flavor', 'filling', 'decoration', 'inscription', 'foodNotes'];
 const ORDER_LABELS = {
   client: 'Cliente', product: 'Produto', details: 'Detalhes', dueAt: 'Data e horário', mode: 'Modalidade',
@@ -280,7 +282,8 @@ function validBackup(value) {
     if (!payment || typeof payment !== 'object' || typeof payment.id !== 'string' || !payment.id.trim()
       || paymentIds.has(payment.id) || orderIds.has(payment.id) || !orderIds.has(payment.orderId)
       || !Number.isFinite(payment.amount) || payment.amount < 0 || payment.amount > 1_000_000
-      || !['Informado', 'Conferido'].includes(payment.status) || !Number.isFinite(Date.parse(payment.createdAt))) {
+      || !PAYMENT_STATUSES.includes(payment.status) || !Number.isFinite(Date.parse(payment.createdAt))
+      || ['confirmedAt', 'undoneAt'].some(key => payment[key] !== undefined && !Number.isFinite(Date.parse(payment[key])))) {
       fail('Pagamento inválido, duplicado ou sem pedido associado.');
     }
     paymentIds.add(payment.id);
@@ -436,12 +439,21 @@ export function transactState(state, url, options = {}) {
       } else if (paymentMatch && method === 'PUT') {
         const payment = nextState.payments.find(item => item.id === decodeURIComponent(paymentMatch[1]));
         if (!payment) fail('Pagamento não encontrado.', 404);
-        if (body.status !== 'Conferido') fail('Só é possível confirmar o recebimento.');
-        if (payment.status !== 'Conferido') {
+        if (!['Conferido', 'Desfeito'].includes(body.status)) fail('Só é possível conferir ou desfazer um pagamento.');
+        const order = nextState.orders.find(item => item.id === payment.orderId);
+        if (body.status === 'Conferido' && payment.status === 'Desfeito') fail('Este pagamento foi desfeito. Lance o valor de novo.');
+        if (body.status === 'Conferido' && payment.status !== 'Conferido') {
           payment.status = 'Conferido';
           payment.confirmedAt = now;
-          const order = nextState.orders.find(item => item.id === payment.orderId);
           order.history.push({ at: now, text: `Recebimento conferido: R$ ${payment.amount.toFixed(2)}.` });
+          order.updatedAt = now;
+        }
+        // Desfazer (03/11/2026): o pagamento lançado errado fica no histórico marcado como desfeito e deixa de contar.
+        if (body.status === 'Desfeito' && payment.status !== 'Desfeito') {
+          const before = payment.status;
+          payment.status = 'Desfeito';
+          payment.undoneAt = now;
+          order.history.push({ at: now, text: `Pagamento desfeito: R$ ${payment.amount.toFixed(2)} (${before === 'Conferido' ? 'estava conferido' : 'estava informado'}).` });
           order.updatedAt = now;
         }
         result = payment;

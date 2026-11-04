@@ -51,9 +51,19 @@ export const closeSheet = () => { const dialog = $('#sheet'); if (dialog.open) d
 export const sheetOpen = () => $('#sheet').open;
 
 let toastTimer = 0;
-// O aviso fica na camada de cima (popover) para aparecer também com a janela aberta.
+// O aviso fica na camada de cima (popover). Com a ficha aberta, o resto da página fica travado pelo navegador; por isso o
+// aviso vai para dentro da ficha (o Desfazer funciona) e volta para a página quando ela fecha.
+export function placeToast() {
+  const box = $('#toast'), host = sheetOpen() ? $('#sheet') : document.body;
+  if (box.parentElement === host) return;
+  let open = false;
+  try { open = box.matches(':popover-open'); if (open) box.hidePopover(); } catch { /* sem popover */ }
+  host.append(box);
+  try { if (open) box.showPopover(); } catch { /* sem popover */ }
+}
 export function toast(text, undo = null) {
   const box = $('#toast');
+  placeToast();
   $('#toast-text').textContent = text;
   const button = $('#toast-undo');
   button.hidden = !undo;

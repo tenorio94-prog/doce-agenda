@@ -60,7 +60,9 @@ try {
       const { context, page, errors } = await open(width, height);
       await assertToday(page);
       const days = page.locator('#days .day');
-      const total = await days.count(), free = await page.locator('#days .day-empty').count();
+      // Dias livres seguidos viram uma linha só; cada dia a mais dessa linha guarda uma âncora (.day-anchor).
+      const anchors = await page.locator('#days .day-anchor').count();
+      const total = await days.count() + anchors, free = await page.locator('#days .day-empty').count() + anchors;
       assert.ok(free >= 2 && free <= 3, `${width}: dois ou três dias livres`);
       assert.ok(await page.locator('#days .mark-full').count() >= 2, `${width}: pelo menos dois dias cheios`);
       assert.ok(total - free > free, `${width}: maioria dos dias ocupada`);
@@ -94,7 +96,7 @@ try {
       await assertToday(page);
       assert.deepEqual((await state(page)).orders.find((order) => order.id === visitor.id), visitor);
       assert.ok((await state(page)).orders.some((order) => order.id === 'DEMO-16'), 'agenda antiga recebe os novos exemplos');
-      assert.equal(await page.locator('#days .day-empty').count(), 2, 'agenda antiga também fica preenchida');
+      assert.equal(await page.locator('#days .day-empty').count() + await page.locator('#days .day-anchor').count(), 2, 'agenda antiga também fica preenchida');
       assert.equal(await page.evaluate((key) => localStorage.getItem(key), DAY), todayKey(NOW));
       assert.deepEqual(errors, []); await context.close();
     }

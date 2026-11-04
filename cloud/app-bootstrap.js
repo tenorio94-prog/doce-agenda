@@ -21,9 +21,9 @@ function rememberWrite(path, data) {
   if (!data || typeof data !== 'object') return;
   if (SECTIONS[path]) { seen.sections[SECTIONS[path]] = JSON.stringify(data); return; }
   if (data.orderId) {
-    // Pagamento: o pedido ganhou o mesmo carimbo do lançamento ou da conferência.
+    // Pagamento: o pedido ganhou o mesmo carimbo do lançamento, da conferência ou do desfazer.
     seen.payments.set(data.id, data.orderId);
-    const at = data.confirmedAt || data.createdAt;
+    const at = data.undoneAt || data.confirmedAt || data.createdAt;
     if (at && seen.orders.has(data.orderId)) seen.orders.set(data.orderId, at);
   } else if (data.id) seen.orders.set(data.id, stampOf(data));
 }

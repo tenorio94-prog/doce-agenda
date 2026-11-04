@@ -3,7 +3,7 @@ import { saoPauloDay } from './monthly-summary.js';
 
 // O marcador acompanha o estado para que uma gravação interrompida não avance as datas duas vezes.
 const STATE_DAY = 'demoExampleDay';
-const DATE_FIELDS = ['dueAt', 'createdAt', 'updatedAt', 'confirmedAt', 'reviewedAt', 'nextAt', 'consentAt'];
+const DATE_FIELDS = ['dueAt', 'createdAt', 'updatedAt', 'confirmedAt', 'undoneAt', 'reviewedAt', 'nextAt', 'consentAt'];
 const EXAMPLE_ID = /^DEMO-/;
 const EXTRA_ID = /^DEMO-(?:1[6-9]|2[0-9])$/;
 const DAY_MS = 86400000;

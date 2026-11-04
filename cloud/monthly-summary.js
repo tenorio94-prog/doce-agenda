@@ -26,6 +26,11 @@ function cents(value) {
   return typeof value === 'number' && Number.isFinite(value) && value >= 0 && value <= 1_000_000 ? Math.round(value * 100) : null;
 }
 function ordinal(day) { return Date.parse(`${day}T00:00:00Z`) / 86400000; }
+const isSample = (order) => order.isSample || order.isDemo || order.sample;
+// Pedidos de verdade (sem os exemplos), em qualquer etapa: o dinheiro conferido deles conta como recebido.
+function realOrderIds(state) { return new Set((state.orders || []).filter(order => !isSample(order)).map(order => String(order.id))); }
+// Dia do recebimento: quando foi conferido; lançamento já conferido na hora usa a data do lançamento.
+export function paymentDay(payment) { return saoPauloDay(payment.confirmedAt || payment.createdAt); }
 
 export function monthlySummary(state, month, now = new Date()) {
   const currentMonth = saoPauloDay(now).slice(0, 7);
@@ -35,7 +40,7 @@ export function monthlySummary(state, month, now = new Date()) {
   const selected = new Set(), weekdays = Array(7).fill(0), products = new Map();
   let ordersCount = 0, soldCents = 0, receivedCents = 0, ordersWithoutValue = 0, noticeDays = 0, noticeOrdersCount = 0;
   for (const order of state.orders || []) {
-    if (!MONTH_STATUSES.includes(order.status) || order.isSample || order.isDemo || order.sample) continue;
+    if (!MONTH_STATUSES.includes(order.status) || isSample(order)) continue;
     const day = saoPauloDay(order.dueAt);
     if (!day || day.slice(0, 7) !== month) continue;
     ordersCount++; selected.add(String(order.id));
@@ -50,13 +55,23 @@ export function monthlySummary(state, month, now = new Date()) {
     const createdDay = saoPauloDay(order.createdAt);
     if (createdDay) { noticeDays += ordinal(day) - ordinal(createdDay); noticeOrdersCount++; }
   }
+  // Recebido no mês (03/11/2026, aprovado por Lucas): pagamentos conferidos pelo dia em que foram conferidos, para bater
+  // com o extrato do banco. Vale para qualquer pedido de verdade, inclusive cancelado ou orçamento: dinheiro recebido não
+  // some do mês porque o pedido mudou. "Falta receber" continua sendo dos pedidos com entrega no mês.
+  const knownOrders = realOrderIds(state), paidByOrder = new Map();
   for (const payment of state.payments || []) {
-    if (payment.status !== 'Conferido' || !selected.has(String(payment.orderId))) continue;
-    const amount = cents(payment.amount); if (amount !== null) receivedCents += amount;
+    if (payment.status !== 'Conferido' || !knownOrders.has(String(payment.orderId))) continue;
+    const amount = cents(payment.amount); if (amount === null) continue;
+    paidByOrder.set(String(payment.orderId), (paidByOrder.get(String(payment.orderId)) || 0) + amount);
+    if (paymentDay(payment)?.slice(0, 7) === month) receivedCents += amount;
+  }
+  let receivableCents = 0;
+  for (const order of state.orders || []) {
+    if (!selected.has(String(order.id)) || order.totalKnown === false) continue;
+    const total = cents(order.total); if (total !== null) receivableCents += Math.max(0, total - (paidByOrder.get(String(order.id)) || 0));
   }
   return {
-    month, currentMonth, timeZone: TIME_ZONE, ordersCount, soldCents, receivedCents,
-    receivableCents: Math.max(0, soldCents - receivedCents), ordersWithoutValue,
+    month, currentMonth, timeZone: TIME_ZONE, ordersCount, soldCents, receivedCents, receivableCents, ordersWithoutValue,
     busiestDays: weekdays.map((count, weekday) => ({ weekday, name: WEEKDAYS[weekday], count }))
       .filter(d => d.count).sort((a, b) => b.count - a.count || (a.weekday + 6) % 7 - (b.weekday + 6) % 7).slice(0, 3),
     topProducts: [...products.values()].sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'pt-BR')).slice(0, 5),
@@ -67,12 +82,12 @@ export function monthlySummary(state, month, now = new Date()) {
 }
 
 // "O que você já guardou aqui": the same eligible orders and checked payments as Meu mês, in every month,
-// so the total never disagrees with the months added up. Clients are counted by the Clientes key.
+// so the total never disagrees with the months added up (received = every checked payment of a real order). Clients are counted by the Clientes key.
 export function lifetimeSummary(state) {
   const selected = new Set(), clients = new Set();
   let ordersCount = 0, deliveredCount = 0, receivedCents = 0, firstMonth = null;
   for (const order of state.orders || []) {
-    if (!MONTH_STATUSES.includes(order.status) || order.isSample || order.isDemo || order.sample) continue;
+    if (!MONTH_STATUSES.includes(order.status) || isSample(order)) continue;
     const day = saoPauloDay(order.dueAt);
     if (!day) continue;
     ordersCount++; selected.add(String(order.id));
@@ -80,8 +95,9 @@ export function lifetimeSummary(state) {
     const key = clientKeyFor(order); if (key) clients.add(key);
     if (!firstMonth || day.slice(0, 7) < firstMonth) firstMonth = day.slice(0, 7);
   }
+  const knownOrders = realOrderIds(state);
   for (const payment of state.payments || []) {
-    if (payment.status !== 'Conferido' || !selected.has(String(payment.orderId))) continue;
+    if (payment.status !== 'Conferido' || !knownOrders.has(String(payment.orderId))) continue;
     const amount = cents(payment.amount); if (amount !== null) receivedCents += amount;
   }
   return { ordersCount, deliveredCount, clientsCount: clients.size, receivedCents, firstMonth };

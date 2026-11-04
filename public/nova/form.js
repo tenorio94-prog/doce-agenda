@@ -17,9 +17,10 @@ export function openForm(id = null) {
     <label class="field"><span>Quem pediu?</span><input name="client" autocomplete="off" maxlength="120" value="${esc(order?.client)}" aria-describedby="form-error"></label>
     <label class="field"><span>O quê?</span><input name="product" autocomplete="off" maxlength="300" value="${esc(order?.product)}" placeholder="Ex.: bolo de cenoura"></label>
     <fieldset class="field"><legend>Quando?</legend>
-      <div class="quick"><button class="chip" type="button" data-act="quick" data-days="0">Hoje</button><button class="chip" type="button" data-act="quick" data-days="1">Amanhã</button></div>
-      <div class="when-fields"><label class="field"><span>Dia</span><input type="date" name="date" value="${esc(M.orderDay(order))}"></label>
-      <label class="field"><span>Hora</span><input type="time" name="time" value="${esc(String(order?.dueAt || '').slice(11, 16))}"></label></div></fieldset>
+      <div class="quick"><button class="chip" type="button" data-act="quick" data-days="0" aria-pressed="false">Hoje</button><button class="chip" type="button" data-act="quick" data-days="1" aria-pressed="false">Amanhã</button></div>
+      <div class="when-fields"><label class="field"><span>Dia</span><input type="date" name="date" value="${esc(M.orderDay(order))}" aria-describedby="day-note"></label>
+      <label class="field"><span>Hora</span><input type="time" name="time" value="${esc(String(order?.dueAt || '').slice(11, 16))}"></label></div>
+      <p class="field-note" id="day-note" aria-live="polite" hidden></p></fieldset>
     <label class="field"><span>Valor <small>(opcional)</small></span><input name="total" inputmode="decimal" autocomplete="off" placeholder="Ex.: 120" value="${value ? esc(M.centsInput(value)) : ''}"></label>
     <label class="field"><span>Anotações</span><textarea name="details" rows="3" maxlength="2000" placeholder="Sabor, tamanho, decoração, o que combinaram">${esc(order?.details)}</textarea></label>
     <label class="field"><span>WhatsApp da cliente <small>(opcional)</small></span><input name="contact" type="tel" inputmode="tel" autocomplete="off" maxlength="120" value="${esc(order?.contact)}"></label>
@@ -29,14 +30,45 @@ export function openForm(id = null) {
     <label class="field" id="location-field"${delivery ? '' : ' hidden'}><span>Endereço da entrega</span><input name="location" autocomplete="off" maxlength="400" value="${esc(order?.location)}"></label>
     ${showQuote ? `<label class="check"><input type="checkbox" name="quote"${order && M.group(order.status) === 'decide' ? ' checked' : ''}><span>Ainda é orçamento</span></label>` : ''}
     <p class="form-error" id="form-error" role="alert" hidden></p>
-    <div class="conflict" id="form-conflict" hidden><button class="btn btn-outline" type="button" data-act="force-save">Salvar mesmo assim</button></div>
+    <div class="conflict" id="form-conflict" hidden><button class="btn btn-outline" type="button" data-act="change-day">Trocar o dia</button></div>
     <button class="btn btn-primary" type="submit">Salvar pedido</button></form>`);
+  syncDay($('#order-form'));
   if (!order) $('#order-form [name=client]').focus();
 }
 
 export function quickDay(days) {
-  $('#order-form [name=date]').value = M.addDays(app.today, Number(days));
-  $('#order-form [name=time]').focus();
+  const form = $('#order-form');
+  form.elements.date.value = M.addDays(app.today, Number(days));
+  syncDay(form);
+  form.elements.time.focus();
+}
+
+// Ao escolher o dia: os atalhos mostram qual está marcado e o dia cheio ou fechado aparece já, não só ao salvar.
+// Trocar o dia ou a hora desfaz o "Salvar mesmo assim" de um conflito anterior.
+export function syncDay(form) {
+  const day = form.elements.date.value;
+  for (const chip of form.querySelectorAll('[data-act="quick"]')) chip.setAttribute('aria-pressed', String(!!day && day === M.addDays(app.today, Number(chip.dataset.days))));
+  const mark = /^\d{4}-\d{2}-\d{2}$/.test(day) ? M.dayMark(app.state, day) : '';
+  const note = $('#day-note');
+  note.textContent = mark === 'cheio' ? `${M.weekdayName(day)}, ${M.shortDate(day)}, já está cheio. Dá para anotar mesmo assim.`
+    : mark === 'fechado' ? `${M.weekdayName(day)}, ${M.shortDate(day)}, é um dia em que você não trabalha.` : '';
+  note.hidden = !mark;
+  note.classList.toggle('is-full', mark === 'cheio');
+  if (form.dataset.force) {
+    delete form.dataset.force;
+    form.querySelector('[type=submit]').textContent = 'Salvar pedido';
+    $('#form-conflict').hidden = true;
+    showError('#form-error', '');
+  }
+}
+
+// O erro aparece logo abaixo do campo que precisa de ajuste, ligado a ele para o leitor de tela.
+function fieldError(form, name, message) {
+  const box = $('#form-error'), input = form.elements[name], anchor = input?.closest('.when-fields') || input?.closest('.field');
+  for (const field of form.querySelectorAll('[aria-invalid]')) field.removeAttribute('aria-invalid');
+  if (anchor) anchor.after(box);
+  showError('#form-error', message);
+  if (input?.setAttribute) { input.setAttribute('aria-invalid', 'true'); if (!input.getAttribute('aria-describedby')?.includes('form-error')) input.setAttribute('aria-describedby', `${input.getAttribute('aria-describedby') || ''} form-error`.trim()); }
 }
 export function syncMode(form) {
   $('#location-field').hidden = form.elements.mode.value !== 'Entrega';
@@ -83,7 +115,7 @@ export async function submitForm(form, force = false) {
   showError('#form-error', '');
   let read;
   try { read = readForm(form); } catch (error) {
-    showError('#form-error', error.message);
+    fieldError(form, error.field, error.message);
     form.elements[error.field]?.focus();
     return;
   }
@@ -102,8 +134,15 @@ export async function submitForm(form, force = false) {
     const name = result.client.split(/\s+/)[0];
     toast(order ? 'Pedido salvo.' : M.group(result.status) === 'decide' ? `Orçamento de ${name} anotado. Ele fica no aviso de decidir.` : `Pedido de ${name} anotado: ${M.dayLabel(day, app.today).toLocaleLowerCase('pt-BR')}, ${M.hourLabel(result)}.`);
   } catch (error) {
-    showError('#form-error', error.message);
-    $('#form-conflict').hidden = !error.capacity;
-    if (error.capacity) $('#form-error').scrollIntoView({ block: 'center' });
+    // Dia cheio ou fechado: o aviso fica junto do dia, o botão principal vira "Salvar mesmo assim" e "Trocar o dia" fica ao lado.
+    fieldError(form, error.capacity ? 'date' : null, error.message);
+    const conflict = $('#form-conflict');
+    conflict.hidden = !error.capacity;
+    if (error.capacity) {
+      $('#form-error').after(conflict);
+      form.dataset.force = '1';
+      button.textContent = 'Salvar mesmo assim';
+      $('#form-error').scrollIntoView({ block: 'center' });
+    }
   } finally { button.disabled = false; }
 }

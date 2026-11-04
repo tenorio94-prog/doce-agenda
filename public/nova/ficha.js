@@ -24,24 +24,41 @@ function agreed(order) {
     ${rows ? `<dl class="f-cake">${rows}</dl>` : ''}</section>`;
 }
 
+// Pagamentos lançados (conferidos e desfeitos), com Desfazer para o que foi lançado errado. Informado fica no aviso acima.
+function paymentList(order) {
+  const items = M.paymentsOf(app.state, order).filter((payment) => payment.status !== 'Informado').map((payment) => {
+    const undone = payment.status === 'Desfeito', when = M.shortDayLabel(M.paymentDay(payment));
+    return `<li class="f-pay${undone ? ' is-undone' : ''}"><span><strong>${esc(M.brl(M.toCents(payment.amount)))}</strong> · ${undone ? `desfeito ${esc(when)}` : `conferido ${esc(when)}`}</span>
+      ${undone ? '' : `<button class="link-btn link-quiet" type="button" data-act="undo-payment" data-payment="${esc(payment.id)}" data-id="${esc(order.id)}">Desfazer</button>`}</li>`;
+  }).join('');
+  return items ? `<ul class="f-pays" aria-label="Pagamentos lançados">${items}</ul>` : '';
+}
+
 function money(order) {
-  const { total, received, due } = M.balance(app.state, order);
-  const reported = M.reportedPayments(app.state, order).map((payment) => `<div class="f-reported"><p>A cliente avisou que pagou ${esc(M.brl(M.toCents(payment.amount)))}. Já viu na conta?</p>
-    <button class="btn btn-outline" type="button" data-act="seen" data-payment="${esc(payment.id)}" data-id="${esc(order.id)}">Vi na conta</button></div>`).join('');
+  const { total, received, due } = M.balance(app.state, order), kind = M.group(order.status), reported = M.reportedPayments(app.state, order);
+  // Pix avisado: conferir vem antes de tudo. Enquanto ele espera, não há Recebi nem Cobrar ao lado.
+  const reportedHtml = reported.map((payment) => `<div class="f-reported"><p>A cliente avisou que pagou ${esc(M.brl(M.toCents(payment.amount)))}. Já viu na conta?</p>
+    <div class="f-actions"><button class="btn btn-primary" type="button" data-act="seen" data-payment="${esc(payment.id)}" data-id="${esc(order.id)}">Vi na conta</button>
+    <button class="btn btn-outline" type="button" data-act="undo-payment" data-payment="${esc(payment.id)}" data-id="${esc(order.id)}">Não caiu</button></div></div>`).join('');
   // Cada parte inteira numa linha: "Falta R$ 120" não quebra no meio.
   const parts = total === null ? ['Valor a combinar', ...(received ? [`Recebido ${M.brl(received)}`] : [])] : [`Total ${M.brl(total)}`, `Recebido ${M.brl(received)}`, due ? `Falta ${M.brl(due)}` : 'Pago'];
   const line = parts.map((part) => `<span>${esc(part)}</span>`).join(' · ');
-  const charge = due && order.contact ? `<button class="btn btn-outline" type="button" data-act="charge" data-id="${esc(order.id)}">Cobrar no WhatsApp</button>` : '';
+  // Entregue com saldo tem "Recebi o resto" como ação principal, embaixo; aqui fica só o Cobrar.
+  const owing = kind === 'delivered' && due > 0;
+  const receive = !reported.length && due !== 0 && !owing ? `<button class="btn btn-outline" type="button" data-act="received" data-id="${esc(order.id)}">Recebi</button>` : '';
+  const charge = !reported.length && due && order.contact && kind !== 'decide' ? `<button class="btn btn-outline" type="button" data-act="charge" data-id="${esc(order.id)}">Cobrar no WhatsApp</button>` : '';
   return `<section class="f-block" aria-labelledby="f-money"><h3 id="f-money">Dinheiro</h3>
-    <p class="money-line" id="money-line">${line}</p>${reported}
-    <div class="f-actions"><button class="btn btn-outline" type="button" data-act="received" data-id="${esc(order.id)}">Recebi</button>${charge}</div></section>`;
+    <p class="money-line" id="money-line">${line}</p>${reportedHtml}${paymentList(order)}
+    ${receive || charge ? `<div class="f-actions">${receive}${charge}</div>` : ''}</section>`;
 }
 
 function mainActions(order) {
-  const id = esc(order.id), kind = M.group(order.status);
-  if (order.status === 'Solicitação') return `<div class="f-main"><button class="btn btn-primary" type="button" data-act="accept" data-id="${id}">Aceitar</button><button class="btn btn-outline" type="button" data-act="refuse" data-id="${id}">Recusar</button></div>`;
-  if (kind === 'decide') return `<div class="f-main"><button class="btn btn-primary" type="button" data-act="confirm" data-id="${id}">Confirmar</button><button class="btn btn-outline" type="button" data-act="cancel-order" data-id="${id}">Cancelar</button></div>`;
-  if (kind === 'confirmed') return `<div class="f-main"><button class="btn btn-primary" type="button" data-act="deliver" data-id="${id}">Entregue</button></div>`;
+  // Um botão cheio por tela: com Pix avisado, o cheio é "Vi na conta" e a etapa fica contornada.
+  const id = esc(order.id), kind = M.group(order.status), main = M.reportedPayments(app.state, order).length ? 'btn-outline' : 'btn-primary';
+  if (order.status === 'Solicitação') return `<div class="f-main"><button class="btn ${main}" type="button" data-act="accept" data-id="${id}">Aceitar</button><button class="btn btn-outline" type="button" data-act="refuse" data-id="${id}">Recusar</button></div>`;
+  if (kind === 'decide') return `<div class="f-main"><button class="btn ${main}" type="button" data-act="confirm" data-id="${id}">Confirmar</button><button class="btn btn-outline" type="button" data-act="cancel-order" data-id="${id}">Cancelar orçamento</button></div>`;
+  if (kind === 'confirmed') return `<div class="f-main"><button class="btn ${main}" type="button" data-act="deliver" data-id="${id}">Entregue</button></div>`;
+  if (kind === 'delivered' && M.balance(app.state, order).due > 0 && !M.reportedPayments(app.state, order).length) return `<div class="f-main"><button class="btn btn-primary" type="button" data-act="received" data-id="${id}">Recebi o resto</button></div>`;
   return '';
 }
 
@@ -71,12 +88,13 @@ export function openFicha(id) {
 const backToFicha = (id) => () => openFicha(id);
 
 export function openList(kind) {
-  const orders = kind === 'late' ? M.lateOrders(app.state, app.today) : M.decideOrders(app.state);
+  const orders = kind === 'late' ? M.lateOrders(app.state, app.today) : kind === 'pix' ? M.reportedOrders(app.state) : M.decideOrders(app.state);
   const items = orders.map((order) => {
     const day = M.orderDay(order);
     return `<li><button class="list-row" type="button" data-act="open" data-id="${esc(order.id)}"><strong>${esc(order.client)}</strong><span>${esc(order.product)}${day ? ` · ${esc(M.shortDayLabel(day))}` : ''}</span></button></li>`;
   }).join('');
-  openSheet(`<h2 id="sheet-title" tabindex="-1">${kind === 'late' ? 'Ficaram para trás' : 'Para decidir'}</h2><ul class="list">${items}</ul>`);
+  const title = { late: 'Ficaram para trás', pix: 'Pix para conferir' }[kind] || 'Para decidir';
+  openSheet(`<h2 id="sheet-title" tabindex="-1">${title}</h2><ul class="list">${items}</ul>`);
 }
 
 // Tocar no nome: telefone, WhatsApp e os pedidos anteriores dela (pela ficha de Clientes do servidor).
@@ -92,28 +110,42 @@ export async function openClient(id) {
     <p>${phone ? `WhatsApp ${esc(phone)}` : '<span class="muted">Sem WhatsApp anotado.</span>'}</p>
     ${link ? `<p><a class="btn btn-outline" href="${esc(link)}" target="_blank" rel="noopener">Abrir conversa</a></p>` : ''}
     <h3>Pedidos anteriores</h3>
-    ${others.length ? `<ul class="list">${others.map((item) => `<li><button class="list-row" type="button" data-act="open" data-id="${esc(item.id)}"><strong>${esc(M.orderDay(item) ? M.shortDate(M.orderDay(item)) + '/' + M.orderDay(item).slice(2, 4) : 'Sem dia')}</strong><span>${esc(item.product)}</span></button></li>`).join('')}</ul>` : '<p class="muted">Este é o primeiro pedido dela aqui.</p>'}`, backToFicha(id));
+    ${others.length ? `<ul class="list">${others.map((item) => `<li><button class="list-row" type="button" data-act="open" data-id="${esc(item.id)}"><strong>${esc(M.orderDay(item) ? M.pastDayLabel(M.orderDay(item), app.today) : 'Sem dia')}</strong><span>${esc(item.product)}</span></button></li>`).join('')}</ul>` : '<p class="muted">Este é o primeiro pedido dela aqui.</p>'}`, backToFicha(id));
 }
 
 // Recebi: o valor sugerido é o que falta; ela pode mudar. Todo pagamento novo é Conferido.
+// Valor acima do que falta pede uma segunda confirmação ("950" no lugar de "95" não vira Pago sem querer).
 export function openReceived(id, fromMoney = false) {
   const order = findOrder(id), { due } = M.balance(app.state, order);
   openSheet(`<form id="pay-form" data-id="${esc(id)}" data-from="${fromMoney ? 'money' : 'ficha'}" novalidate>
-    <h2 id="sheet-title" tabindex="-1">Recebi</h2><p class="muted">${esc(order.product)} · ${esc(order.client)}</p>
+    <h2 id="sheet-title" tabindex="-1">Recebi</h2><p class="muted">${esc(order.product)} · ${esc(order.client)}${due ? ` · falta ${esc(M.brl(due))}` : ''}</p>
     <label class="field"><span>Quanto você viu na conta?</span><input name="amount" inputmode="decimal" autocomplete="off" value="${due ? esc(M.centsInput(due)) : ''}" placeholder="Ex.: 50" aria-describedby="pay-error"></label>
     <p class="form-error" id="pay-error" role="alert" hidden></p>
     <button class="btn btn-primary" type="submit">Registrar</button></form>`, fromMoney ? null : backToFicha(id));
 }
+export function resetReceived(form) {
+  delete form.dataset.over;
+  form.querySelector('[type=submit]').textContent = 'Registrar';
+  showError('#pay-error', '');
+}
 export async function submitReceived(form) {
-  const cents = M.parseMoney(form.elements.amount.value);
+  const cents = M.parseMoney(form.elements.amount.value), id = form.dataset.id, button = form.querySelector('[type=submit]');
   if (!cents) return showError('#pay-error', 'Escreva quanto recebeu, como 50 ou 50,50.');
+  const { due } = M.balance(app.state, findOrder(id));
+  if (due !== null && cents > due && form.dataset.over !== String(cents)) {
+    form.dataset.over = String(cents);
+    button.textContent = 'Registrar mesmo assim';
+    return showError('#pay-error', due ? `Falta ${M.brl(due)}. Com ${M.brl(cents)}, passa do total em ${M.brl(cents - due)}. Confira o valor.` : `Este pedido já está pago. ${M.brl(cents)} passaria do total.`);
+  }
+  if (button.disabled) return;
+  button.disabled = true;
   try {
-    await api(`/orders/${encodeURIComponent(form.dataset.id)}/payments`, { method: 'POST', body: { amount: cents / 100, status: 'Conferido', note: 'Recebido' } });
+    const payment = await api(`/orders/${encodeURIComponent(id)}/payments`, { method: 'POST', body: { amount: cents / 100, status: 'Conferido', note: 'Recebido' } });
     await reload();
     await refresh();
-    if (form.dataset.from === 'money') closeSheet(); else openFicha(form.dataset.id);
-    toast(`Recebido ${M.brl(cents)}.`);
-  } catch (error) { showError('#pay-error', error.message); }
+    if (form.dataset.from === 'money') closeSheet(); else openFicha(id);
+    toast(`Recebido ${M.brl(cents)}.`, () => undoPayment(payment.id, id, form.dataset.from === 'money'));
+  } catch (error) { showError('#pay-error', error.message); button.disabled = false; }
 }
 
 export async function markSeen(paymentId, id) {
@@ -122,6 +154,26 @@ export async function markSeen(paymentId, id) {
     await reload(); await refresh(); openFicha(id);
     toast('Anotado como recebido.');
   } catch (error) { toast(error.message); }
+}
+
+// Desfazer um pagamento lançado errado, ou marcar que o Pix avisado não caiu. Ele fica no histórico como desfeito.
+export function openUndoPayment(paymentId, id) {
+  const payment = app.state.payments.find((item) => item.id === paymentId);
+  if (!payment) return openFicha(id);
+  const value = M.brl(M.toCents(payment.amount)), reported = payment.status === 'Informado';
+  openSheet(`<h2 id="sheet-title" tabindex="-1">${reported ? `O Pix de ${esc(value)} não caiu?` : `Desfazer o pagamento de ${esc(value)}?`}</h2>
+    <p>${reported ? 'O aviso da cliente sai da ficha. Se o dinheiro cair depois, use Recebi.' : 'Ele deixa de contar como recebido.'} Fica anotado no histórico do pedido como desfeito.</p>
+    <p class="form-error" id="undo-error" role="alert" hidden></p>
+    <div class="f-main"><button class="btn btn-primary" type="button" data-act="undo-confirm" data-payment="${esc(paymentId)}" data-id="${esc(id)}">${reported ? 'Não caiu' : 'Desfazer pagamento'}</button>
+    <button class="btn btn-outline" type="button" data-act="open" data-id="${esc(id)}">Voltar</button></div>`, backToFicha(id));
+}
+export async function undoPayment(paymentId, id, fromMoney = false) {
+  try {
+    await api(`/payments/${encodeURIComponent(paymentId)}`, { method: 'PUT', body: { status: 'Desfeito' } });
+    await reload(); await refresh();
+    if (!fromMoney) openFicha(id);
+    toast('Pagamento desfeito.');
+  } catch (error) { if ($('#undo-error')) showError('#undo-error', error.message); else toast(error.message); }
 }
 
 // Mensagem pronta. Na demonstração só mostra o texto; nunca abre o WhatsApp.
@@ -282,7 +334,8 @@ export function openCancel(id) {
   const order = findOrder(id);
   openSheet(`<h2 id="sheet-title" tabindex="-1">Cancelar o pedido de ${esc(firstName(order))}?</h2><p>${esc(order.product)}. Ele sai da agenda; o que já foi recebido continua anotado.</p>
     <p class="form-error" id="cancel-error" role="alert" hidden></p>
-    <button class="btn btn-primary" type="button" data-act="cancel-confirm" data-id="${esc(id)}">Cancelar pedido</button>`, backToFicha(id));
+    <div class="f-main"><button class="btn btn-primary" type="button" data-act="cancel-confirm" data-id="${esc(id)}">Cancelar pedido</button>
+    <button class="btn btn-outline" type="button" data-act="open" data-id="${esc(id)}">Voltar</button></div>`, backToFicha(id));
 }
 export async function cancelOrder(id) {
   try {

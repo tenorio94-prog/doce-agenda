@@ -5,7 +5,8 @@ import { createEmptyState, transactState } from './state-engine.js';
 
 const now = new Date('2026-10-13T12:00:00Z');
 const makeOrder = (id, changes = {}) => ({ id, client: 'Cliente fictícia', product: 'Bolo de Cenoura', status: 'Confirmado', dueAt: '2026-10-06T15:00', total: 100.1, createdAt: '2026-10-03T12:00:00Z', history: [], ...changes });
-const payment = (orderId, amount, status = 'Conferido') => ({ id: `p-${orderId}-${amount}-${status}`, orderId, amount, status, createdAt: '2026-09-01T12:00:00Z' });
+// Pagamentos lançados em outubro: o recebido conta pelo dia em que o dinheiro foi conferido (regra de 03/11/2026).
+const payment = (orderId, amount, status = 'Conferido', extra = {}) => ({ id: `p-${orderId}-${amount}-${status}`, orderId, amount, status, createdAt: '2026-10-05T12:00:00Z', ...extra });
 const summary = state => monthlySummary(state, '2026-10', now);
 
 test('all seven definitions use eligible orders, integer cents and checked payments', () => {
@@ -14,7 +15,7 @@ test('all seven definitions use eligible orders, integer cents and checked payme
     ...['Cancelado','Recusado','Orçamento','Solicitação','Aguardando confirmação'].map(status => makeOrder(status, {status})), makeOrder('no-date',{dueAt:''}), makeOrder('other-month',{dueAt:'2026-09-30T23:30'}),makeOrder('sample',{isSample:true})];
   state.payments = [payment('a',30.1),payment('b',10.2),payment('a',500,'Informado'),payment('Cancelado',100),payment('unknown-order',100)];
   const result = summary(state);
-  assert.equal(result.ordersCount,3);assert.equal(result.soldCents,15030);assert.equal(result.receivedCents,4030);assert.equal(result.receivableCents,11000);assert.equal(result.ordersWithoutValue,1);
+  assert.equal(result.ordersCount,3);assert.equal(result.soldCents,15030);assert.equal(result.receivedCents,14030,'conferido em outubro, inclusive do pedido cancelado');assert.equal(result.receivableCents,11000);assert.equal(result.ordersWithoutValue,1);
   assert.deepEqual(result.busiestDays,[{weekday:2,name:'Terça-feira',count:2},{weekday:3,name:'Quarta-feira',count:1}]);
   assert.deepEqual(result.topProducts,[{name:'Bolo de Cenoura',count:3}]);assert.equal(result.averageNoticeDays,2);assert.equal(result.noticeOrdersCount,3);
 });
@@ -65,7 +66,7 @@ test('lifetime adds up every month with the same rules, counting clients once', 
     makeOrder('cancelled', { status: 'Cancelado' }), makeOrder('sample', { isSample: true })];
   state.payments = [payment('a', 30.1), payment('b', 80), payment('c', 20, 'Informado'), payment('cancelled', 100), payment('sample', 10)];
   const { lifetime } = summary(state);
-  assert.deepEqual(lifetime, { ordersCount: 3, deliveredCount: 1, clientsCount: 2, receivedCents: 11010, firstMonth: '2026-08' });
+  assert.deepEqual(lifetime, { ordersCount: 3, deliveredCount: 1, clientsCount: 2, receivedCents: 21010, firstMonth: '2026-08' }, 'o recebido do pedido cancelado continua guardado');
   assert.deepEqual(monthlySummary(createEmptyState(), '2026-10', now).lifetime, { ordersCount: 0, deliveredCount: 0, clientsCount: 0, receivedCents: 0, firstMonth: null });
 });
 test('combined orders count in the month while being made or ready, not only once delivered', () => {
@@ -76,8 +77,24 @@ test('combined orders count in the month while being made or ready, not only onc
   const result = summary(state);
   assert.equal(result.ordersCount, 4);
   assert.equal(result.soldCents, 28000);
-  assert.equal(result.receivedCents, 9000, 'só conferido, de pedidos combinados ou entregues');
+  assert.equal(result.receivedCents, 14000, 'só conferido; o recebido no orçamento também conta');
   assert.equal(result.receivableCents, 19000);
   assert.equal(result.lifetime.ordersCount, 4);
-  assert.equal(result.lifetime.receivedCents, 9000);
+  assert.equal(result.lifetime.receivedCents, 14000);
+});
+
+test('received counts by the day the money was checked, not by the order day, and undone payments never count', () => {
+  const state = createEmptyState();
+  state.orders = [makeOrder('nov', { dueAt: '2026-11-20T10:00', total: 200 }), makeOrder('oct', { total: 100 }), makeOrder('sample', { isSample: true })];
+  state.payments = [
+    payment('nov', 60, 'Conferido', { createdAt: '2026-09-28T12:00:00Z', confirmedAt: '2026-10-02T12:00:00Z' }),
+    payment('oct', 40, 'Conferido', { createdAt: '2026-09-30T23:30:00Z' }),
+    payment('oct', 950, 'Desfeito', { undoneAt: '2026-10-06T12:00:00Z' }),
+    payment('sample', 10),
+  ];
+  const october = summary(state), september = monthlySummary(state, '2026-09', now);
+  assert.equal(october.receivedCents, 6000, 'sinal de novembro conferido em outubro entra em outubro');
+  assert.equal(september.receivedCents, 4000, 'lançado e conferido em 30/09 entra em setembro');
+  assert.equal(october.receivableCents, 6000, 'falta receber dos pedidos de outubro: 100 - 40');
+  assert.equal(october.lifetime.receivedCents, 10000);
 });
