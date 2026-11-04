@@ -38,7 +38,7 @@ if (/[?&]preview=/.test(location.search) && window.top === window) document.writ
   <!-- Pedido em 3 passos. Um formulário só: os valores ficam ao voltar e avançar. -->
   <section id="request-page" class="order" hidden aria-labelledby="step-title">
     <div class="order-bar">
-      <div class="order-bar-row"><button id="step-back" class="back" type="button"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg><span id="step-back-label">Vitrine</span></button><span id="step-count" class="step-count"></span></div>
+      <div class="order-bar-row"><button id="step-back" class="back" type="button"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg><span id="step-back-label">Vitrine</span></button><span id="step-count" class="step-count" aria-live="polite"></span></div>
       <div class="progress" aria-hidden="true"><i></i><i></i><i></i></div>
     </div>
     <form id="request-form" class="order-body" novalidate>
@@ -93,7 +93,9 @@ if (/[?&]preview=/.test(location.search) && window.top === window) document.writ
     <pre id="summary"></pre>
     <a id="whatsapp-link" class="pill wa" target="_blank" rel="noopener" hidden><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.3-.7-2.8-1.1-4.5-3.9-4.7-4.1-.1-.2-1.1-1.5-1.1-2.9s.7-2 1-2.3c.2-.3.6-.4.8-.4h.6c.2 0 .4 0 .6.5l.9 2.1c.1.2.1.4 0 .5l-.4.6-.4.4c-.1.2-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.3 2.4 1.5.3.1.5.1.6-.1l.9-1c.2-.3.4-.2.6-.1l2 .9c.3.2.5.2.5.4.1.1.1.7-.1 1.3Z"/></svg>Avisar no WhatsApp</a>
     <p id="no-whatsapp" class="help" hidden>Guarde o código e aguarde o contato da confeitaria.</p>
-    <p id="track-link" class="track-link" hidden>Acompanhe a situação do pedido na <a id="track-url" href="#">página do seu pedido</a>. Guarde o endereço: é só seu.</p>
+    <p id="wa-note" class="help" hidden>Opcional: a confeitaria já recebeu o pedido. A mensagem leva o link para você acompanhar.</p>
+    <div id="track-link" class="track-link" hidden><p>Acompanhe a situação na <a id="track-url" href="#">página do seu pedido</a>. O endereço é só seu.</p>
+      <button id="copy-track" class="pill soft" type="button">Copiar o link</button><p id="copy-track-note" class="help" role="status"></p></div>
     <button id="back-home" class="pill soft" type="button">Voltar à vitrine</button>
   </section>
 

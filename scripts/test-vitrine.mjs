@@ -118,6 +118,13 @@ try {
     assert.ok(await page.locator(`#calendar-days [data-date="${day(3)}"]`).isDisabled());
     assert.equal(await page.locator('#calendar-days [aria-pressed="true"]').count(), 0, 'a data recusada sai marcada');
     assert.ok(await page.evaluate(() => { const r = document.querySelector('#step2-error').getBoundingClientRect(); return r.top >= 0 && r.bottom <= innerHeight; }), 'o aviso aparece na tela');
+    // Voltar depois da recusa anda para trás (passo 1), nunca para a revisão sem data.
+    await page.locator('#step-back').click();
+    await page.locator('.step[data-step="1"]:not([hidden])').waitFor();
+    await page.locator('[data-next="2"]').click();
+    await page.locator('.step[data-step="2"]:not([hidden])').waitFor();
+    // Calendário: uma parada de Tab só; as setas andam pelos dias livres.
+    assert.equal(await page.locator('#calendar-days [data-date][tabindex="0"]').count(), 1);
     await page.locator('#quick-dates button').first().click();
     await page.locator('[data-next="3"]').click();
     await page.locator('#send').click();

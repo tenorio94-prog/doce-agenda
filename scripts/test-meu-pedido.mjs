@@ -42,7 +42,7 @@ try {
     assert.equal(await box.locator('.track-steps .is-done').count(), 2, 'Recebido e Combinado já passaram');
     assert.match(text, /Bolo de aniversário/);
     assert.match(text, /às 15h30 · retirada/);
-    assert.match(text.replace(/\s+/g, ' '), /Total R\$ 200 · conferido R\$ 60 · falta R\$ 140/);
+    assert.match(text.replace(/\s+/g, ' '), /Total R\$ 200 · pago R\$ 60 · falta R\$ 140/);
     assert.match(await box.locator('a.wa').getAttribute('href'), /wa\.me\/5511999999999\?text=Oi!%20Sobre%20o%20meu%20pedido%20DA-ABC234/);
     await page.waitForFunction(() => document.documentElement.scrollWidth <= window.innerWidth, null, { timeout: 3000 }).catch(() => {});
     const wide = await page.evaluate(() => [...document.querySelectorAll('body *')].filter((el) => el.getBoundingClientRect().right > window.innerWidth + 1 && el.getBoundingClientRect().width).map((el) => `${el.tagName}.${el.className}`).slice(0, 4));
@@ -90,6 +90,10 @@ try {
     await page.locator('#confirmation:not([hidden])').waitFor();
     assert.equal(await page.locator('#track-link').isVisible(), true);
     assert.equal(await page.locator('#track-url').getAttribute('href'), `https://lucast.app/p/encomenda?pedido=${TOKEN}`);
+    // O link vai também na mensagem do WhatsApp (fica guardado na conversa) e tem botão de copiar.
+    assert.ok(decodeURIComponent(await page.locator('#whatsapp-link').getAttribute('href')).includes(`Acompanhe o pedido: https://lucast.app/p/encomenda?pedido=${TOKEN}`), 'o link vai na mensagem');
+    assert.equal(await page.locator('#copy-track').isVisible(), true);
+    assert.equal(await page.locator('#wa-note').isVisible(), true, 'diz que o WhatsApp é opcional');
     assert.deepEqual(errors, []);
     await context.close();
 

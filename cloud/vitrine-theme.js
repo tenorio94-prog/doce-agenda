@@ -20,14 +20,17 @@ const mix = (a, b, t) => a.map((v, i) => v + (b[i] - v) * t);
 const lum = (c) => { const f = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }; return 0.2126 * f(c[0]) + 0.7152 * f(c[1]) + 0.0722 * f(c[2]); };
 export const contrast = (a, b) => { const x = lum(rgb(a)), y = lum(rgb(b)); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
 
-// Tons derivados da cor escolhida. "ink" é a cor dos botões e textos de destaque: escurece até ter
-// contraste de 4,5:1 com branco, então qualquer cor escolhida continua legível.
+// Tons derivados da cor escolhida. "ink" é a cor dos botões e textos de destaque: escurece até ter contraste de 4,5:1
+// com branco, com o fundo creme do estilo Caseira e com o tom claro da própria cor, então qualquer cor escolhida
+// continua legível em todos os estilos (04/11/2026: o Caseira tinha preço a 4,29:1).
+const CASEIRA_BG = '#f7f0e3';
 export function vitrinePalette(color) {
   const chosen = /^#[0-9a-f]{6}$/i.test(color || '') ? color.toLowerCase() : DEFAULT_COLOR;
-  const base = rgb(chosen);
+  const base = rgb(chosen), tint = hex(mix(base, [255, 255, 255], 0.9));
+  const legible = (value) => Math.min(contrast(value, '#ffffff'), contrast(value, CASEIRA_BG), contrast(value, tint)) >= 4.5;
   let ink = base, steps = 0;
-  while (contrast(hex(ink), '#ffffff') < 4.5 && steps < 40) { ink = mix(ink, [20, 12, 16], 0.07); steps++; }
-  return { color: chosen, ink: hex(ink), adjusted: steps > 0, tint: hex(mix(base, [255, 255, 255], 0.9)), tint2: hex(mix(base, [255, 255, 255], 0.76)), soft: hex(mix(base, [255, 255, 255], 0.5)) };
+  while (!legible(hex(ink)) && steps < 40) { ink = mix(ink, [20, 12, 16], 0.07); steps++; }
+  return { color: chosen, ink: hex(ink), adjusted: steps > 0, tint, tint2: hex(mix(base, [255, 255, 255], 0.76)), soft: hex(mix(base, [255, 255, 255], 0.5)) };
 }
 
 export function photoUrl(key) {

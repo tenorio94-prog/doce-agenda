@@ -128,6 +128,8 @@ function go(nav, replace = false) {
   history[replace ? 'replaceState' : 'pushState'](nav, ''); show(nav);
 }
 addEventListener('popstate', (event) => show(event.state));
+// A rolagem é da página (show/showStep): o navegador não devolve a posição antiga ao voltar um passo.
+history.scrollRestoration = 'manual';
 
 function openSheet(p) {
   if (!p) return;
@@ -224,11 +226,12 @@ function renderCake() {
   const show = usesCakeFields(chosen, chosenName()); $('#cake-fields').hidden = !show;
   if (!show) { $('#cake-content').innerHTML = ''; return; }
   if ($('#cake-content').children.length) return;
-  // Com muitos campos, ficam à vista Tamanho, Sabor e os obrigatórios; os outros em "Mais detalhes do bolo".
+  // Com muitos campos, ficam à vista Tamanho, Sabor, Inscrição, alergias e os obrigatórios (o que a confeiteira não pode
+  // adivinhar); recheio e decoração vão para "Mais detalhes do bolo", com seta de abrir.
   const fields = config.orderTemplate.fields.filter((f) => f.enabled), many = fields.length >= 4;
-  const main = many ? fields.filter((f) => f.required || ['size', 'flavor'].includes(f.key)) : fields, more = many ? fields.filter((f) => !main.includes(f)) : [];
+  const main = many ? fields.filter((f) => f.required || ['size', 'flavor', 'inscription', 'foodNotes'].includes(f.key)) : fields, more = many ? fields.filter((f) => !main.includes(f)) : [];
   $('#cake-content').innerHTML = main.map(cakeField).join('')
-    + (more.length ? `<details class="more-cake"><summary>Mais detalhes do bolo <span class="opt">(opcional)</span></summary><div class="group-body">${more.map(cakeField).join('')}</div></details>` : '');
+    + (more.length ? `<details class="more-cake"><summary>Mais detalhes do bolo <span class="opt">(opcional, toque para abrir)</span></summary><div class="group-body">${more.map(cakeField).join('')}</div></details>` : '');
 }
 function showStep(n) {
   $$('.step').forEach((s) => { s.hidden = Number(s.dataset.step) !== n; });
@@ -245,6 +248,15 @@ function showStep(n) {
   window.scrollTo(0, 0);
   $(`#step-title-${n}`).focus({ preventScroll: true });
 }
+// Calendário: uma parada de Tab (o dia escolhido ou o primeiro livre); as setas andam pelos dias livres.
+$('#calendar-days').addEventListener('keydown', (event) => {
+  const moves = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -7, ArrowDown: 7 }, step = moves[event.key];
+  if (!step || !event.target.matches('[data-date]')) return;
+  const days = $$('#calendar-days [data-date]'), from = days.indexOf(event.target);
+  for (let i = from + step; i >= 0 && i < days.length; i += step) {
+    if (!days[i].disabled) { event.preventDefault(); days.forEach((d) => { d.tabIndex = d === days[i] ? 0 : -1; }); days[i].focus(); return; }
+  }
+});
 // Revisão no último passo: o que vai para a confeitaria, com "Alterar" em cada parte (volta ao passo, sem perder nada).
 const hourText = (time) => (/^\d{2}:\d{2}$/.test(time) ? `${Number(time.slice(0, 2))}h${time.slice(3) === '00' ? '' : time.slice(3)}` : '');
 function renderReview() {
@@ -347,6 +359,8 @@ function renderCalendar() {
     html += `<button type="button" data-date="${value}" ${available ? '' : 'disabled'} aria-label="${esc(brDate(value))}${available ? '' : ', indisponível'}" aria-pressed="${value === selected}">${day}</button>`;
   }
   $('#calendar-days').innerHTML = html;
+  const days = $$('#calendar-days [data-date]'), current = days.find((d) => d.dataset.date === selected && !d.disabled) || days.find((d) => !d.disabled);
+  days.forEach((d) => { d.tabIndex = d === current ? 0 : -1; });
   $('#previous-month').disabled = month <= dates[0]?.date.slice(0, 7); $('#next-month').disabled = month >= dates.at(-1)?.date.slice(0, 7);
 }
 for (const [id, step] of [['previous-month', -1], ['next-month', 1]]) $('#' + id).addEventListener('click', () => { const [y, m] = month.split('-').map(Number); month = new Date(Date.UTC(y, m - 1 + step, 1)).toISOString().slice(0, 7); renderCalendar(); });
@@ -355,6 +369,7 @@ for (const [id, step] of [['previous-month', -1], ['next-month', 1]]) $('#' + id
 $('#request-form').addEventListener('submit', async (event) => {
   event.preventDefault();
   const error = $('#form-error'); error.hidden = true;
+  if (!selected) { backToDate('Escolha uma data disponível antes de enviar.'); return; }
   if (!stepValid(3)) return;
   const send = $('#send'); send.disabled = true; send.textContent = 'Enviando…';
   try {
@@ -363,27 +378,41 @@ $('#request-form').addEventListener('submit', async (event) => {
       details: $('#details').value, client: $('#client').value, contact: $('#contact').value, consent: $('#consent').checked, website: $('#website').value,
       cake: Object.fromEntries($$('[data-cake]').map((el) => [el.dataset.cake, el.value])) }) });
     sent = true; clearDraft();
-    $('#track-link').hidden = !data.trackUrl; if (data.trackUrl) $('#track-url').href = data.trackUrl;
+    $('#track-link').hidden = !data.trackUrl; if (data.trackUrl) { $('#track-url').href = data.trackUrl; trackUrl = new URL(data.trackUrl, location.href).href; }
     $('#done-title').textContent = `Pedido enviado para ${config.displayName}`; $('#code').textContent = data.code; $('#summary').textContent = data.summary;
     const wa = $('#whatsapp-link');
-    if (data.whatsapp) { wa.href = `https://wa.me/${data.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(data.summary)}`; wa.hidden = false; $('#no-whatsapp').hidden = true; } else { wa.hidden = true; $('#no-whatsapp').hidden = false; }
+    // A mensagem leva o link do acompanhamento: ele fica guardado na conversa dela com a confeitaria.
+    const text = data.trackUrl ? `${data.summary}\n\nAcompanhe o pedido: ${trackUrl}` : data.summary;
+    if (data.whatsapp) { wa.href = `https://wa.me/${data.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(text)}`; wa.hidden = false; $('#wa-note').hidden = false; $('#no-whatsapp').hidden = true; } else { wa.hidden = true; $('#wa-note').hidden = true; $('#no-whatsapp').hidden = false; }
     go({ v: 'done' }, true);
   } catch (failure) {
     if (failure.code === 'DATE_UNAVAILABLE') {
+      const lost = selected;
       await refreshDates().catch(() => {});
       selected = ''; $('#date').value = ''; saveDraft();
       $('#chosen-date').textContent = 'Riscado: fechado, lotado ou sem antecedência. A vaga é conferida de novo no envio.';
-      go({ v: 'order', s: 2 });
-      const e = $('#step2-error'); e.textContent = /outra data/i.test(failure.message) ? failure.message : `${failure.message} Escolha outra data.`; e.hidden = false; e.focus({ preventScroll: true });
+      backToDate(lost ? `${brDate(lost, { weekday: 'long', day: 'numeric', month: 'long' })} acabou de ficar indisponível. Escolha outra data.` : failure.message);
     } else { error.textContent = failure.message; error.hidden = false; }
   } finally { send.disabled = false; send.textContent = 'Enviar pedido'; }
 });
+// Volta ao passo 2 andando para trás no histórico (o Voltar do celular continua certo) e mostra o aviso no topo dele.
+function backToDate(message) {
+  const showError = () => { const e = $('#step2-error'); e.textContent = message; e.hidden = false; e.focus({ preventScroll: true }); };
+  if (history.state?.v === 'order' && history.state.s === 3) { addEventListener('popstate', showError, { once: true }); history.back(); }
+  else { go({ v: 'order', s: 2 }, true); showError(); }
+}
 function resetForm() {
   $('#request-form').reset(); $('#cake-content').innerHTML = ''; $('#address-field').hidden = true; $('#location').required = false;
   selected = ''; extras = new Set(); sent = false; $('#form-error').hidden = true; $('#step2-error').hidden = true;
   $('#chosen-date').textContent = 'Riscado: fechado, lotado ou sem antecedência. A vaga é conferida de novo no envio.';
 }
 $('#back-home').addEventListener('click', () => { resetForm(); go({ v: 'home' }); });
+let trackUrl = '';
+$('#copy-track').addEventListener('click', async () => {
+  let ok = false;
+  try { await navigator.clipboard.writeText(trackUrl); ok = true; } catch { /* sem permissão: o link continua à vista */ }
+  $('#copy-track-note').textContent = ok ? 'Link copiado.' : 'Não deu para copiar. Toque e segure o link para copiar.';
+});
 
 // ---- Vitrine: cliques ----
 $('#vitrine').addEventListener('click', (event) => {
@@ -421,7 +450,7 @@ async function showTracking() {
     const at = TRACK_STEPS.findIndex(([key]) => key === view.stage), day = view.dueAt.slice(0, 10), time = view.dueAt.slice(11, 16);
     const when = day ? `${brDate(day, { weekday: 'long', day: 'numeric', month: 'long' })}${time ? ` às ${time.replace(':00', 'h').replace(':', 'h')}` : ''}` : 'data a combinar';
     const part = (text) => `<span>${esc(text)}</span>`;
-    const money = Number.isInteger(view.totalCents) ? `<p class="track-money">${part(`Total ${formatCents(view.totalCents)}`)} · ${part(`conferido ${formatCents(view.paidCents)}`)} · ${view.totalCents > view.paidCents ? part(`falta ${formatCents(view.totalCents - view.paidCents)}`) : part('tudo pago')}</p>` : '';
+    const money = Number.isInteger(view.totalCents) ? `<p class="track-money">${part(`Total ${formatCents(view.totalCents)}`)} · ${part(`pago ${formatCents(view.paidCents)}`)} · ${view.totalCents > view.paidCents ? part(`falta ${formatCents(view.totalCents - view.paidCents)}`) : part('tudo pago')}</p>` : '';
     const steps = at >= 0 ? `<ol class="track-steps">${TRACK_STEPS.map(([key, label], i) => `<li class="${i < at ? 'is-done' : i === at ? 'is-now' : ''}"${i === at ? ' aria-current="step"' : ''}>${label}</li>`).join('')}</ol>` : '';
     const talk = view.whatsapp ? `<a class="pill wa" target="_blank" rel="noopener" href="https://wa.me/${view.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(`Oi! Sobre o meu pedido ${view.code}:`)}">Falar com a confeitaria</a>` : '';
     box.innerHTML = `<p class="track-shop">Seu pedido na ${esc(view.displayName)}</p><h1 id="track-title" class="d">${esc(title)}</h1><p>${esc(note)}</p>${steps}
@@ -450,7 +479,8 @@ function readInjected() {
 async function start() {
   try {
     // Um pedido já enviado continua acessível mesmo se a vitrine estiver pausada ou sem datas livres.
-    if (TRACK && !PREVIEW) { $('#loading').hidden = true; await showTracking(); return; }
+    // A página do pedido usa a cor e a letra da loja quando o servidor já entregou os dados dela.
+    if (TRACK && !PREVIEW) { const injected = readInjected(); if (injected) { config = injected; applyTheme(); } $('#loading').hidden = true; await showTracking(); return; }
     config = readInjected() || await json(TRACK ? `${api}?visita=0` : api);
     if (!config.active) {
       $('#loading').hidden = true; $('#unavailable').hidden = false;
