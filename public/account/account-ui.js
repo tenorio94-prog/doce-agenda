@@ -101,7 +101,7 @@
       $("recovery-form").hidden = true;
       $("recovery-support").hidden = false;
       $("form-title").textContent = "Recuperar acesso";
-      $("form-intro").textContent = "A recuperação é feita manualmente com a ajuda de quem te convidou.";
+      $("form-intro").textContent = "Por enquanto, a recuperação é feita pelo nosso e-mail de contato.";
     } else {
       $("recovery-support").hidden = true;
     }
@@ -125,18 +125,19 @@
     if (mode === "signup") $("tab-signup").setAttribute("aria-current", "page");
     if (isLogin) $("tab-login").setAttribute("aria-current", "page");
 
+    // Sem rótulo em maiúsculas acima do título: o título já diz o que é (skill impeccable, 03/11/2026).
     const headings = {
-      signup: ["UM COMEÇO SIMPLES", "Crie sua conta", "Use seu e-mail para começar a organizar sua confeitaria."],
-      login: ["BEM-VINDA DE VOLTA", "Entre na sua conta", "Acesse os pedidos e a agenda da sua confeitaria."],
-      recovery: ["RECUPERE O ACESSO", "Recuperar acesso", "Informe seu e-mail para receber as instruções de recuperação."],
-      update: ["QUASE LÁ", "Escolha uma nova senha", "Crie uma senha nova para voltar à sua conta."],
+      signup: ["Crie sua conta", "Use seu e-mail para começar a organizar sua confeitaria."],
+      login: ["Entre na sua conta", "Acesse os pedidos e a agenda da sua confeitaria."],
+      recovery: ["Recuperar acesso", "Informe seu e-mail para receber as instruções de recuperação."],
+      update: ["Escolha uma nova senha", "Crie uma senha nova para voltar à sua conta."],
     }[mode];
-    $("mode-eyebrow").textContent = headings[0];
-    $("form-title").textContent = headings[1];
-    $("form-intro").textContent = headings[2];
-    $("terms-note").textContent = mode === "login"
+    $("form-title").textContent = headings[0];
+    $("form-intro").textContent = headings[1];
+    // Texto fixo nosso (sem dado da pessoa): o link para a política vai junto.
+    $("terms-note").innerHTML = `${mode === "login"
       ? "Ao entrar, você acessa os pedidos e a agenda da sua confeitaria."
-      : "Ao criar uma conta, você poderá acessar sua agenda em outros dispositivos.";
+      : "Ao criar uma conta, você poderá acessar sua agenda em outros dispositivos."} <a href="/privacidade/#conta">Como cuidamos dos seus dados</a>.`;
     $("terms-note").hidden = mode === "recovery" || mode === "update";
     $("recovery-support").hidden = true;
     clearNotices();

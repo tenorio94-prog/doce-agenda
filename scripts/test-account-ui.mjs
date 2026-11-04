@@ -48,7 +48,8 @@ const origin = await new Promise((resolve, reject) => {
         res.writeHead(403).end("Forbidden");
         return;
       }
-      const body = await readFile(filePath);
+      // As letras são copiadas do @fontsource pelo build: o que não está nos fontes vem do site montado.
+      const body = await readFile(filePath).catch(() => readFile(path.resolve(publicRoot, '..', 'deploy-cloud', 'public', relative)));
       res.writeHead(200, {
         "Content-Type": mimeTypes[path.extname(filePath).toLowerCase()] || "application/octet-stream",
         "Cache-Control": "no-store",
@@ -227,7 +228,8 @@ try {
   await installTestProvider(supportPage, { recoveryEmail: false });
   await supportPage.goto(`${origin}/cadastro/?mode=recovery`, { waitUntil: 'networkidle' });
   assert.equal(await supportPage.locator('#recovery-form').isVisible(), false);
-  assert.match(await supportPage.locator('#form-intro').innerText(), /quem te convidou/);
+  assert.match(await supportPage.locator('#form-intro').innerText(), /e-mail de contato/);
+  assert.equal(await supportPage.locator('#recovery-support a[href^="mailto:doceagenda@lucast.app"]').count(), 1, 'recuperação aponta para o e-mail de contato');
   assert.deepEqual(await supportPage.evaluate(() => window.__doceAuthCalls.filter(call => call.method === 'sendPasswordReset')), []);
   await supportContext.close();
 
@@ -359,17 +361,14 @@ try {
     return { style: style.outlineStyle, width: style.outlineWidth, color: style.outlineColor, offset: style.outlineOffset, shadow: style.boxShadow, border: style.borderTopColor };
   });
   assert.deepEqual(focusStyle, { style: "solid", width: "3px", color: "rgb(46, 106, 70)", offset: "2px", shadow: "none", border: "rgb(46, 106, 70)" }, "Focused field must show a 3px sage ring.");
-  // Type scale for the signup card: hint and terms at 13px, eyebrows at 12px with .08em tracking.
+  // Type scale for the signup card: hint and terms at 13px. No uppercase label above the titles (removed 03/11/2026).
   const metrics = await errorPage.evaluate(() => {
     const read = (selector) => { const style = getComputedStyle(document.querySelector(selector)); return { size: style.fontSize, spacing: style.letterSpacing }; };
-    return { hint: read(".field-hint"), terms: read("#terms-note"), cardEyebrow: read("#mode-eyebrow"), eyebrow: read(".intro .eyebrow") };
+    return { hint: read(".field-hint"), terms: read("#terms-note"), eyebrows: document.querySelectorAll(".eyebrow, #mode-eyebrow").length };
   });
   assert.equal(metrics.hint.size, "13px");
   assert.equal(metrics.terms.size, "13px");
-  assert.equal(metrics.cardEyebrow.size, "12px");
-  assert.equal(metrics.cardEyebrow.spacing, "0.96px");
-  assert.equal(metrics.eyebrow.size, "12px");
-  assert.equal(metrics.eyebrow.spacing, "0.96px");
+  assert.equal(metrics.eyebrows, 0);
   await errorContext.close();
 
   // Real controller with the network blocked (Playwright route, nothing leaves the machine):
@@ -420,7 +419,8 @@ try {
       await installTestProvider(page);
       await page.goto(`${origin}/cadastro/${query}`, { waitUntil: "networkidle" });
       await page.evaluate(() => document.fonts.ready);
-      assert.equal(await page.evaluate(async () => (await Promise.all([document.fonts.load("16px Fredoka"), document.fonts.load("16px Figtree")])).every((faces) => faces.length > 0)), true, `Local fonts must load at ${width}px in ${mode}.`);
+      // Fonte servida pelo nosso domínio só existe no site montado (/fonts/vnext/); aqui conferimos que a página pede a letra da marca.
+      assert.match(await page.evaluate(() => getComputedStyle(document.body).fontFamily), /Bricolage Grotesque/, `Brand font must be requested at ${width}px in ${mode}.`);
       const form = page.locator(`#${mode}-form`);
       assert.equal(await form.isVisible(), true, `Expected ${mode} form at ${width}px.`);
       assert.equal(await page.locator("#signup-business-name").count(), 1, "Business name control should be in shared markup.");
