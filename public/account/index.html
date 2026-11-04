@@ -62,14 +62,14 @@
             <span>E-mail</span>
             <input id="signup-email" name="email" type="email" autocomplete="email" inputmode="email" maxlength="254" required>
           </label>
-          <label class="field" for="signup-password">
-            <span>Senha</span>
+          <div class="field">
+            <label for="signup-password">Senha</label>
             <span class="password-control">
-              <input id="signup-password" name="password" type="text" autocomplete="new-password" minlength="8" required spellcheck="false" autocapitalize="off">
+              <input id="signup-password" name="password" type="text" autocomplete="new-password" minlength="8" required spellcheck="false" autocapitalize="off" aria-describedby="signup-password-hint">
               <button class="reveal-password" type="button" data-password-toggle="signup-password" aria-label="Ocultar senha" aria-pressed="true">Ocultar</button>
             </span>
-            <small class="field-hint">Pelo menos 8 caracteres. Confira antes de criar: é com ela que você entra.</small>
-          </label>
+            <small class="field-hint" id="signup-password-hint">Pelo menos 8 caracteres. Confira antes de criar: é com ela que você entra.</small>
+          </div>
           <button id="signup-submit" class="button button-primary" type="submit">Criar conta</button>
         </form>
         <ul class="checks" aria-label="Condições">
@@ -78,23 +78,23 @@
           <li>Nada para instalar</li>
         </ul>
 
-        <form id="login-form" class="account-form" hidden>
+        <form id="login-form" class="account-form" novalidate hidden>
           <label class="field" for="login-email">
             <span>E-mail</span>
             <input id="login-email" name="email" type="email" autocomplete="email" inputmode="email" maxlength="254" required>
           </label>
-          <label class="field" for="login-password">
-            <span>Senha</span>
+          <div class="field">
+            <label for="login-password">Senha</label>
             <span class="password-control">
               <input id="login-password" name="password" type="password" autocomplete="current-password" required>
               <button class="reveal-password" type="button" data-password-toggle="login-password" aria-label="Mostrar senha" aria-pressed="false">Mostrar</button>
             </span>
-          </label>
+          </div>
           <div class="form-row"><a class="text-link" href="/cadastro/?mode=recovery">Esqueci minha senha</a></div>
           <button id="login-submit" class="button button-primary" type="submit">Entrar</button>
         </form>
 
-        <form id="recovery-form" class="account-form" hidden>
+        <form id="recovery-form" class="account-form" novalidate hidden>
           <label class="field" for="recovery-email">
             <span>E-mail</span>
             <input id="recovery-email" name="email" type="email" autocomplete="email" inputmode="email" maxlength="254" required>
@@ -103,27 +103,29 @@
           <div class="form-row form-row-center"><a class="text-link" href="/cadastro/?mode=login">Voltar para entrar</a></div>
         </form>
         <div id="recovery-support" class="recovery-support" hidden>
-          <p>Escreva para <strong>doceagenda@lucast.app</strong> usando o e-mail da sua conta e diga o nome da confeitaria. Respondemos com os próximos passos para você criar uma senha nova. Por segurança, ninguém consegue ver a senha atual.</p>
-          <a class="button button-primary" href="mailto:doceagenda@lucast.app?subject=Recuperar%20acesso%20ao%20Doce%20Agenda">Escrever o e-mail</a>
-          <a class="button button-secondary" href="/cadastro/?mode=login">Voltar para entrar</a>
+          <p>Escreva para <strong>doceagenda@lucast.app</strong> usando o e-mail da sua conta e diga o nome da confeitaria. Respondemos em até 1 dia útil com os próximos passos para você criar uma senha nova. Por segurança, ninguém consegue ver a senha atual.</p>
+          <a class="button button-primary" href="mailto:doceagenda@lucast.app?subject=Recuperar%20acesso%20ao%20Doce%20Agenda&amp;body=E-mail%20da%20conta%3A%20%0ANome%20da%20confeitaria%3A%20">Escrever o e-mail</a>
+          <button class="button button-secondary" id="copy-support" type="button">Copiar o endereço</button>
+          <p class="copy-note" id="copy-support-note" role="status"></p>
+          <div class="form-row form-row-center"><a class="text-link" href="/cadastro/?mode=login">Voltar para entrar</a></div>
         </div>
 
-        <form id="update-form" class="account-form" hidden>
-          <label class="field" for="update-password">
-            <span>Nova senha</span>
+        <form id="update-form" class="account-form" novalidate hidden>
+          <div class="field">
+            <label for="update-password">Nova senha</label>
             <span class="password-control">
-              <input id="update-password" name="password" type="password" autocomplete="new-password" minlength="8" required>
+              <input id="update-password" name="password" type="password" autocomplete="new-password" minlength="8" required aria-describedby="update-password-hint">
               <button class="reveal-password" type="button" data-password-toggle="update-password" aria-label="Mostrar nova senha" aria-pressed="false">Mostrar</button>
             </span>
-            <small class="field-hint">Use pelo menos 8 caracteres.</small>
-          </label>
-          <label class="field" for="update-password-confirm">
-            <span>Confirme a nova senha</span>
+            <small class="field-hint" id="update-password-hint">Use pelo menos 8 caracteres.</small>
+          </div>
+          <div class="field">
+            <label for="update-password-confirm">Confirme a nova senha</label>
             <span class="password-control">
               <input id="update-password-confirm" name="passwordConfirm" type="password" autocomplete="new-password" minlength="8" required>
               <button class="reveal-password" type="button" data-password-toggle="update-password-confirm" aria-label="Mostrar confirmação da nova senha" aria-pressed="false">Mostrar</button>
             </span>
-          </label>
+          </div>
           <button id="update-submit" class="button button-primary" type="submit">Salvar nova senha</button>
         </form>
 

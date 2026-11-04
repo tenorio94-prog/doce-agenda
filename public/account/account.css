@@ -140,3 +140,11 @@ body{background:var(--papel);color:var(--ink)}
 /* Marca revista (03/11/2026): no celular o cartão basta; a frase do topo já está no rodapé. */
 @media(max-width:760px){.intro{display:none}}
 .recovery-support .button{text-decoration:none}
+
+/* Quarta rodada impeccable (04/11/2026): erro junto do campo, "Esqueci minha senha" legível e frases sem palavra sozinha. */
+.field-error{color:var(--error);font-size:13px;font-weight:600;line-height:1.4}
+.field input[aria-invalid="true"]{border-color:var(--error)}
+.text-link{font-size:15px}
+.copy-note{min-height:0;margin:-6px 0 0;color:var(--carimbo);font-size:13px;font-weight:600;text-align:center}
+.copy-note:empty{display:none}
+p{text-wrap:pretty}

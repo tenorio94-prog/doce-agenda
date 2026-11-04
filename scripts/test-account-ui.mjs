@@ -196,6 +196,18 @@ try {
   await fixturePage.locator("#signup-submit").click();
   assert.deepEqual(await fixturePage.evaluate(() => window.__doceAuthCalls.filter((call) => call.method === "signUp")), [], "Short passwords must not call signUp.");
   assert.equal(await fixturePage.locator("#signup-password-confirm").count(), 0, "Signup has no confirmation field.");
+  // Errors sit under the field, in Portuguese, linked to it (no browser bubble); the password label is just "Senha".
+  assert.equal(await fixturePage.locator("#signup-password-error").innerText(), "A senha precisa de pelo menos 8 caracteres.");
+  assert.match(await fixturePage.locator("#signup-password").getAttribute("aria-describedby"), /signup-password-error/);
+  assert.equal(await fixturePage.evaluate(() => document.activeElement.id), "signup-password", "Focus goes to the field that needs fixing.");
+  assert.equal(await fixturePage.locator("#signup-form").getByLabel("Senha", { exact: true }).count(), 1, "The password field is named just Senha.");
+  // A common e-mail typo is asked once; sending again with the same address goes ahead.
+  await fixturePage.locator("#signup-email").fill("confeiteira@gmial.com");
+  await fixturePage.locator("#signup-password").fill("senha-segura-123");
+  await fixturePage.locator("#signup-submit").click();
+  assert.match(await fixturePage.locator("#signup-email-error").innerText(), /não seria confeiteira@gmail\.com\?/);
+  assert.deepEqual(await fixturePage.evaluate(() => window.__doceAuthCalls.filter((call) => call.method === "signUp")), [], "The typo question comes before signUp.");
+  await fixturePage.locator("#signup-email").fill("confeiteira@example.test");
 
   // Signup without an active session must display email confirmation without opening the app.
   await fixturePage.locator("#signup-password").fill("senha-segura-123");

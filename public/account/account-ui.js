@@ -179,13 +179,71 @@
     });
   };
 
+  // Erros junto do campo, em português e ligados a ele (antes: balão do navegador, às vezes em inglês, que some sozinho).
+  // Com a recuperação manual, um e-mail errado no cadastro prende a pessoa fora: por isso o formato e os erros comuns.
+  const EMAIL_TYPOS = { "gmial.com": "gmail.com", "gmai.com": "gmail.com", "gmail.co": "gmail.com", "gamil.com": "gmail.com", "gmil.com": "gmail.com",
+    "hotmial.com": "hotmail.com", "hotmai.com": "hotmail.com", "hotmail.co": "hotmail.com", "outlok.com": "outlook.com", "yahoo.com.b": "yahoo.com.br" };
+  const fieldMessage = (input) => {
+    const value = input.value.trim();
+    if (input.required && !value) return input.type === "email" ? "Escreva seu e-mail." : input.name === "businessName" ? "Escreva o nome da confeitaria."
+      : input.name === "passwordConfirm" ? "Repita a nova senha." : "Escreva a senha.";
+    if (input.type === "email" && !/^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/.test(value)) return "Confira o e-mail: ele precisa ter @ e o final, como @gmail.com.";
+    if (input.minLength > 0 && value && input.value.length < input.minLength) return `A senha precisa de pelo menos ${input.minLength} caracteres.`;
+    return "";
+  };
+  const clearFieldError = (input) => {
+    $(`${input.id}-error`)?.remove();
+    input.removeAttribute("aria-invalid");
+    const described = (input.getAttribute("aria-describedby") || "").split(" ").filter((id) => id && id !== `${input.id}-error`).join(" ");
+    if (described) input.setAttribute("aria-describedby", described); else input.removeAttribute("aria-describedby");
+  };
+  const setFieldError = (input, message) => {
+    clearFieldError(input);
+    const box = document.createElement("small");
+    box.className = "field-error";
+    box.id = `${input.id}-error`;
+    box.textContent = message;
+    (input.closest(".password-control") || input).after(box);
+    input.setAttribute("aria-invalid", "true");
+    input.setAttribute("aria-describedby", `${input.getAttribute("aria-describedby") || ""} ${box.id}`.trim());
+  };
+  const validate = (form) => {
+    let first = null;
+    form.querySelectorAll("input[required]").forEach((input) => {
+      const message = fieldMessage(input);
+      if (message) { setFieldError(input, message); first ||= input; } else clearFieldError(input);
+    });
+    first?.focus();
+    return !first;
+  };
+  const emailTypo = (email) => {
+    const [user, domain = ""] = email.toLowerCase().split("@");
+    return EMAIL_TYPOS[domain] ? `${user}@${EMAIL_TYPOS[domain]}` : "";
+  };
+  document.addEventListener("input", (event) => {
+    if (event.target.matches?.(".account-form input[aria-invalid]")) clearFieldError(event.target);
+  });
+  $("copy-support")?.addEventListener("click", async () => {
+    let copied = false;
+    try { await navigator.clipboard.writeText("doceagenda@lucast.app"); copied = true; } catch { /* sem permissão: o endereço está escrito acima */ }
+    $("copy-support-note").textContent = copied ? "Endereço copiado." : "Não deu para copiar: o endereço é doceagenda@lucast.app.";
+  });
+
   const bindForms = () => {
     forms.signup.addEventListener("submit", async (event) => {
       event.preventDefault();
       clearNotices();
       const form = forms.signup;
       const password = $("signup-password").value;
-      if (!form.reportValidity()) return;
+      if (!validate(form)) return;
+      // "gmial.com" e parecidos: pergunta uma vez; se ela enviar de novo com o mesmo e-mail, segue.
+      const email = $("signup-email").value.trim(), suggestion = emailTypo(email);
+      if (suggestion && form.dataset.typoChecked !== email) {
+        form.dataset.typoChecked = email;
+        setFieldError($("signup-email"), `Confira: não seria ${suggestion}? Se estiver certo, toque em Criar conta de novo.`);
+        $("signup-email").focus();
+        return;
+      }
       // Sem campo de confirmação: a senha aparece por padrão para ser conferida, e volta a ser
       // campo de senha no envio para o navegador oferecer guardá-la.
       revealPassword($("signup-password"), false);
@@ -204,7 +262,7 @@
     forms.login.addEventListener("submit", async (event) => {
       event.preventDefault();
       clearNotices();
-      if (!forms.login.reportValidity()) return;
+      if (!validate(forms.login)) return;
       if (!auth()?.signIn) return showError(null, "Não foi possível iniciar a sessão agora. Tente novamente.");
       isBusy(true);
       try {
@@ -219,7 +277,7 @@
     forms.recovery.addEventListener("submit", async (event) => {
       event.preventDefault();
       clearNotices();
-      if (!forms.recovery.reportValidity()) return;
+      if (!validate(forms.recovery)) return;
       if (!auth()?.sendPasswordReset) return showError(null, "Não foi possível enviar as instruções agora. Tente novamente.");
       isBusy(true);
       try {
@@ -234,12 +292,11 @@
     forms.update.addEventListener("submit", async (event) => {
       event.preventDefault();
       clearNotices();
-      if (!forms.update.reportValidity()) return;
+      if (!validate(forms.update)) return;
       const password = $("update-password").value;
       if (password !== $("update-password-confirm").value) {
-        $("update-password-confirm").setCustomValidity("As senhas não coincidem.");
-        $("update-password-confirm").reportValidity();
-        $("update-password-confirm").addEventListener("input", () => $("update-password-confirm").setCustomValidity(""), { once: true });
+        setFieldError($("update-password-confirm"), "As duas senhas precisam ser iguais.");
+        $("update-password-confirm").focus();
         return;
       }
       if (!auth()?.updatePassword) return showError(null, "Não foi possível atualizar a senha agora. Tente novamente.");

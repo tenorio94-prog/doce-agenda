@@ -29,3 +29,9 @@ a:focus-visible{outline:3px solid var(--focus);outline-offset:3px;border-radius:
 .part>h2+h3{margin-top:16px}
 .back a{display:inline-flex;align-items:center;min-height:44px;font-weight:700}
 @media(max-width:380px){header{padding:16px 20px}}
+
+/* Quarta rodada impeccable (04/11/2026): Voltar também no topo, aviso para quem abriu numa aba nova e frases sem
+   palavra sozinha na última linha. */
+.top-back{display:inline-flex;align-items:center;min-height:44px;font-weight:700;font-size:15px}
+.tab-note{margin-top:28px;padding:12px 14px;border-radius:12px;background:var(--baunilha);color:var(--ink-soft);font-weight:600}
+p,li{text-wrap:pretty}
