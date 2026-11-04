@@ -12,18 +12,12 @@ try {
       await page.goto(`${server.origin}${route}`, { waitUntil: 'networkidle' });
       assert.equal(await page.locator('h1').innerText(), 'Sua semana de encomendas, sem susto.');
       assert.equal(await page.locator('meta[name="robots"]').count(), route === '/' ? 0 : 1);
-      assert.equal(await page.locator('.hero-image img').evaluate((img) => img.complete && img.naturalWidth > 0), true, `${route}: foto carregada`);
-      const photo = await page.locator('.hero-image > img').evaluate((img) => {
-        const image = img.getBoundingClientRect();
-        const card = img.parentElement.querySelector('.agenda-card').getBoundingClientRect();
-        return { width: image.width, height: image.height, naturalRatio: img.naturalWidth / img.naturalHeight,
-          cardLeft: (card.left - image.left) / image.width, cardRight: (card.right - image.left) / image.width,
-          cardTop: (card.top - image.top) / image.height, cardBottom: (card.bottom - image.top) / image.height };
-      });
-      assert.ok(Math.abs(photo.width / photo.height - photo.naturalRatio) < 0.01, `${width}: foto inteira, sem recorte`);
-      if (width < 700) assert.ok(photo.height <= height * 0.75, `${width}: foto não pode exceder 75% da altura`);
-      // Coordinates of the phone's black screen in the approved photograph, measured against the whole image.
-      assert.ok(photo.cardLeft >= 0.605 && photo.cardRight <= 0.84 && photo.cardTop >= 0.145 && photo.cardBottom <= 0.93, `${width}: agenda deve caber na tela do celular`);
+      // Topo (03/11/2026): ilustração da Lu no mesmo traço da história, sem texto miúdo por cima.
+      assert.equal(await page.locator('.hero-image img').evaluate((img) => img.complete && img.naturalWidth > 0 && /topo-lu\.svg$/.test(img.src)), true, `${route}: ilustração carregada`);
+      const photo = await page.locator('.hero-image > img').evaluate((img) => { const r = img.getBoundingClientRect(); return { width: r.width, height: r.height, ratio: img.naturalWidth / img.naturalHeight }; });
+      assert.ok(Math.abs(photo.width / photo.height - photo.ratio) < 0.01, `${width}: ilustração inteira, sem recorte`);
+      if (width < 700) assert.ok(photo.height <= height * 0.75, `${width}: ilustração não pode exceder 75% da altura`);
+      assert.equal(await page.locator('.agenda-card').count(), 0, 'sem cartão de texto miúdo sobre a ilustração');
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, `${width}: sem rolagem lateral`);
       if (width < 700 && height <= 760) {
         const intro = await page.evaluate(() => ({
@@ -40,10 +34,9 @@ try {
         const inView = await page.locator('.hero-image').evaluate((e) => { const r = e.getBoundingClientRect(); return Math.max(0, Math.min(innerHeight, r.bottom) - Math.max(0, r.top)) / r.height; });
         assert.ok(inView >= 0.5, `${width}: ao menos metade da foto aparece na primeira tela`);
       }
-      assert.equal(await page.locator('.example-label').count(), 3, 'as três imagens são identificadas como exemplos');
-      for (const img of await page.locator('.screen-shot').all()) {
-        assert.ok((await img.boundingBox()).height <= 260, 'os exemplos de tela são curtos');
-      }
+      // "Como funciona" saiu (repetia "Mexa na agenda" com telas antigas do app).
+      assert.equal(await page.locator('.how, img[src*="tela-"], img[src*="passo-"]').count(), 0, 'sem telas antigas do app');
+      assert.match(await page.locator('.faq-list').innerText(), /E se o projeto acabar\?/);
       for (const side of ['client', 'baker']) {
         await page.locator(`.ld-switch button[data-side="${side}"]`).click();
         const phone = page.locator(`.ld-${side} .mock-phone`);

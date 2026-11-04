@@ -21,6 +21,16 @@ document.querySelector('.video-open').addEventListener('click', () => {
     close.addEventListener('click', () => dialog.close());
     dialog.addEventListener('click', (event) => { if (event.target === dialog) dialog.close(); });
     dialog.addEventListener('close', () => video.pause());
+    // Sem rede ou sem suporte ao vídeo: diz o que houve em vez de ficar uma tela preta.
+    const failed = () => {
+      if (dialog.querySelector('.video-error')) return;
+      const note = document.createElement('p');
+      note.className = 'video-error'; note.setAttribute('role', 'alert');
+      note.textContent = 'Não deu para carregar o vídeo agora. A história está nesta página, logo acima; tente o vídeo mais tarde.';
+      dialog.append(note);
+    };
+    source.addEventListener('error', failed);
+    video.addEventListener('error', failed);
   }
   dialog.showModal();
   dialog.querySelector('video').play().catch(() => {});
@@ -47,10 +57,7 @@ try {
   const cakeList = cakeTrack.querySelector('.cake');
   let cakeShift = cakeRows.map(() => [0, 0]);
   const painted = [...scenes, ...captions, sky, day, bar, ...cakeRows, ...cakeLabels.filter(Boolean), cakeList];
-  const steps = [...document.querySelectorAll('.how-grid article')];
-  const screens = [...document.querySelectorAll('.how-screen img')];
-  const stage = document.querySelector('.how-stage');
-  let scene = -1, step = -1, queued = false;
+  let scene = -1, queued = false;
 
   function showScene(index) {
     if (index === scene) return;
@@ -58,12 +65,6 @@ try {
     scenes.forEach((figure, i) => { figure.classList.toggle('is-active', i === index); figure.classList.toggle('is-past', i < index); });
     count.textContent = `0${index + 1}/0${scenes.length}`;
     when.textContent = ['de manhã', '11h', 'à noite'][index];
-  }
-  function showStep(index) {
-    if (index === step) return;
-    step = index;
-    steps.forEach((article, i) => { article.classList.toggle('is-active', i === index); article.classList.toggle('is-past', i < index); });
-    screens.forEach((img, i) => { img.classList.toggle('is-active', i === index); img.classList.toggle('is-past', i < index); });
   }
   // As cenas acompanham o dedo: cada troca ocupa um trecho da rolagem e anoitece na última.
   const between = (p, a, b) => { const t = Math.min(1, Math.max(0, (p - a) / (b - a))); return t * t * (3 - 2 * t); };
@@ -96,8 +97,9 @@ try {
     for (let i = cakeRows.length - 1; i >= 0; i--) {
       closed[i] = i === cakeRows.length - 1 ? tops[i] : closed[i + 1] + (Number(cakeRows[i + 1].dataset.top) - Number(cakeRows[i].dataset.base)) * scale;
     }
-    // Montado, o bolo fica no meio do espaço que ele ocupa aberto: abre do centro para cima e para baixo.
-    const lift = ((tops.at(-1) - tops[0]) - (closed.at(-1) - closed[0])) / 2;
+    // Montado, o bolo fica no meio do espaço que ele ocupa aberto: abre do centro para cima e para baixo. No celular ele
+    // começa logo abaixo do texto e abre para baixo, sem o vão vazio entre o título e o bolo.
+    const spare = (tops.at(-1) - tops[0]) - (closed.at(-1) - closed[0]), lift = wide.matches ? spare / 2 : spare;
     const center = cakeRows[0].parentElement.clientWidth / 2 - (images[0].offsetLeft + images[0].clientWidth / 2);
     cakeShift = cakeRows.map((row, i) => [center, closed[i] - tops[i] - lift]);
   }
@@ -151,19 +153,8 @@ try {
       const cakeRange = cakeBox.height - innerHeight;
       paintCake(cakeRange > 0 ? Math.min(1, Math.max(0, -cakeBox.top / cakeRange)) : 0);
     }
-    // No celular o passo vale quando o topo passa de 70% da tela; no computador, quando o meio passa de 60%.
-    let current = 0;
-    steps.forEach((article, i) => {
-      const r = article.getBoundingClientRect();
-      if ((wide.matches ? r.top + r.height / 2 : r.top) < innerHeight * (wide.matches ? 0.6 : 0.7)) current = i;
-    });
-    showStep(current);
   }
-  // No celular, o aparelho solta junto com o último passo, que fica à vista logo abaixo dele.
-  const measure = () => {
-    stage.style.setProperty('--how-tail', wide.matches ? '0px' : `${steps.at(-1).offsetHeight}px`);
-    if (root.classList.contains('anima')) measureCake();
-  };
+  const measure = () => { if (root.classList.contains('anima')) measureCake(); };
   const queue = () => { if (!queued) { queued = true; requestAnimationFrame(update); } };
   addEventListener('scroll', queue, { passive: true });
   addEventListener('resize', () => { measure(); queue(); });
@@ -391,7 +382,18 @@ try {
   const status = visual.querySelector('.ld-status');
   const again = visual.querySelector('.ld-replay');
   const bakerTab = visual.querySelector('.ld-switch [data-side="baker"]');
-  const begin = () => { stage.classList.remove('s4', 's5', 's6'); showSide('client'); again.hidden = true; status.textContent = ''; };
+  const accept = stage.querySelector('.m-accept'), refuse = stage.querySelector('.m-refuse'), zap = stage.querySelector('.m-zap');
+  const feedback = stage.querySelector('.m-feedback');
+  const begin = () => { stage.classList.remove('s4', 's5', 's6', 's7'); showSide('client'); again.hidden = true; status.textContent = ''; feedback.textContent = ''; };
+  // Na ficha: Aceitar é o último passo (o pedido entra no sábado); responder e recusar dizem o que o app faz de verdade.
+  const say = (text) => { feedback.textContent = text; status.textContent = text; };
+  accept.addEventListener('click', () => {
+    stage.classList.add('s7');
+    status.textContent = 'Pedido aceito: entrou na agenda no sábado, 24/10, às 11h.';
+    again.focus({ preventScroll: true });
+  });
+  zap.addEventListener('click', () => say('No app, abre a conversa com a Camila no WhatsApp. Quem envia é você.'));
+  refuse.addEventListener('click', () => say('No app, você recusa com um toque e pode avisar a Camila pelo WhatsApp.'));
 
   send.addEventListener('click', async () => {
     if (stage.classList.contains('s4')) return;
@@ -425,5 +427,6 @@ try {
   begin();
   send.disabled = false;
   see.disabled = false;
+  for (const button of [accept, refuse, zap]) button.disabled = false;
   visual.classList.add('is-live');
 } catch (error) { /* fica o retrato com os dois lados */ }

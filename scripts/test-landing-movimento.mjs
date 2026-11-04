@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { chromium, serveSite } from './lib/browser-test.mjs';
 
-// Movimento da landing (Fase 1): sexta-feira da Lu parada e celular do Como funciona.
+// Movimento da landing: bolo em camadas, semana da Lu parada e demonstrações (o "Como funciona" saiu em 03/11/2026).
 // Também confere que, sem JavaScript ou com movimento reduzido, tudo continua à vista e parado.
 const server = await serveSite();
 const browser = await chromium.launch();
@@ -59,6 +59,12 @@ async function checkDemos(page, label) {
   assert.equal(await page.locator('.ld-flyer').isVisible(), false);
   await page.locator('.m-see').click();
   assert.equal(await page.locator('.m-review').isVisible(), true, `${label}: ficha aberta`);
+  // Na ficha: responder diz o que o app faz; Aceitar leva o pedido para o sábado.
+  await page.locator('.m-zap').click();
+  assert.match(await page.locator('.m-feedback').innerText(), /WhatsApp/, `${label}: responder explica`);
+  await page.locator('.m-accept').click();
+  assert.match(await page.locator('.m-ok').innerText(), /Aceito: entrou no sábado/, `${label}: aceitar funciona`);
+  assert.equal(await page.locator('.m-review').isVisible(), false);
   await page.locator('.ld-replay').click();
   assert.equal(await page.locator('.ld-client .m-form').isVisible(), true, `${label}: recomeça na cliente`);
   assert.equal(await noSideScroll(page), true, `${label}: sem rolagem lateral nas demonstrações`);
@@ -113,31 +119,6 @@ try {
     await goTo(page, story.top + story.height); await wait(page, 200);
     assert.equal(await page.locator('.video-open').isVisible(), true, `${width}: Ver o vídeo continua lá`);
 
-    // Como funciona: o celular fica parado e a tela acompanha o passo.
-    const howTop = await page.locator('.how-stage').evaluate((e) => e.getBoundingClientRect().top + scrollY);
-    const steps = await page.locator('.how-grid article').evaluateAll((list) => list.map((a) => ({ top: a.getBoundingClientRect().top + scrollY, height: a.offsetHeight })));
-    const files = ['tela-anotar.webp', 'tela-semana.webp', 'tela-dinheiro.webp'];
-    const phoneTops = [];
-    for (const [i, file] of files.entries()) {
-      // Coloca o passo um pouco acima da linha que o ativa (topo a 70% no celular, meio a 60% no computador).
-      const mark = width > 700 ? steps[i].top + steps[i].height / 2 - height * 0.5 : steps[i].top - height * 0.62;
-      await goTo(page, Math.max(howTop, mark)); await wait(page);
-      assert.equal(await page.locator('.how-screen img.is-active').evaluate((img) => img.src.split('/').pop()), file, `${width}: tela do passo ${i + 1}`);
-      assert.equal(await page.locator('.how-grid article').nth(i).evaluate((a) => a.classList.contains('is-active')), true);
-      assert.equal(await page.locator('.how-screen img.is-active').evaluate((img) => img.complete && img.naturalWidth > 0), true, `${width}: tela ${file} carregada`);
-      if (i) phoneTops.push(await page.locator('.how-phone').evaluate((e) => Math.round(e.getBoundingClientRect().top)));
-      assert.equal(await noSideScroll(page), true, `${width}: sem rolagem lateral no passo ${i + 1}`);
-    }
-    assert.equal(phoneTops[0], phoneTops[1], `${width}: celular parado entre os passos`);
-    // No celular, o último passo aparece por inteiro logo abaixo do aparelho antes de ele soltar.
-    if (width <= 700) {
-      const last = await page.evaluate(() => {
-        const phone = document.querySelector('.how-phone').getBoundingClientRect();
-        const step = document.querySelector('.how-grid article:last-child').getBoundingClientRect();
-        return { phoneBottom: phone.bottom, stepTop: step.top, stepBottom: step.bottom };
-      });
-      assert.ok(last.stepTop >= last.phoneBottom - 2 && last.stepBottom <= height, `${width}: último passo visível abaixo do celular`);
-    }
     await checkDemos(page, String(width));
 
     // Barra fixa (só no celular): escondida no topo, nas cenas paradas e no convite do fim; aparece entre elas.
@@ -145,7 +126,7 @@ try {
     const at = async (selector, offset = 0) => { await goTo(page, await page.locator(selector).evaluate((e) => e.getBoundingClientRect().top + scrollY) + offset); await wait(page, 500); };
     await goTo(page, 0); await wait(page, 300);
     assert.equal(await ctaShown(), false, `${width}: barra escondida no topo`);
-    await at('.how');
+    await at('.try', height * 0.3);
     assert.equal(await ctaShown(), width <= 700, `${width}: barra ${width <= 700 ? 'aparece' : 'não existe'} depois do topo`);
     await at('.story-track', height * 0.5);
     assert.equal(await ctaShown(), false, `${width}: barra some na semana da Lu`);
@@ -187,8 +168,6 @@ try {
     }
     assert.equal(await page.locator('.cake-label').count(), 5);
     assert.equal(await page.locator('.cake-layer img[loading="lazy"][width="240"][height]').count(), 6);
-    assert.equal(await page.locator('.how-rail').isVisible(), false, `${label}: celular animado fora`);
-    for (const shot of await page.locator('.how-grid .screen-shot').all()) assert.equal(await shot.isVisible(), true, `${label}: imagens dos passos à vista`);
     assert.equal(await noSideScroll(page), true, `${label}: sem rolagem lateral`);
     if (options.reducedMotion) {
       await checkDemos(page, label);
