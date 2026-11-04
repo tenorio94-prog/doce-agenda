@@ -3,7 +3,6 @@
 @font-face{font-family:"Young Serif";src:url(/fonts/vitrine/young-serif.woff2) format("woff2");font-weight:400;font-display:swap}
 @font-face{font-family:"Baloo 2";src:url(/fonts/vitrine/baloo-2.woff2) format("woff2");font-weight:800;font-display:swap}
 @font-face{font-family:"Caprasimo";src:url(/fonts/vitrine/caprasimo.woff2) format("woff2");font-weight:400;font-display:swap}
-@font-face{font-family:"Bricolage Grotesque";src:url(/fonts/vitrine/bricolage-grotesque.woff2) format("woff2");font-weight:800;font-display:swap}
 
 :root{--a:#b8325a;--a-ink:#b8325a;--a-tint:#f8e7ec;--a-tint2:#f1cfd9;--a-soft:#dc98ac;--t:#231a20;--t2:#5e5259;--ln:#ece4e8;--field:#9c8f96;
   --bg:#fff;--card:#fff;--fd:"Young Serif",Georgia,serif;--fdw:400;--r-img:6px;color-scheme:light}
@@ -97,7 +96,7 @@ body.in-order .foot{display:none}
 .st-atelie .sec>h2{text-align:center;font-size:21px}
 .st-atelie .sec>h2::after{content:"";display:block;width:28px;height:1px;background:var(--a-ink);margin:9px auto 0}
 /* Doceria: arredondada, fundo na cor, cartões brancos */
-.st-doceria{--fd:"Baloo 2","Plus Jakarta Sans",sans-serif;--fdw:800;--r-img:20px;--bg:var(--a-tint);--card:#fff}
+.st-doceria{--fd:"Baloo 2","Bricolage Grotesque",sans-serif;--fdw:800;--r-img:20px;--bg:var(--a-tint);--card:#fff}
 .st-doceria .hero{padding:14px 14px 0}
 .st-doceria .cover{height:200px;border-radius:26px}
 .st-doceria .cover.none{height:96px}
@@ -123,7 +122,7 @@ body.in-order .foot{display:none}
 .st-caseira .facts>*{background:#fffdf8;border:1px dashed var(--a-soft)}
 .st-caseira .facts .free{border-style:solid;background:var(--a-ink)}
 /* Moderna: bloco de cor e letra grande */
-.st-moderna{--fd:"Bricolage Grotesque","Plus Jakarta Sans",sans-serif;--fdw:800;--r-img:16px}
+.st-moderna{--fd:"Bricolage Grotesque",sans-serif;--fdw:800;--r-img:16px}
 .st-moderna .head{background:var(--a-ink);color:#fff;padding:26px 20px 80px;position:relative;overflow:hidden;display:grid;gap:10px}
 .st-moderna .head::after{content:"";position:absolute;right:-70px;top:-50px;width:230px;height:230px;border-radius:50%;background:rgb(255 255 255 / 9%)}
 .st-moderna .brand{display:flex;gap:10px;align-items:center;position:relative;z-index:1}
@@ -241,13 +240,12 @@ body.in-order .preview-banner{position:static}
 .st-doceria .how li::before,.st-caseira .how li::before{background:#fff}
 
 /* ---- Alinhamento com o "Link da loja" do laboratório visual (16/10/2026) ----
-   Texto em Plus Jakarta Sans (a mesma do app); títulos seguem a letra do estilo da confeitaria. */
-@font-face{font-family:"Plus Jakarta Sans";src:url(/fonts/vnext/plus-jakarta-sans.woff2) format("woff2");font-weight:200 800;font-display:swap}
-body{font-family:"Plus Jakarta Sans",var(--font-body),sans-serif}
+   Texto em Bricolage Grotesque (a mesma do app, tokens.css); títulos seguem a letra do estilo da confeitaria. */
+body{font-family:"Bricolage Grotesque",var(--font-body),sans-serif}
 input,select,textarea{border-color:#dcc8cf;border-radius:12px}
 input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid var(--a-ink);outline-offset:2px;border-color:var(--a-ink)}
 .step-title{display:flex;align-items:center;gap:12px}
-.step-title::before{display:grid;place-items:center;flex:none;width:32px;height:32px;border-radius:50%;background:var(--a-ink);color:#fff;font:800 15px "Plus Jakarta Sans",sans-serif}
+.step-title::before{display:grid;place-items:center;flex:none;width:32px;height:32px;border-radius:50%;background:var(--a-ink);color:#fff;font:800 15px "Bricolage Grotesque",sans-serif}
 .step[data-step="1"] .step-title::before{content:"1"}
 .step[data-step="2"] .step-title::before{content:"2"}
 .step[data-step="3"] .step-title::before{content:"3"}

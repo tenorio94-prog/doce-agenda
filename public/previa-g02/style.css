@@ -9,8 +9,8 @@
   --green: #1e6b47;
   --muted: #65545a;
   --line: #e8dfe2;
-  --title: "Bricolage Grotesque", "Plus Jakarta Sans", system-ui, sans-serif;
-  --body: "Plus Jakarta Sans", system-ui, sans-serif;
+  --title: "Bricolage Grotesque", system-ui, sans-serif;
+  --body: "Bricolage Grotesque", system-ui, sans-serif;
   font-family: var(--body);
   color: var(--ink);
   background: var(--canvas);

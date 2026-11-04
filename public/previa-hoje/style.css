@@ -3,7 +3,7 @@
   --canvas: #f5f1f2; --surface: #fff; --soft: #f7eef1; --berry: #b0244a; --berry-dark: #921d3d; --wine: #3a1220;
   --ink: #2a141b; --muted: #6f5a61; --line: #e9e0e3; --green: #1e6b47; --mint: #e3f2e9; --amber: #7f4d00; --vanilla: #fff0cc;
   --r: 18px; --pill: 999px; --shadow: 0 1px 0 #3a12200a, 0 6px 18px -10px #3a122026;
-  --font: "Plus Jakarta Sans", Arial, sans-serif; --title: "Bricolage Grotesque", "Plus Jakarta Sans", sans-serif;
+  --font: "Bricolage Grotesque", Arial, sans-serif; --title: "Bricolage Grotesque", sans-serif;
 }
 * { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }

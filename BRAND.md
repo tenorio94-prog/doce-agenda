@@ -30,7 +30,7 @@ Direto e acolhedor, sem diminutivo. Instruções curtas e verbos diretos ("Nova 
 |---|---|---|---|
 | Vinho | `--vn-wine` / `--vn-ink` | `#3a1220` / `#2a141b` | texto, títulos, cabeçalho da ficha |
 | Framboesa | `--vn-berry` | `#b0244a` | marca e ação principal; **nunca estado** |
-| Farinha | `--vn-canvas` | `#f5f1f2` | fundo das telas |
+| Farinha | `--vn-canvas` / `--papel` | `#f5f1f2` | fundo de todas as telas: app, landing, cadastro, privacidade (o creme `#fffaf2` saiu em 03/11/2026) |
 | Açúcar | `--vn-surface` | `#ffffff` | cartões e janelas |
 | Pistache | `--vn-green` / `--vn-mint` | `#1e6b47` / `#e3f2e9` | conferido, pronto, entregue |
 | Caramelo | `--vn-amber` / `--vn-vanilla` | `#7f4d00` / `#fff0cc` | falta o sinal, falta conferir |
@@ -42,15 +42,14 @@ Texto sobre fundo precisa de contraste AA (4,5:1); o axe-core deve dar zero viol
 
 ## Letras
 
-- **Bricolage Grotesque** (600 e 700): títulos, horários e valores.
-- **Plus Jakarta Sans** (variável): todo o resto, com números tabulares.
+- **Bricolage Grotesque** variável (peso 200–800 e tamanho óptico 12–96): uma letra só, em títulos, horários, valores e texto, com números tabulares. O navegador ajusta o desenho ao tamanho; títulos em 600/700, texto em 400.
 
-Ambas SIL OFL 1.1, copiadas do `@fontsource` pelo build para `/fonts/vnext/`. Nenhum texto abaixo de 12 px. Landing e app usam as mesmas duas letras; Outfit saiu (rodada 2). A vitrine da cliente tem as letras próprias de cada estilo (Young Serif, Baloo 2, Caprasimo, Bricolage).
+SIL OFL 1.1, copiada do `@fontsource-variable` pelo build para `/fonts/vnext/bricolage.woff2`. Nenhum texto abaixo de 12 px. **Marca revista em 03/11/2026 (aprovada por Lucas):** a Plus Jakarta Sans saiu do texto porque é uma das letras mais usadas por padrão em sites gerados por IA (avaliação com a skill impeccable); Outfit já tinha saído na rodada 2. A vitrine da cliente mantém nos títulos as letras próprias de cada estilo (Young Serif, Baloo 2, Caprasimo, Bricolage); o texto dela também é Bricolage.
 
 ## Peças
 
-- **Cartão Comanda** (`.vn-order.comanda`): coluna da hora (com sacola para retirada, caminhão para entrega, "Atrasado" em tijolo logo abaixo), produto como título-botão (`.vn-open`) com a largura toda, cliente e detalhe abaixo, foto pequena no canto do texto quando houver, filete lateral com a cor do dinheiro (tijolo se atrasado). **Rodapé = dinheiro + ação** (rodada 4): carimbo à esquerda, um botão à direita; no celular o rodapé usa o cartão inteiro. Na versão compacta o carimbo pequeno continua no canto.
-- **Carimbo** (`.vn-stamp`, `moneyStamp()` em `app.js`): diz quanto. `is-ok` (cheio, pistache: "Sinal conferido", "Total conferido"), `is-due` (tracejado caramelo: "R$ 28,50 falta o sinal", "Falta R$ 55 já entregue"), `is-check` (tracejado: "Pix R$ 60 falta conferir"). Pequeno (`is-mini`) nas linhas: "Com sinal", "Pago", "Sem sinal", "Pix a conferir", "Falta R$ 55". Entregue com saldo nunca é verde. Na ficha, o carimbo grande "SINAL PAGO / PAGO" com a data.
+- **Cartão Comanda** (`.vn-order.comanda`): coluna da hora (com sacola para retirada, caminhão para entrega, "Atrasado" em tijolo logo abaixo), produto como título-botão (`.vn-open`) com a largura toda, cliente e detalhe abaixo, foto pequena no canto do texto quando houver; sem faixa colorida na lateral (saiu em 03/11/2026: o carimbo do rodapé já diz o dinheiro e a hora em tijolo diz o atraso). **Rodapé = dinheiro + ação** (rodada 4): carimbo à esquerda, um botão à direita; no celular o rodapé usa o cartão inteiro. Na versão compacta o carimbo pequeno continua no canto.
+- **Carimbo** (`.vn-stamp`, `moneyStamp()` em `app.js`): diz quanto. `is-ok` (cheio, pistache: "Sinal conferido", "Total conferido"), `is-due` (tracejado caramelo: "R$ 28,50 falta o sinal", "Falta R$ 55 já entregue"), `is-check` (tracejado: "Pix R$ 60 falta conferir"). Pequeno (`is-mini`) nas linhas: "Com sinal", "Pago", "Sem sinal", "Pix a conferir", "Falta R$ 55". A tela nova (`public/nova/`) usa os mesmos selos nas linhas (03/11/2026): Pago e Com sinal em pistache, Sem sinal em baunilha, Pix a conferir tracejado caramelo, entregue devendo em tijolo com o valor. Entregue com saldo nunca é verde. Na ficha, o carimbo grande "SINAL PAGO / PAGO" com a data.
 - **Canhoto do dinheiro** (`.money-stub` na ficha): picote no topo, uma linha por fato (total combinado, informado pela cliente "não conta ainda", conferido por você, sinal sugerido, saldo) e a ação logo abaixo ("Conferi os R$ 60,00", WhatsApp de cobrança, Pix, registrar).
 - **Semana no topo** (`.vn-weekbar`): sete dias com pontinhos de vagas (tijolo quando lota), grudada ao rolar; o dia escolhido em vinho.
 - **Pedem sua atenção** (`.vn-attention`): uma lista só para pedido do link, Pix a conferir, saldos, sinais e próximas ações; três à vista, o resto em "Ver mais".

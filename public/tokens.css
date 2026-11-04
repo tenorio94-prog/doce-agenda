@@ -1,10 +1,9 @@
 /* Tokens compartilhados do Doce Agenda: fontes e aliases usados por style.css, landing, cadastro, privacidade e vitrine.
-   Direção Comanda (16/10): Bricolage Grotesque (títulos, horários e valores) e Plus Jakarta Sans (todo o resto),
-   SIL OFL 1.1, servidas localmente de /fonts/vnext (copiadas do @fontsource pelo build), sem CDN.
-   Fredoka e Figtree saíram; o logo continua em contornos (não depende de fonte). */
-@font-face { font-family: "Bricolage Grotesque"; src: url("/fonts/vnext/bricolage-600.woff2") format("woff2"); font-weight: 500 650; font-display: swap; }
-@font-face { font-family: "Bricolage Grotesque"; src: url("/fonts/vnext/bricolage-700.woff2") format("woff2"); font-weight: 651 900; font-display: swap; }
-@font-face { font-family: "Plus Jakarta Sans"; src: url("/fonts/vnext/plus-jakarta-sans.woff2") format("woff2"); font-weight: 200 800; font-display: swap; }
+   Marca revista (03/11/2026, aprovada por Lucas): uma letra só, Bricolage Grotesque variável (peso 200–800 e tamanho óptico
+   12–96, o navegador ajusta o desenho ao tamanho do texto), SIL OFL 1.1, servida de /fonts/vnext (copiada do
+   @fontsource-variable pelo build), sem CDN. Plus Jakarta Sans saiu; o fundo deixou o creme e passou a ser a Farinha.
+   O logo continua em contornos (não depende de fonte). */
+@font-face { font-family: "Bricolage Grotesque"; src: url("/fonts/vnext/bricolage.woff2") format("woff2-variations"), url("/fonts/vnext/bricolage.woff2") format("woff2"); font-weight: 200 800; font-display: swap; }
 
 :root {
   color-scheme: light;
@@ -18,22 +17,22 @@
   --carimbo: #2e6a46;    /* carimbo de sinal pago */
 
   /* Superfícies e texto */
-  --papel: #fffaf2;
-  --ink: var(--ameixa);  /* 15,7:1 no papel */
+  --papel: #f5f1f2;     /* Farinha: o mesmo fundo do app inteiro */
+  --ink: var(--ameixa);  /* 14,6:1 no papel */
   --ink-soft: #4a3550;   /* 9,0:1 na baunilha */
-  --muted: #66536a;      /* 6,7:1 no papel, 4,6:1 no glacê */
-  --link: #8f2a4f;       /* 7,7:1 no papel, 5,3:1 no glacê */
+  --muted: #66536a;      /* 6,2:1 no papel, 4,6:1 no glacê */
+  --link: #8f2a4f;       /* 7,2:1 no papel, 5,3:1 no glacê */
   --line: #ecdfe3;       /* bordas decorativas de cartão */
-  --border-input: #9c8290; /* bordas de controles: 3,49:1 (WCAG 1.4.11) */
+  --border-input: #9c8290; /* bordas de controles: 3,1:1 no papel (WCAG 1.4.11) */
   --placeholder: #7a667d;
   --segmented: #f3e6ea;
   --error: #a32e34;
   --error-soft: #fce9e7;
-  --focus: var(--carimbo);
+  --focus: var(--link);  /* framboesa: diferente do verde de "entregue" e "conferido" */
 
   /* Tipografia */
-  --font-title: "Bricolage Grotesque", "Plus Jakarta Sans", system-ui, sans-serif;
-  --font-body: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-title: "Bricolage Grotesque", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-body: var(--font-title);
   --text-xs: 12px; --text-sm: 13px; --text-md: 15px;
   --text-lg: 18px; --text-xl: 22px; --text-2xl: 28px;
   --text-display: clamp(42px, 6.6vw, 84px);

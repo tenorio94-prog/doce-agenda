@@ -256,10 +256,10 @@ details.settings-data-tools { display: block; }
 details.settings-data-tools > summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; font-weight: 700; }
 details.settings-data-tools[open] > summary { margin-bottom: 8px; }
 details.settings-data-tools > div:last-child { margin-top: 12px; }
-.payment-context { display: grid; gap: 3px; margin: -5px 0 18px; padding: 12px; border: 1px solid var(--line); border-radius: var(--r-s); background: #fffaf2; color: var(--muted); font-size: var(--fs-xs); }
+.payment-context { display: grid; gap: 3px; margin: -5px 0 18px; padding: 12px; border: 1px solid var(--line); border-radius: var(--r-s); background: var(--branco); color: var(--muted); font-size: var(--fs-xs); }
 .payment-context strong { color: var(--ink); font-size: var(--fs-sm); }
 .payment-context span:last-child { margin-top: 3px; }
-.sample-examples { margin: 14px 0; padding: 12px 15px; border: 1px dashed #9c8290; border-radius: var(--r-s); background: #fffaf2; }
+.sample-examples { margin: 14px 0; padding: 12px 15px; border: 1px dashed #9c8290; border-radius: var(--r-s); background: var(--branco); }
 .sample-examples > summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; color: #4a3550; font-weight: 700; }
 .sample-example-list { display: flex; flex-wrap: wrap; gap: 5px 16px; padding-top: 8px; border-top: 1px solid var(--line); }
 .sample-example-list .text-link { text-align: left; }
@@ -712,8 +712,7 @@ body { color: var(--ink); font-family: var(--font-body); font-size: var(--fs-bas
 .link-hero p { margin: 0; color: var(--ink-soft); font-size: var(--fs-base); line-height: 1.45; }
 .link-hero.is-live { margin: -8px -8px 0; padding: 20px; border-radius: var(--r-l); background: var(--pistache); }
 .live-badge { display: inline-flex; align-items: center; gap: 7px; padding: 4px 11px; border-radius: var(--r-l); background: var(--branco); color: var(--carimbo); font-size: var(--fs-sm); font-weight: 700; }
-.live-badge i { width: 8px; height: 8px; border-radius: 50%; background: var(--carimbo); animation: live-pulse 1.8s ease-in-out infinite; }
-@keyframes live-pulse { 50% { box-shadow: 0 0 0 5px rgb(46 106 70 / 18%); } }
+.live-badge i { width: 8px; height: 8px; border-radius: 50%; background: var(--carimbo); }
 .link-url { max-width: 100%; padding: 10px 14px; border-radius: var(--r-s); background: var(--branco); color: var(--ink) !important; font-size: var(--fs-base) !important; overflow-wrap: anywhere; }
 .link-url b { color: var(--link); }
 .link-share { display: flex; flex-wrap: wrap; gap: 8px; width: 100%; }
@@ -1074,7 +1073,7 @@ wa-input[aria-invalid="true"]::part(input-wrapper), wa-textarea[aria-invalid="tr
   --vn-green: #1e6b47; --vn-mint: #e3f2e9; --vn-amber: #7f4d00; --vn-vanilla: #fff0cc;
   --vn-zap: #0e7a3f; --vn-zap-soft: #e7f6ec; --vn-zap-ink: #0b6b37;
   --vn-r: 18px; --vn-r-ctl: 14px; --vn-shadow: 0 1px 0 #3a12200a, 0 6px 18px -10px #3a122026; --vn-shadow-hover: 0 1px 0 #3a12200f, 0 10px 24px -12px #3a122033;
-  --vn-font: "Plus Jakarta Sans", Arial, sans-serif; --vn-title: "Bricolage Grotesque", "Plus Jakarta Sans", sans-serif;
+  --vn-font: "Bricolage Grotesque", Arial, sans-serif; --vn-title: "Bricolage Grotesque", sans-serif;
   background: var(--vn-canvas);
   /* Rodada 2: escalas únicas. Raios: --vn-r (cartões), --vn-r-ctl (controles), --vn-r-sm (selos), --vn-r-dialog (janelas), --vn-pill.
      Letras: 12 · 14 · 16 · 20 · 28 · 40 (as telas novas usam esta escala; as antigas migram aos poucos). */
@@ -1538,10 +1537,7 @@ body.vnext { font-variant-numeric: tabular-nums; -webkit-tap-highlight-color: tr
 /* ---- Fase 2 da direção Comanda (16/10): o cartão do pedido ---- */
 /* A hora é o eixo: coluna à esquerda; o corpo tem produto, cliente, carimbo do dinheiro e um botão. */
 .vn-order.comanda { position: relative; display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 0 12px; padding: 14px 14px 14px 12px; border: 0; border-radius: var(--vn-r); box-shadow: var(--vn-shadow); overflow: hidden; }
-.vn-order.comanda::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 4px; background: var(--vn-line); }
-.vn-order.comanda.is-ok::before { background: var(--vn-green); }
-.vn-order.comanda.is-due::before, .vn-order.comanda.is-check::before { background: #e3a92c; }
-.vn-order.comanda.is-late::before { background: var(--vn-red); }
+/* Marca revista (03/11/2026): sem faixa colorida na lateral; o carimbo do rodapé já diz a situação do dinheiro. */
 .cmd-when { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; padding-top: 2px; text-align: right; }
 .cmd-when .vn-time { display: block; font: 700 24px/1 var(--vn-title); letter-spacing: -.03em; color: var(--vn-ink); }
 .vn-order.comanda.is-late .cmd-when .vn-time { color: var(--vn-red); }
@@ -1706,6 +1702,7 @@ body.vnext { font-variant-numeric: tabular-nums; -webkit-tap-highlight-color: tr
 .vnext .detail-dialog .payment-section h3::before { display: none; }
 .vnext .detail-dialog .payment-status .is-done { color: var(--vn-green); font-weight: 700; }
 .vnext .detail-dialog .payment-status .is-informed { color: var(--vn-amber); font-weight: 700; }
+.vnext .detail-dialog .payment-status .is-undone { color: var(--vn-muted); font-weight: 700; text-decoration: line-through; }
 .vnext .detail-dialog .detail-actions { margin-top: 0; }
 .vnext .detail-dialog .deposit-rule { display: none; }
 

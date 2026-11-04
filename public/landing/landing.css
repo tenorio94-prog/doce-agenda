@@ -302,8 +302,8 @@ h2{margin:0;font-family:var(--font-title);font-size:clamp(30px,4vw,46px);font-we
 }
 
 /* Nova identidade (laboratório visual, 16/10/2026): mesmos textos, seções e animações.
-   Os tokens do app são redefinidos só nesta página; letras Outfit e Plus Jakarta Sans servidas pelo nosso domínio. */
-:root{--font-title:"Outfit","Plus Jakarta Sans",sans-serif;--font-body:"Plus Jakarta Sans",Arial,sans-serif;--papel:#fff8f8;--glace:#ffe1e7;--ameixa:#4a1525;--ink:#27171c;--muted:#795f67;--link:#ad2644;--line:#efdee2;
+   Os tokens do app são redefinidos só nesta página; letras servidas pelo nosso domínio (hoje só a Bricolage, tokens.css). */
+:root{--font-title:"Bricolage Grotesque",sans-serif;--font-body:"Bricolage Grotesque",Arial,sans-serif;--papel:#fff8f8;--glace:#ffe1e7;--ameixa:#4a1525;--ink:#27171c;--muted:#795f67;--link:#ad2644;--line:#efdee2;
   --wa-color-brand-fill-loud:#ad2644;--wa-color-brand-border-loud:#ad2644;--wa-color-brand-on-loud:#fff}
 body{background:#fff8f8}
 h1,h2{letter-spacing:-.03em}
@@ -311,10 +311,10 @@ h1,h2{letter-spacing:-.03em}
 .top-band::before,.top-band::after{display:none}
 .drip{display:none}
 /* O carimbo vira o selo verde do app: "Sinal conferido", sem rotação. */
-.stamp-mini{border:0;border-radius:30px;background:#e5f7ef;color:#006947;font-family:"Plus Jakarta Sans",sans-serif;font-size:12px;letter-spacing:0;text-transform:none;transform:none;padding:5px 10px}
+.stamp-mini{border:0;border-radius:30px;background:#e5f7ef;color:#006947;font-family:"Bricolage Grotesque",sans-serif;font-size:12px;letter-spacing:0;text-transform:none;transform:none;padding:5px 10px}
 
 /* Direção Comanda (16/10): mesmas cores, letras e carimbo do app. */
-:root{--font-title:"Bricolage Grotesque","Plus Jakarta Sans",sans-serif;--papel:#f5f1f2;--ameixa:#3a1220;--ink:#2a141b;--muted:#6f5a61;--link:#b0244a;--line:#e9e0e3;
+:root{--font-title:"Bricolage Grotesque",sans-serif;--papel:#f5f1f2;--ameixa:#3a1220;--ink:#2a141b;--muted:#6f5a61;--link:#b0244a;--line:#e9e0e3;
   --wa-color-brand-fill-loud:#b0244a;--wa-color-brand-border-loud:#b0244a}
 body,.top-band{background:#f5f1f2}
 .top-band{border-bottom-color:#e9e0e3}
@@ -332,7 +332,7 @@ h1 em{color:inherit}
 .hero-bench{width:min(100%,480px);padding:8px 0 44px}
 .bench{position:relative;margin:0;border-radius:28px;overflow:visible}
 .bench>img{display:block;width:100%;height:auto;aspect-ratio:1;object-fit:cover;border-radius:28px;box-shadow:0 30px 60px -40px #3a122066}
-.bench-order{position:absolute;left:5%;right:5%;bottom:-18px;display:grid;grid-template-columns:auto minmax(0,1fr);gap:0 12px;align-items:start;padding:14px 16px 14px 12px;border-left:4px solid #1e6b47;border-radius:18px;background:#fff;box-shadow:0 24px 40px -22px #2a141b99;rotate:-1.5deg;font:14px/1.4 "Plus Jakarta Sans",sans-serif;color:#2a141b}
+.bench-order{position:absolute;left:5%;right:5%;bottom:-18px;display:grid;grid-template-columns:auto minmax(0,1fr);gap:0 12px;align-items:start;padding:14px 16px 14px 12px;border-left:4px solid #1e6b47;border-radius:18px;background:#fff;box-shadow:0 24px 40px -22px #2a141b99;rotate:-1.5deg;font:14px/1.4 "Bricolage Grotesque",sans-serif;color:#2a141b}
 .bench-order::before{content:"";position:absolute;top:-10px;left:50%;width:52px;height:20px;translate:-50% 0;rotate:4deg;background:#f3e6c9d9;border-radius:2px}
 .bo-when{display:grid;justify-items:end;gap:3px}
 .bo-when b{font:700 26px/1 "Bricolage Grotesque",sans-serif;letter-spacing:-.03em}
@@ -342,7 +342,7 @@ h1 em{color:inherit}
 .bo-body span{color:#6f5a61}
 .bo-body span b{color:#2a141b}
 .bench-order .bo-stamp{position:absolute;top:12px;right:12px;display:grid;justify-items:center;padding:5px 10px 6px;font-size:16px;line-height:1.05}
-.stamp-mini small{display:block;font:700 12px "Plus Jakarta Sans",sans-serif}
+.stamp-mini small{display:block;font:700 12px "Bricolage Grotesque",sans-serif}
 .motion .bench-order{opacity:0}
 @media (max-width:420px){.bench-order{left:3%;right:3%}.bo-body{padding-right:86px}.bo-body strong{font-size:16px}}
 /* Pedidos de exemplo na foto do caderno: mesma linguagem do app. */
@@ -372,7 +372,7 @@ h1 em{color:inherit}
 .om-btn{border-color:#f0dbe2;background:#f7eef1;color:#3a1220}
 /* Dinheiro: o mesmo carimbo do app nos dois estados. */
 .pm-flag.stamp-due{display:grid;justify-items:center;padding:4px 9px 5px;border:2px dashed #c98a12;border-radius:10px;background:#fff0cc;color:#7f4d00;font:700 14px/1.05 "Bricolage Grotesque",sans-serif;rotate:-2deg}
-.pm-flag.stamp-due small{font:700 11px "Plus Jakarta Sans",sans-serif}
+.pm-flag.stamp-due small{font:700 11px "Bricolage Grotesque",sans-serif}
 .pay-mock.is-pending{border-color:#e9e0e3;background:#fff}
 .pm-stamp{display:grid;justify-items:center;padding:4px 9px 5px;line-height:1.05}
 @media (prefers-reduced-motion:reduce){.bench-order,.pm-flag.stamp-due{rotate:0deg}}
