@@ -1,13 +1,31 @@
-/* Política de privacidade: mesmo visual de antes, separado da vitrine (que agora tem a identidade de cada confeitaria). */
-*{box-sizing:border-box}body{margin:0;background:var(--papel);color:var(--ink);font:16px/1.55 var(--font-body)}
-header{background:var(--glace);padding:20px max(20px,calc((100vw - 680px)/2));display:flex;align-items:center;justify-content:space-between;gap:12px}
-header span{font-size:12px;max-width:90px;text-align:right}header img{display:block;max-width:100%}
-main{max-width:680px;margin:0 auto;padding:32px 20px 48px}
-h1,h2{font-family:var(--font-title);line-height:1.12}h1{font-size:clamp(30px,7vw,42px);margin:12px 0;overflow-wrap:anywhere}h2{font-size:18px;font-weight:600}
-a{color:var(--link)}a:focus-visible{outline:3px solid var(--focus);outline-offset:3px}
-footer{max-width:680px;margin:auto;padding:24px 20px 40px;font-size:12px;color:var(--muted)}
+/* Política de privacidade (modo leitura): resumo, índice e duas partes, para quem pede e para a confeiteira.
+   Mesmo fundo, letra e cabeçalho do app (tokens.css). Títulos das partes bem maiores que o texto, com mais espaço acima. */
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{margin:0;background:var(--papel);color:var(--ink);font:16px/1.6 var(--font-body)}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:20px max(20px,calc((100vw - 680px)/2));background:var(--branco);border-bottom:var(--hairline)}
+header span{font-size:13px;color:var(--muted);text-align:right}
+header img{display:block;max-width:100%}
+main{max-width:680px;margin:0 auto;padding:28px 20px 48px}
+h1,h2,h3{font-family:var(--font-title);line-height:1.15;letter-spacing:-.02em;color:var(--ameixa)}
+h1{font-size:clamp(32px,8vw,44px);margin:8px 0 10px;overflow-wrap:anywhere}
+h2{font-size:24px;font-weight:700;margin:0 0 12px}
+h3{font-size:19px;font-weight:700;margin:32px 0 8px;scroll-margin-top:16px}
+p{margin:0 0 12px}
+.updated{color:var(--muted);font-size:14px}
+a{color:var(--link);text-underline-offset:3px}
+a:focus-visible{outline:3px solid var(--focus);outline-offset:3px;border-radius:4px}
+.summary{margin:24px 0;padding:18px 20px 8px;border-radius:var(--r-l);background:var(--branco);border:var(--hairline)}
+.summary ul{margin:0;padding-left:20px;display:grid;gap:10px}
+.summary li{padding-left:2px}
+.toc{margin:0 0 8px;padding:4px 0 8px;border-bottom:var(--hairline)}
+.toc h2{font-size:19px;margin-bottom:8px}
+.toc p{margin:12px 0 2px;font-size:14px;color:var(--muted)}
+.toc ul{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:0 16px}
+.toc a{display:inline-flex;align-items:center;min-height:44px;font-weight:600}
+.part{padding-top:40px;scroll-margin-top:16px}
+.part>h2{padding-top:16px;border-top:3px solid var(--glace)}
+.part>h2+h3{margin-top:16px}
+.back a{display:inline-flex;align-items:center;min-height:44px;font-weight:700}
 @media(max-width:380px){header{padding:16px 20px}}
-/* Direção Comanda (16/10): mesmo fundo e cabeçalho do app. */
-body{background:#f5f1f2;color:#2a141b}header{background:#fff;border-bottom:1px solid #e9e0e3}h1,h2{font-family:"Bricolage Grotesque",sans-serif;letter-spacing:-.02em}
-/* Rodada 3: links soltos com pelo menos 44 px de altura. */
-main>p:last-child>a:only-child{display:inline-flex;align-items:center;min-height:44px}

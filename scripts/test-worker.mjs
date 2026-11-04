@@ -56,7 +56,7 @@ try {
   for (const bad of ['/fotos/abc.jpg', `/fotos/${'b'.repeat(32)}/11111111-1111-1111-1111-111111111111.jpg`]) assert.equal((await fetch(origin + bad)).status, 404, bad);
   results.push('fotos com cache de um ano; caminhos inválidos dão 404');
 
-  for (const [route, text] of [['/', 'Para quem vende doces'], ['/demo/', '/data-client.js'], ['/privacidade/', 'Cloudflare para hospedar'], ['/encomenda/exemplos/bolo.svg', '<svg']]) {
+  for (const [route, text] of [['/', 'Para quem vende doces'], ['/demo/', '/data-client.js'], ['/privacidade/', 'Seus dados no Doce Agenda'], ['/encomenda/exemplos/bolo.svg', '<svg']]) {
     const r = await fetch(origin + route); assert.equal(r.status, 200, route); assert.ok((await r.text()).includes(text), route);
   }
   results.push('resto do site continua estático');
