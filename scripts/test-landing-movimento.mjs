@@ -43,10 +43,15 @@ async function checkDemos(page, label) {
   await page.locator('.money-demo').scrollIntoViewIfNeeded();
   await page.locator('.mc-btn').nth(1).click();
   await sumIs(page, 'R$ 175');
-  assert.equal(await page.locator('.money-card').nth(1).locator('.t-tag').innerText(), 'Pago', `${label}: Marcos pago`);
+  const marcos = page.locator('.money-card').nth(1);
+  assert.equal(await marcos.locator('.mc-stamp').isVisible(), true, `${label}: Marcos pago (carimbo)`);
+  assert.equal(await marcos.locator('.t-tag').isVisible(), false, `${label}: sem "Pago" em dobro`);
+  // O carimbo fica no lugar do botão, sem passar por cima de "seg 15h".
+  const [text, stamp] = await Promise.all([marcos.locator('.mc-info small').boundingBox(), marcos.locator('.mc-stamp').boundingBox()]);
+  assert.ok(text.x + text.width <= stamp.x + 4, `${label}: carimbo não cobre o texto (${Math.round(text.x + text.width)} ≤ ${Math.round(stamp.x)})`);
   await page.locator('.mc-btn').nth(0).click();
   await page.locator('.mc-btn').nth(2).click();
-  await sumIs(page, 'R$ 0');
+  await sumIs(page, 'Tudo recebido');
   assert.equal(await page.locator('.money-status').innerText(), 'Tudo recebido.');
   await page.locator('.money-demo .try-reset').click();
   await sumIs(page, 'R$ 270');
@@ -127,7 +132,11 @@ try {
     await goTo(page, 0); await wait(page, 300);
     assert.equal(await ctaShown(), false, `${width}: barra escondida no topo`);
     await at('.try', height * 0.3);
-    assert.equal(await ctaShown(), width <= 700, `${width}: barra ${width <= 700 ? 'aparece' : 'não existe'} depois do topo`);
+    assert.equal(await ctaShown(), false, `${width}: barra some nas demonstrações (não cobre Recebi nem os doces)`);
+    await at('#link-cliente', height * 0.3);
+    assert.equal(await ctaShown(), false, `${width}: barra some na demonstração do link`);
+    await at('.trust', height * 0.2);
+    assert.equal(await ctaShown(), width <= 700, `${width}: barra ${width <= 700 ? 'aparece' : 'não existe'} entre as demonstrações e o fim`);
     await at('.story-track', height * 0.5);
     assert.equal(await ctaShown(), false, `${width}: barra some na semana da Lu`);
     await at('.story', -height * 0.2);

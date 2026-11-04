@@ -80,6 +80,7 @@ try {
       captions[i].style.opacity = Math.max(0, 1 - Math.abs(offset) * 2.5).toFixed(3);
     });
     sky.style.opacity = third.toFixed(3);
+    day.classList.toggle('is-night', third >= 0.5);
     // O dia gigante vira de segunda a sábado enquanto a semana passa entre a primeira e a segunda cena.
     const today = ['seg', 'ter', 'qua', 'qui', 'sex', 'sáb'][third > 0 ? 5 : Math.round(second * 5)];
     if (day.dataset.day !== today) day.dataset.day = today;
@@ -121,10 +122,12 @@ try {
   }
   // Barra fixa no celular: aparece enquanto o botão principal do topo não está à vista (em celular baixo ele fica
   // abaixo da foto, então a barra já vem na primeira tela) e some no bolo parado, em toda a semana da Lu (o botão do
-  // vídeo fica no pé da cena) e quando chega o convite do fim. Escondida, fica fora do teclado e do leitor de tela.
+  // vídeo fica no pé da cena), nas demonstrações para tocar (ficava na zona do polegar, sobre Recebi e Aceitar) e quando
+  // chega o convite do fim. Escondida, fica fora do teclado e do leitor de tela.
   const cta = document.querySelector('.float-cta');
   const heroPrimary = document.querySelector('.hero-end .primary');
   const closing = document.querySelector('.closing-new');
+  const demos = [...document.querySelectorAll('.try, #link-cliente')];
   const narrow = matchMedia('(max-width: 700px)');
   let ctaShown = null;
   cta.hidden = false;
@@ -134,7 +137,8 @@ try {
     const primary = heroPrimary.getBoundingClientRect();
     const heroHidden = primary.bottom < 0 || primary.top > innerHeight - cta.offsetHeight;
     const show = narrow.matches && heroHidden && closing.getBoundingClientRect().top > innerHeight
-      && !inView(storyTrack.getBoundingClientRect()) && !pinned(cakeTrack.getBoundingClientRect());
+      && !inView(storyTrack.getBoundingClientRect()) && !pinned(cakeTrack.getBoundingClientRect())
+      && !demos.some((section) => inView(section.getBoundingClientRect()));
     if (show === ctaShown) return;
     ctaShown = show;
     cta.classList.toggle('is-shown', show);
@@ -307,6 +311,7 @@ try {
   const reset = demo.querySelector('.try-reset');
   const cards = [...demo.querySelectorAll('.money-card')];
   const tags = cards.map((card) => card.querySelector('.t-tag').textContent);
+  const label = total.querySelector('span');
   const due = () => cards.filter((card) => !card.classList.contains('is-paid')).reduce((left, card) => left + Number(card.dataset.cents), 0);
   let shown = due(), frame = 0;
 
@@ -317,7 +322,10 @@ try {
       const t = length ? Math.min(1, (now - begin) / length) : 1;
       // Conta em reais inteiros durante a descida; o valor final é o exato.
       shown = t < 1 ? Math.round((from + (target - from) * (1 - (1 - t) ** 3)) / 100) * 100 : target;
-      sum.textContent = brl(shown);
+      // Zerou: no lugar de "Falta receber R$ 0", a frase inteira.
+      const done = t >= 1 && target === 0;
+      sum.textContent = done ? 'Tudo recebido' : brl(shown);
+      label.hidden = done;
       if (t < 1) frame = requestAnimationFrame(step);
     };
     frame = requestAnimationFrame(step);
@@ -349,9 +357,9 @@ try {
     }
   };
   cards.forEach((card) => card.querySelector('.mc-btn').addEventListener('click', () => {
+    // O carimbo "Pago" fica no lugar do botão; a etiqueta sai para não dizer "Pago" duas vezes.
     card.classList.add('is-paid');
-    card.querySelector('.t-tag').textContent = 'Pago';
-    card.querySelector('.t-tag').classList.add('is-paid');
+    card.querySelector('.t-tag').hidden = true;
     reset.hidden = false;
     if (settle() === 0) celebrate();
     (cards.find((item) => !item.classList.contains('is-paid'))?.querySelector('.mc-btn') ?? reset).focus({ preventScroll: true });
@@ -360,7 +368,7 @@ try {
     cards.forEach((card, i) => {
       card.classList.remove('is-paid');
       card.querySelector('.t-tag').textContent = tags[i];
-      card.querySelector('.t-tag').classList.remove('is-paid');
+      card.querySelector('.t-tag').hidden = false;
     });
     reset.hidden = true;
     settle();

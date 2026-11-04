@@ -222,3 +222,25 @@ h1 span{display:inline-block;white-space:nowrap}
 .video-error{position:absolute;left:16px;right:16px;bottom:calc(24px + env(safe-area-inset-bottom));margin:0;padding:12px 16px;border-radius:14px;background:var(--papel);color:var(--ink);font-weight:600;text-align:center}
 /* No celular o bolo fica mais perto do título (antes sobrava um vão de uns 200 px). */
 @media (max-width:700px){.anima .cake{margin-top:max(16px,3svh);margin-bottom:auto;transform-origin:50% 0}}
+
+/* Quarta rodada impeccable (04/11/2026, avaliação com ajudantes separados).
+   Celular: as trilhas da animação ficam mais curtas (a primeira demonstração para tocar subia 5 telas abaixo). */
+@media (max-width:700px){.anima .cake-track{height:135vh;height:135svh}.anima .story-track{height:185vh;height:185svh}}
+/* Cor com um sentido só: vaga ocupada em vinho; tijolo só no Dia cheio; framboesa é marca, nunca estado. */
+.wk-slots i:after{background:var(--vinho)}
+.week-demo.is-choosing .wk-day:not(.is-full),.wk-day.is-over:not(.is-full){border-color:var(--vinho)}
+.anima .story-day.is-night:before{color:#f7c5d0}
+.m-eyebrow{text-transform:none;letter-spacing:0}
+/* Carimbo "Pago" no lugar do botão: o botão some sem tirar o espaço, e o texto não passa por baixo do carimbo. */
+.money-demo.is-live .money-card.is-paid .mc-btn{display:block;visibility:hidden}
+.money-total [hidden]{display:none}
+.money-total.is-done .money-sum{font-size:26px}
+/* Rodapé: o link da política com 44 px de toque. */
+.footer .footer-link{display:inline-flex;align-items:center;min-height:44px}
+/* Computador: um eixo só. O bolo e a semana alinham com o título, à esquerda, em vez de ficarem no meio. */
+@media (min-width:1024px){
+  .cake{margin-inline:0}
+  .anima .story-meta,.anima .story figure img,.anima .story figcaption,.anima .story-foot{margin-left:0}
+  .anima .story figcaption{text-align:left}
+  .anima .story .video-open{align-self:flex-start}
+}
