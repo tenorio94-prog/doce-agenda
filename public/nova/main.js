@@ -74,6 +74,12 @@ const actions = {
   month: (el) => { app.month = M.addMonths(app.month, Number(el.dataset.step)); renderMoney({ keep: true }).then(() => $(`[data-act="month"][data-step="${el.dataset.step}"]:not([disabled])`)?.focus()); },
   link: () => Link.openLink(),
   'edit-link': () => Link.openWizard(Link.openLink),
+  'open-vitrine': () => Link.openVitrineEditor(),
+  'preview-vitrine': () => Link.previewFromVitrine(),
+  'add-product': () => Link.addProductRow(),
+  'remove-product': (el) => Link.removeProductRow(el),
+  'move-product': (el) => Link.moveProductRow(el),
+  'remove-photo': (el) => Link.removePhoto(el),
   'copy-link': () => Link.copyLink(),
   'preview-link': () => Link.previewSaved(),
   menu: () => Menu.openMenu(),
@@ -102,13 +108,16 @@ document.addEventListener('submit', async (event) => {
   else if (form.id === 'refuse-form') Ficha.submitRefuse(form);
   else if (form.id === 'confirm-form') Ficha.confirmQuote(form.dataset.id);
   else if (form.id === 'link-wizard') Link.wizardNext(event.submitter?.value || 'next');
+  else if (form.id === 'vitrine-form') Link.submitVitrine(form, event.submitter?.value || 'save');
   else if (form.id === 'days-form') { if (await Menu.submitDays(form)) refresh(); }
 });
 document.addEventListener('input', (event) => {
   if (event.target.closest('#link-wizard')) Link.onWizardInput(event.target);
+  else if (event.target.closest('#vitrine-form')) Link.onVitrineInput(event);
   if (event.target.name === 'amount' && event.target.form?.id === 'pay-form' && event.target.form.dataset.over) Ficha.resetReceived(event.target.form);
 });
 document.addEventListener('change', (event) => {
+  if (event.target.closest('#vitrine-form')) Link.onVitrineChange(event);
   if (event.target.name === 'mode' && event.target.form?.id === 'order-form') Form.syncMode(event.target.form);
   if (['date', 'time'].includes(event.target.name)) {
     if (event.target.form?.id === 'order-form') Form.syncDay(event.target.form);

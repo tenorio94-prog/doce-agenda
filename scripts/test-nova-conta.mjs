@@ -28,6 +28,7 @@ async function open(width, height, url = '/app/') {
   const backend = { state: demoSeedState(new Date(2026, 9, 27, 12)), revision: 1, calls: [] };
   const context = await browser.newContext({ viewport: { width, height }, locale: 'pt-BR', timezoneId: 'America/Sao_Paulo', serviceWorkers: 'block' });
   await context.route('**/account/config.js', (route) => route.fulfill({ contentType: 'text/javascript', body: config }));
+  await context.route('**/fotos/**', (route) => route.fulfill({ status: 200, contentType: 'image/png', body: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64') }));
   await context.addInitScript((value) => { if (!localStorage.getItem('sb-doce-teste-auth-token')) localStorage.setItem('sb-doce-teste-auth-token', value); }, JSON.stringify(session));
   await context.route(`${API}/**`, async (route) => {
     const request = route.request();
@@ -37,6 +38,12 @@ async function open(width, height, url = '/app/') {
     const write = envelope.method !== 'GET';
     backend.calls.push({ ...envelope, auth: request.headers().authorization });
     const reply = (body, status) => route.fulfill({ status, headers: { ...cors, 'Content-Type': 'application/json', 'X-Agenda-Revision': String(backend.revision) }, body: JSON.stringify(body) });
+    if (envelope.path === '/api/vitrine/fotos' && envelope.method === 'POST') {
+      backend.photoCount = (backend.photoCount || 0) + 1;
+      const ext = envelope.body?.type === 'image/jpeg' ? 'jpg' : 'webp';
+      const uuid = `00000000-0000-4000-8000-${String(backend.photoCount).padStart(12, '0')}`;
+      return reply({ key: `${'a'.repeat(32)}/${uuid}.${ext}` }, 201);
+    }
     if (write && envelope.expectedRevision !== backend.revision && !atTestTime(() => canRebaseWrite(backend.state, envelope.path, envelope.method, envelope.base || {}))) {
       return reply({ error: 'O estado mudou em outra sessão. Atualize e tente novamente.', code: 'REVISION_CONFLICT' }, 409);
     }
@@ -119,11 +126,52 @@ try {
     await page.waitForFunction(() => document.querySelector('.order.is-done')?.textContent.includes('Ana Conta'));
     assert.equal(backend.state.orders.find((order) => order.id === saved.id).status, 'Entregue');
 
-    // Dinheiro do mês pelo servidor; menu limpo com Dias e limite e Sair (sem Recomeçar e sem /completa/).
+    // Dinheiro do mês pelo servidor; editor completo da vitrine na conta (upload de logo/doce, estilo, 4º+ doce, ativar e pausar); menu limpo e Sair.
     await page.locator('[data-tab="dinheiro"]:visible').first().click();
     await page.locator('#money-received').waitFor();
     assert.ok(backend.calls.some((call) => call.path.startsWith('/api/resumo-mensal?mes=2026-10')));
     await page.locator('[data-tab="agenda"]:visible').first().click();
+
+    await page.locator('.top [data-act="link"]').click();
+    await sheet(page).locator('[data-act="open-vitrine"]').click();
+    const vForm = page.locator('#vitrine-form');
+    await vForm.waitFor();
+    assert.equal(await vForm.locator('[data-photo="logo"]').isDisabled(), false, 'na conta o envio de fotos fica habilitado');
+    // Simula seleção de uma foto PNG para o logo e uma foto para um novo doce (17º doce).
+    const pngBytes = await page.evaluate(async () => {
+      const c = document.createElement('canvas'); c.width = 240; c.height = 240;
+      const ctx = c.getContext('2d'); ctx.fillStyle = '#6e54a6'; ctx.fillRect(0, 0, 240, 240);
+      const b = await new Promise((r) => c.toBlob(r, 'image/png'));
+      return [...new Uint8Array(await b.arrayBuffer())];
+    });
+    await vForm.locator('[data-photo="logo"]').setInputFiles({ name: 'logo.png', mimeType: 'image/png', buffer: Buffer.from(pngBytes) });
+    await vForm.locator('.media-logo .photo-status', { hasText: 'Foto pronta' }).waitFor();
+    assert.equal(await vForm.locator('.logo-swatch input').isChecked(), true, 'cor dominante do logo é sugerida e selecionada');
+    assert.match(await vForm.locator('[name=logo]').inputValue(), /^[a-f0-9]{32}\/[a-f0-9-]{36}\.webp$/);
+    assert.match(await vForm.locator('[name=share]').inputValue(), /^[a-f0-9]{32}\/[a-f0-9-]{36}\.jpg$/, 'imagem de compartilhamento 1200x630 gerada');
+    await vForm.locator('.style-card', { hasText: 'Caseira' }).click();
+    await vForm.locator('[name=welcome]').fill('Bolos artesanais sob encomenda.');
+    await vForm.locator('[name=instagram]').fill('@docesdalu.oficial');
+    await vForm.locator('[data-act="add-product"]').click();
+    const newRow = vForm.locator('.product-item').last();
+    await newRow.locator('[name=productName]').fill('Quindim de festa (cento)');
+    await newRow.locator('[name=productPrice]').fill('140');
+    await newRow.locator('[data-photo="product"]').setInputFiles({ name: 'quindim.png', mimeType: 'image/png', buffer: Buffer.from(pngBytes) });
+    await newRow.locator('.photo-status', { hasText: 'Foto pronta' }).waitFor();
+    await vForm.locator('button[value="activate"]').click();
+    await page.locator('#toast', { hasText: 'Seu link está no ar!' }).waitFor();
+    assert.equal(backend.state.orderPage.active, true);
+    assert.equal(backend.state.orderPage.style, 'caseira');
+    assert.equal(backend.state.orderPage.instagram, 'docesdalu.oficial');
+    assert.equal(backend.state.orderPage.products.length, 17);
+    assert.equal(backend.state.orderPage.products.at(-1).name, 'Quindim de festa (cento)');
+    assert.match(backend.state.orderPage.products.at(-1).photo, /^[a-f0-9]{32}\/[a-f0-9-]{36}\.webp$/);
+    // Com o link ativo, abrir o editor completo permite pausar o link.
+    await sheet(page).locator('[data-act="open-vitrine"]').click();
+    await page.locator('#vitrine-form button[value="pause"]').click();
+    await page.locator('#toast', { hasText: 'Link pausado' }).waitFor();
+    assert.equal(backend.state.orderPage.active, false);
+
     await page.locator('[data-act="menu"]').click();
     assert.equal(await sheet(page).locator('[data-act="reset"]').count(), 0);
     assert.equal(await sheet(page).locator('a.menu-item').count(), 0, 'sem atalho para /completa/ no menu');
@@ -134,7 +182,7 @@ try {
     await landsOnLogin(page);
     assert.deepEqual(errors, [], 'sem erro na página');
     await context.close();
-    results.push(`${width}: conta abre a tela nova, grava, recebe pedido do link, conflito, Dinheiro e Sair`);
+    results.push(`${width}: conta abre a tela nova, grava, recebe pedido do link, conflito, vitrine completa (fotos/estilo/17º doce/ativar/pausar), Dinheiro e Sair`);
   }
 
   // Sem login, vai para a entrada; a versão completa (/app/completa/) abre a tela anterior com "Sair" no topo.

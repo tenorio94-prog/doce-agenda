@@ -238,11 +238,54 @@ try {
     assert.equal(await sheet(page).locator('#sheet-back').isVisible(), true, 'pode voltar ao resumo do Meu link');
     await sheet(page).locator('#sheet-back').click();
     await sheet(page).locator('#link-url').waitFor();
+
+    // 2B (Etapa 3B): Fotos, estilo e todos os doces (editor completo na tela nova, sem ir para /completa/).
+    const vitrineBtn = sheet(page).locator('[data-act="open-vitrine"]', { hasText: 'Fotos, estilo e doces' });
+    await vitrineBtn.waitFor();
+    await vitrineBtn.click();
+    const vForm = page.locator('#vitrine-form');
+    await vForm.waitFor();
+    assert.equal(await vForm.locator('.product-item').count(), 16, 'todos os 16 doces da demo aparecem');
+    assert.equal(await vForm.locator('[data-photo="logo"]').isDisabled(), true, 'na demo o envio de foto fica desabilitado');
+    assert.match(await vForm.innerText(), /Na demonstração, as fotos são exemplos/);
+    await vForm.locator('.style-card', { hasText: 'Moderna' }).click();
+    await vForm.locator('.swatch[title="Pistache"]').click();
+    await vForm.locator('.color-picker').evaluate((input) => { input.value = '#f2c94c'; input.dispatchEvent(new Event('input', { bubbles: true })); });
+    assert.equal(await vForm.locator('#color-note').isVisible(), true, 'cor clara avisa ajuste automático de contraste');
+    // Mais pedidos: máximo de 3 doces com aviso amigável.
+    await vForm.locator('.product-item').nth(3).locator('summary').click();
+    await vForm.locator('.product-item').nth(3).locator('[name=productFeatured]').click();
+    assert.equal(await vForm.locator('[name=productFeatured]:checked').count(), 3, 'quarto destaque é recusado');
+    // Adicionar 17º doce (4º+ doce), preencher categoria, preço, tamanho e detalhes do bolo.
+    await vForm.locator('[data-act="add-product"]').click();
+    assert.equal(await vForm.locator('.product-item').count(), 17);
+    const added = vForm.locator('.product-item').last();
+    await added.locator('[name=productName]').fill('Bolo Red Velvet');
+    assert.equal(await added.locator('[name=productCakeFields]').isChecked(), true, 'nome com bolo marca detalhes do bolo automaticamente');
+    await added.locator('[name=productCategory]').fill('Especiais');
+    await added.locator('[name=productPrice]').fill('185,50');
+    await added.locator('[name=productSlots]').selectOption('2');
+    assert.match(await added.locator('summary').innerText(), /Bolo Red Velvet[\s\S]*Especiais · a partir de R\$\s*185,50/);
+    await look('editor completo da vitrine');
+    await vForm.locator('[data-act="preview-vitrine"]').click();
+    const vFrame = page.frameLocator('#link-preview-frame');
+    await vFrame.locator('#vitrine:not([hidden])').waitFor();
+    assert.equal(await vFrame.locator('body').getAttribute('class'), 'st-moderna');
+    await vFrame.locator('text=Bolo Red Velvet').first().waitFor();
+    const previewDraft = await page.evaluate(() => JSON.parse(localStorage.getItem('doce-agenda.link-preview')));
+    assert.equal(previewDraft.style, 'moderna');
+    assert.equal(previewDraft.color, '#f2c94c');
+    assert.equal(previewDraft.products.length, 17);
+    assert.deepEqual(previewDraft.products.at(-1), { name: 'Bolo Red Velvet', description: '', category: 'Especiais', priceFromCents: 18550, slots: 2 });
+    // Voltar da prévia devolve ao editor completo preservando o rascunho.
+    await sheet(page).locator('#sheet-back').click();
+    await page.locator('#vitrine-form').waitFor();
+    assert.equal(await page.locator('#vitrine-form .product-item').count(), 17);
     await closeSheet(page);
     await page.locator('[data-act="menu"]').click();
     for (const href of await sheet(page).locator('a').evaluateAll((links) => links.map((a) => a.getAttribute('href')))) assert.doesNotMatch(String(href || ''), /\/completa\//, 'menu sem link para /completa/');
     await finish();
-    results.push(`${width}: Editar nome e doces abre no app limpo, sem /completa/`);
+    results.push(`${width}: Editar nome e doces e editor completo (fotos, estilo, cor e 4º+ doce) abrem no app limpo, sem /completa/`);
 
     // 3. A landing anterior continua disponível com seus exemplos e CTA originais.
     {
