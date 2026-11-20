@@ -330,3 +330,5 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px soli
   .feat-nav[data-feat="-1"]{left:-6px}
   .feat-nav[data-feat="1"]{right:-6px}
 }
+body:has(.sheet[open]){overflow:hidden}
+

@@ -79,7 +79,7 @@ try {
     assert.equal(await wide(page), false);
 
     // Anotar e receber gravam no servidor, com a revisão que o app viu.
-    await page.locator('.bar [data-act="new"]').click();
+    await page.locator('[data-act="new"]:visible').first().click();
     const form = page.locator('#order-form');
     await form.locator('[name=client]').fill('Ana Conta');
     await form.locator('[name=product]').fill('Bolo de cenoura');
@@ -119,14 +119,15 @@ try {
     await page.waitForFunction(() => document.querySelector('.order.is-done')?.textContent.includes('Ana Conta'));
     assert.equal(backend.state.orders.find((order) => order.id === saved.id).status, 'Entregue');
 
-    // Dinheiro do mês pelo servidor; menu com Sair (e sem Recomeçar).
-    await page.locator('.bar [data-tab="dinheiro"]').click();
+    // Dinheiro do mês pelo servidor; menu limpo com Dias e limite e Sair (sem Recomeçar e sem /completa/).
+    await page.locator('[data-tab="dinheiro"]:visible').first().click();
     await page.locator('#money-received').waitFor();
     assert.ok(backend.calls.some((call) => call.path.startsWith('/api/resumo-mensal?mes=2026-10')));
-    await page.locator('.bar [data-tab="agenda"]').click();
+    await page.locator('[data-tab="agenda"]:visible').first().click();
     await page.locator('[data-act="menu"]').click();
     assert.equal(await sheet(page).locator('[data-act="reset"]').count(), 0);
-    assert.match(await sheet(page).locator('a.menu-item').first().getAttribute('href'), /^\/app\//);
+    assert.equal(await sheet(page).locator('a.menu-item').count(), 0, 'sem atalho para /completa/ no menu');
+    assert.equal(await sheet(page).locator('[data-act="days"]').count(), 1);
     const text = (await page.evaluate(() => document.body.innerText)).toLocaleLowerCase('pt-BR');
     assert.deepEqual(FORBIDDEN.filter((word) => text.includes(word)), []);
     await sheet(page).locator('[data-act="sign-out"]').click();

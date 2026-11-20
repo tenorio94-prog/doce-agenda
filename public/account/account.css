@@ -115,25 +115,25 @@ body{background:#fff8f8;color:#27171c;font-family:"Bricolage Grotesque",Arial,sa
 /* Rodada 3: alvos de toque com pelo menos 44 px. */
 .reveal-password{top:2px;min-height:44px}
 .text-link{display:inline-flex;align-items:center;min-height:44px}
-/* Cara da landing acolhedora (27/10): creme, Bricolage, botões redondos, fio de glacê e selos. Formulário igual. */
+/* Harmonia editorial com tokens.css */
 body{background:var(--papel);color:var(--ink)}
 .site-header{border-bottom-color:var(--line)}
 .site-footer{border-top-color:var(--line)}
 .header-link{color:var(--link);font-weight:700}
-.intro h1{color:#3a1220;letter-spacing:-.04em;line-height:1.12}
+.intro h1{color:var(--vinho);letter-spacing:-.04em;line-height:1.12}
 .intro h1 .glace{display:inline-block;position:relative;color:inherit;white-space:nowrap}
-.intro h1 .glace::after{content:"";display:block;width:85%;height:18px;background:url(/previa-landing/fio.svg) left center/100% 100% no-repeat}
-.card-content h2{color:#3a1220}
-.account-card{border-color:var(--line);background:var(--branco)}
+.intro h1 .glace::after{content:"";display:block;width:92%;height:6px;margin-top:4px;border-radius:999px;background:var(--framboesa);opacity:.85}
+.card-content h2{color:var(--vinho)}
+.account-card{border-color:var(--line);background:var(--branco);box-shadow:var(--shadow-m)}
 .mode-tab[aria-current="page"]{color:var(--framboesa)}
 .mode-tab[aria-current="page"]::after{background:var(--framboesa)}
 .button{min-height:50px;font-family:var(--font-body);font-weight:700;font-size:15px}
-.button-primary{background:var(--framboesa);border:2px solid var(--framboesa);box-shadow:none}
-.button-primary:hover:not(:disabled){background:var(--link);border-color:var(--link)}
-.button-secondary{background:transparent;border:2px solid var(--link);color:var(--link)}
-.button-secondary:hover{background:#fff;border-color:var(--link)}
-.detail-icon{background:#f9ecd1;color:var(--link)}
-.checks{display:flex;flex-wrap:wrap;justify-content:center;gap:6px 16px;margin:14px 0 0;padding:0;list-style:none;font-size:13px;font-weight:700;color:#2a141b}
+.button-primary{background:var(--framboesa);border:1.5px solid var(--framboesa);box-shadow:0 4px 12px rgb(158 38 71 / 18%)}
+.button-primary:hover:not(:disabled){background:var(--framboesa-hover);border-color:var(--framboesa-hover)}
+.button-secondary{background:var(--branco);border:1.5px solid #d6c8cc;color:var(--vinho);box-shadow:var(--shadow-s)}
+.button-secondary:hover{background:#fff;border-color:var(--border-input)}
+.detail-icon{background:var(--glace);color:var(--link)}
+.checks{display:flex;flex-wrap:wrap;justify-content:center;gap:6px 16px;margin:14px 0 0;padding:0;list-style:none;font-size:13px;font-weight:700;color:var(--vinho)}
 .checks li::before{content:"";display:inline-block;width:18px;height:18px;margin-right:6px;vertical-align:-4px;border-radius:50%;background:var(--carimbo) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4.5 8.3l2.2 2.2 4.8-4.8' fill='none' stroke='%23fff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/100% no-repeat}
 #signup-form[hidden]+.checks{display:none}
 @media(max-width:760px){.intro h1{font-size:28px;line-height:1.2}.intro h1 .glace::after{margin-inline:auto;height:12px}}

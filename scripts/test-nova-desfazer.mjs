@@ -35,10 +35,10 @@ try {
     const { context, page, state, errors, filled } = await open(width, height);
 
     // 1. Pedido pela metade: tocar fora pergunta; Continuar mantém o que foi digitado; Esc pergunta de novo; Descartar fecha.
-    await page.locator('.bar [data-act="new"]').click();
+    await page.locator('[data-act="new"]:visible').first().click();
     await outside(page);
     assert.equal(await sheetOpen(page), false, 'formulário vazio fecha com um toque fora');
-    await page.locator('.bar [data-act="new"]').click();
+    await page.locator('[data-act="new"]:visible').first().click();
     await page.locator('#order-form [name=client]').fill('Cida Teste');
     await page.locator('#order-form [name=product]').fill('Torta de limão');
     await outside(page);
@@ -53,7 +53,7 @@ try {
     assert.equal(await sheetOpen(page), true, 'Esc também pergunta');
     await page.locator('[data-act="discard"]').click();
     assert.equal(await sheetOpen(page), false, 'Descartar fecha');
-    await page.locator('.bar [data-act="new"]').click();
+    await page.locator('[data-act="new"]:visible').first().click();
     assert.equal(await page.locator('#order-form [name=client]').inputValue(), '', 'descartado não volta');
     await page.locator('#sheet [data-act="close"]').click();
     results.push(`${width}: pedido pela metade não se perde`);
@@ -79,7 +79,7 @@ try {
 
     // 3. Recusar o pedido do link: botão tijolo e "Desfazer a recusa" volta para decidir.
     const request = before.orders.find((order) => order.status === 'Solicitação');
-    await page.locator('#notice-decide [data-act]').click();
+    await page.locator('#notice-decide').click();
     if (await page.locator('#sheet .list-row').count()) await page.locator(`#sheet .list-row[data-id="${request.id}"]`).click();
     await page.locator('#sheet [data-act="refuse"]').click();
     assert.match(await page.locator('#refuse-form [type=submit]').getAttribute('class'), /btn-danger/);
@@ -92,7 +92,7 @@ try {
     results.push(`${width}: recusar com Desfazer`);
 
     // 4. Orçamento num dia cheio: Confirmar mostra o bloco único com "Confirmar mesmo assim" e "Trocar o dia".
-    await page.locator('.bar [data-act="new"]').click();
+    await page.locator('[data-act="new"]:visible').first().click();
     await page.locator('#order-form [name=client]').fill('Dora Teste');
     await page.locator('#order-form [name=product]').fill('Pudim');
     await page.locator('#order-form [data-act="quick"][data-days="0"]').click();
@@ -102,7 +102,7 @@ try {
     await page.locator('#sheet[open]').waitFor({ state: 'detached' }).catch(() => {});
     const quote = (await state()).orders.find((order) => order.client === 'Dora Teste');
     assert.equal(quote.status, 'Orçamento');
-    await page.evaluate((id) => document.querySelector(`[data-act="open"][data-id="${id}"]`)?.click() ?? document.querySelector('#notice-decide [data-act]').click(), quote.id);
+    await page.evaluate((id) => document.querySelector(`[data-act="open"][data-id="${id}"]`)?.click() ?? document.querySelector('#notice-decide').click(), quote.id);
     if (await page.locator('#sheet .list-row').count()) await page.locator(`#sheet .list-row[data-id="${quote.id}"]`).click();
     await page.locator('#sheet [data-act="confirm"]').click();
     await page.locator('#conflict-text', { hasText: 'já está cheio' }).waitFor();
@@ -116,7 +116,7 @@ try {
     results.push(`${width}: dia cheio num bloco só`);
 
     // 5. Dinheiro: "Ver os pagamentos" lista o que forma o Recebido do mês, e a soma bate.
-    await page.locator('.bar [data-tab="dinheiro"]').click();
+    await page.locator('[data-tab="dinheiro"]:visible').first().click();
     await page.locator('#money-received').waitFor();
     const total = cents(await page.locator('#money-received').innerText());
     await page.locator('[data-act="month-payments"]').click();

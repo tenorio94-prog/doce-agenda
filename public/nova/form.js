@@ -12,6 +12,7 @@ export function openForm(id = null) {
   const showQuote = !order || M.group(order.status) === 'decide';
   const value = order ? M.totalCents(order) : null;
   const delivery = order?.mode === 'Entrega';
+  const hasExtras = Boolean(order && (order.details || order.contact || delivery || order.location));
   openSheet(`<form id="order-form" novalidate${order ? ` data-id="${esc(order.id)}"` : ''}>
     <h2 id="sheet-title" tabindex="-1">${order ? 'Editar pedido' : 'Novo pedido'}</h2>
     <label class="field"><span>Quem pediu?</span><input name="client" autocomplete="off" maxlength="120" value="${esc(order?.client)}" aria-describedby="form-error"></label>
@@ -22,12 +23,17 @@ export function openForm(id = null) {
       <label class="field"><span>Hora</span><input type="time" name="time" value="${esc(String(order?.dueAt || '').slice(11, 16))}"></label></div>
       <p class="field-note" id="day-note" aria-live="polite" hidden></p>${conflictHtml('force-save', 'Salvar mesmo assim')}</fieldset>
     <label class="field"><span>Valor <small>(opcional)</small></span><input name="total" inputmode="decimal" autocomplete="off" placeholder="Ex.: 120" value="${value ? esc(M.centsInput(value)) : ''}"></label>
-    <label class="field"><span>Anotações</span><textarea name="details" rows="3" maxlength="2000" placeholder="Sabor, tamanho, decoração, o que combinaram">${esc(order?.details)}</textarea></label>
-    <label class="field"><span>WhatsApp da cliente <small>(opcional)</small></span><input name="contact" type="tel" inputmode="tel" autocomplete="off" maxlength="120" value="${esc(order?.contact)}"></label>
-    <fieldset class="field"><legend>Retirada ou entrega</legend><div class="seg">
-      <label><input type="radio" name="mode" value="Retirada"${delivery ? '' : ' checked'}><span>Retirada</span></label>
-      <label><input type="radio" name="mode" value="Entrega"${delivery ? ' checked' : ''}><span>Entrega</span></label></div></fieldset>
-    <label class="field" id="location-field"${delivery ? '' : ' hidden'}><span>Endereço da entrega</span><input name="location" autocomplete="off" maxlength="400" value="${esc(order?.location)}"></label>
+    <details class="more-fields" id="more-fields"${hasExtras ? ' open' : ''}>
+      <summary><span>Mais detalhes<small>Anotações, WhatsApp, entrega</small></span></summary>
+      <div class="more-fields-body">
+        <label class="field"><span>Anotações</span><textarea name="details" rows="3" maxlength="2000" placeholder="Sabor, tamanho, decoração, o que combinaram">${esc(order?.details)}</textarea></label>
+        <label class="field"><span>WhatsApp da cliente <small>(opcional)</small></span><input name="contact" type="tel" inputmode="tel" autocomplete="off" maxlength="120" value="${esc(order?.contact)}"></label>
+        <fieldset class="field"><legend>Retirada ou entrega</legend><div class="seg">
+          <label><input type="radio" name="mode" value="Retirada"${delivery ? '' : ' checked'}><span>Retirada</span></label>
+          <label><input type="radio" name="mode" value="Entrega"${delivery ? ' checked' : ''}><span>Entrega</span></label></div></fieldset>
+        <label class="field" id="location-field"${delivery ? '' : ' hidden'}><span>Endereço da entrega</span><input name="location" autocomplete="off" maxlength="400" value="${esc(order?.location)}"></label>
+      </div>
+    </details>
     ${showQuote ? `<label class="check"><input type="checkbox" name="quote"${order && M.group(order.status) === 'decide' ? ' checked' : ''}><span>Ainda é orçamento</span></label>` : ''}
     <p class="form-error" id="form-error" role="alert" hidden></p>
     <button class="btn btn-primary" type="submit">Salvar pedido</button></form>`);

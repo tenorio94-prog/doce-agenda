@@ -63,7 +63,7 @@ async function open(width, height, url = '/demo/') {
 }
 const sheet = (page) => page.locator('#sheet[open]');
 const closeSheet = async (page) => { await page.locator('#sheet [data-act="close"]').click(); await page.locator('#sheet[open]').waitFor({ state: 'detached' }).catch(() => {}); };
-const tab = (page, name) => page.locator(`.bar [data-tab="${name}"]`).click();
+const tab = (page, name) => page.locator(`[data-tab="${name}"]:visible`).first().click();
 async function received(page) {
   await tab(page, 'dinheiro');
   await page.locator('#money-received').waitFor();
@@ -78,11 +78,13 @@ try {
     await look('agenda');
     if (shots) await page.screenshot({ path: path.join(shots, `nova-agenda-${width}.png`) });
 
-    // 1. Os pedidos de hoje à vista, sem rolar, acima da barra de baixo.
-    const barTop = await page.locator('.bar').evaluate((el) => el.getBoundingClientRect().top);
+    // 1. Os pedidos de hoje à vista, sem rolar, acima da barra de baixo (no celular).
     const today = page.locator(`#d-${TODAY} .order`);
     assert.equal(await today.count(), 3, 'três pedidos hoje no exemplo');
-    for (const box of await today.evaluateAll((rows) => rows.map((row) => row.getBoundingClientRect().bottom))) assert.ok(box <= barTop, `pedido de hoje sem rolar (${box} ≤ ${barTop})`);
+    if (width < 820) {
+      const barTop = await page.locator('.bar').evaluate((el) => el.getBoundingClientRect().top);
+      for (const box of await today.evaluateAll((rows) => rows.map((row) => row.getBoundingClientRect().bottom))) assert.ok(box <= barTop, `pedido de hoje sem rolar (${box} ≤ ${barTop})`);
+    }
     assert.match(await page.locator(`#d-${TODAY} .day-meta`).innerText(), /3 pedidos · cheio/);
     assert.match(await page.locator('#notice-decide').innerText(), /2 pedidos para decidir/);
     assert.match(await page.locator('#demo-line').innerText(), /Exemplo: a semana da Lu, da Doces da Lu\./);
@@ -96,11 +98,12 @@ try {
     assert.match(await page.locator(`#d-${TOMORROW}`).innerText(), /Amanhã[\s\S]*Carla/);
     results.push(`${width}: faixa leva a amanhã`);
 
-    // 6. Entregue com Desfazer; o pedido entregue fica riscado no fim do dia.
+    // 6. Entregue pela ficha com Desfazer; o pedido entregue fica marcado no fim do dia.
     const juliana = page.locator(`#d-${TODAY} .order[data-id="DEMO-09"]`);
     assert.match(await juliana.innerText(), /Pix a conferir/, 'Pix avisado aparece na linha, fora da ficha');
     assert.match(await page.locator(`#d-${TODAY} .order[data-id="DEMO-08"]`).innerText(), /Sem sinal/);
-    await juliana.locator('.order-done').click();
+    await juliana.locator('.order-open').click();
+    await sheet(page).locator('[data-act="deliver"]').click();
     await page.locator('#toast-undo:visible').waitFor();
     assert.equal(await page.locator('#toast-text').innerText(), 'Pedido entregue: Docinhos sortidos (50 un.).', 'aviso sem errar o plural');
     assert.equal(await page.locator(`#d-${TODAY} .order`).last().getAttribute('data-id'), 'DEMO-09', 'entregue vai para o fim do dia');
@@ -122,7 +125,7 @@ try {
 
     // 2. "Ana, bolo de cenoura, sábado 15h, R$ 120".
     const before = await received(page);
-    await page.locator('.bar [data-act="new"]').click();
+    await page.locator('[data-act="new"]:visible').first().click();
     const form = page.locator('#order-form');
     await form.locator('[name=client]').fill('Ana');
     await form.locator('[name=product]').fill('Bolo de cenoura');
@@ -162,7 +165,7 @@ try {
     results.push(`${width}: recebi e Dinheiro`);
 
     // 5. Aceitar o pedido da Camila: o que ela pediu vem antes dos botões; depois sai do aviso e entra no domingo.
-    await page.locator('#notice-decide [data-act="list"]').click();
+    await page.locator('#notice-decide').click();
     await sheet(page).locator('[data-act="open"]', { hasText: 'Camila' }).click();
     const order15 = sheet(page).locator('.ficha');
     await order15.locator('text=Para 20 pessoas').waitFor();
@@ -183,7 +186,7 @@ try {
     results.push(`${width}: aceitar pelo link`);
 
     // Dia cheio: um bloco só junto do dia, com "Salvar mesmo assim" e "Trocar o dia" lado a lado.
-    await page.locator('.bar [data-act="new"]').click();
+    await page.locator('[data-act="new"]:visible').first().click();
     await form.locator('[name=client]').fill('Lia Nove');
     await form.locator('[name=product]').fill('Pudim');
     await form.locator('[data-act="quick"][data-days="0"]').click();
@@ -242,7 +245,7 @@ try {
   // Recusar e avisar no WhatsApp (só o texto na demonstração).
   {
     const { page, look, order, finish } = await open(360, 740);
-    await page.locator('#notice-decide [data-act="list"]').click();
+    await page.locator('#notice-decide').click();
     await sheet(page).locator('[data-act="open"]', { hasText: 'Camila' }).click();
     await sheet(page).locator('[data-act="refuse"]').click();
     await page.locator('#refuse-form [name=reason]').fill('Agenda cheia no domingo');
@@ -275,12 +278,14 @@ try {
     assert.equal((await order('DEMO-08')).history.at(-1).text, 'Pagamento desfeito: R$ 950.00 (estava conferido).');
     await look('pagamento desfeito');
     await closeSheet(page);
-    // Entregue com saldo não parece resolvido: nada riscado e o valor em tijolo.
-    await page.locator(`#d-${TODAY} .order[data-id="DEMO-08"] .order-done`).click();
+    // Entregue com saldo não parece resolvido: o valor em tijolo.
+    await page.locator(`#d-${TODAY} .order[data-id="DEMO-08"] .order-open`).click();
+    await sheet(page).locator('[data-act="deliver"]').click();
     await page.locator(`#d-${TODAY} .order.has-due[data-id="DEMO-08"]`).waitFor();
     assert.match(await page.locator(`#d-${TODAY} .order[data-id="DEMO-08"] .tag-late`).innerText(), /Falta R\$ 95/);
     await page.locator(`#d-${TODAY} .order[data-id="DEMO-08"] .order-open`).click();
     assert.equal(await sheet(page).locator('.f-main .btn-primary').innerText(), 'Recebi o resto');
+    assert.equal(await sheet(page).locator('.f-footer [data-act="deliver"]').innerText(), 'Desfazer entrega');
     await closeSheet(page);
     // Semana passada pelas setas, e de volta.
     await page.locator('[data-act="week"][data-step="-7"]').click();
@@ -294,7 +299,7 @@ try {
   // 7. O mesmo armazenamento da versão completa (/demo/completa/), nos dois sentidos; /demo/nova/ continua abrindo a tela nova.
   {
     const { page, context, api, finish } = await open(360, 800);
-    await page.locator('.bar [data-act="new"]').click();
+    await page.locator('[data-act="new"]:visible').first().click();
     const form = page.locator('#order-form');
     await form.locator('[name=client]').fill('Joana Sete');
     await form.locator('[name=product]').fill('Torta de maçã');
@@ -326,7 +331,7 @@ try {
     await page.locator(`#d-${TODAY} .order-open`).first().click();
     await look('ficha 320');
     await closeSheet(page);
-    await page.locator('.bar [data-act="new"]').click();
+    await page.locator('[data-act="new"]:visible').first().click();
     await look('novo 320');
     await closeSheet(page);
     await tab(page, 'dinheiro');

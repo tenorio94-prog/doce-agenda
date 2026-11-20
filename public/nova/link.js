@@ -8,7 +8,6 @@ import { $, api, app, closeSheet, copy, esc, openSheet, reload, toast } from './
 const LINK_BASE = 'lucast.app/p/';
 const LINK_PREVIEW_KEY = 'doce-agenda.link-preview';
 const TITLES = ['Como a cliente te encontra', 'O que você vende', 'Pronto para ir ao ar'];
-const fullVersion = () => (app.demo ? '/demo/completa/' : '/app/completa/');
 let wizard = null;
 
 export function openLink() {
@@ -24,16 +23,16 @@ export function openLink() {
     <p class="link-url" id="link-url">${esc(url)}</p>
     <button class="btn btn-primary" type="button" data-act="copy-link">Copiar link</button>
     ${see}
-    <a class="btn btn-outline" href="${fullVersion()}#vitrine">Mudar doces e fotos</a>`);
+    <button class="btn btn-outline" type="button" data-act="edit-link">Editar nome e doces</button>`);
 }
 export async function copyLink() {
   toast(await copy(`https://${LINK_BASE}${app.state.orderPage.slug}`) ? 'Link copiado.' : 'Não deu para copiar. Selecione o endereço e copie.');
 }
 
-export function openWizard() {
+export function openWizard(back = null) {
   const page = app.state.orderPage || {}, first = (page.products || []).slice(0, 3);
   wizard = {
-    step: 1, displayName: page.displayName || '', slug: page.slug || '', slugEdited: !!page.slug, whatsapp: page.whatsapp || '',
+    step: 1, back, displayName: page.displayName || '', slug: page.slug || '', slugEdited: !!page.slug, whatsapp: page.whatsapp || '',
     products: [0, 1, 2].map((i) => ({ name: first[i]?.name || '', price: Number.isInteger(first[i]?.priceFromCents) ? M.centsInput(first[i].priceFromCents) : '' })),
   };
   renderWizard();
@@ -50,14 +49,14 @@ function renderWizard(errorText = '') {
         ${w.products.map((product, i) => `<div class="lw-product"><label class="field"><span>Doce ${i + 1}${i ? ' <small>(opcional)</small>' : ''}</span><input data-product="name" data-index="${i}" maxlength="80" value="${esc(product.name)}" placeholder="${['Ex.: Bolo de aniversário', 'Ex.: Brigadeiro (cento)', 'Ex.: Torta de limão'][i]}"></label><label class="field lw-price"><span>A partir de</span><input data-product="price" data-index="${i}" inputmode="decimal" maxlength="12" value="${esc(product.price)}" placeholder="R$"></label></div>`).join('')}`
       : `<p class="link-url">${esc(LINK_BASE)}<b>${esc(w.slug)}</b></p>
         <ul class="lw-summary"><li><b>${esc(w.displayName)}</b>${w.whatsapp ? ` · ${esc(w.whatsapp)}` : ''}</li><li>${esc(w.products.filter((p) => p.name.trim()).map((p) => p.name.trim()).join(', '))}</li></ul>
-        <p class="muted">${cloud ? 'Os pedidos chegam no aviso do topo da Agenda e só entram no dia quando você aceita. Fotos, estilo e cor você ajusta depois, na versão completa.' : 'No exemplo o link não vai ao ar. Na sua conta, este passo liga o link e já copia o endereço.'}</p>`;
+        <p class="muted">${cloud ? 'Os pedidos chegam no aviso do topo da Agenda e só entram no dia quando você aceita.' : 'No exemplo o link não vai ao ar. Na sua conta, este passo liga o link e já copia o endereço.'}</p>`;
   const primary = w.step < 3 ? 'Continuar' : cloud ? 'Ativar e copiar link' : 'Ver como a cliente vê';
   openSheet(`<form id="link-wizard" novalidate><p class="lw-step">Passo ${w.step} de 3</p><h2 id="sheet-title" tabindex="-1">${TITLES[w.step - 1]}</h2>
     ${body}
     <p class="form-error" id="link-wizard-error" role="alert"${errorText ? '' : ' hidden'}>${esc(errorText)}</p>
     <div class="f-main">${w.step > 1 ? '<button class="btn btn-outline" type="submit" value="back">Voltar</button>' : ''}${w.step === 3 && cloud ? '<button class="btn btn-outline" type="submit" value="preview">Ver prévia</button>' : ''}<button class="btn btn-primary" type="submit" value="next">${primary}</button></div>
     ${w.step === 1 && app.demo ? '<button class="link-btn" type="button" data-act="preview-link">Ver como a cliente vê o exemplo da Doces da Lu</button>' : ''}
-  </form>`);
+  </form>`, w.step === 1 ? w.back : null);
   if (errorText) $('#link-wizard-error').scrollIntoView({ block: 'nearest' });
   else $('#link-wizard input')?.focus({ preventScroll: true });
 }

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
-<meta name="theme-color" content="#f7c5d0">
+<meta name="theme-color" content="#faf7f5">
 <meta name="description" content="Organize encomendas, pagamentos e a semana da sua confeitaria.">
 <title>Doce Agenda — pedidos da sua confeitaria</title>
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
@@ -20,9 +20,16 @@
 <a class="skip-link" href="#main" data-act="skip">Ir para os pedidos</a>
 <header class="top">
   <div class="wrap top-row">
-    <h1 class="top-date" id="today-label">Agenda</h1>
+    <div class="top-left">
+      <h1 class="top-date" id="today-label">Agenda</h1>
+      <nav class="top-tabs" aria-label="Seções">
+        <button class="top-tab" type="button" data-tab="agenda" aria-current="page">Agenda</button>
+        <button class="top-tab" type="button" data-tab="dinheiro">Dinheiro<span class="top-badge" id="money-badge-top" hidden></span></button>
+      </nav>
+    </div>
     <div class="top-actions">
-      <button class="btn btn-outline btn-small" type="button" data-act="link">Meu link</button>
+      <button class="btn btn-tonal btn-small" type="button" data-act="link">Meu link</button>
+      <button class="btn btn-primary btn-small top-new" type="button" data-act="new"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Novo pedido</button>
       <button class="icon-btn" type="button" data-act="menu" aria-label="Menu"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
     </div>
   </div>
@@ -33,7 +40,7 @@
   <p class="load-state" id="load-state" role="status">Abrindo a agenda…</p>
   <div id="views" hidden>
     <section id="view-agenda" aria-label="Agenda"></section>
-    <section id="view-dinheiro" aria-labelledby="month-title" hidden></section>
+    <section id="view-dinheiro" aria-label="Dinheiro" hidden></section>
   </div>
 </main>
 
@@ -46,6 +53,7 @@
 </nav>
 
 <dialog class="sheet" id="sheet" aria-labelledby="sheet-title">
+  <span class="sheet-handle" aria-hidden="true"></span>
   <div class="sheet-top">
     <button class="link-btn sheet-back" id="sheet-back" type="button" data-act="back" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14.5 6-6 6 6 6"/></svg>Voltar</button>
     <button class="icon-btn sheet-close" type="button" data-act="close" aria-label="Fechar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>

@@ -112,12 +112,11 @@ try {
     const box = await long.evaluate((el) => { const s = getComputedStyle(el); return { lines: Math.round(el.clientHeight / parseFloat(s.lineHeight)), clipped: el.scrollHeight > el.clientHeight + 1, nowrap: s.whiteSpace === 'nowrap' }; });
     assert.equal(box.nowrap, false, 'o nome quebra linha');
     assert.equal(box.clipped, false, 'nada cortado');
-    assert.ok(box.lines <= 2, `até 2 linhas: ${box.lines}`);
-    if (width <= 390) assert.equal(box.lines, 2, 'nome longo usa a segunda linha no celular');
+    assert.ok(box.lines >= 1 && box.lines <= 2, `até 2 linhas sem cortar: ${box.lines}`);
     results.push(`${width}: linha da agenda`);
 
     // 4. Pedido do link: "O que ela pediu" antes de Aceitar/Recusar; responder sem decidir.
-    await page.locator('#notice-decide [data-act="list"]').click();
+    await page.locator('#notice-decide').click();
     await sheet(page).locator('[data-act="open"]', { hasText: 'Camila' }).click();
     const ficha = sheet(page).locator('.ficha');
     await ficha.locator('h3', { hasText: 'O que ela pediu' }).waitFor();
@@ -139,9 +138,9 @@ try {
     results.push(`${width}: responder o pedido do link`);
 
     // 5. Dinheiro: quem já levou separado do que vai entrar; números batem com as listas; número na barra.
-    const badge = page.locator('.bar [data-tab="dinheiro"] .bar-badge');
+    const badge = page.locator('[data-tab="dinheiro"]:visible .bar-badge, [data-tab="dinheiro"]:visible .top-badge').first();
     assert.equal(await badge.innerText(), '1', 'um entregue com saldo (Roberta)');
-    await page.locator('.bar [data-tab="dinheiro"]').click();
+    await page.locator('[data-tab="dinheiro"]:visible').first().click();
     await page.locator('#money-received').waitFor();
     const owed = page.locator('#owed-list'), coming = page.locator('#coming-list');
     assert.match(await page.locator('#owed-title').innerText(), /Já entregue, falta receber/);
@@ -174,7 +173,7 @@ try {
     await page.locator('#owed-empty').waitFor();
     assert.equal(cents(await page.locator('#money-delivered-due').innerText()), 0);
     assert.equal(await badge.isVisible(), false, 'sem entregues com saldo, o número some');
-    await page.locator('.bar [data-tab="agenda"]').click();
+    await page.locator('[data-tab="agenda"]:visible').first().click();
     results.push(`${width}: Dinheiro em duas listas`);
 
     // 2. Meu link: sem link ativo, assistente na tela nova; o fim mostra a prévia com o nome digitado.
@@ -223,25 +222,27 @@ try {
     await closeSheet(page);
     results.push(`${width}: Meu link monta na tela nova e mostra a prévia`);
 
-    // Link ativo: "Mudar doces e fotos" abre a versão completa já em Sua vitrine.
+    // Link ativo: "Editar nome e doces" abre o assistente direto aqui, sem sair para /completa/.
     const current = await api('/api/order-page');
     await api('/api/order-page', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...current, active: true }) });
     await page.reload();
     await page.locator('#days .order').first().waitFor();
     await page.locator('.top [data-act="link"]').click();
     await sheet(page).locator('text=lucast').first().waitFor().catch(() => {});
-    const change = sheet(page).locator('a', { hasText: 'Mudar doces e fotos' });
-    assert.equal(await change.getAttribute('href'), '/demo/completa/#vitrine');
-    for (const href of await sheet(page).locator('a').evaluateAll((links) => links.map((a) => a.getAttribute('href')))) assert.notEqual(href, '/demo/completa/');
+    const change = sheet(page).locator('[data-act="edit-link"]', { hasText: 'Editar nome e doces' });
+    await change.waitFor();
+    for (const href of await sheet(page).locator('a').evaluateAll((links) => links.map((a) => a.getAttribute('href')))) assert.doesNotMatch(String(href || ''), /\/completa\//, 'sem link para /completa/');
     await look('meu link ativo');
     await change.click();
-    await page.locator('#settings-title').waitFor();
-    assert.equal(await page.locator('#view-settings').isVisible(), true, 'abre em Ajustes, não em Hoje');
-    assert.equal(await page.locator('.settings-card[data-settings="link"]').evaluate((el) => el.open), true, 'Sua vitrine aberta');
-    // Com conta e link no ar o formulário fica dentro de "Editar vitrine", que o endereço abre; na demo ele já está à vista.
-    assert.equal(await page.locator('#order-page-form').isVisible(), true, 'o formulário da vitrine à vista');
+    await page.locator('#link-wizard').waitFor();
+    assert.equal(await sheet(page).locator('#sheet-back').isVisible(), true, 'pode voltar ao resumo do Meu link');
+    await sheet(page).locator('#sheet-back').click();
+    await sheet(page).locator('#link-url').waitFor();
+    await closeSheet(page);
+    await page.locator('[data-act="menu"]').click();
+    for (const href of await sheet(page).locator('a').evaluateAll((links) => links.map((a) => a.getAttribute('href')))) assert.doesNotMatch(String(href || ''), /\/completa\//, 'menu sem link para /completa/');
     await finish();
-    results.push(`${width}: Mudar doces e fotos abre Sua vitrine`);
+    results.push(`${width}: Editar nome e doces abre no app limpo, sem /completa/`);
 
     // 3. A landing anterior continua disponível com seus exemplos e CTA originais.
     {

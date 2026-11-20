@@ -13,22 +13,25 @@ function row(order, withCharge) {
   // Pix avisado: primeiro conferir na conta (pela ficha); Recebi e Cobrar voltam depois.
   const actions = reported
     ? `<button class="btn btn-outline btn-small" type="button" data-act="open" data-id="${esc(order.id)}">Conferir Pix</button>`
-    : `<button class="btn btn-outline btn-small" type="button" data-act="received-money" data-id="${esc(order.id)}">Recebi</button>${withCharge && order.contact ? `<button class="btn btn-outline btn-small" type="button" data-act="charge-money" data-id="${esc(order.id)}">Cobrar</button>` : ''}`;
+    : `<button class="btn btn-tonal btn-small" type="button" data-act="received-money" data-id="${esc(order.id)}">Recebi</button>${withCharge && order.contact ? `<button class="btn btn-outline btn-small" type="button" data-act="charge-money" data-id="${esc(order.id)}">Cobrar</button>` : ''}`;
   return `<li class="due-row" data-day="${esc(day)}"><button class="due-open" type="button" data-act="open" data-id="${esc(order.id)}">
-      <span class="due-top"><strong>${esc(order.client)}</strong><span class="tag due-amount ${late ? 'tag-late' : 'tag-due'}">Falta ${esc(M.brl(due))}</span></span>
+      <span class="due-top"><strong>${esc(order.client)}</strong><span class="tag due-amount ${late ? 'tag-late' : 'tag-due'}"><i class="tag-dot" aria-hidden="true"></i>Falta ${esc(M.brl(due))}</span></span>
       <span class="muted">${esc(M.shortDayLabel(day))} · ${esc(order.product)}</span>
-      ${reported ? `<span class="tag tag-check due-pix">Pix ${esc(M.brl(reported))} a conferir</span>` : ''}</button>
+      ${reported ? `<span class="tag tag-check due-pix"><i class="tag-dot" aria-hidden="true"></i>Pix ${esc(M.brl(reported))} a conferir</span>` : ''}</button>
     <span class="due-actions">${actions}</span></li>`;
 }
 
-// Número no botão Dinheiro da barra: quantos já levaram e ainda devem. Some no zero.
+// Número no botão Dinheiro da barra/topo: quantos já levaram e ainda devem. Some no zero.
 export function updateMoneyBadge() {
-  const badge = $('#money-badge');
-  if (!badge || !app.state) return;
+  if (!app.state) return;
   const count = M.owedOrders(app.state).length;
-  badge.textContent = count ? String(count) : '';
-  badge.hidden = !count;
-  $('.bar [data-tab="dinheiro"]').setAttribute('aria-label', count ? `Dinheiro: ${count === 1 ? '1 pedido entregue' : `${count} pedidos entregues`} com saldo` : 'Dinheiro');
+  for (const badge of [$('#money-badge'), $('#money-badge-top')]) {
+    if (!badge) continue;
+    badge.textContent = count ? String(count) : '';
+    badge.hidden = !count;
+  }
+  const label = count ? `Dinheiro: ${count === 1 ? '1 pedido entregue' : `${count} pedidos entregues`} com saldo` : 'Dinheiro';
+  for (const tab of document.querySelectorAll('[data-tab="dinheiro"]')) tab.setAttribute('aria-label', label);
 }
 
 // `keep`: as setas do mês deixam a tela como está até o novo Recebido chegar; nos outros casos aparece "Somando…".
@@ -46,14 +49,14 @@ export async function renderMoney({ keep = false } = {}) {
   const owed = M.owedOrders(app.state), coming = M.comingOrders(app.state);
   view.innerHTML = `<section class="money-month" aria-describedby="money-month-note">${head}
       <p class="mm-label">Recebido em ${esc(monthName)}</p><strong id="money-received">${esc(received)}</strong>
-      <p class="mm-note" id="money-month-note">O que você conferiu na conta neste mês, de qualquer pedido.</p>
+      <p class="mm-note" id="money-month-note">Conferido na conta neste mês.</p>
       <button class="link-btn" type="button" data-act="month-payments">Ver os pagamentos</button></section>
     ${error ? `<p class="form-error" role="alert">${esc(error)}</p>` : ''}
     <h2 class="section-title" id="owed-title">Já entregue, falta receber · <span id="money-delivered-due">${esc(M.brl(M.sumDue(app.state, owed)))}</span></h2>
-    <p class="muted section-note">Quem já levou e ainda deve, de todos os meses.</p>
+    <p class="muted section-note">Entregues com saldo em aberto.</p>
     ${owed.length ? `<ul class="due-list" id="owed-list">${owed.map((order) => row(order, true)).join('')}</ul>` : '<p class="muted" id="owed-empty">Ninguém que já levou está devendo.</p>'}
     <h2 class="section-title" id="coming-title">Ainda vai entrar · ${esc(M.brl(M.sumDue(app.state, coming)))}</h2>
-    <p class="muted section-note">Pedidos combinados que ainda não foram entregues, de todos os meses.</p>
+    <p class="muted section-note">Confirmados com saldo em aberto.</p>
     ${coming.length ? `<ul class="due-list" id="coming-list">${coming.map((order) => row(order, false)).join('')}</ul>` : '<p class="muted" id="coming-list">Nada combinado com saldo.</p>'}`;
 }
 

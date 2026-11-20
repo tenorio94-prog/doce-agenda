@@ -66,8 +66,8 @@ try {
       assert.ok(free >= 2 && free <= 3, `${width}: dois ou três dias livres`);
       assert.ok(await page.locator('#days .mark-full').count() >= 2, `${width}: pelo menos dois dias cheios`);
       assert.ok(total - free > free, `${width}: maioria dos dias ocupada`);
-      const counts = (await page.locator('#week .wk-count').allInnerTexts()).filter(Boolean);
-      assert.ok(counts.length >= 4, `${width}: faixa com números na maioria dos dias`);
+      const counts = await page.locator('#week .wk-day:not([data-count="0"])').count();
+      assert.ok(counts >= 4, `${width}: faixa com indicadores na maioria dos dias`);
       assert.equal(await page.evaluate((key) => localStorage.getItem(key), DAY), todayKey(NOW));
       assert.deepEqual(errors, []); await context.close();
     }

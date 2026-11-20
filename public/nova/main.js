@@ -19,7 +19,7 @@ async function refresh(focusId = null, dayToShow = null) {
     renderAgenda();
     updateMoneyBadge();
     if (dayToShow) scrollToDay(dayToShow);
-    if (focusId) document.querySelector(`.order-done[data-id="${CSS.escape(focusId)}"]`)?.focus({ preventScroll: true });
+    if (focusId) document.querySelector(`.order[data-id="${CSS.escape(focusId)}"] .order-open`)?.focus({ preventScroll: true });
   } else await renderMoney();
 }
 Ficha.setRefresh(refresh);
@@ -73,6 +73,7 @@ const actions = {
   week: (el) => { app.week = M.addDays(app.week, Number(el.dataset.step)); renderAgenda(); $(`[data-act="week"][data-step="${el.dataset.step}"]`)?.focus(); },
   month: (el) => { app.month = M.addMonths(app.month, Number(el.dataset.step)); renderMoney({ keep: true }).then(() => $(`[data-act="month"][data-step="${el.dataset.step}"]:not([disabled])`)?.focus()); },
   link: () => Link.openLink(),
+  'edit-link': () => Link.openWizard(Link.openLink),
   'copy-link': () => Link.copyLink(),
   'preview-link': () => Link.previewSaved(),
   menu: () => Menu.openMenu(),

@@ -1,14 +1,11 @@
-// Menu: Dias e limite, versão completa e, na demo, Recomeçar exemplo. Meu link fica em link.js.
+// Menu: Dias e limite e ações da conta ou demonstração. Meu link fica em link.js.
 import { api, app, closeSheet, openSheet, reload, showError, toast } from './ui.js';
 
-// A versão completa (a anterior) fica por um tempo em /completa/, com os mesmos dados.
-const fullVersion = () => (app.demo ? '/demo/completa/' : '/app/completa/');
 const DAYS = [[1, 'Segunda'], [2, 'Terça'], [3, 'Quarta'], [4, 'Quinta'], [5, 'Sexta'], [6, 'Sábado'], [0, 'Domingo']];
 
 export function openMenu() {
   openSheet(`<h2 id="sheet-title" tabindex="-1">Menu</h2><ul class="menu-list">
     <li><button class="menu-item" type="button" data-act="days">Dias e limite</button></li>
-    <li><a class="menu-item" href="${fullVersion()}">Mais opções: clientes, Pix e cópia de segurança</a></li>
     ${app.demo ? '<li><button class="menu-item" type="button" data-act="reset">Recomeçar exemplo</button></li><li><a class="menu-item" href="/cadastro/">Criar conta grátis</a></li>'
       : '<li><button class="menu-item" type="button" data-act="sign-out">Sair</button></li>'}
   </ul>`);
@@ -47,7 +44,7 @@ export async function submitDays(form) {
 }
 
 export function openReset() {
-  openSheet(`<h2 id="sheet-title" tabindex="-1">Recomeçar o exemplo?</h2><p>Os pedidos de exemplo voltam ao começo. O que você mudou aqui some, nesta tela e na versão completa.</p>
+  openSheet(`<h2 id="sheet-title" tabindex="-1">Recomeçar o exemplo?</h2><p>Os pedidos de exemplo voltam ao começo. O que você mudou aqui some.</p>
     <button class="btn btn-primary" type="button" data-act="reset-confirm">Recomeçar</button>`, openMenu);
 }
 export function resetDemo() {

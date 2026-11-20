@@ -67,6 +67,7 @@ function fichaHtml(order) {
   const footer = [
     !request ? `<button class="link-btn" type="button" data-act="edit" data-id="${esc(order.id)}">Editar</button>` : '',
     kind === 'confirmed' ? `<button class="link-btn link-quiet" type="button" data-act="cancel-order" data-id="${esc(order.id)}">Cancelar pedido</button>` : '',
+    kind === 'delivered' ? `<button class="link-btn link-quiet" type="button" data-act="deliver" data-id="${esc(order.id)}">Desfazer entrega</button>` : '',
   ].filter(Boolean).join('');
   return `<article class="ficha" data-id="${esc(order.id)}">
     <p class="f-when">${esc(whenText(order))}</p>

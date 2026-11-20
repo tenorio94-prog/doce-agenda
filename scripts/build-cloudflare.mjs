@@ -48,14 +48,14 @@ for (const name of ['browser-store.js', 'data-client.js', 'favicon.svg', 'logo.s
 for (const name of ['fonts', 'icons', 'encomenda', 'privacidade']) await copy(name);
 await copy('previa-landing');
 // A mesma fonte da prévia é publicada na raiz; recursos relativos continuam na pasta da prévia.
-const warmPreview = await readFile(path.join(source, 'previa-landing', 'index.html'), 'utf8');
+const warmPreview = (await readFile(path.join(source, 'previa-landing', 'index.html'), 'utf8')).replace(/\r\n/g, '\n');
 let warmLanding = swap(warmPreview, '<meta name="robots" content="noindex, nofollow">', '');
 warmLanding = warmLanding.replace(/\b(src|href)="(?!\/|#|https?:|data:)([^"]+)"/g, '$1="/previa-landing/$2"');
 warmLanding = warmLanding.replace(/\bsrcset="([^"]+)"/g, (_, value) => `srcset="${value.split(',').map((entry) => `/previa-landing/${entry.trim()}`).join(', ')}"`);
 warmLanding = swap(warmLanding, '</head>', '<meta name="description" content="Anote encomendas, veja sua semana e receba pedidos por um link. Experimente o Doce Agenda sem cadastro."><link rel="canonical" href="https://lucast.app/"><meta property="og:type" content="website"><meta property="og:locale" content="pt_BR"><meta property="og:site_name" content="Doce Agenda"><meta property="og:title" content="Sua semana de encomendas, sem susto."><meta property="og:description" content="Anote encomendas, veja sua semana e receba pedidos por um link. Tudo no celular."><meta property="og:image" content="https://lucast.app/landing/assets/og.jpg"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta name="twitter:card" content="summary_large_image"></head>');
 await writeFile(path.join(output, 'index.html'), warmLanding);
 // Preserva a página anterior para comparação e reversão, com sua própria rota fora do índice.
-let previousLanding = await readFile(path.join(source, 'landing', 'index.html'), 'utf8');
+let previousLanding = (await readFile(path.join(source, 'landing', 'index.html'), 'utf8')).replace(/\r\n/g, '\n');
 previousLanding = swap(previousLanding, '<meta name="viewport" content="width=device-width, initial-scale=1">', '<meta name="viewport" content="width=device-width, initial-scale=1">\n  <meta name="robots" content="noindex, nofollow">');
 previousLanding = swap(previousLanding, '<link rel="canonical" href="https://lucast.app/">', '');
 await mkdir(path.join(output, 'landing-anterior'), { recursive: true });
@@ -85,7 +85,7 @@ await mkdir(path.join(output, 'account'), { recursive: true });
 for (const name of ['account.css', 'account-ui.js', 'account-controller.js', 'config.js']) await copy(path.join('account', name));
 await copy('account/index.html', 'cadastro/index.html');
 
-const html = await readFile(path.join(source, 'index.html'), 'utf8');
+const html = (await readFile(path.join(source, 'index.html'), 'utf8')).replace(/\r\n/g, '\n');
 
 // Demonstration: data stays in this browser, so the page loads the local store before the app.
 let demoHtml = swap(html, '<script src="/data-client.js" defer></script>', '<script src="/browser-store.js" defer></script>\n    <script src="/data-client.js" defer></script>');
@@ -104,7 +104,7 @@ await bundle('public/app.js', path.join(output, 'app.js'));
 await mkdir(path.join(output, 'nova'), { recursive: true });
 await copyFile(path.join(source, 'nova', 'nova.css'), path.join(output, 'nova', 'nova.css'));
 await bundle('public/nova/main.js', path.join(output, 'nova', 'nova.js'));
-const novaHtml = await readFile(path.join(source, 'nova', 'index.html'), 'utf8');
+const novaHtml = (await readFile(path.join(source, 'nova', 'index.html'), 'utf8')).replace(/\r\n/g, '\n');
 const indexed = (page) => swap(page, '<meta name="robots" content="noindex, nofollow">\n', '');
 let novaCloudHtml = swap(novaHtml, '<script src="/browser-store.js" defer></script>\n<script src="/data-client.js" defer></script>\n', '');
 novaCloudHtml = swap(novaCloudHtml, '<script src="/nova/nova.js" defer></script>', '<script src="/account/config.js" defer></script>\n<script src="/cloud-bootstrap.js" data-app="/nova/nova.js" defer></script>');
