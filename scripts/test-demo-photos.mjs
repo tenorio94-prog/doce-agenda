@@ -36,7 +36,7 @@ try {
     await page.goto(`${origin}/demo/completa/`, { waitUntil: 'networkidle' });
     await page.locator('#today-title').waitFor();
     const agendaCLS = await page.evaluate(() => window.photoCLS);
-    assert.match(await page.title(), /Doce Agenda/);
+    assert.match(await page.title(), /Fornada/);
     const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('doce-agenda.demo.v2')));
     assert.equal(saved.orderPage.products.filter((p) => p.photo?.endsWith('.webp')).length, 16);
     assert.equal(saved.orderPage.logo, 'exemplo/logo-doces-da-lu-960.webp');

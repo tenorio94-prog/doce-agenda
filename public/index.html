@@ -8,7 +8,7 @@
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
     <link rel="manifest" href="/manifest.webmanifest">
-    <title>Doce Agenda — pedidos da sua confeitaria</title>
+    <title>Fornada — pedidos da sua confeitaria</title>
     <link rel="stylesheet" href="/tokens.css">
     <link rel="stylesheet" href="/ui/doce-wa.css">
     <link rel="stylesheet" href="/ui/vnext.css">
@@ -19,7 +19,7 @@
   <body class="vnext">
     <div class="app-shell">
       <header class="topbar">
-        <a class="brand" href="#hoje" data-view="today" aria-label="Doce Agenda, ir para Hoje"><img src="/logo.svg" alt="Doce Agenda" width="182" height="48"></a>
+        <a class="brand" href="#hoje" data-view="today" aria-label="Fornada, ir para Hoje"><img src="/logo.svg" alt="Fornada" width="116" height="48"></a>
         <div class="topbar-actions">
           <span class="connection" id="connection" role="status"><span class="connection-dot"></span><span id="connection-text">Conectando…</span><span class="connection-short" id="connection-short" aria-hidden="true"></span></span>
           <button class="icon-button settings-button" data-view="settings" type="button" aria-label="Ajustes" title="Ajustes">Ajustes</button>
@@ -29,7 +29,7 @@
       <div class="demo-bar" id="demo-bar" role="note" hidden><p><strong>Demonstração</strong>, dados só neste navegador.</p><div class="demo-bar-actions"><button class="demo-bar-link" type="button" data-action="open-onboarding">Como funciona</button><button class="demo-bar-link" id="demo-reset" type="button" data-action="reset-demo" hidden>Recomeçar</button><a class="demo-bar-cta" href="/cadastro/">Criar conta grátis</a></div></div>
 
       <nav class="main-nav" aria-label="Navegação principal">
-        <a class="nav-brand" href="#hoje" data-view="today" aria-label="Doce Agenda, ir para Hoje"><img src="/logo.svg" alt="Doce Agenda" width="160" height="42"></a>
+        <a class="nav-brand" href="#hoje" data-view="today" aria-label="Fornada, ir para Hoje"><img src="/logo.svg" alt="Fornada" width="102" height="42"></a>
         <div class="nav-studio" id="nav-studio" hidden></div>
         <button class="nav-item active" data-view="today" type="button" aria-current="page"><span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 11.5 12 4l8 7.5V20h-5v-5.5H9V20H4z"/></svg></span>Hoje<span class="nav-count" id="nav-attention-count" hidden></span></button>
         <button class="nav-item" data-view="orders" type="button"><span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 5H6a2 2 0 0 0-2 2v13h16V7a2 2 0 0 0-2-2h-2"/><rect x="8" y="3" width="8" height="4" rx="1"/><path d="M8 12h8M8 16h8"/></svg></span>Pedidos</button>
@@ -54,7 +54,7 @@
         <section class="view-panel" id="view-settings" aria-labelledby="settings-title" hidden><div id="settings-content"></div><details class="settings-data-tools surface"><summary>Avançado</summary><div><h2>Cópia de segurança</h2><p>Exporte seus dados ou restaure um arquivo salvo anteriormente. A cópia inclui seus pedidos, os dados das clientes e sua chave Pix: guarde em lugar seguro.</p></div><div><button class="button button-quiet" id="export-button" type="button" title="Baixar cópia de segurança" aria-label="Baixar cópia de segurança">Baixar backup</button> <button class="button button-quiet" id="restore-button" type="button" title="Restaurar dados" aria-label="Restaurar dados">Restaurar dados</button></div></details></section>
       </main>
 
-      <footer class="app-footer"><span>Doce Agenda</span><span>Seu combinado, em um só lugar.</span></footer>
+      <footer class="app-footer"><span>Fornada</span><span>Seu combinado, em um só lugar.</span></footer>
     </div>
 
     <dialog class="dialog order-dialog" id="order-dialog" aria-labelledby="order-dialog-title">
@@ -115,7 +115,7 @@
     <dialog class="dialog" id="refuse-dialog" aria-labelledby="refuse-title"><form id="refuse-form" method="dialog"><div class="dialog-heading"><h2 id="refuse-title">Recusar este pedido?</h2><button type="button" class="icon-button close-dialog" data-close="refuse-dialog" aria-label="Fechar"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div><p>A cliente não é avisada sozinha. Depois, copie a mensagem pronta e mande no WhatsApp.</p><label class="field"><span>Quer explicar o motivo? (opcional)</span><textarea name="reason" maxlength="500" rows="2" placeholder="Ex.: essa data já está lotada"></textarea></label><p role="alert" class="form-error" hidden></p><div class="dialog-actions"><button type="button" class="button button-quiet" data-close="refuse-dialog">Voltar</button><button type="submit" class="button button-primary">Recusar pedido</button></div></form></dialog>
     <dialog class="dialog restore-dialog" id="restore-dialog" aria-labelledby="restore-title">
       <div class="dialog-heading"><div><h2 id="restore-title">Restaurar dados</h2></div><button class="icon-button" type="button" data-close="restore-dialog" aria-label="Fechar restauração"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
-      <p>Escolha um backup JSON do Doce Agenda. A restauração substitui os dados deste dispositivo. Uma cópia do estado atual será preservada antes da troca.</p>
+      <p>Escolha um backup JSON do Fornada. A restauração substitui os dados deste dispositivo. Uma cópia do estado atual será preservada antes da troca.</p>
       <label class="button button-quiet restore-file-label" for="restore-file">Escolher arquivo JSON</label><input id="restore-file" class="visually-hidden" type="file" accept="application/json,.json">
       <p class="restore-preview" id="restore-preview" aria-live="polite">Nenhum arquivo escolhido.</p>
       <div class="dialog-actions"><button class="button button-quiet" type="button" data-close="restore-dialog">Cancelar</button><button class="button button-primary" id="restore-confirm" type="button" disabled>Substituir dados</button></div>

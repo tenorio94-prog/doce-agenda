@@ -79,7 +79,7 @@ try {
     await page.goto(`${server.origin}/demo/completa/`);
     await page.locator('#today-title').waitFor();
     await loadFixture(page, fixture());
-    assert.match(await page.title(), /Doce Agenda/);
+    assert.match(await page.title(), /Fornada/);
     assert.equal(new URL(page.url()).pathname, '/demo/completa/');
     assert.match(await page.locator('.vn-inbox-counts').textContent(), /3 pelo link · 2 orçamentos/);
     assert.equal(await section(page, 'review').locator('.vn-order').count(), 3);

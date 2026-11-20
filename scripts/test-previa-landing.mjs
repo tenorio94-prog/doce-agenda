@@ -34,7 +34,8 @@ try {
       const storyImgs = await page.locator('.story-card img').evaluateAll((imgs) => imgs.map((img) => img.complete && img.naturalWidth > 0));
       assert.deepEqual(storyImgs, [true, true, true], `${route}: 3 fotografias da semana carregadas`);
 
-      assert.match(await page.locator('.faq-list').innerText(), /E se o projeto acabar\?/);
+      assert.match(await page.locator('.faq-list').innerText(), /E se o app sair do ar\?/);
+      assert.match(await page.locator('.faq-list').innerText(), /Quem faz\?/);
       for (const side of ['client', 'baker']) {
         await page.locator(`.ld-switch button[data-side="${side}"]`).click();
         const phone = page.locator(`.ld-${side} .mock-phone`);

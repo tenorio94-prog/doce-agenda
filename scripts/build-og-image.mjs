@@ -1,7 +1,7 @@
 import { mkdir, stat } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { chromium } from "file:///C:/Users/Restore/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/index.mjs";
+import { chromium } from "playwright";
 
 // Generate the link-preview image with `node scripts/build-og-image.mjs`.
 // It renders scripts/og-image.html (local fonts, logo and HTML-drawn order cards)
@@ -17,7 +17,6 @@ const maxBytes = 300 * 1024;
 await mkdir(path.dirname(output), { recursive: true });
 const browser = await chromium.launch({
   headless: true,
-  executablePath: "C:/Program Files/Google/Chrome/Application/chrome.exe",
 });
 try {
   const page = await browser.newPage({ viewport: { width: 1200, height: 630 }, deviceScaleFactor: 1 });

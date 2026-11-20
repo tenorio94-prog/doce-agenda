@@ -1406,7 +1406,7 @@ async function inspectRestoreFile(file) {
   if (file.size > 5 * 1024 * 1024) { preview.textContent = "O arquivo excede o limite de 5 MB."; return; }
   try {
     const backup = JSON.parse(await file.text());
-    if (backup.version !== 1 || !Array.isArray(backup.orders) || !Array.isArray(backup.payments)) throw new Error("Este arquivo não parece um backup do Doce Agenda versão 1.");
+    if (backup.version !== 1 || !Array.isArray(backup.orders) || !Array.isArray(backup.payments)) throw new Error("Este arquivo não parece um backup do Fornada versão 1.");
     if (backup.orders.length > 10000 || backup.payments.length > 50000) throw new Error("O backup contém mais registros que o limite aceito.");
     state.restoreData = backup;
     preview.textContent = `Arquivo reconhecido: ${backup.orders.length} ${backup.orders.length === 1 ? "pedido" : "pedidos"} e ${backup.payments.length} ${backup.payments.length === 1 ? "pagamento" : "pagamentos"}. Restaurar substituirá os dados atuais ${window.DoceApi.mode === 'cloud' ? 'da sua conta' : 'neste dispositivo'}.`;

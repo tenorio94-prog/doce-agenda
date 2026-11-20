@@ -1,4 +1,4 @@
-"""Gera public/logo.svg: "doce agenda" em Fredoka (texto convertido em curvas) com o fio de glacê e a gota.
+"""Gera public/logo.svg: "fornada" em Fredoka (texto convertido em curvas) com o fio de glacê e a gota.
 
 Uso: python scripts/build-logo.py
 Fredoka (SIL OFL 1.1) fica em public/fonts/. O SVG final não depende de fonte instalada.
@@ -29,15 +29,12 @@ def text_path(weight, text, x0):
     return pen.getCommands(), x
 
 
-doce, end_doce = text_path(600, "doce", 0)
-gap = SIZE * 0.22
-agenda, end = text_path(500, "agenda", end_doce + gap)
+fornada, end = text_path(600, "fornada", 0)
 width, height = round(end + 2, 2), 46
 svg = f'''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}" role="img" aria-labelledby="brand-title">
-<title id="brand-title">Doce Agenda</title>
-<metadata>Doce Agenda wordmark. Letterforms from Fredoka, SIL Open Font License 1.1, converted to outlines. No external font dependency.</metadata>
-<path fill="{INK}" d="{doce}"/>
-<path fill="{SOFT}" d="{agenda}"/>
+<title id="brand-title">Fornada</title>
+<metadata>Fornada wordmark. Letterforms from Fredoka, SIL Open Font License 1.1, converted to outlines. No external font dependency.</metadata>
+<path fill="{INK}" d="{fornada}"/>
 <g transform="translate(0 30)"><path d="M2 5 C22 2 46 8 72 4" fill="none" stroke="{INK}" stroke-width="3" stroke-linecap="round"/><path d="M44 5 V10 a4 4 0 0 0 8 0 V5 Z" fill="{INK}"/></g>
 </svg>
 '''

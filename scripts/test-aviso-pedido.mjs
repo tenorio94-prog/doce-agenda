@@ -39,7 +39,7 @@ try {
     await page.goto(`${server.origin}/demo/completa/`);
     await page.locator('#today-title').waitFor();
     const waiting = () => page.evaluate(() => JSON.parse(localStorage.getItem('doce-agenda.demo.v2')).orders.filter((order) => order.status === 'Solicitação').length);
-    assert.equal(await page.title(), `(${await waiting()}) Doce Agenda — pedidos da sua confeitaria`, 'o título conta os pedidos do link');
+    assert.equal(await page.title(), `(${await waiting()}) Fornada — pedidos da sua confeitaria`, 'o título conta os pedidos do link');
 
     // Ajustes: ligar os avisos registra o service worker do aviso.
     await page.locator('[data-view="settings"]:visible').first().click();

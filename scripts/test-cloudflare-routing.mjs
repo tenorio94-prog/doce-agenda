@@ -8,7 +8,7 @@ const checks = [
   ['/cadastro/', 'id="login-submit"'],
   ['/demo/', '/nova/nova.js'],
   ['/demo/completa/', '/app.js'],
-  ['/privacidade/', 'Seus dados no Doce Agenda'],
+  ['/privacidade/', 'Seus dados no Fornada'],
 ];
 for (const [route, expected] of checks) {
   const response = await fetch(origin + route, { redirect: 'manual' });

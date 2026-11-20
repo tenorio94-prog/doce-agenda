@@ -58,7 +58,7 @@
   // `retry` is offered for network failures, or always when `alwaysRetry` is set (availability check).
   const showError = (error, fallback, retry, alwaysRetry = false) => {
     const { message, network } = friendlyError(error, fallback);
-    if (error) console.warn("[Doce Agenda] Erro de acesso (detalhe técnico para suporte):", error?.message ?? error, { name: error?.name, code: error?.code, status: error?.status });
+    if (error) console.warn("[Fornada] Erro de acesso (detalhe técnico para suporte):", error?.message ?? error, { name: error?.name, code: error?.code, status: error?.status });
     $("error-message").textContent = message;
     $("error-message").hidden = false;
     $("status-message").hidden = true;

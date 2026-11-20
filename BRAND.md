@@ -1,6 +1,6 @@
-# Doce Agenda — identidade
+# Fornada — identidade
 
-**Nome de trabalho:** Doce Agenda. Nome provisório, sem pesquisa de disponibilidade ou registro de marca.
+**Nome:** Fornada (adotado por decisão de Lucas em 20/11/2026, substituindo o nome provisório "Doce Agenda" na marca e nos textos visíveis; endereço `lucast.app`, e-mail `doceagenda@lucast.app`, Worker `doce-agenda`, rotas `/api` e chaves `doce-agenda.*` do navegador preservados). Sem pesquisa oficial no INPI ou registro de domínio concluídos.
 
 **Produto:** ferramenta web para confeiteiras organizarem encomendas e consultarem a semana.
 
@@ -22,7 +22,7 @@ Direto e acolhedor, sem diminutivo. Instruções curtas e verbos diretos ("Nova 
 
 ## Logo
 
-"doce agenda" com um fio de glacê e uma gota embaixo, em contornos (`public/logo.svg`, gerado por `python scripts/build-logo.py`; não depende de fonte). A gota é o ícone do app (`public/favicon.svg`; PNGs do manifest por `node scripts/build-icons.mjs`).
+"fornada" com um fio de glacê e uma gota embaixo, em contornos (`public/logo.svg`, gerado por `python scripts/build-logo.py`; não depende de fonte). A gota é o ícone do app (`public/favicon.svg`; PNGs do manifest por `node scripts/build-icons.mjs`).
 
 ## Cores e o que significam
 

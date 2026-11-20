@@ -1,4 +1,4 @@
-/* Landing editorial do Doce Agenda: porcelana quente, fotografia realista e prévia fiel do app. */
+/* Landing editorial do Fornada: porcelana quente, fotografia realista e prévia fiel do app. */
 *, *::before, *::after { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
@@ -21,7 +21,7 @@ a:focus-visible, button:focus-visible, summary:focus-visible { outline: 3px soli
 /* Cabeçalho */
 .header { height: 76px; display: flex; align-items: center; justify-content: space-between; border-bottom: var(--hairline); }
 .brand { display: inline-flex; align-items: center; min-height: 44px; }
-.brand img { width: 158px; height: auto; }
+.brand img { width: auto; height: 42px; }
 .header-login {
   display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 18px;
   border-radius: 999px; border: 1.5px solid #d6c8cc; background: var(--branco); color: var(--vinho);

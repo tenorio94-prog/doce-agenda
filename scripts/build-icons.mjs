@@ -1,7 +1,7 @@
 import { mkdir, readFile, stat } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { chromium } from "file:///C:/Users/Restore/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/index.mjs";
+import { chromium } from "playwright";
 
 // Generate the installed-app icons with `node scripts/build-icons.mjs`.
 // The source is public/favicon.svg. The PNGs are full-bleed
@@ -27,7 +27,6 @@ const dataUrl = `data:image/svg+xml;base64,${Buffer.from(svg).toString("base64")
 await mkdir(outDir, { recursive: true });
 const browser = await chromium.launch({
   headless: true,
-  executablePath: "C:/Program Files/Google/Chrome/Application/chrome.exe",
 });
 try {
   for (const { file, size } of targets) {
