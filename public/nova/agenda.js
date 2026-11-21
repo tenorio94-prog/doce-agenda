@@ -1,6 +1,6 @@
 // Agenda: avisos clicáveis, faixa semanal leve com pontinhos e lista de pedidos limpa.
 import * as M from './model.js';
-import { $, app, esc } from './ui.js';
+import { $, app, esc, orderPhotoHtml } from './ui.js';
 
 export const CHEVRON_LEFT = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14.5 6-6 6 6 6"/></svg>';
 export const CHEVRON_RIGHT = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9.5 6 6 6-6 6"/></svg>';
@@ -64,9 +64,11 @@ function orderRow(order) {
   const badge = done && !owing
     ? '<span class="tag tag-delivered"><i class="tag-dot" aria-hidden="true"></i>Entregue</span>'
     : `<span class="tag tag-${tag.kind}"><i class="tag-dot" aria-hidden="true"></i>${esc(tag.text)}</span>`;
+  const photo = orderPhotoHtml(order, 'o-photo', '48px');
   return `<li class="order${done ? ' is-done' : ''}${owing ? ' has-due' : ''}" data-id="${esc(order.id)}">
     <button class="order-open" type="button" data-act="open" data-id="${esc(order.id)}">
       <span class="o-time">${esc(M.hourLabel(order))}</span>
+      ${photo}
       <span class="o-what">${esc(order.product)}</span>
       <span class="o-who">${esc(who)}</span>
       ${badge}
@@ -97,7 +99,7 @@ function dayList() {
       html += `<section class="day day-empty" id="d-${day}" data-day="${day}"><p><strong>${esc(label)}</strong> · ${mark}</p></section>`;
       continue;
     }
-    html += `<section class="day" id="d-${day}" data-day="${day}" aria-labelledby="h-${day}">
+    html += `<section class="day${day === app.today ? ' is-today' : ''}" id="d-${day}" data-day="${day}" aria-labelledby="h-${day}">
       <div class="day-head"><h2 id="h-${day}">${esc(label)}</h2><p class="day-meta">${countText(orders.length)}${mark ? ` · <span class="mark mark-${mark === 'cheio' ? 'full' : 'closed'}">${mark}</span>` : ''}</p></div>
       <ul class="orders">${orders.map(orderRow).join('')}</ul></section>`;
   }
@@ -114,7 +116,7 @@ const emptyStart = (fresh) => `<section class="empty-start" id="empty-start" ari
 export function renderAgenda() {
   const view = $('#view-agenda');
   if (!app.state.orders.some((order) => M.group(order.status) !== 'out')) { view.innerHTML = emptyStart(!app.state.orders.length); return; }
-  view.innerHTML = `${notices()}${weekStrip()}<div class="days" id="days">${dayList()}</div>`;
+  view.innerHTML = `<div class="agenda-rail">${notices()}${weekStrip()}</div><div class="days" id="days">${dayList()}</div>`;
 }
 
 export function scrollToDay(day) {

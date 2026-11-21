@@ -115,7 +115,16 @@ a:focus-visible, button:focus-visible, summary:focus-visible { outline: 3px soli
   align-items: center; column-gap: 10px; row-gap: 2px;
   padding: 10px 10px 10px 12px; background: var(--branco); border: var(--hairline); border-radius: 14px; box-shadow: var(--shadow-s);
 }
+.pa-order:has(.pa-photo) {
+  grid-template-columns: 34px 36px minmax(0, 1fr) auto auto;
+  grid-template-areas: "time photo what what chev" "time photo who tag chev";
+}
+.pa-photo {
+  grid-area: photo; width: 36px; height: 36px; border-radius: 9px; object-fit: cover;
+  border: 1px solid rgb(58 18 32 / 8%); background: var(--surface-soft);
+}
 .pa-order.is-done { background: rgb(255 255 255 / 65%); box-shadow: none; }
+.pa-order.is-done .pa-photo { opacity: .68; }
 .pa-order.is-done .pa-what, .pa-order.is-done .pa-time { color: var(--muted); }
 .pa-time { grid-area: time; font-family: var(--font-title); font-weight: 700; font-size: 14.5px; color: var(--vinho); }
 .pa-what { grid-area: what; font-weight: 700; font-size: 14.5px; color: var(--ink); line-height: 1.25; }
@@ -131,6 +140,7 @@ a:focus-visible, button:focus-visible, summary:focus-visible { outline: 3px soli
 .pa-chev svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 @media (min-width: 480px) {
   .pa-order { grid-template-areas: "time what tag chev" "time who tag chev"; }
+  .pa-order:has(.pa-photo) { grid-template-areas: "time photo what tag chev" "time photo who tag chev"; }
 }
 .pa-caption { text-align: center; font-size: 12.5px; color: var(--muted); padding-top: 2px; }
 
@@ -339,7 +349,7 @@ a:focus-visible, button:focus-visible, summary:focus-visible { outline: 3px soli
 
 /* Confiança e FAQ */
 .trust { padding-bottom: 64px; }
-.trust-box { background: var(--branco); border: var(--hairline); border-radius: 22px; padding: 32px; box-shadow: var(--shadow-s); }
+.trust-box { background: linear-gradient(180deg, #ffffff 0%, #fcfaf9 100%); border: var(--hairline); border-top: 3px solid var(--carimbo); border-radius: 22px; padding: 32px; box-shadow: var(--shadow-s); }
 .trust h2 { font-size: clamp(26px, 3.4vw, 36px); margin-bottom: 22px; }
 .trust ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 24px; font-weight: 700; font-size: 17px; color: var(--vinho); }
 .trust li { display: flex; align-items: flex-start; gap: 12px; text-wrap: balance; }
@@ -363,7 +373,7 @@ a:focus-visible, button:focus-visible, summary:focus-visible { outline: 3px soli
 .faq-list p { margin: 0 0 12px; max-width: 62ch; color: var(--ink-soft); }
 
 /* Convite final e rodapé */
-.closing-new { background: var(--vinho); color: #fff; padding: 64px 0; }
+.closing-new { background: radial-gradient(720px 360px at 88% 18%, rgb(176 36 74 / 28%), transparent 68%), var(--vinho); color: #fff; padding: 64px 0; }
 .closing-box { max-width: 680px; }
 .closing-new h2 { color: #fff; font-size: clamp(32px, 5vw, 54px); letter-spacing: -.03em; margin-bottom: 12px; }
 .closing-box p { color: #f2e4e8; font-size: 17px; }

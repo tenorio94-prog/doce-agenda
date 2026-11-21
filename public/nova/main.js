@@ -6,6 +6,7 @@ import * as Ficha from './ficha.js';
 import * as Form from './form.js';
 import { openMonthPayments, renderMoney, updateMoneyBadge } from './dinheiro.js';
 import * as Menu from './menu.js';
+import * as Ajustes from './ajustes.js';
 import * as Link from './link.js';
 import { $, app, changeDay, closeSheet, hasUnsavedForm, hideConflict, hideToast, keepEditing, placeToast, reload, requestClose, sheetOpen, toast } from './ui.js';
 
@@ -24,6 +25,7 @@ async function refresh(focusId = null, dayToShow = null) {
 }
 Ficha.setRefresh(refresh);
 Form.setRefresh(refresh);
+Ajustes.setRefresh(refresh);
 
 function setTab(tab) {
   app.tab = tab;
@@ -84,6 +86,13 @@ const actions = {
   'preview-link': () => Link.previewSaved(),
   menu: () => Menu.openMenu(),
   days: () => Menu.openDays(),
+  special: () => Ajustes.openSpecialDates(),
+  'add-special-row': () => Ajustes.addSpecialRow(),
+  'remove-special': (el) => Ajustes.removeSpecialDate(el.dataset.id),
+  'cake-template': () => Ajustes.openCakeTemplate(),
+  backup: () => Ajustes.openBackup(),
+  'export-backup': (el) => Ajustes.exportBackup(el),
+  'restore-confirm': (el) => Ajustes.restoreBackup(el),
   reset: () => Menu.openReset(),
   'reset-confirm': () => Menu.resetDemo(),
   'sign-out': (el) => Menu.signOut(el),
@@ -92,6 +101,10 @@ const actions = {
   'keep-editing': () => keepEditing(),
   back: () => app.back?.(),
 };
+
+document.addEventListener('error', (event) => {
+  if (event.target?.matches?.('img.o-photo, img.f-photo')) event.target.remove();
+}, true);
 
 document.addEventListener('click', (event) => {
   const tab = event.target.closest('[data-tab]');
@@ -110,14 +123,19 @@ document.addEventListener('submit', async (event) => {
   else if (form.id === 'link-wizard') Link.wizardNext(event.submitter?.value || 'next');
   else if (form.id === 'vitrine-form') Link.submitVitrine(form, event.submitter?.value || 'save');
   else if (form.id === 'days-form') { if (await Menu.submitDays(form)) refresh(); }
+  else if (form.id === 'special-date-form') Ajustes.submitSpecialDate(form);
+  else if (form.id === 'cake-template-form') Ajustes.submitCakeTemplate(form);
 });
 document.addEventListener('input', (event) => {
   if (event.target.closest('#link-wizard')) Link.onWizardInput(event.target);
   else if (event.target.closest('#vitrine-form')) Link.onVitrineInput(event);
+  else if (event.target.closest('#cake-template-form')) Ajustes.onCakeTemplateChange(event);
   if (event.target.name === 'amount' && event.target.form?.id === 'pay-form' && event.target.form.dataset.over) Ficha.resetReceived(event.target.form);
 });
 document.addEventListener('change', (event) => {
   if (event.target.closest('#vitrine-form')) Link.onVitrineChange(event);
+  else if (event.target.closest('#cake-template-form')) Ajustes.onCakeTemplateChange(event);
+  else if (event.target.id === 'restore-file') Ajustes.inspectRestoreFile(event.target.files?.[0]);
   if (event.target.name === 'mode' && event.target.form?.id === 'order-form') Form.syncMode(event.target.form);
   if (['date', 'time'].includes(event.target.name)) {
     if (event.target.form?.id === 'order-form') Form.syncDay(event.target.form);

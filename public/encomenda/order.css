@@ -64,12 +64,13 @@ h1.name{font-family:var(--fd);font-weight:var(--fdw);margin:0;line-height:1.05;o
 .grid.one{grid-template-columns:1fr;gap:24px}
 .grid.one .img{aspect-ratio:4/3}
 .card{display:flex;flex-direction:column;min-width:0;text-align:left;border:0;padding:0;background:none;border-radius:0}
-.card .img{aspect-ratio:4/5;border-radius:var(--r-img);overflow:hidden;background:var(--a-tint);position:relative;transition:transform .15s}
+.card .img{aspect-ratio:4/5;border-radius:var(--r-img);overflow:hidden;background:var(--a-tint);position:relative;box-shadow:0 8px 22px -12px rgb(38 23 30 / 18%);transition:transform .15s,box-shadow .15s}
+@media(hover:hover){.card:hover .img{transform:translateY(-2px)}}
 .card .tag{position:absolute;left:8px;top:8px;background:#fff;color:var(--t);font-size:12px;font-weight:700;padding:4px 9px;border-radius:999px}
 .card h3{font-family:var(--fd);font-weight:var(--fdw);font-size:17px;line-height:1.25;margin:10px 2px 2px;overflow-wrap:anywhere}
 .grid.one .card h3{font-size:21px}
 .card .sub{margin:0 2px;font-size:14px;color:var(--t2);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.card .price,.price{margin:2px 2px 0;font-size:14px;font-weight:800;color:var(--a-ink)}
+.card .price,.price{margin:2px 2px 0;font-size:14px;font-weight:800;color:var(--a-ink);font-variant-numeric:tabular-nums}
 .notice{display:flex;gap:8px;align-items:flex-start;margin:16px 16px 0;font-size:13px;color:var(--t2);line-height:1.4}
 .notice svg{flex:none;margin-top:1px}
 .how{display:grid;gap:14px;counter-reset:h;margin:0;padding:0;list-style:none}
@@ -86,6 +87,7 @@ h1.name{font-family:var(--fd);font-weight:var(--fdw);margin:0;line-height:1.05;o
 body.in-order .foot{display:none}
 
 /* Estilo Ateliê: elegante, centralizado, capa inteira */
+.st-atelie{--r-img:14px}
 .st-atelie .cover{height:210px}
 .st-atelie .cover.none{height:110px}
 .st-atelie .head{text-align:center;padding:0 22px;margin-top:-50px;position:relative;display:grid;gap:10px;justify-items:center}
@@ -235,7 +237,7 @@ body.in-order .preview-banner{position:static}
   .order{min-height:0}
 }
 @media(max-width:360px){.two{grid-template-columns:1fr}.st-moderna h1.name{font-size:42px}}
-@media(prefers-reduced-motion:reduce){*,::before,::after{animation:none!important;transition:none!important}.pill:active,.next:active,.card:active .img{transform:none}}
+@media(prefers-reduced-motion:reduce){*,::before,::after{animation:none!important;transition:none!important}.pill:active,.next:active,.card:active .img,.card:hover .img{transform:none}}
 .st-doceria .how li::before,.st-caseira .how li::before{background:#fff}
 
 /* ---- Alinhamento com o "Link da loja" do laboratório visual (16/10/2026) ----
@@ -268,7 +270,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px soli
   .foot{max-width:1180px;margin:0 auto}
 }
 /* Direção Comanda (16/10): produto sem foto vira cartão de texto, na cor da confeitaria. */
-.card.is-text{position:relative;justify-content:flex-start;gap:4px;min-height:132px;padding:16px;border-radius:var(--r-img);background:var(--a-tint);color:var(--t)}
+.card.is-text{position:relative;justify-content:flex-start;gap:4px;min-height:132px;padding:16px;border-radius:var(--r-img);background:var(--a-tint);color:var(--t);border:1px solid color-mix(in srgb,var(--a-ink) 18%,transparent);box-shadow:0 6px 16px -10px rgb(38 23 30 / 14%)}
 .card.is-text .tag{position:static;align-self:flex-start;margin-bottom:6px}
 .card.is-text h3{margin:0}
 .card.is-text .card-go{margin-top:auto;padding-top:10px;color:var(--a-ink);font-size:14px;font-weight:700}

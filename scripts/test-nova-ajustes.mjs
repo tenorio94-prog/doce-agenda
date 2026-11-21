@@ -101,12 +101,21 @@ try {
     // 2-6 sobre o exemplo da demonstração.
     const { page, look, api, finish } = await open(width, height);
 
-    // 6. Linha da agenda: sem "Retirada"; "Entrega" quando for; nome longo em 2 linhas, inteiro.
+    // 6. Linha da agenda: sem "Retirada"; "Entrega" quando for; nome longo em 2 linhas, inteiro; fotos só quando houver.
     const days = await page.locator('#days').innerText();
     assert.doesNotMatch(days, /Retirada/);
     assert.match(await page.locator('.order[data-id="DEMO-10"]').innerText(), /Carla · Entrega/);
+    assert.equal(await page.locator('.order[data-id="DEMO-07"] img.o-photo').count(), 1, 'pedido com foto no catálogo exibe miniatura na agenda');
     await api('/api/orders', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ client: 'Helena', product: 'Bolo de chocolate com morango', dueAt: '2026-10-30T16:00', total: 230, status: 'Confirmado' }) });
+    await api('/api/orders', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ client: 'Sílvia', product: 'Doce autoral sem foto', dueAt: '2026-10-31T11:00', total: 80, status: 'Confirmado' }) });
     await page.reload();
+    assert.equal(await page.locator('#d-2026-10-31 .order', { hasText: 'Sílvia' }).locator('img.o-photo').count(), 0, 'pedido sem foto não inventa imagem nem iniciais');
+    // Se uma miniatura falhar ao carregar, o listener em captura remove o <img> sem deixar ícone quebrado.
+    await page.evaluate(() => {
+      const img = document.querySelector('.order[data-id="DEMO-07"] img.o-photo');
+      img.dispatchEvent(new Event('error'));
+    });
+    assert.equal(await page.locator('.order[data-id="DEMO-07"] img.o-photo').count(), 0, 'imagem com erro é removida limpamente');
     const long = page.locator('#d-2026-10-30 .order', { hasText: 'Helena' }).locator('.o-what');
     await long.waitFor();
     const box = await long.evaluate((el) => { const s = getComputedStyle(el); return { lines: Math.round(el.clientHeight / parseFloat(s.lineHeight)), clipped: el.scrollHeight > el.clientHeight + 1, nowrap: s.whiteSpace === 'nowrap' }; });
@@ -131,9 +140,16 @@ try {
     await look('responder no WhatsApp');
     await closeSheet(page);
     assert.equal((await api('/api/state')).orders.find((o) => o.id === 'DEMO-15').status, 'Solicitação', 'continua para decidir');
-    // Pedido que não é do link continua com "O combinado".
+    // Pedido que não é do link continua com "O combinado", foto na ficha e canhoto financeiro com selo tátil.
     await page.locator('.order[data-id="DEMO-07"] .order-open').click();
     await sheet(page).locator('h3', { hasText: 'O combinado' }).waitFor();
+    assert.equal(await sheet(page).locator('img.f-photo').count(), 1, 'ficha exibe foto do doce quando disponível');
+    assert.match(await sheet(page).locator('.stub-stamp').innerText(), /Pago/i, 'selo do canhoto mostra Pago');
+    assert.match(await sheet(page).locator('#money-line').innerText(), /Total R\$ 180 · Recebido R\$ 180 · Pago/);
+    await closeSheet(page);
+    await page.locator('#d-2026-10-31 .order', { hasText: 'Sílvia' }).locator('.order-open').click();
+    assert.equal(await sheet(page).locator('img.f-photo').count(), 0, 'ficha sem foto não exibe img.f-photo');
+    assert.match(await sheet(page).locator('.stub-stamp').innerText(), /Sem sinal/i);
     await closeSheet(page);
     results.push(`${width}: responder o pedido do link`);
 
@@ -284,6 +300,42 @@ try {
     await closeSheet(page);
     await page.locator('[data-act="menu"]').click();
     for (const href of await sheet(page).locator('a').evaluateAll((links) => links.map((a) => a.getAttribute('href')))) assert.doesNotMatch(String(href || ''), /\/completa\//, 'menu sem link para /completa/');
+    // 2C (Frente B): Datas especiais, Detalhes do bolo e Cópia de segurança no Menu da tela nova.
+    await sheet(page).locator('[data-act="special"]').click();
+    await page.locator('#special-date-form').waitFor();
+    await page.locator('#special-date-form [name=name]').fill('Natal da Lu');
+    await page.locator('#special-date-form [name=from]').fill('2026-12-20');
+    await page.locator('#special-date-form [name=to]').fill('2026-12-25');
+    await page.locator('#special-date-form [name=product]').first().fill('Bolo de pistache');
+    await page.locator('#special-date-form [name=max]').first().fill('15');
+    await look('datas especiais');
+    await page.locator('#special-date-form [type=submit]').click();
+    await page.locator('#special-list', { hasText: 'Natal da Lu' }).waitFor();
+    assert.match(await page.locator('#special-list').innerText(), /Bolo de pistache: 0 de 15 combinados/);
+    await page.locator('#special-list [data-act="remove-special"]').first().click();
+    await page.locator('#toast-undo:visible').waitFor();
+    await page.locator('#toast-undo').click();
+    await page.locator('#special-list', { hasText: 'Natal da Lu' }).waitFor();
+    await sheet(page).locator('#sheet-back').click();
+
+    await sheet(page).locator('[data-act="cake-template"]').click();
+    const cakeForm = page.locator('#cake-template-form');
+    await cakeForm.waitFor();
+    assert.equal(await cakeForm.locator('.template-field').count(), 6);
+    await cakeForm.locator('[name=required][value="size"]').check();
+    await cakeForm.locator('[name="label.size"]').fill('Peso do bolo');
+    await look('detalhes do bolo');
+    await cakeForm.locator('[type=submit]').click();
+    await page.locator('#toast', { hasText: 'Detalhes do bolo salvos.' }).waitFor();
+    const savedTpl = await api('/api/order-template');
+    assert.equal(savedTpl.fields[0].key, 'size');
+    assert.equal(savedTpl.fields[0].label, 'Peso do bolo');
+    assert.equal(savedTpl.fields[0].required, true);
+
+    await sheet(page).locator('[data-act="backup"]').click();
+    await page.locator('[data-act="export-backup"]').waitFor();
+    await look('cópia de segurança');
+    await closeSheet(page);
     await finish();
     results.push(`${width}: Editar nome e doces e editor completo (fotos, estilo, cor e 4º+ doce) abrem no app limpo, sem /completa/`);
 

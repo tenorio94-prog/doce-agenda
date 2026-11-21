@@ -176,6 +176,32 @@ try {
     assert.equal(await sheet(page).locator('[data-act="reset"]').count(), 0);
     assert.equal(await sheet(page).locator('a.menu-item').count(), 0, 'sem atalho para /completa/ no menu');
     assert.equal(await sheet(page).locator('[data-act="days"]').count(), 1);
+    assert.equal(await sheet(page).locator('[data-act="special"]').count(), 1);
+    assert.equal(await sheet(page).locator('[data-act="cake-template"]').count(), 1);
+    assert.equal(await sheet(page).locator('[data-act="backup"]').count(), 1);
+    // Cópia de segurança na conta: exportar (/api/export) e restaurar (/api/import).
+    await sheet(page).locator('[data-act="backup"]').click();
+    const [download] = await Promise.all([
+      page.waitForEvent('download'),
+      sheet(page).locator('[data-act="export-backup"]').click(),
+    ]);
+    assert.match(download.suggestedFilename(), /^fornada-backup-\d{4}-\d{2}-\d{2}\.json$/);
+    assert.ok(backend.calls.some((call) => call.path === '/api/export' && call.method === 'GET'));
+    const backupPayload = structuredClone(backend.state);
+    backupPayload.orders = backupPayload.orders.slice(0, 2);
+    backupPayload.payments = backupPayload.payments.filter((p) => backupPayload.orders.some((o) => o.id === p.orderId));
+    await sheet(page).locator('#restore-file').setInputFiles({
+      name: 'fornada-backup.json',
+      mimeType: 'application/json',
+      buffer: Buffer.from(JSON.stringify(backupPayload)),
+    });
+    await sheet(page).locator('#restore-preview', { hasText: 'Arquivo reconhecido: 2 pedidos' }).waitFor();
+    assert.equal(await sheet(page).locator('#restore-confirm').isDisabled(), false);
+    await sheet(page).locator('#restore-confirm').click();
+    await page.locator('#toast', { hasText: 'Cópia restaurada. A cópia anterior foi preservada.' }).waitFor();
+    assert.equal(backend.state.orders.length, 2);
+    await page.locator('[data-act="menu"]').click();
+    assert.equal(await sheet(page).locator('a.menu-item').count(), 0, 'nenhum <a class="menu-item"> na conta');
     const text = (await page.evaluate(() => document.body.innerText)).toLocaleLowerCase('pt-BR');
     assert.deepEqual(FORBIDDEN.filter((word) => text.includes(word)), []);
     await sheet(page).locator('[data-act="sign-out"]').click();

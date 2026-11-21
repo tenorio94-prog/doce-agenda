@@ -1,7 +1,7 @@
 // Ficha do pedido e o que se faz nela: receber, cobrar, aceitar ou recusar o pedido do link,
 // confirmar o orçamento, marcar entregue e cancelar. Tudo pelas rotas /api que já existem.
 import * as M from './model.js';
-import { $, api, app, closeSheet, conflictHtml, copy, esc, findOrder, hideConflict, openSheet, reload, showConflict, showError, toast } from './ui.js';
+import { $, api, app, closeSheet, conflictHtml, copy, esc, findOrder, hideConflict, openSheet, orderPhotoHtml, reload, showConflict, showError, toast } from './ui.js';
 
 let refresh = async () => {};
 export const setRefresh = (fn) => { refresh = fn; };
@@ -34,20 +34,35 @@ function paymentList(order) {
   return items ? `<ul class="f-pays" aria-label="Pagamentos lançados">${items}</ul>` : '';
 }
 
+function stubStamp(order, total, received, due, owing, reported) {
+  if (reported.length) return '<span class="stub-stamp is-check" aria-hidden="true"><span>Pix a conferir</span></span>';
+  if (total === null) return '<span class="stub-stamp is-open" aria-hidden="true"><span>A combinar</span></span>';
+  if (due === 0) {
+    const lastPaid = M.paymentsOf(app.state, order).filter((payment) => payment.status === 'Conferido').at(-1);
+    const paidWhen = lastPaid ? M.shortDate(M.paymentDay(lastPaid)) : '';
+    return `<span class="stub-stamp is-paid" aria-hidden="true"><span>Pago</span>${paidWhen ? `<small>${esc(paidWhen)}</small>` : ''}</span>`;
+  }
+  if (owing) return '<span class="stub-stamp is-late" aria-hidden="true"><span>Falta receber</span></span>';
+  if (received > 0) return '<span class="stub-stamp is-due" aria-hidden="true"><span>Com sinal</span></span>';
+  return '<span class="stub-stamp is-due" aria-hidden="true"><span>Sem sinal</span></span>';
+}
+
 function money(order) {
   const { total, received, due } = M.balance(app.state, order), kind = M.group(order.status), reported = M.reportedPayments(app.state, order);
   // Pix avisado: conferir vem antes de tudo. Enquanto ele espera, não há Recebi nem Cobrar ao lado.
   const reportedHtml = reported.map((payment) => `<div class="f-reported"><p>A cliente avisou que pagou ${esc(M.brl(M.toCents(payment.amount)))}. Já viu na conta?</p>
     <div class="f-actions"><button class="btn btn-primary" type="button" data-act="seen" data-payment="${esc(payment.id)}" data-id="${esc(order.id)}">Vi na conta</button>
     <button class="btn btn-outline" type="button" data-act="undo-payment" data-payment="${esc(payment.id)}" data-id="${esc(order.id)}">Não caiu</button></div></div>`).join('');
-  // Cada parte inteira numa linha: "Falta R$ 120" não quebra no meio.
-  const parts = total === null ? ['Valor a combinar', ...(received ? [`Recebido ${M.brl(received)}`] : [])] : [`Total ${M.brl(total)}`, `Recebido ${M.brl(received)}`, due ? `Falta ${M.brl(due)}` : 'Pago'];
-  const line = parts.map((part) => `<span>${esc(part)}</span>`).join(' · ');
   // Entregue com saldo tem "Recebi o resto" como ação principal, embaixo; aqui fica só o Cobrar.
   const owing = kind === 'delivered' && due > 0;
+  // Cada parte inteira numa linha: "Falta R$ 120" não quebra no meio.
+  const parts = total === null ? ['Valor a combinar', ...(received ? [`Recebido ${M.brl(received)}`] : [])] : [`Total ${M.brl(total)}`, `Recebido ${M.brl(received)}`, due ? `Falta ${M.brl(due)}` : 'Pago'];
+  const statusTone = total === null ? 'is-open' : due === 0 ? 'is-paid' : owing ? 'is-late' : 'is-due';
+  const line = parts.map((part, index) => `<span${index === parts.length - 1 ? ` class="ml-status ${statusTone}"` : ''}>${esc(part)}</span>`).join(' · ');
+  const stamp = stubStamp(order, total, received, due, owing, reported);
   const receive = !reported.length && due !== 0 && !owing ? `<button class="btn btn-outline" type="button" data-act="received" data-id="${esc(order.id)}">Recebi</button>` : '';
   const charge = !reported.length && due && order.contact && kind !== 'decide' ? `<button class="btn btn-outline" type="button" data-act="charge" data-id="${esc(order.id)}">Cobrar ${esc(M.brl(due))}</button>` : '';
-  return `<section class="f-block" aria-labelledby="f-money"><h3 id="f-money">Dinheiro</h3>
+  return `<section class="f-block f-stub" aria-labelledby="f-money"><div class="f-stub-head"><h3 id="f-money">Dinheiro</h3>${stamp}</div>
     <p class="money-line" id="money-line">${line}</p>${reportedHtml}${paymentList(order)}
     ${receive || charge ? `<div class="f-actions">${receive}${charge}</div>` : ''}</section>`;
 }
@@ -64,16 +79,24 @@ function mainActions(order) {
 
 function fichaHtml(order) {
   const kind = M.group(order.status), request = order.status === 'Solicitação';
+  const photo = orderPhotoHtml(order, 'f-photo', '76px', true);
   const footer = [
     !request ? `<button class="link-btn" type="button" data-act="edit" data-id="${esc(order.id)}">Editar</button>` : '',
     kind === 'confirmed' ? `<button class="link-btn link-quiet" type="button" data-act="cancel-order" data-id="${esc(order.id)}">Cancelar pedido</button>` : '',
     kind === 'delivered' ? `<button class="link-btn link-quiet" type="button" data-act="deliver" data-id="${esc(order.id)}">Desfazer entrega</button>` : '',
   ].filter(Boolean).join('');
   return `<article class="ficha" data-id="${esc(order.id)}">
-    <p class="f-when">${esc(whenText(order))}</p>
-    <h2 id="sheet-title" tabindex="-1">${esc(order.product)}</h2>
-    <p class="f-who"><button class="link-btn" type="button" data-act="client" data-id="${esc(order.id)}">${esc(order.client)}</button> · ${esc(modeText(order))}</p>
-    <p class="f-state"><span class="pill pill-${kind}">${M.GROUP_LABEL[kind] || order.status}</span>${order.origin === 'link' && request ? ' <span class="muted">Chegou pelo link</span>' : ''}</p>
+    <div class="f-head">
+      <div class="f-top">
+        <div class="f-titles">
+          <p class="f-when">${esc(whenText(order))}</p>
+          <h2 id="sheet-title" tabindex="-1">${esc(order.product)}</h2>
+          <p class="f-who"><button class="link-btn" type="button" data-act="client" data-id="${esc(order.id)}">${esc(order.client)}</button> · ${esc(modeText(order))}</p>
+        </div>
+        ${photo}
+      </div>
+      <p class="f-state"><span class="pill pill-${kind}">${M.GROUP_LABEL[kind] || order.status}</span>${order.origin === 'link' && request ? ' <span class="muted">Chegou pelo link</span>' : ''}</p>
+    </div>
     ${agreed(order)}
     ${request ? `<section class="f-block"><h3>Contato</h3><p>${order.contact ? `WhatsApp ${esc(order.contact)}` : '<span class="muted">Sem WhatsApp.</span>'}</p>${order.contact ? `<div class="f-actions"><button class="btn btn-outline" type="button" data-act="reply" data-id="${esc(order.id)}">Responder no WhatsApp</button></div>` : ''}</section>` : money(order)}
     ${mainActions(order)}

@@ -51,13 +51,15 @@ export async function renderMoney({ keep = false } = {}) {
       <p class="mm-label">Recebido em ${esc(monthName)}</p><strong id="money-received">${esc(received)}</strong>
       <p class="mm-note" id="money-month-note">Conferido na conta neste mês.</p>
       <button class="link-btn" type="button" data-act="month-payments">Ver os pagamentos</button></section>
-    ${error ? `<p class="form-error" role="alert">${esc(error)}</p>` : ''}
-    <h2 class="section-title" id="owed-title">Já entregue, falta receber · <span id="money-delivered-due">${esc(M.brl(M.sumDue(app.state, owed)))}</span></h2>
-    <p class="muted section-note">Entregues com saldo em aberto.</p>
-    ${owed.length ? `<ul class="due-list" id="owed-list">${owed.map((order) => row(order, true)).join('')}</ul>` : '<p class="muted" id="owed-empty">Ninguém que já levou está devendo.</p>'}
-    <h2 class="section-title" id="coming-title">Ainda vai entrar · ${esc(M.brl(M.sumDue(app.state, coming)))}</h2>
-    <p class="muted section-note">Confirmados com saldo em aberto.</p>
-    ${coming.length ? `<ul class="due-list" id="coming-list">${coming.map((order) => row(order, false)).join('')}</ul>` : '<p class="muted" id="coming-list">Nada combinado com saldo.</p>'}`;
+    <div class="money-lists">
+      ${error ? `<p class="form-error" role="alert">${esc(error)}</p>` : ''}
+      <h2 class="section-title" id="owed-title">Já entregue, falta receber · <span id="money-delivered-due">${esc(M.brl(M.sumDue(app.state, owed)))}</span></h2>
+      <p class="muted section-note">Entregues com saldo em aberto.</p>
+      ${owed.length ? `<ul class="due-list" id="owed-list">${owed.map((order) => row(order, true)).join('')}</ul>` : '<p class="muted" id="owed-empty">Ninguém que já levou está devendo.</p>'}
+      <h2 class="section-title" id="coming-title">Ainda vai entrar · ${esc(M.brl(M.sumDue(app.state, coming)))}</h2>
+      <p class="muted section-note">Confirmados com saldo em aberto.</p>
+      ${coming.length ? `<ul class="due-list" id="coming-list">${coming.map((order) => row(order, false)).join('')}</ul>` : '<p class="muted" id="coming-list">Nada combinado com saldo.</p>'}
+    </div>`;
 }
 
 // Os pagamentos que formam o Recebido do mês: dia em que foram conferidos, cliente e valor. Cancelado aparece marcado

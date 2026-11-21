@@ -1,4 +1,6 @@
 // Peças comuns da tela nova: estado em memória, acesso às rotas /api, a janela (ficha) e o aviso de baixo.
+import { demoOrderPhoto } from '../../cloud/demo-photos.js';
+import { photoAttrs, photoUrl } from '../../cloud/vitrine-theme.js';
 import { CAPACITY_CODES, friendlyError, todayKey } from './model.js';
 
 export const app = {
@@ -9,6 +11,12 @@ export const $ = (selector, root = document) => root.querySelector(selector);
 export const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 export const findOrder = (id) => app.state?.orders.find((order) => order.id === id);
 export const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+export function orderPhotoHtml(order, className, sizes, eager = false) {
+  const key = demoOrderPhoto(order, app.state?.orderPage?.products || [], app.demo);
+  if (!key) return '';
+  return `<img class="${esc(className)}" src="${esc(photoUrl(key))}" ${photoAttrs(key, sizes)} alt="" ${eager ? 'loading="eager"' : 'loading="lazy"'} decoding="async">`;
+}
 
 // Só DoceApi.fetch e as rotas que já existem.
 export async function api(path, { method = 'GET', body } = {}) {
