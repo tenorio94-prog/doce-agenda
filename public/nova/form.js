@@ -1,11 +1,51 @@
 // Novo pedido e Editar. Tudo à vista, na ordem do caderno. Ao editar, só vai o que mudou:
 // o servidor mescla, então bolo, vagas, próxima ação e alteração pendente ficam como estavam.
+import { DEMO_PHOTO_CATALOG } from '../../cloud/demo-photos.js';
+import { photoAttrs, photoUrl } from '../../cloud/vitrine-theme.js';
 import * as M from './model.js';
-import { $, api, app, closeSheet, conflictHtml, esc, findOrder, hideConflict, markClean, openSheet, reload, showConflict, showError, toast } from './ui.js';
+import { $, api, app, closeSheet, conflictHtml, esc, findOrder, hideConflict, markClean, openSheet, orderPhotoHtml, reload, showConflict, showError, toast } from './ui.js';
 
 let refresh = async () => {};
 export const setRefresh = (fn) => { refresh = fn; };
 const OVERRIDE_REASON = 'Anotado mesmo assim pela confeiteira.';
+
+function productPicksHtml(currentProduct = '') {
+  let list = (app.state?.orderPage?.products || []).filter((product) => product?.name);
+  if (!list.length && app.demo) list = DEMO_PHOTO_CATALOG;
+  const picks = [...list.filter((product) => product.featured !== false && product.featured), ...list.filter((product) => !product.featured)].slice(0, 8);
+  if (!picks.length) return '';
+  const currentKey = String(currentProduct || '').trim().toLocaleLowerCase('pt-BR');
+  return `<div class="product-picks" role="group" aria-label="Atalhos de doces">${picks.map((product) => {
+    const thumb = product.photo
+      ? `<img class="product-chip-thumb" src="${esc(photoUrl(product.photo))}" ${photoAttrs(product.photo, '22px')} alt="" loading="lazy" decoding="async">`
+      : orderPhotoHtml({ product: product.name }, 'product-chip-thumb', '22px');
+    const price = Number.isInteger(product.priceFromCents) && product.priceFromCents > 0 ? String(product.priceFromCents) : '';
+    const pressed = product.name.toLocaleLowerCase('pt-BR') === currentKey;
+    return `<button type="button" class="chip product-chip" data-act="pick-product" data-product-name="${esc(product.name)}" data-product-price="${esc(price)}" aria-pressed="${pressed}">${thumb}<span>${esc(product.name)}</span></button>`;
+  }).join('')}</div>`;
+}
+
+export function pickProduct(button) {
+  const form = $('#order-form');
+  if (!form || !button) return;
+  const name = button.dataset.productName || '';
+  const priceCents = Number(button.dataset.productPrice || 0);
+  form.elements.product.value = name;
+  for (const chip of form.querySelectorAll('[data-act="pick-product"]')) {
+    chip.setAttribute('aria-pressed', String(chip === button));
+  }
+  if (!form.elements.total.value.trim() && priceCents > 0) {
+    form.elements.total.value = M.centsInput(priceCents);
+  }
+}
+
+export function syncProductPicks(form) {
+  if (!form) return;
+  const currentKey = String(form.elements.product?.value || '').trim().toLocaleLowerCase('pt-BR');
+  for (const chip of form.querySelectorAll('[data-act="pick-product"]')) {
+    chip.setAttribute('aria-pressed', String(String(chip.dataset.productName || '').toLocaleLowerCase('pt-BR') === currentKey));
+  }
+}
 
 export function openForm(id = null) {
   const order = id ? findOrder(id) : null;
@@ -16,7 +56,7 @@ export function openForm(id = null) {
   openSheet(`<form id="order-form" novalidate${order ? ` data-id="${esc(order.id)}"` : ''}>
     <h2 id="sheet-title" tabindex="-1">${order ? 'Editar pedido' : 'Novo pedido'}</h2>
     <label class="field"><span>Quem pediu?</span><input name="client" autocomplete="off" maxlength="120" value="${esc(order?.client)}" aria-describedby="form-error"></label>
-    <label class="field"><span>O quê?</span><input name="product" autocomplete="off" maxlength="300" value="${esc(order?.product)}" placeholder="Ex.: bolo de cenoura"></label>
+    <div class="field"><label class="field"><span>O quê?</span><input name="product" autocomplete="off" maxlength="300" value="${esc(order?.product)}" placeholder="Ex.: bolo de cenoura"></label>${productPicksHtml(order?.product)}</div>
     <fieldset class="field"><legend>Quando?</legend>
       <div class="quick"><button class="chip" type="button" data-act="quick" data-days="0" aria-pressed="false">Hoje</button><button class="chip" type="button" data-act="quick" data-days="1" aria-pressed="false">Amanhã</button></div>
       <div class="when-fields"><label class="field"><span>Dia</span><input type="date" name="date" value="${esc(M.orderDay(order))}" aria-describedby="day-note"></label>

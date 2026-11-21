@@ -43,6 +43,7 @@ export async function storyImage(page, url) {
   const qy = top + 390; x.fillStyle = '#ffffff'; round(330, qy, 420, 420, 36); x.fill();
   drawQr(x, url, 365, qy + 35, 350);
   x.fillStyle = p.ink; x.font = '700 44px "Bricolage Grotesque", sans-serif'; x.fillText(url.replace(/^https:\/\//, ''), 540, qy + 500);
+  x.fillStyle = '#5e5259'; x.font = '600 30px "Bricolage Grotesque", sans-serif'; x.fillText('Fornada · encomendas pelo link', 540, 1872);
   return toBlob(canvas);
 }
 
@@ -56,6 +57,7 @@ export async function printQr(page, url) {
   x.fillStyle = '#3b2c34'; x.font = '600 48px "Bricolage Grotesque", sans-serif'; x.fillText('Aponte a câmera para encomendar', 600, 260);
   drawQr(x, url, 200, 340, 800);
   x.fillStyle = p.ink; x.font = '700 46px "Bricolage Grotesque", sans-serif'; x.fillText(url.replace(/^https:\/\//, ''), 600, 1320);
+  x.fillStyle = '#5e5259'; x.font = '600 30px "Bricolage Grotesque", sans-serif'; x.fillText('Fornada · encomendas pelo link', 600, 1435);
   return toBlob(canvas);
 }
 

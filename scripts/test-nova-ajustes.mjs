@@ -86,8 +86,14 @@ try {
       await closeSheet(page);
       await start.locator('[data-act="new"]').click();
       const form = page.locator('#order-form');
+      assert.ok(await form.locator('.product-picks [data-act="pick-product"]').count() >= 3, 'atalhos de doces com foto no Novo pedido');
+      await form.locator('[data-act="pick-product"]', { hasText: 'Bolo de pistache' }).click();
+      assert.equal(await form.locator('[name=product]').inputValue(), 'Bolo de pistache');
+      assert.equal(await form.locator('[name=total]').inputValue(), '180');
+      assert.equal(await form.locator('[data-act="pick-product"]', { hasText: 'Bolo de pistache' }).getAttribute('aria-pressed'), 'true');
       await form.locator('[name=client]').fill('Primeira Cliente');
       await form.locator('[name=product]').fill('Bolo de fubá');
+      assert.equal(await form.locator('[data-act="pick-product"]', { hasText: 'Bolo de pistache' }).getAttribute('aria-pressed'), 'false');
       await form.locator('[data-act="quick"][data-days="1"]').click();
       await form.locator('[name=time]').fill('10:00');
       await form.locator('[type=submit]').click();
@@ -247,6 +253,9 @@ try {
     await sheet(page).locator('text=lucast').first().waitFor().catch(() => {});
     const change = sheet(page).locator('[data-act="edit-link"]', { hasText: 'Editar nome e doces' });
     await change.waitFor();
+    assert.equal(await sheet(page).locator('.share-kit-box .share-kit-preview').count(), 1, 'kit de divulgação visual no Meu link');
+    assert.equal(await sheet(page).locator('[data-act="share-story"]').count(), 1);
+    assert.equal(await sheet(page).locator('[data-act="share-qr"]').count(), 1);
     for (const href of await sheet(page).locator('a').evaluateAll((links) => links.map((a) => a.getAttribute('href')))) assert.doesNotMatch(String(href || ''), /\/completa\//, 'sem link para /completa/');
     await look('meu link ativo');
     await change.click();
@@ -335,6 +344,26 @@ try {
     await sheet(page).locator('[data-act="backup"]').click();
     await page.locator('[data-act="export-backup"]').waitFor();
     await look('cópia de segurança');
+    await sheet(page).locator('#sheet-back').click();
+
+    // 2D (Item 3): Caderninho visual de Clientes e busca rápida no Menu da tela nova.
+    await sheet(page).locator('[data-act="clients"]').click();
+    await page.locator('#clients-search').waitFor();
+    assert.match(await sheet(page).locator('.client-reminders').innerText(), /Ana Clara[\s\S]*faltam 20 dias/);
+    await page.locator('#clients-search').fill('paula');
+    assert.equal(await sheet(page).locator('.client-card').count(), 2, 'Paula com e sem WhatsApp separadas');
+    await page.locator('#clients-search').fill('');
+    await sheet(page).locator('[data-act="filter-clients"][data-filter="away"]').click();
+    assert.ok(await sheet(page).locator('.client-card', { hasText: 'Helena' }).count() >= 1);
+    await sheet(page).locator('.client-card', { hasText: 'Helena' }).first().click();
+    await sheet(page).locator('.client-stats').waitFor();
+    assert.match(await sheet(page).locator('.client-stats').innerText(), /Pedidos[\s\S]*Total/);
+    await look('ficha da cliente');
+    await sheet(page).locator('[data-act="anon-client-ask"]').click();
+    await sheet(page).locator('[data-act="anon-client-confirm"]').waitFor();
+    await look('confirmar apagar dados da cliente');
+    await sheet(page).locator('[data-act="anon-client-confirm"]').click();
+    await page.locator('#toast', { hasText: 'Dados apagados' }).waitFor();
     await closeSheet(page);
     await finish();
     results.push(`${width}: Editar nome e doces e editor completo (fotos, estilo, cor e 4º+ doce) abrem no app limpo, sem /completa/`);

@@ -34,20 +34,21 @@ function paymentList(order) {
   return items ? `<ul class="f-pays" aria-label="Pagamentos lançados">${items}</ul>` : '';
 }
 
-function stubStamp(order, total, received, due, owing, reported) {
-  if (reported.length) return '<span class="stub-stamp is-check" aria-hidden="true"><span>Pix a conferir</span></span>';
-  if (total === null) return '<span class="stub-stamp is-open" aria-hidden="true"><span>A combinar</span></span>';
+function stubStamp(order, total, received, due, owing, reported, stampBeat = false) {
+  const beat = stampBeat ? ' is-beating' : '';
+  if (reported.length) return `<span class="stub-stamp is-check${beat}" aria-hidden="true"><span>Pix a conferir</span></span>`;
+  if (total === null) return `<span class="stub-stamp is-open${beat}" aria-hidden="true"><span>A combinar</span></span>`;
   if (due === 0) {
     const lastPaid = M.paymentsOf(app.state, order).filter((payment) => payment.status === 'Conferido').at(-1);
     const paidWhen = lastPaid ? M.shortDate(M.paymentDay(lastPaid)) : '';
-    return `<span class="stub-stamp is-paid" aria-hidden="true"><span>Pago</span>${paidWhen ? `<small>${esc(paidWhen)}</small>` : ''}</span>`;
+    return `<span class="stub-stamp is-paid${beat}" aria-hidden="true"><span>Pago</span>${paidWhen ? `<small>${esc(paidWhen)}</small>` : ''}</span>`;
   }
-  if (owing) return '<span class="stub-stamp is-late" aria-hidden="true"><span>Falta receber</span></span>';
-  if (received > 0) return '<span class="stub-stamp is-due" aria-hidden="true"><span>Com sinal</span></span>';
-  return '<span class="stub-stamp is-due" aria-hidden="true"><span>Sem sinal</span></span>';
+  if (owing) return `<span class="stub-stamp is-late${beat}" aria-hidden="true"><span>Falta receber</span></span>`;
+  if (received > 0) return `<span class="stub-stamp is-due${beat}" aria-hidden="true"><span>Com sinal</span></span>`;
+  return `<span class="stub-stamp is-due${beat}" aria-hidden="true"><span>Sem sinal</span></span>`;
 }
 
-function money(order) {
+function money(order, opts = {}) {
   const { total, received, due } = M.balance(app.state, order), kind = M.group(order.status), reported = M.reportedPayments(app.state, order);
   // Pix avisado: conferir vem antes de tudo. Enquanto ele espera, não há Recebi nem Cobrar ao lado.
   const reportedHtml = reported.map((payment) => `<div class="f-reported"><p>A cliente avisou que pagou ${esc(M.brl(M.toCents(payment.amount)))}. Já viu na conta?</p>
@@ -59,7 +60,7 @@ function money(order) {
   const parts = total === null ? ['Valor a combinar', ...(received ? [`Recebido ${M.brl(received)}`] : [])] : [`Total ${M.brl(total)}`, `Recebido ${M.brl(received)}`, due ? `Falta ${M.brl(due)}` : 'Pago'];
   const statusTone = total === null ? 'is-open' : due === 0 ? 'is-paid' : owing ? 'is-late' : 'is-due';
   const line = parts.map((part, index) => `<span${index === parts.length - 1 ? ` class="ml-status ${statusTone}"` : ''}>${esc(part)}</span>`).join(' · ');
-  const stamp = stubStamp(order, total, received, due, owing, reported);
+  const stamp = stubStamp(order, total, received, due, owing, reported, Boolean(opts.stampBeat));
   const receive = !reported.length && due !== 0 && !owing ? `<button class="btn btn-outline" type="button" data-act="received" data-id="${esc(order.id)}">Recebi</button>` : '';
   const charge = !reported.length && due && order.contact && kind !== 'decide' ? `<button class="btn btn-outline" type="button" data-act="charge" data-id="${esc(order.id)}">Cobrar ${esc(M.brl(due))}</button>` : '';
   return `<section class="f-block f-stub" aria-labelledby="f-money"><div class="f-stub-head"><h3 id="f-money">Dinheiro</h3>${stamp}</div>
@@ -77,7 +78,7 @@ function mainActions(order) {
   return '';
 }
 
-function fichaHtml(order) {
+function fichaHtml(order, opts = {}) {
   const kind = M.group(order.status), request = order.status === 'Solicitação';
   const photo = orderPhotoHtml(order, 'f-photo', '76px', true);
   const footer = [
@@ -98,18 +99,20 @@ function fichaHtml(order) {
       <p class="f-state"><span class="pill pill-${kind}">${M.GROUP_LABEL[kind] || order.status}</span>${order.origin === 'link' && request ? ' <span class="muted">Chegou pelo link</span>' : ''}</p>
     </div>
     ${agreed(order)}
-    ${request ? `<section class="f-block"><h3>Contato</h3><p>${order.contact ? `WhatsApp ${esc(order.contact)}` : '<span class="muted">Sem WhatsApp.</span>'}</p>${order.contact ? `<div class="f-actions"><button class="btn btn-outline" type="button" data-act="reply" data-id="${esc(order.id)}">Responder no WhatsApp</button></div>` : ''}</section>` : money(order)}
+    ${request ? `<section class="f-block"><h3>Contato</h3><p>${order.contact ? `WhatsApp ${esc(order.contact)}` : '<span class="muted">Sem WhatsApp.</span>'}</p>${order.contact ? `<div class="f-actions"><button class="btn btn-outline" type="button" data-act="reply" data-id="${esc(order.id)}">Responder no WhatsApp</button></div>` : ''}</section>` : money(order, opts)}
     ${mainActions(order)}
     ${footer ? `<div class="f-footer">${footer}</div>` : ''}
   </article>`;
 }
 
-export function openFicha(id, back = null) {
+let currentBack = null;
+export function openFicha(id, back = currentBack, opts = {}) {
   const order = findOrder(id);
   if (!order) { closeSheet(); return; }
-  openSheet(fichaHtml(order), back);
+  currentBack = back;
+  openSheet(fichaHtml(order, opts), currentBack);
 }
-const backToFicha = (id) => () => openFicha(id);
+const backToFicha = (id) => () => openFicha(id, currentBack);
 
 export function openList(kind) {
   const orders = kind === 'late' ? M.lateOrders(app.state, app.today) : kind === 'pix' ? M.reportedOrders(app.state) : M.decideOrders(app.state);
@@ -171,7 +174,7 @@ export async function submitReceived(form) {
     const payment = await api(`/orders/${encodeURIComponent(id)}/payments`, { method: 'POST', body: { amount: cents / 100, status: 'Conferido', note: 'Recebido' } });
     await reload();
     await refresh();
-    if (form.dataset.from === 'money') closeSheet(); else openFicha(id);
+    if (form.dataset.from === 'money') closeSheet(); else openFicha(id, currentBack, { stampBeat: true });
     toast(`Recebido ${M.brl(cents)}.`, () => undoPayment(payment.id, id, form.dataset.from === 'money'));
   } catch (error) { showError('#pay-error', error.message); button.disabled = false; }
 }
@@ -179,7 +182,7 @@ export async function submitReceived(form) {
 export async function markSeen(paymentId, id) {
   try {
     await api(`/payments/${encodeURIComponent(paymentId)}`, { method: 'PUT', body: { status: 'Conferido' } });
-    await reload(); await refresh(); openFicha(id);
+    await reload(); await refresh(); openFicha(id, currentBack, { stampBeat: true });
     toast('Anotado como recebido.');
   } catch (error) { toast(error.message); }
 }

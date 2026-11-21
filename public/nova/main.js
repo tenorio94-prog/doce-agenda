@@ -7,6 +7,7 @@ import * as Form from './form.js';
 import { openMonthPayments, renderMoney, updateMoneyBadge } from './dinheiro.js';
 import * as Menu from './menu.js';
 import * as Ajustes from './ajustes.js';
+import * as Clientes from './clientes.js';
 import * as Link from './link.js';
 import { $, app, changeDay, closeSheet, hasUnsavedForm, hideConflict, hideToast, keepEditing, placeToast, reload, requestClose, sheetOpen, toast } from './ui.js';
 
@@ -26,6 +27,7 @@ async function refresh(focusId = null, dayToShow = null) {
 Ficha.setRefresh(refresh);
 Form.setRefresh(refresh);
 Ajustes.setRefresh(refresh);
+Clientes.setRefresh(refresh);
 
 function setTab(tab) {
   app.tab = tab;
@@ -42,7 +44,12 @@ const actions = {
   // Da lista de avisos ou dos pagamentos do mês, a ficha ganha Voltar para a lista.
   open: (el) => Ficha.openFicha(el.dataset.id, el.dataset.back === 'month' ? () => openMonthPayments(app.month) : el.dataset.back ? () => Ficha.openList(el.dataset.back) : null),
   list: (el) => Ficha.openList(el.dataset.list),
-  client: (el) => Ficha.openClient(el.dataset.id),
+  client: (el) => Clientes.openClient(el.dataset.id),
+  clients: () => Clientes.openClients(),
+  'open-client': (el) => Clientes.openClient(el.dataset.key),
+  'filter-clients': (el) => Clientes.filterClients(el.dataset.filter),
+  'anon-client-ask': (el) => Clientes.askAnonymizeClient(el.dataset.key),
+  'anon-client-confirm': (el) => Clientes.confirmAnonymizeClient(el.dataset.key, el),
   received: (el) => Ficha.openReceived(el.dataset.id),
   'received-money': (el) => Ficha.openReceived(el.dataset.id, true),
   seen: (el) => Ficha.markSeen(el.dataset.payment, el.dataset.id),
@@ -66,6 +73,7 @@ const actions = {
   edit: (el) => Form.openForm(el.dataset.id),
   new: () => Form.openForm(),
   quick: (el) => Form.quickDay(el.dataset.days),
+  'pick-product': (el) => Form.pickProduct(el),
   'force-save': () => Form.submitForm($('#order-form'), true),
   'change-day': () => changeDay(),
   'fill-due': (el) => { const input = $('#pay-form [name=amount]'); input.value = el.dataset.value; input.focus(); Ficha.resetReceived($('#pay-form')); },
@@ -84,6 +92,8 @@ const actions = {
   'remove-photo': (el) => Link.removePhoto(el),
   'copy-link': () => Link.copyLink(),
   'preview-link': () => Link.previewSaved(),
+  'share-story': (el) => Link.shareKit('story', el),
+  'share-qr': (el) => Link.shareKit('qr', el),
   menu: () => Menu.openMenu(),
   days: () => Menu.openDays(),
   special: () => Ajustes.openSpecialDates(),
@@ -103,7 +113,7 @@ const actions = {
 };
 
 document.addEventListener('error', (event) => {
-  if (event.target?.matches?.('img.o-photo, img.f-photo')) event.target.remove();
+  if (event.target?.matches?.('img.o-photo, img.f-photo, img.product-chip-thumb, img.c-photo, img.c-order-photo')) event.target.remove();
 }, true);
 
 document.addEventListener('click', (event) => {
@@ -130,6 +140,8 @@ document.addEventListener('input', (event) => {
   if (event.target.closest('#link-wizard')) Link.onWizardInput(event.target);
   else if (event.target.closest('#vitrine-form')) Link.onVitrineInput(event);
   else if (event.target.closest('#cake-template-form')) Ajustes.onCakeTemplateChange(event);
+  else if (event.target.id === 'clients-search') Clientes.onClientsSearch(event.target);
+  if (event.target.name === 'product' && event.target.form?.id === 'order-form') Form.syncProductPicks(event.target.form);
   if (event.target.name === 'amount' && event.target.form?.id === 'pay-form' && event.target.form.dataset.over) Ficha.resetReceived(event.target.form);
 });
 document.addEventListener('change', (event) => {

@@ -5,6 +5,7 @@ const DAYS = [[1, 'Segunda'], [2, 'Terça'], [3, 'Quarta'], [4, 'Quinta'], [5, '
 
 export function openMenu() {
   openSheet(`<h2 id="sheet-title" tabindex="-1">Menu</h2><ul class="menu-list">
+    <li><button class="menu-item" type="button" data-act="clients">Clientes</button></li>
     <li><button class="menu-item" type="button" data-act="days">Dias e limite</button></li>
     <li><button class="menu-item" type="button" data-act="special">Datas especiais</button></li>
     <li><button class="menu-item" type="button" data-act="cake-template">Detalhes do bolo</button></li>

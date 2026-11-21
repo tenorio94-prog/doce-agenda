@@ -2,10 +2,12 @@
 // Nome e endereço, WhatsApp opcional; até 3 doces no assistente rápido ou até 30 doces, estilo, cor e fotos
 // no editor completo. Salvar manda o orderPage inteiro lido do servidor agora, só com a mudança.
 // Na demonstração o último passo só mostra a prévia (/encomenda/?preview=1), e nada é ativado.
+import { DEMO_COVER_PHOTO, DEMO_PHOTO_CATALOG } from '../../cloud/demo-photos.js';
 import { usesCakeFields } from '../../cloud/order-link-model.js';
 import { orderSlots } from '../../cloud/state-engine.js';
 import { DEFAULT_COLOR, VITRINE_PRESETS, VITRINE_STYLE_INFO, formatCents, initials, photoAttrs, photoUrl, vitrinePalette } from '../../cloud/vitrine-theme.js';
 import { blobToBase64, dominantColor, preparePhoto, shareImage } from '../photo-prep.js';
+import { printQr, shareOrDownload, storyImage } from '../share-kit.js';
 import * as M from './model.js';
 import { $, api, app, closeSheet, copy, esc, openSheet, reload, toast } from './ui.js';
 
@@ -14,6 +16,73 @@ const LINK_PREVIEW_KEY = 'doce-agenda.link-preview';
 const TITLES = ['Como a cliente te encontra', 'O que você vende', 'Pronto para ir ao ar'];
 let wizard = null;
 const vitrineCanvases = { logo: null, cover: null };
+
+function pageForShareKit(rawPage = app.state?.orderPage || {}) {
+  if (app.demo) {
+    return {
+      displayName: rawPage.displayName || 'Doces da Lu',
+      slug: rawPage.slug || 'doces-da-lu',
+      color: rawPage.color || DEFAULT_COLOR,
+      style: rawPage.style || 'atelie',
+      welcome: rawPage.welcome || 'Bolos e docinhos feitos em casa, sob encomenda.',
+      logo: rawPage.logo || 'exemplo/logo-doces-da-lu-160.webp',
+      cover: rawPage.cover || DEMO_COVER_PHOTO,
+      products: (rawPage.products || []).length ? rawPage.products : DEMO_PHOTO_CATALOG,
+    };
+  }
+  return {
+    ...rawPage,
+    displayName: rawPage.displayName || 'Sua confeitaria',
+    slug: rawPage.slug || 'confeitaria',
+    color: rawPage.color || DEFAULT_COLOR,
+    style: rawPage.style || 'atelie',
+  };
+}
+
+function shareKitMarkup(rawPage = app.state?.orderPage || {}) {
+  const kit = pageForShareKit(rawPage);
+  const palette = vitrinePalette(kit.color);
+  const styleInfo = VITRINE_STYLE_INFO[kit.style] || VITRINE_STYLE_INFO.atelie;
+  const shortUrl = `${LINK_BASE}${kit.slug}`;
+  return `<section class="share-kit-box" aria-label="Kit de divulgação">
+    <div class="share-kit-preview st-${esc(kit.style)}" style="--sk-tint:${palette.tint};--sk-tint2:${palette.tint2};--sk-ink:${palette.ink};--sk-font:${styleInfo.font.replace(/"/g, "'")};--sk-weight:${styleInfo.weight}">
+      ${kit.cover ? `<img class="sk-cover" src="${esc(photoUrl(kit.cover))}" alt="" loading="lazy" decoding="async">` : '<div class="sk-cover is-none" aria-hidden="true"></div>'}
+      <div class="sk-avatar">${kit.logo ? `<img src="${esc(photoUrl(kit.logo))}" alt="" loading="lazy" decoding="async">` : `<span aria-hidden="true">${esc(initials(kit.displayName))}</span>`}</div>
+      <strong class="sk-name">${esc(kit.displayName)}</strong>
+      <span class="sk-badge">Encomendas abertas</span>
+      <small class="sk-url">${esc(shortUrl)}</small>
+    </div>
+    <div class="share-kit-actions">
+      <button class="btn btn-outline link-btn" type="button" data-act="share-story">Arte para Story e Status</button>
+      <button class="btn btn-outline link-btn" type="button" data-act="share-qr">QR para imprimir</button>
+    </div>
+    <p class="muted share-kit-status" id="share-kit-status" role="status" hidden></p>
+  </section>`;
+}
+
+export async function shareKit(kind, button) {
+  const kit = pageForShareKit(app.state?.orderPage || {});
+  const slug = kit.slug || 'doces-da-lu';
+  const fullUrl = app.demo ? new URL('/encomenda/', location.origin).href : `https://${LINK_BASE}${slug}`;
+  const status = $('#share-kit-status');
+  const story = kind === 'story';
+  if (button) button.disabled = true;
+  if (status) { status.textContent = story ? 'Montando a arte…' : 'Montando o QR…'; status.hidden = false; }
+  try {
+    const blob = story ? await storyImage(kit, fullUrl) : await printQr(kit, fullUrl);
+    const filename = story ? `${slug}-story.png` : `${slug}-qr.png`;
+    const result = await shareOrDownload(blob, filename, fullUrl);
+    const msg = story ? 'Arte pronta para Story e Status.' : 'QR pronto para imprimir.';
+    if (status) { status.textContent = msg; status.hidden = false; }
+    if (result === 'downloaded' || result === 'shared') toast(msg);
+  } catch {
+    const err = 'Não deu para montar a imagem agora. Tente de novo.';
+    if (status) { status.textContent = err; status.hidden = false; }
+    toast(err);
+  } finally {
+    if (button) button.disabled = false;
+  }
+}
 
 export function openLink() {
   const page = app.state.orderPage || {};
@@ -28,6 +97,7 @@ export function openLink() {
     <p class="link-url" id="link-url">${esc(url)}</p>
     <button class="btn btn-primary" type="button" data-act="copy-link">Copiar link</button>
     ${see}
+    ${shareKitMarkup(page)}
     <button class="btn btn-outline" type="button" data-act="open-vitrine">Fotos, estilo e doces</button>
     <button class="btn btn-outline" type="button" data-act="edit-link">Editar nome e doces</button>`);
 }
@@ -63,6 +133,7 @@ function renderWizard(errorText = '') {
     <div class="f-main">${w.step > 1 ? '<button class="btn btn-outline" type="submit" value="back">Voltar</button>' : ''}${w.step === 3 && cloud ? '<button class="btn btn-outline" type="submit" value="preview">Ver prévia</button>' : ''}<button class="btn btn-primary" type="submit" value="next">${primary}</button></div>
     ${w.step === 1 ? '<button class="link-btn" type="button" data-act="open-vitrine">Fotos, estilo e todos os doces</button>' : ''}
     ${w.step === 1 && app.demo ? '<button class="link-btn" type="button" data-act="preview-link">Ver como a cliente vê o exemplo da Doces da Lu</button>' : ''}
+    ${w.step === 1 && app.demo ? shareKitMarkup(app.state?.orderPage) : ''}
   </form>`, w.step === 1 ? w.back : null);
   if (errorText) $('#link-wizard-error').scrollIntoView({ block: 'nearest' });
   else $('#link-wizard input')?.focus({ preventScroll: true });

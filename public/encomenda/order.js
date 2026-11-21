@@ -451,14 +451,34 @@ async function showTracking() {
     const when = day ? `${brDate(day, { weekday: 'long', day: 'numeric', month: 'long' })}${time ? ` às ${time.replace(':00', 'h').replace(':', 'h')}` : ''}` : 'data a combinar';
     const part = (text) => `<span>${esc(text)}</span>`;
     const money = Number.isInteger(view.totalCents) ? `<p class="track-money">${part(`Total ${formatCents(view.totalCents)}`)} · ${part(`pago ${formatCents(view.paidCents)}`)} · ${view.totalCents > view.paidCents ? part(`falta ${formatCents(view.totalCents - view.paidCents)}`) : part('tudo pago')}</p>` : '';
-    const steps = at >= 0 ? `<ol class="track-steps">${TRACK_STEPS.map(([key, label], i) => `<li class="${i < at ? 'is-done' : i === at ? 'is-now' : ''}"${i === at ? ' aria-current="step"' : ''}>${label}</li>`).join('')}</ol>` : '';
+    const steps = at >= 0 ? `<ol class="track-steps">${TRACK_STEPS.map(([, label], i) => `<li class="${i < at ? 'is-done' : i === at ? 'is-now' : ''}"${i === at ? ' aria-current="step"' : ''}>${label}</li>`).join('')}</ol>` : '';
     const talk = view.whatsapp ? `<a class="pill wa" target="_blank" rel="noopener" href="https://wa.me/${view.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(`Oi! Sobre o meu pedido ${view.code}:`)}">Falar com a confeitaria</a>` : '';
-    box.innerHTML = `<p class="track-shop">Seu pedido na ${esc(view.displayName)}</p><h1 id="track-title" class="d">${esc(title)}</h1><p>${esc(note)}</p>${steps}
-      <p class="track-what"><b>${esc(view.product)}</b><br>${esc(when)} · ${esc(view.mode === 'Entrega' ? 'entrega' : 'retirada')}</p>${money}
-      ${talk}<button class="pill soft" type="button" data-track-home>Ver a vitrine</button>
-      <p class="help">Código ${esc(view.code)}. Esta página só mostra a situação do pedido; quem tiver este link vê o mesmo.</p>`;
+    const shopName = view.displayName || config?.displayName || 'Confeitaria';
+    const shopAvatar = config?.logo ? `<div class="track-logo">${img(config.logo, '', true, '48px')}</div>` : `<div class="track-logo"><div class="wordmark" aria-hidden="true">${esc(initials(shopName))}</div></div>`;
+    const matchedProduct = (config?.products || []).find((p) => p?.photo && String(p.name).toLocaleLowerCase('pt-BR') === String(view.product || '').toLocaleLowerCase('pt-BR'));
+    const productThumb = matchedProduct ? `<div class="track-photo">${img(matchedProduct.photo, '', false, '64px')}</div>` : '';
+    box.innerHTML = `<article class="track-card">
+      <header class="track-head">
+        <div class="track-brand">${shopAvatar}<div class="track-head-text"><p class="track-shop">Seu pedido na ${esc(shopName)}</p><span class="track-code">${esc(view.code)}</span></div></div>
+        <h1 id="track-title" class="d">${esc(title)}</h1>
+        ${note ? `<p class="track-note">${esc(note)}</p>` : ''}
+      </header>
+      ${steps}
+      <div class="track-stub">
+        <div class="track-what-row">
+          ${productThumb}
+          <div class="track-what-body">
+            <p class="track-what"><b>${esc(view.product)}</b></p>
+            <p class="track-when">${esc(when)} · ${esc(view.mode === 'Entrega' ? 'entrega' : 'retirada')}</p>
+          </div>
+        </div>
+        ${money}
+      </div>
+      <div class="track-actions">${talk}<button class="pill soft" type="button" data-track-home>Ver a vitrine</button></div>
+      <p class="help">Código ${esc(view.code)}. Esta página só mostra a situação do pedido; quem tiver este link vê o mesmo.</p>
+    </article>`;
   } catch {
-    box.innerHTML = '<h1 id="track-title" class="d">Pedido não encontrado</h1><p>Confira o link que a confeitaria mandou.</p><button class="pill soft" type="button" data-track-home>Ver a vitrine</button>';
+    box.innerHTML = '<article class="track-card"><h1 id="track-title" class="d">Pedido não encontrado</h1><p>Confira o link que a confeitaria mandou.</p><button class="pill soft" type="button" data-track-home>Ver a vitrine</button></article>';
   }
   $('#vitrine').hidden = true; box.hidden = false; box.focus();
 }
