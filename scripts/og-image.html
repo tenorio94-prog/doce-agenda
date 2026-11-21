@@ -5,26 +5,28 @@
 <title>Fornada — imagem de compartilhamento</title>
 <style>
 /* Fonte da imagem public/landing/assets/og.jpg (1200x630). Gerada por scripts/build-og-image.mjs. */
-@font-face{font-family:Fredoka;src:url("../public/fonts/Fredoka.ttf") format("truetype");font-weight:300 700;font-stretch:75% 125%}
-@font-face{font-family:Figtree;src:url("../public/fonts/Figtree.ttf") format("truetype");font-weight:300 900}
-:root{--ameixa:#2b1a2c;--glace:#f7c5d0;--pistache:#d3e7c1;--baunilha:#fbe9a9;--carimbo:#2e6a46;--papel:#fffaf2;--soft:#4a3550}
+@font-face{font-family:"Fraunces";src:url("../node_modules/@fontsource-variable/fraunces/files/fraunces-latin-full-normal.woff2") format("woff2-variations");font-weight:100 900}
+@font-face{font-family:"DM Sans";src:url("../node_modules/@fontsource-variable/dm-sans/files/dm-sans-latin-opsz-normal.woff2") format("woff2-variations");font-weight:100 1000}
+:root{--papel-manteiga:#F7F7F4;--farinha:#EEEDE8;--porcelana:#FFFFFF;--ferro:#161D2B;--tinta:#354052;--grafite:#525B6B;--azul-louca:#1D449B;--nevoa:#E6EEFA;--linha:#DCE0E6;--pago:#166534;--pago-soft:#E3F4E8;--sinal:#854D0E;--sinal-soft:#FEF2D4}
 *{box-sizing:border-box}
 html,body{margin:0;width:1200px;height:630px;overflow:hidden}
-body{position:relative;background:var(--glace);color:var(--ameixa);font-family:Figtree,sans-serif}
-.brand{position:absolute;left:84px;top:64px;display:block;width:290px;height:auto}
-h1{position:absolute;left:84px;top:178px;width:600px;margin:0;font-family:Fredoka,sans-serif;font-size:66px;font-weight:600;line-height:1.04;letter-spacing:-.02em}
-.tag{position:absolute;left:84px;bottom:64px;margin:0;color:var(--soft);font-size:22px;font-weight:600}
-.stack{position:absolute;right:72px;top:68px;width:392px;display:flex;flex-direction:column;gap:14px}
-.day{padding:20px 24px;border-radius:28px;background:var(--pistache);display:flex;align-items:baseline;gap:14px;font-family:Fredoka,sans-serif}
-.day b{font-size:84px;font-weight:600;line-height:.9;letter-spacing:-.03em}
-.day span{font-size:24px;font-weight:500;line-height:1.1}
-.card{position:relative;display:flex;gap:16px;padding:18px 22px;border-radius:24px;background:#fff}
-.card.pending{background:var(--baunilha)}
-.time{min-width:58px;font-family:Fredoka,sans-serif;font-size:26px;font-weight:600}
-.text{display:flex;flex-direction:column;gap:2px;font-size:17px;color:var(--soft)}
-.text b{font-size:21px;color:var(--ameixa)}
-.stamp{position:absolute;right:18px;top:50%;margin-top:-22px;padding:5px 11px;border:3px solid var(--carimbo);border-radius:8px;background:rgba(255,255,255,.88);color:var(--carimbo);font-family:Fredoka,sans-serif;font-size:16px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;transform:rotate(-8deg)}
-.fictional{margin:0;padding-left:8px;color:var(--soft);font-size:15px;font-weight:600}
+body{position:relative;background:var(--papel-manteiga);color:var(--ferro);font-family:"DM Sans",sans-serif;border-top:6px solid var(--azul-louca)}
+.brand{position:absolute;left:84px;top:60px;display:block;width:270px;height:auto}
+h1{position:absolute;left:84px;top:164px;width:580px;margin:0;font-family:"Fraunces",Georgia,serif;font-variation-settings:"SOFT" 50;font-size:62px;font-weight:700;line-height:1.04;letter-spacing:-.03em;color:var(--ferro)}
+.tag{position:absolute;left:84px;bottom:60px;margin:0;color:var(--grafite);font-size:22px;font-weight:600}
+.stack{position:absolute;right:64px;top:64px;width:434px;display:flex;flex-direction:column;gap:14px}
+.day{padding:20px 24px;border-radius:26px;background:var(--nevoa);border:1px solid #C9D8F2;display:flex;align-items:baseline;gap:16px}
+.day b{font-family:"Fraunces",Georgia,serif;font-variation-settings:"SOFT" 50;font-size:84px;font-weight:700;line-height:.9;letter-spacing:-.03em;color:var(--azul-louca);font-variant-numeric:tabular-nums}
+.day span{font-family:"Fraunces",Georgia,serif;font-variation-settings:"SOFT" 50;font-size:24px;font-weight:600;line-height:1.1;color:var(--ferro)}
+.card{position:relative;display:flex;gap:14px;align-items:center;padding:18px 20px;border-radius:22px;background:var(--porcelana);border:1px solid var(--linha);box-shadow:0 10px 26px -10px rgb(22 29 43 / 10%)}
+.card.pending{background:var(--sinal-soft);border-color:#E8D39E;box-shadow:none}
+.time{min-width:48px;font-family:"DM Sans",sans-serif;font-variant-numeric:tabular-nums;font-size:24px;font-weight:700;color:var(--azul-louca)}
+.card.pending .time{color:var(--sinal)}
+.text{display:flex;flex-direction:column;gap:2px;font-size:16px;color:var(--tinta);padding-right:132px}
+.text b{font-size:19px;color:var(--ferro);white-space:nowrap}
+.card.pending .text{padding-right:0;color:var(--sinal)}
+.stamp{position:absolute;right:18px;top:50%;margin-top:-20px;padding:5px 11px;border:2.5px solid var(--pago);border-radius:8px;background:var(--pago-soft);color:var(--pago);font-family:"Fraunces",Georgia,serif;font-size:15px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;transform:rotate(-6deg)}
+.fictional{margin:0;padding-left:8px;color:var(--grafite);font-size:15px;font-weight:600}
 </style>
 </head>
 <body>

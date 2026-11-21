@@ -253,21 +253,21 @@ h2{margin:0;font-family:var(--font-title);font-size:clamp(30px,4vw,46px);font-we
 .m-ph{color:var(--placeholder)}
 .m-field .m-val,.s1 .m-product .m-ph,.s3 .m-name .m-ph{display:none}
 .s1 .m-product .m-val,.s3 .m-name .m-val{display:inline}
-.m-vitrine{position:relative;height:96px;margin-bottom:22px;background:#f4dfe5}
+.m-vitrine{position:relative;height:96px;margin-bottom:22px;background:#E6EEFA}
 .m-cover{display:block;width:100%;height:96px;object-fit:cover}
 .m-logo{position:absolute;left:50%;bottom:-22px;width:44px;height:44px;margin-left:-22px;border:3px solid var(--branco);border-radius:50%}
 .m-center{text-align:center}
-.m-free{align-self:center;padding:3px 9px;border-radius:999px;background:#b8325a;color:var(--branco);font-size:12px;font-weight:700}
+.m-free{align-self:center;padding:3px 9px;border-radius:999px;background:#1D449B;color:var(--branco);font-size:12px;font-weight:700}
 .m-cards{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px}
 .m-card{display:flex;flex-direction:column;gap:1px;padding:4px;border-radius:12px;color:var(--ink);transition:box-shadow .25s}
 .m-card img{width:100%;height:auto;aspect-ratio:5/4;object-fit:cover;border-radius:8px}
 .m-card b{font-size:12px;line-height:1.2;margin-top:3px}
-.m-card small{color:#b8325a;font-size:12px;font-weight:700}
-.s1 .m-product{box-shadow:0 0 0 2px #b8325a}
+.m-card small{color:#1D449B;font-size:12px;font-weight:700}
+.s1 .m-product{box-shadow:0 0 0 2px #1D449B}
 .m-days{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
 .m-days b{display:grid;place-items:center;min-height:30px;border:1px solid var(--border-input);border-radius:8px;background:var(--branco);color:var(--ink);font-size:12px;font-weight:700;transition:background-color .25s,color .25s}
-.s2 .m-days .m-pick{border-color:#b8325a;background:#b8325a;color:var(--branco)}
-.m-form .m-btn{background:#b8325a}
+.s2 .m-days .m-pick{border-color:#1D449B;background:#1D449B;color:var(--branco)}
+.m-form .m-btn{background:#1D449B}
 .m-cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px;text-align:center}
 .m-cal i{color:var(--muted);font-style:normal}
 .m-cal b{display:grid;place-items:center;height:24px;border:1px solid var(--border-input);border-radius:7px;background:var(--branco);color:var(--ink);font-weight:600;transition:background-color .25s,color .25s}
@@ -301,79 +301,62 @@ h2{margin:0;font-family:var(--font-title);font-size:clamp(30px,4vw,46px);font-we
   .motion .ld-stage[data-side="client"] .ld-baker,.motion .ld-stage[data-side="baker"] .ld-client{display:none}
 }
 
-/* Nova identidade (laboratório visual, 16/10/2026): mesmos textos, seções e animações.
-   Os tokens do app são redefinidos só nesta página; letras servidas pelo nosso domínio (hoje só a Bricolage, tokens.css). */
-:root{--font-title:"Bricolage Grotesque",sans-serif;--font-body:"Bricolage Grotesque",Arial,sans-serif;--papel:#fff8f8;--glace:#ffe1e7;--ameixa:#4a1525;--ink:#27171c;--muted:#795f67;--link:#ad2644;--line:#efdee2;
-  --wa-color-brand-fill-loud:#ad2644;--wa-color-brand-border-loud:#ad2644;--wa-color-brand-on-loud:#fff}
-body{background:#fff8f8}
-h1,h2{letter-spacing:-.03em}
-.top-band{background:#fff8f8;border-bottom:1px solid #efdee2}
+/* Direção Louça & Forno (21/11/2026): Fraunces + DM Sans, Azul Louça e Papel Manteiga. */
+:root{--font-title:"Fraunces",Georgia,serif;--font-body:"DM Sans",ui-sans-serif,system-ui,sans-serif;--papel:#F7F7F4;--glace:#E6EEFA;--ameixa:#161D2B;--ink:#161D2B;--muted:#525B6B;--link:#1D449B;--line:#DCE0E6;
+  --wa-color-brand-fill-loud:#1D449B;--wa-color-brand-border-loud:#1D449B;--wa-color-brand-on-loud:#fff}
+body,.top-band{background:#F7F7F4}
+.top-band{border-bottom:1px solid #DCE0E6}
 .top-band::before,.top-band::after{display:none}
 .drip{display:none}
-/* O carimbo vira o selo verde do app: "Sinal conferido", sem rotação. */
-.stamp-mini{border:0;border-radius:30px;background:#e5f7ef;color:#006947;font-family:"Bricolage Grotesque",sans-serif;font-size:12px;letter-spacing:0;text-transform:none;transform:none;padding:5px 10px}
-
-/* Direção Comanda (16/10): mesmas cores, letras e carimbo do app. */
-:root{--font-title:"Bricolage Grotesque",sans-serif;--papel:#f5f1f2;--ameixa:#3a1220;--ink:#2a141b;--muted:#6f5a61;--link:#b0244a;--line:#e9e0e3;
-  --wa-color-brand-fill-loud:#b0244a;--wa-color-brand-border-loud:#b0244a}
-body,.top-band{background:#f5f1f2}
-.top-band{border-bottom-color:#e9e0e3}
+h1,h2{font-variation-settings:"SOFT" 50;letter-spacing:-.03em}
 h1{font-weight:700}
-/* O título fala por inteiro: sem metade em outra cor. */
 h1 em{color:inherit}
-/* Rótulos em caixa normal. */
+a:focus-visible,summary:focus-visible,button:focus-visible{outline:3px solid var(--focus);outline-offset:3px}
 .eyebrow,.step-eyebrow,.ld-label,.pain-list small{text-transform:none;letter-spacing:0}
-/* O carimbo volta a ser carimbo: borda verde, leve inclinação. */
-.stamp-mini{border:2px solid #1e6b47;border-radius:10px;background:#e3f2e9;color:#1e6b47;font-family:"Bricolage Grotesque",sans-serif;font-weight:700;transform:rotate(-5deg)}
+.stamp-mini{border:2px solid #166534;border-radius:10px;background:#E3F4E8;color:#166534;font-family:"Fraunces",serif;font-weight:700;padding:5px 10px;font-size:12px;letter-spacing:0;text-transform:none;transform:rotate(-5deg)}
 @media (prefers-reduced-motion:reduce){.stamp-mini{transform:none}}
 
-/* ---- Rodada 2 (16/10): mostrar o produto de verdade ---- */
-/* Topo: uma foto real da vitrine e um pedido do app preso na bancada. Sem celular desenhado nem cartões flutuando. */
+/* ---- Rodada 2: mostrar o produto de verdade ---- */
 .hero-bench{width:min(100%,480px);padding:8px 0 44px}
 .bench{position:relative;margin:0;border-radius:28px;overflow:visible}
-.bench>img{display:block;width:100%;height:auto;aspect-ratio:1;object-fit:cover;border-radius:28px;box-shadow:0 30px 60px -40px #3a122066}
-.bench-order{position:absolute;left:5%;right:5%;bottom:-18px;display:grid;grid-template-columns:auto minmax(0,1fr);gap:0 12px;align-items:start;padding:14px 16px 14px 12px;border-left:4px solid #1e6b47;border-radius:18px;background:#fff;box-shadow:0 24px 40px -22px #2a141b99;rotate:-1.5deg;font:14px/1.4 "Bricolage Grotesque",sans-serif;color:#2a141b}
+.bench>img{display:block;width:100%;height:auto;aspect-ratio:1;object-fit:cover;border-radius:28px;box-shadow:0 30px 60px -40px rgb(22 29 43 / 40%)}
+.bench-order{position:absolute;left:5%;right:5%;bottom:-18px;display:grid;grid-template-columns:auto minmax(0,1fr);gap:0 12px;align-items:start;padding:14px 16px 14px 12px;border-left:4px solid #166534;border-radius:18px;background:#fff;box-shadow:0 24px 40px -22px rgb(22 29 43 / 50%);rotate:-1.5deg;font:14px/1.4 "DM Sans",sans-serif;color:#161D2B}
 .bench-order::before{content:"";position:absolute;top:-10px;left:50%;width:52px;height:20px;translate:-50% 0;rotate:4deg;background:#f3e6c9d9;border-radius:2px}
 .bo-when{display:grid;justify-items:end;gap:3px}
-.bo-when b{font:700 26px/1 "Bricolage Grotesque",sans-serif;letter-spacing:-.03em}
-.bo-when small{color:#6f5a61;font-size:12px;font-weight:600}
+.bo-when b{font:700 26px/1 "Fraunces",serif;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.bo-when small{color:#525B6B;font-size:12px;font-weight:600}
 .bo-body{display:grid;gap:2px;min-width:0;padding-right:96px}
-.bo-body strong{font:700 18px/1.2 "Bricolage Grotesque",sans-serif}
-.bo-body span{color:#6f5a61}
-.bo-body span b{color:#2a141b}
+.bo-body strong{font:700 18px/1.2 "Fraunces",serif}
+.bo-body span{color:#525B6B}
+.bo-body span b{color:#161D2B}
 .bench-order .bo-stamp{position:absolute;top:12px;right:12px;display:grid;justify-items:center;padding:5px 10px 6px;font-size:16px;line-height:1.05}
-.stamp-mini small{display:block;font:700 12px "Bricolage Grotesque",sans-serif}
+.stamp-mini small{display:block;font:700 12px "DM Sans",sans-serif}
 .motion .bench-order{opacity:0}
 @media (max-width:420px){.bench-order{left:3%;right:3%}.bo-body{padding-right:86px}.bo-body strong{font-size:16px}}
-/* Pedidos de exemplo na foto do caderno: mesma linguagem do app. */
 .ps-count{background:#fff}
-.ps-stamp{border-color:#1e6b47;color:#1e6b47;background:#e3f2e9}
-.ps-stamp.is-due{border-style:dashed;border-color:#c98a12;color:#7f4d00;background:#fffaf0}
-.ps-row.is-pending{border-color:#e3a92c;background:#fff}
-/* Antes e depois numa lista só, sem quatro cartões iguais. */
-.pain-list{gap:0;border:1px solid #e9e0e3;border-radius:18px;background:#fff;box-shadow:0 1px 0 #3a12200a,0 6px 18px -10px #3a122026;overflow:hidden}
+.ps-stamp{border-color:#166534;color:#166534;background:#E3F4E8}
+.ps-stamp.is-due{border-style:dashed;border-color:#854D0E;color:#854D0E;background:#FEF2D4}
+.ps-row.is-pending{border-color:#854D0E;background:#fff}
+.pain-list{gap:0;border:1px solid #DCE0E6;border-radius:18px;background:#fff;box-shadow:0 1px 0 rgb(22 29 43 / 4%),0 6px 18px -10px rgb(22 29 43 / 15%);overflow:hidden}
 .pain-list li{border:0;border-radius:0;box-shadow:none;background:none}
-.pain-list li+li{border-top:1px solid #efe8ea}
+.pain-list li+li{border-top:1px solid #DCE0E6}
 .pain-list .pl-after{background:none}
-.pain-list small{color:#6f5a61;font-size:12px}
-.pain-list .pl-after small{color:#1e6b47}
-@media (min-width:821px){.pain-list li{display:grid;grid-template-columns:1fr 1fr}.pain-list .pl-after{border-left:1px dashed #e9e0e3}}
-/* Link: vitrine com fotos de verdade; o lado da confeiteira no visual atual (linha de atenção e botão framboesa). */
+.pain-list small{color:#525B6B;font-size:12px}
+.pain-list .pl-after small{color:#166534}
+@media (min-width:821px){.pain-list li{display:grid;grid-template-columns:1fr 1fr}.pain-list .pl-after{border-left:1px dashed #DCE0E6}}
 .m-cover{object-fit:cover}
 .m-card img{object-fit:cover;border-radius:10px}
 .m-logo{border-radius:50%;object-fit:cover;background:#fff}
-.m-banner,.m-review{background:#fff;border:1px solid #efe8ea;box-shadow:0 6px 18px -12px #3a122040}
-.m-att{color:#6f5a61;font-size:11px;font-weight:700}
-.m-btn{background:#b0244a}
-.m-btn.m-tonal,.m-btn.m-quiet{background:#f7eef1;color:#3a1220;border:1px solid #f0dbe2}
-/* Semana: lotado é tijolo, como no app. */
-.wm-days .is-full,.wm-key.is-full::before{border-color:#a3341a;background:#fdebe5;color:#a3341a}
-.wm-days .is-full i{color:#a3341a}
-.om-btn{border-color:#f0dbe2;background:#f7eef1;color:#3a1220}
-/* Dinheiro: o mesmo carimbo do app nos dois estados. */
-.pm-flag.stamp-due{display:grid;justify-items:center;padding:4px 9px 5px;border:2px dashed #c98a12;border-radius:10px;background:#fff0cc;color:#7f4d00;font:700 14px/1.05 "Bricolage Grotesque",sans-serif;rotate:-2deg}
-.pm-flag.stamp-due small{font:700 11px "Bricolage Grotesque",sans-serif}
-.pay-mock.is-pending{border-color:#e9e0e3;background:#fff}
+.m-banner,.m-review{background:#fff;border:1px solid #DCE0E6;box-shadow:0 6px 18px -12px rgb(22 29 43 / 25%)}
+.m-att{color:#525B6B;font-size:11px;font-weight:700}
+.m-btn{background:#1D449B}
+.m-btn.m-tonal,.m-btn.m-quiet{background:#E6EEFA;color:#161D2B;border:1px solid #C9D8F2}
+.wm-days .is-full,.wm-key.is-full::before{border-color:#B42318;background:#FDECEB;color:#B42318}
+.wm-days .is-full i{color:#B42318}
+.om-btn{border-color:#C9D8F2;background:#E6EEFA;color:#161D2B}
+.pm-flag.stamp-due{display:grid;justify-items:center;padding:4px 9px 5px;border:2px dashed #854D0E;border-radius:10px;background:#FEF2D4;color:#854D0E;font:700 14px/1.05 "DM Sans",sans-serif;rotate:-2deg}
+.pm-flag.stamp-due small{font:700 11px "DM Sans",sans-serif}
+.pay-mock.is-pending{border-color:#DCE0E6;background:#fff}
 .pm-stamp{display:grid;justify-items:center;padding:4px 9px 5px;line-height:1.05}
 @media (prefers-reduced-motion:reduce){.bench-order,.pm-flag.stamp-due{rotate:0deg}}
 

@@ -3,7 +3,7 @@ import { createServer } from "node:http";
 import { access, mkdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { chromium } from "file:///C:/Users/Restore/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/index.mjs";
+import { chromium } from "playwright";
 
 // Review the live account UI locally with `node scripts/test-account-ui.mjs`.
 // Do not run until the real account controller bundle is present in public/account.
@@ -31,6 +31,7 @@ const mimeTypes = {
   ".svg": "image/svg+xml",
   ".ttf": "font/ttf",
   ".webp": "image/webp",
+  ".woff2": "font/woff2",
 };
 
 let server;
@@ -67,7 +68,6 @@ const origin = await new Promise((resolve, reject) => {
 await mkdir(reviewDir, { recursive: true });
 const browser = await chromium.launch({
   headless: true,
-  executablePath: "C:/Program Files/Google/Chrome/Application/chrome.exe",
 });
 
 const pageErrors = [];
@@ -365,14 +365,14 @@ try {
   // Visible keyboard focus and field borders (WCAG 2.4.7 / 1.4.11).
   await errorPage.goto(`${origin}/cadastro/`, { waitUntil: "networkidle" });
   const fieldBorder = await errorPage.locator("#signup-email").evaluate((node) => getComputedStyle(node).borderTopColor);
-  assert.equal(fieldBorder, "rgb(156, 130, 144)", "Field border must be #9c8290.");
+  assert.equal(fieldBorder, "rgb(122, 132, 150)", "Field border must be #7A8496.");
   await errorPage.locator("#signup-email").focus();
-  await errorPage.waitForFunction(() => getComputedStyle(document.getElementById("signup-email")).borderTopColor === "rgb(46, 106, 70)"); // border transition (.15s)
+  await errorPage.waitForFunction(() => getComputedStyle(document.getElementById("signup-email")).borderTopColor === "rgb(29, 68, 155)"); // border transition (.15s)
   const focusStyle = await errorPage.locator("#signup-email").evaluate((node) => {
     const style = getComputedStyle(node);
     return { style: style.outlineStyle, width: style.outlineWidth, color: style.outlineColor, offset: style.outlineOffset, shadow: style.boxShadow, border: style.borderTopColor };
   });
-  assert.deepEqual(focusStyle, { style: "solid", width: "3px", color: "rgb(46, 106, 70)", offset: "2px", shadow: "none", border: "rgb(46, 106, 70)" }, "Focused field must show a 3px sage ring.");
+  assert.deepEqual(focusStyle, { style: "solid", width: "3px", color: "rgb(29, 68, 155)", offset: "2px", shadow: "none", border: "rgb(29, 68, 155)" }, "Focused field must show a 3px focus ring.");
   // Type scale for the signup card: hint and terms at 13px. No uppercase label above the titles (removed 03/11/2026).
   const metrics = await errorPage.evaluate(() => {
     const read = (selector) => { const style = getComputedStyle(document.querySelector(selector)); return { size: style.fontSize, spacing: style.letterSpacing }; };
@@ -432,7 +432,7 @@ try {
       await page.goto(`${origin}/cadastro/${query}`, { waitUntil: "networkidle" });
       await page.evaluate(() => document.fonts.ready);
       // Fonte servida pelo nosso domínio só existe no site montado (/fonts/vnext/); aqui conferimos que a página pede a letra da marca.
-      assert.match(await page.evaluate(() => getComputedStyle(document.body).fontFamily), /Bricolage Grotesque/, `Brand font must be requested at ${width}px in ${mode}.`);
+      assert.match(await page.evaluate(() => getComputedStyle(document.body).fontFamily), /DM Sans/, `Brand font must be requested at ${width}px in ${mode}.`);
       const form = page.locator(`#${mode}-form`);
       assert.equal(await form.isVisible(), true, `Expected ${mode} form at ${width}px.`);
       assert.equal(await page.locator("#signup-business-name").count(), 1, "Business name control should be in shared markup.");

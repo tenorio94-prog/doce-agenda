@@ -178,7 +178,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
   .detail-actions .button { flex: 1 1 auto; }
 }
 
-/* Doce Agenda identity v2: accessible type, contrast and a consistent icon set. */
+/* Fornada identity (legacy layer): accessible type, contrast and a consistent icon set. */
 .connection { font-size: var(--fs-xs); }
 .text-link, .pending-banner, .pending-row strong, .empty-state p, .detail-tile-label, .field small, .form-hint, .form-error { font-size: var(--fs-sm); }
 .pending-row small, .order-results, .detail-summary-label, .payment-note, .app-footer { font-size: var(--fs-xs); }
@@ -525,7 +525,7 @@ body { color: var(--ink); font-family: var(--font-body); font-size: var(--fs-bas
 @media (max-width: 760px) { .brand img { width: auto; } }
 .connection, .settings-button { color: var(--ink); }
 
-/* Botões em pílula, rótulos em Fredoka */
+/* Botões em pílula, rótulos em título */
 .button { border-radius: var(--r-l); font-family: var(--font-title); font-weight: 500; }
 .button-primary { border: 2px solid var(--ameixa); color: var(--papel); box-shadow: none; }
 .button-primary:hover { background: var(--ink-soft); border-color: var(--ink-soft); }
@@ -607,7 +607,7 @@ body { color: var(--ink); font-family: var(--font-body); font-size: var(--fs-bas
 .deposit-card.is-pending { border-color: var(--baunilha); background: var(--baunilha); }
 .deposit-rule { margin: 10px 4px 0; color: var(--muted); font-size: var(--fs-sm); }
 
-/* Formulário: perguntas em Fredoka, campos grandes */
+/* Formulário: perguntas destacadas, campos grandes */
 #order-form .field > span:first-child, #payment-form .field > span:first-child { font-family: var(--font-title); font-weight: 600; font-size: var(--fs-xl); }
 .field input, .field select, .field textarea { border: 1px solid var(--border-input); border-radius: var(--r-m); background: var(--branco); }
 .field input:not([type="checkbox"]), .field select { min-height: 52px; }
@@ -761,7 +761,7 @@ body { color: var(--ink); font-family: var(--font-body); font-size: var(--fs-bas
 .style-card input { position: absolute; opacity: 0; pointer-events: none; }
 .style-card:has(input:checked) { border-color: var(--ameixa); box-shadow: 0 0 0 1px var(--ameixa); }
 .style-card:has(input:focus-visible) { outline: 3px solid var(--carimbo); outline-offset: 2px; }
-.style-aa { font-size: 30px; line-height: 1.1; color: #b8325a; }
+.style-aa { font-size: 30px; line-height: 1.1; color: var(--azul-louca); }
 .style-card b { font-size: var(--fs-sm); }
 .style-card small { color: var(--muted); font-size: var(--fs-xs); line-height: 1.3; }
 .color-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
@@ -1060,45 +1060,41 @@ wa-input[aria-invalid="true"]::part(input-wrapper), wa-textarea[aria-invalid="tr
 .link-kit { display: flex; flex-wrap: wrap; gap: 4px 18px; }
 .link-kit .text-link { min-height: 44px; }
 
-/* ==== Identidade Comanda (vnext) ==== */
-/* Nova identidade do Doce Agenda (laboratório visual, branch codex/laboratorio-visual), integrada tela por tela.
-   Tokens com prefixo --vn- e classes vn-*: não alteram as telas que ainda usam o visual Glacê (style.css).
-   Etapa 1: moldura (topo, faixa da demonstração, navegação) e Agenda. Textos com no mínimo 12 px (BRAND.md). */
+/* ==== Identidade Louça & Forno (vnext) ==== */
+/* Identidade oficial do Fornada aplicada também às telas legadas (/completa/).
+   Tokens com prefixo --vn- e classes vn-*. Textos com no mínimo 12 px (BRAND.md). */
 
 .vnext {
-  /* Direção Comanda (16/10): cada cor tem um trabalho. Framboesa = marca e ação, nunca estado. Pistache = conferido/pronto;
-     caramelo = falta; tijolo = atraso/lotado; verde WhatsApp só em ações que abrem o WhatsApp. */
-  --vn-canvas: #f5f1f2; --vn-surface: #fff; --vn-soft: #f7eef1; --vn-rose: #f6e3e9; --vn-berry: #b0244a; --vn-berry-dark: #921d3d;
-  --vn-wine: #3a1220; --vn-ink: #2a141b; --vn-muted: #6f5a61; --vn-line: #e9e0e3; --vn-line-soft: #efe8ea;
-  --vn-green: #1e6b47; --vn-mint: #e3f2e9; --vn-amber: #7f4d00; --vn-vanilla: #fff0cc;
-  --vn-zap: #0e7a3f; --vn-zap-soft: #e7f6ec; --vn-zap-ink: #0b6b37;
-  --vn-r: 18px; --vn-r-ctl: 14px; --vn-shadow: 0 1px 0 #3a12200a, 0 6px 18px -10px #3a122026; --vn-shadow-hover: 0 1px 0 #3a12200f, 0 10px 24px -12px #3a122033;
-  --vn-font: "Bricolage Grotesque", Arial, sans-serif; --vn-title: "Bricolage Grotesque", sans-serif;
+  /* Direção Louça & Forno (21/11/2026): Azul Louça = marca e ação, nunca estado. Verde = pago/pronto;
+     âmbar = falta; terracota = atraso/lotado; verde WhatsApp só em ações que abrem o WhatsApp. */
+  --vn-canvas: #F7F7F4; --vn-surface: #FFFFFF; --vn-soft: #EEEDE8; --vn-rose: #E6EEFA; --vn-berry: #1D449B; --vn-berry-dark: #15347A;
+  --vn-wine: #161D2B; --vn-ink: #161D2B; --vn-muted: #525B6B; --vn-line: #DCE0E6; --vn-line-soft: #E5E8EE;
+  --vn-green: #166534; --vn-mint: #E3F4E8; --vn-amber: #854D0E; --vn-vanilla: #FEF2D4;
+  --vn-zap: #0E7A3F; --vn-zap-soft: #E3F4E8; --vn-zap-ink: #166534;
+  --vn-r: 18px; --vn-r-ctl: 14px; --vn-shadow: 0 1px 0 rgb(22 29 43 / 4%), 0 6px 18px -10px rgb(22 29 43 / 12%); --vn-shadow-hover: 0 1px 0 rgb(22 29 43 / 6%), 0 10px 24px -12px rgb(22 29 43 / 20%);
+  --vn-font: "DM Sans", ui-sans-serif, system-ui, sans-serif; --vn-title: "Fraunces", Georgia, serif;
   background: var(--vn-canvas);
-  /* Rodada 2: escalas únicas. Raios: --vn-r (cartões), --vn-r-ctl (controles), --vn-r-sm (selos), --vn-r-dialog (janelas), --vn-pill.
-     Letras: 12 · 14 · 16 · 20 · 28 · 40 (as telas novas usam esta escala; as antigas migram aos poucos). */
   --vn-r-sm: 10px; --vn-r-dialog: 24px; --vn-pill: 999px;
   --vn-t12: 12px; --vn-t14: 14px; --vn-t16: 16px; --vn-t20: 20px; --vn-t28: 28px; --vn-t40: 40px;
 }
-/* Todas as telas do app já usam a nova identidade: as letras antigas (Fredoka, Figtree) saem também dos formulários. */
 body.vnext { --font-title: var(--vn-title); --font-body: var(--vn-font); --ameixa: var(--vn-wine); --link: var(--vn-berry);
   --wa-color-brand-fill-loud: var(--vn-berry); --wa-color-brand-border-loud: var(--vn-berry); --wa-color-brand-on-loud: #fff; }
-.vnext :focus-visible { outline: 3px solid var(--vn-green); outline-offset: 3px; }
+.vnext :focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
 
 /* ---- Primitivos ---- */
 .vn-icon { flex-shrink: 0; vertical-align: middle; }
 .vn-btn { display: inline-flex; align-items: center; justify-content: center; gap: 9px; min-height: 46px; padding: 11px 20px; border: 1px solid transparent; border-radius: var(--vn-pill); font: 700 14px/1.4 var(--vn-font); text-align: center; cursor: pointer; transition: background .18s, box-shadow .18s, transform .18s; }
 .vn-btn:active { transform: translateY(1px) scale(.985); }
-.vn-btn.primary { background: var(--vn-berry); color: #fff; box-shadow: 0 4px 10px #ad264418; }
-.vn-btn.primary:hover { background: var(--vn-berry-dark); box-shadow: 0 7px 18px #ad264426; }
-.vn-btn.secondary { background: var(--vn-soft); color: var(--vn-wine); border-color: #f3dce3; }
+.vn-btn.primary { background: var(--vn-berry); color: #fff; box-shadow: 0 4px 10px rgb(29 68 155 / 16%); }
+.vn-btn.primary:hover { background: var(--vn-berry-dark); box-shadow: 0 7px 18px rgb(29 68 155 / 22%); }
+.vn-btn.secondary { background: var(--vn-soft); color: var(--vn-wine); border-color: #CBD2DC; }
 .vn-btn.secondary:hover { background: var(--vn-rose); }
 .vn-btn.small { min-height: 44px; padding: 10px 16px; font-size: 13px; }
 .vn-btn .vn-icon { width: 18px; height: 18px; }
-.vn-badge { display: inline-flex; align-items: center; gap: 5px; padding: 5px 11px; border-radius: var(--vn-pill); font: 650 12px/1.4 var(--vn-font); white-space: nowrap; background: var(--vn-rose); color: #8d2841; }
+.vn-badge { display: inline-flex; align-items: center; gap: 5px; padding: 5px 11px; border-radius: var(--vn-pill); font: 650 12px/1.4 var(--vn-font); white-space: nowrap; background: var(--vn-rose); color: var(--vn-berry); }
 .vn-badge.green { background: var(--vn-mint); color: var(--vn-green); }
 .vn-badge.amber { background: var(--vn-vanilla); color: var(--vn-amber); }
-.vn-badge.muted { background: #f3eef0; color: var(--vn-muted); }
+.vn-badge.muted { background: var(--vn-soft); color: var(--vn-muted); }
 .vn-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
 .vn-grow { flex: 1; min-width: 0; }
 .vn-muted { color: var(--vn-muted); font-size: 13px; }
@@ -1108,13 +1104,13 @@ body.vnext { --font-title: var(--vn-title); --font-body: var(--vn-font); --ameix
 .vn-note.amber { background: var(--vn-vanilla); color: var(--vn-amber); }
 .vn-note .vn-icon { width: 18px; height: 18px; }
 .vn-summary-icon { display: grid; place-items: center; width: 44px; height: 44px; border-radius: var(--vn-r-ctl); background: var(--vn-rose); color: var(--vn-berry); flex-shrink: 0; }
-.vn-empty { text-align: center; padding: 40px 20px; border: 1px dashed #d9bcc5; border-radius: var(--vn-r); background: #fff9; font-family: var(--vn-font); }
+.vn-empty { text-align: center; padding: 40px 20px; border: 1px dashed #CBD2DC; border-radius: var(--vn-r); background: #fff9; font-family: var(--vn-font); }
 .vn-empty > .vn-icon { width: 34px; height: 34px; color: var(--vn-berry); margin-bottom: 12px; }
 .vn-empty h3 { margin: 0; font: 600 19px/1.25 var(--vn-title); color: var(--vn-ink); }
 .vn-empty p { margin: 8px auto 18px; max-width: 300px; color: var(--vn-muted); font-size: 14px; }
-.vn-segmented { display: inline-flex; align-items: center; gap: 2px; padding: 4px; border-radius: var(--vn-pill); background: #f7e9ed; }
+.vn-segmented { display: inline-flex; align-items: center; gap: 2px; padding: 4px; border-radius: var(--vn-pill); background: var(--vn-soft); }
 .vn-segmented button { min-height: 38px; padding: 6px 16px; border: 0; border-radius: var(--vn-pill); background: transparent; color: var(--vn-muted); font: 700 13px var(--vn-font); cursor: pointer; }
-.vn-segmented button[aria-pressed="true"] { background: #fff; color: var(--vn-berry); box-shadow: 0 2px 6px #4a152509; }
+.vn-segmented button[aria-pressed="true"] { background: #fff; color: var(--vn-berry); box-shadow: 0 2px 6px rgb(22 29 43 / 6%); }
 .vnext progress { display: block; width: 100%; height: 8px; border: 0; appearance: none; background: var(--vn-rose); border-radius: var(--vn-r); overflow: hidden; }
 .vnext progress::-webkit-progress-bar { background: var(--vn-rose); border-radius: var(--vn-r); }
 .vnext progress::-webkit-progress-value { background: var(--vn-green); border-radius: var(--vn-r); transition: width .3s; }
@@ -1126,7 +1122,7 @@ body.vnext { background: var(--vn-canvas); }
 .vnext .topbar::before, .vnext .topbar::after { display: none; }
 .vnext .brand img { height: 40px; }
 .vnext .settings-button { font-family: var(--vn-font); color: var(--vn-wine); }
-.vnext .header-add { background: var(--vn-berry); border-color: var(--vn-berry); font-family: var(--vn-font); box-shadow: 0 4px 10px #ad264418; }
+.vnext .header-add { background: var(--vn-berry); border-color: var(--vn-berry); font-family: var(--vn-font); box-shadow: 0 4px 10px rgb(29 68 155 / 16%); }
 .vnext .header-add:hover { background: var(--vn-berry-dark); }
 .vnext .demo-bar { margin-top: 14px; background: var(--vn-wine); color: #fff; border: 0; border-radius: var(--vn-r-ctl); font-family: var(--vn-font); }
 .vnext .demo-bar p, .vnext .demo-bar strong { color: #fff; }
@@ -1160,16 +1156,16 @@ body.vnext { background: var(--vn-canvas); }
 .vnext :is(#view-today, #view-orders) .week-step { width: 44px; height: 44px; border: 0; border-radius: 50%; background: transparent; color: var(--vn-muted); }
 .vnext :is(#view-today, #view-orders) .week-step:hover { background: var(--vn-soft); }
 .vn-week { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; margin: 10px 0 16px; }
-.vnext :is(#view-today, #view-orders) .vn-day { display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 0; min-height: 98px; padding: 10px 2px; border: 1px solid #f2e6e9; border-radius: var(--vn-r); background: #fff; color: var(--vn-ink); font-family: var(--vn-font); box-shadow: 0 2px 4px #4a152503; cursor: pointer; transition: background .18s, box-shadow .18s; }
+.vnext :is(#view-today, #view-orders) .vn-day { display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 0; min-height: 98px; padding: 10px 2px; border: 1px solid var(--vn-line); border-radius: var(--vn-r); background: #fff; color: var(--vn-ink); font-family: var(--vn-font); box-shadow: 0 2px 4px rgb(22 29 43 / 3%); cursor: pointer; transition: background .18s, box-shadow .18s; }
 .vnext :is(#view-today, #view-orders) .vn-day:hover:not(.is-selected) { background: var(--vn-soft); }
 .vnext :is(#view-today, #view-orders) .vn-day .day-name { font-size: 12px; }
 .vnext :is(#view-today, #view-orders) .vn-day .day-number { font: 600 24px/1.2 var(--vn-title); }
 .vnext :is(#view-today, #view-orders) .vn-day .day-count { font-size: 12px; padding: 1px 8px; border-radius: var(--vn-r); background: var(--vn-soft); color: var(--vn-muted); }
 .vnext :is(#view-today, #view-orders) .vn-day .day-availability { font-size: 12px; font-style: normal; }
 .vnext :is(#view-today, #view-orders) .vn-day.is-full .day-availability { color: var(--vn-amber); font-weight: 700; }
-.vnext :is(#view-today, #view-orders) .vn-day.is-closed { background: #f6f1f2; color: var(--vn-muted); }
+.vnext :is(#view-today, #view-orders) .vn-day.is-closed { background: var(--vn-soft); color: var(--vn-muted); }
 .vnext :is(#view-today, #view-orders) .vn-day.is-today:not(.is-selected) { border-color: var(--vn-berry); }
-.vnext :is(#view-today, #view-orders) .vn-day.is-selected { background: var(--vn-berry); border-color: var(--vn-berry); color: #fff; box-shadow: 0 4px 12px #ad264430; }
+.vnext :is(#view-today, #view-orders) .vn-day.is-selected { background: var(--vn-berry); border-color: var(--vn-berry); color: #fff; box-shadow: 0 4px 12px rgb(29 68 155 / 22%); }
 .vnext :is(#view-today, #view-orders) .vn-day.is-selected .day-count { background: #ffffff25; color: #fff; }
 .vnext :is(#view-today, #view-orders) .vn-day.is-selected .day-availability { color: #fff; }
 .vn-daily { margin-bottom: 22px; padding: 18px; background: #fff; border: 1px solid var(--vn-line-soft); border-radius: var(--vn-r); box-shadow: var(--vn-shadow); }
@@ -1214,18 +1210,18 @@ body.vnext { background: var(--vn-canvas); }
 /* Coluna lateral: resumo no painel vinho */
 .vn-aside { display: grid; gap: 18px; min-width: 0; }
 .vn-wine-panel { padding: 24px; border-radius: var(--vn-r); background: var(--vn-wine); color: #fff; }
-.vn-wine-panel .vn-eyebrow { color: #f4aebf; }
+.vn-wine-panel .vn-eyebrow { color: #B9CDF2; }
 .vnext #view-today .vn-wine-panel h2 { margin: 12px 0 6px; color: #fff; font-size: 26px; }
 .vnext #view-today .vn-wine-panel .stats-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0; }
 .vnext #view-today .vn-wine-panel .stat-card { padding: 14px 0; background: none; border: 0; border-bottom: 1px solid #ffffff1f; border-radius: 0; box-shadow: none; color: #fff; }
 .vn-wine-panel .stat-card:last-child { border-bottom: 0; }
-.vnext #view-today .vn-wine-panel .stat-top { color: #e4bdc9; font-size: 13px; }
+.vnext #view-today .vn-wine-panel .stat-top { color: #CFD8EB; font-size: 13px; }
 .vnext #view-today .vn-wine-panel .stat-value { color: #fff; font: 600 26px var(--vn-title); }
 .vnext #view-today .vn-wine-panel .stat-value.is-unknown { font-size: 18px; }
-.vnext #view-today .vn-wine-panel .stat-note, .vnext #view-today .vn-wine-panel .finance-note { color: #e4bdc9; font-size: 12px; }
+.vnext #view-today .vn-wine-panel .stat-note, .vnext #view-today .vn-wine-panel .finance-note { color: #CFD8EB; font-size: 12px; }
 .vn-wine-panel .finance-how { margin-top: 8px; color: #fff; font-size: 13px; }
-.vn-wine-panel .finance-how summary { color: #ffd1dc; cursor: pointer; min-height: 44px; display: flex; align-items: center; }
-.vn-wine-panel .finance-how p { color: #e4bdc9; }
+.vn-wine-panel .finance-how summary { color: #DCE6F7; cursor: pointer; min-height: 44px; display: flex; align-items: center; }
+.vn-wine-panel .finance-how p { color: #CFD8EB; }
 .vnext #view-today .storage-note, .vnext #view-today .vn-aside > section:not(.vn-wine-panel) { border-radius: var(--vn-r); border-color: var(--vn-line-soft); background: #fff; box-shadow: var(--vn-shadow); }
 
 /* Cartões que já existiam na Agenda, na nova linguagem */
@@ -1266,14 +1262,14 @@ body.vnext { background: var(--vn-canvas); }
 .vnext .detail-dialog .detail-topline { display: flex; margin: -24px -24px 20px; padding: 22px 24px 24px; background: var(--vn-wine); color: #fff; border-radius: 24px 24px 0 0; }
 @media (max-width: 760px) { .vnext .detail-dialog .detail-topline { margin: -18px -18px 18px; padding: 18px; } }
 .vnext .detail-dialog .detail-topline::after, .vnext .detail-dialog .detail-topline::before { display: none; }
-.vnext .detail-dialog .detail-when { display: block; color: #f4cbd5; font: 600 13px var(--vn-font); margin: 0; }
-.vnext .detail-dialog .detail-eyebrow { display: block; margin-bottom: 4px; color: #f4aebf; font: 750 12px var(--vn-font); letter-spacing: .12em; text-transform: uppercase; }
+.vnext .detail-dialog .detail-when { display: block; color: #DCE6F7; font: 600 13px var(--vn-font); margin: 0; }
+.vnext .detail-dialog .detail-eyebrow { display: block; margin-bottom: 4px; color: #B9CDF2; font: 750 12px var(--vn-font); letter-spacing: .12em; text-transform: uppercase; }
 .vnext .detail-dialog .detail-client { color: #fff; font-size: clamp(24px, 4vw, 30px); font-weight: 600; margin: 6px 0 2px; }
-.vnext .detail-dialog .detail-product { color: #e4bdc9; margin: 0; }
+.vnext .detail-dialog .detail-product { color: #CFD8EB; margin: 0; }
 .vnext .detail-dialog .close-dialog { background: #ffffff1f; color: #fff; border: 0; }
 .vnext .detail-dialog .detail-top-actions .vn-badge { background: #ffffff26; color: #fff; }
 .vnext .detail-dialog .detail-next { margin-top: 18px; }
-.vnext .detail-dialog .detail-next .row-advance { width: 100%; min-height: 50px; border: 0; border-radius: var(--vn-pill); background: var(--vn-berry); color: #fff; font: 700 15px var(--vn-font); box-shadow: 0 4px 10px #ad264418; }
+.vnext .detail-dialog .detail-next .row-advance { width: 100%; min-height: 50px; border: 0; border-radius: var(--vn-pill); background: var(--vn-berry); color: #fff; font: 700 15px var(--vn-font); box-shadow: 0 4px 10px rgb(29 68 155 / 16%); }
 .vnext .detail-dialog .detail-next .row-advance:hover { background: var(--vn-berry-dark); }
 .vnext .detail-dialog .meta-chip { background: #fff; border: 1px solid var(--vn-line-soft); color: var(--vn-wine); border-radius: var(--vn-pill); font-size: 13px; }
 .vnext .detail-dialog .detail-summary { padding: 16px; border: 0; border-radius: var(--vn-r-ctl); background: var(--vn-soft); color: var(--vn-ink); font-size: 14px; }
@@ -1295,7 +1291,7 @@ body.vnext { background: var(--vn-canvas); }
 .vnext .detail-dialog .payment-item { border: 1px solid var(--vn-line-soft); border-radius: var(--vn-r-ctl); background: var(--vn-canvas); }
 .vnext .detail-dialog .payment-amount { font: 600 17px var(--vn-title); }
 .vnext .detail-dialog .payment-status button { border-radius: var(--vn-pill); background: var(--vn-green); border-color: var(--vn-green); color: #fff; font-weight: 700; }
-.vnext .detail-dialog .button-small, .vnext .detail-dialog .button-quiet { border-radius: var(--vn-pill); border: 1px solid #f3dce3; background: var(--vn-soft); color: var(--vn-wine); font-family: var(--vn-font); }
+.vnext .detail-dialog .button-small, .vnext .detail-dialog .button-quiet { border-radius: var(--vn-pill); border: 1px solid #CBD2DC; background: var(--vn-soft); color: var(--vn-wine); font-family: var(--vn-font); }
 .vnext .detail-dialog .button-primary { border-radius: var(--vn-pill); background: var(--vn-berry); border-color: var(--vn-berry); color: #fff; font-family: var(--vn-font); }
 .vnext .detail-dialog .history-section { border-radius: var(--vn-r-ctl); border-color: var(--vn-line-soft); background: #fff; }
 .vnext .detail-dialog .request-review { border-radius: var(--vn-r); background: var(--vn-soft); border: 1px solid var(--vn-line-soft); }
@@ -1310,14 +1306,14 @@ body.vnext { background: var(--vn-canvas); }
 .vnext .dialog-heading h2, .vnext .dialog-heading p, .vnext .dialog-heading .eyebrow { color: #fff; font-family: var(--vn-title); }
 .vnext .dialog-heading .icon-button { background: #ffffff1f; color: #fff; }
 .vnext .dialog .button-primary { border-radius: var(--vn-pill); background: var(--vn-berry); border-color: var(--vn-berry); color: #fff; }
-.vnext .dialog .button-quiet { border-radius: var(--vn-pill); background: var(--vn-soft); border-color: #f3dce3; color: var(--vn-wine); }
+.vnext .dialog .button-quiet { border-radius: var(--vn-pill); background: var(--vn-soft); border-color: #CBD2DC; color: var(--vn-wine); }
 .vnext .dialog wa-button[variant="brand"]::part(base) { background: var(--vn-berry); border-color: var(--vn-berry); }
 
 /* ---- Etapa 3: Pedidos e Novos (mesmo cartão da Agenda, com a data) ---- */
 .vnext #view-orders { font-family: var(--vn-font); color: var(--vn-ink); }
 .vnext #view-orders h1, .vnext #view-orders h2, .vnext #view-orders h3 { font-family: var(--vn-title); letter-spacing: -.02em; color: var(--vn-ink); }
 .vnext #view-orders .toolbar { margin: 0 0 14px; }
-.vnext #view-orders .search-wrap { border: 0; border-bottom: 1px solid #dfcbd2; border-radius: 0; background: transparent; box-shadow: none; }
+.vnext #view-orders .search-wrap { border: 0; border-bottom: 1px solid var(--vn-line); border-radius: 0; background: transparent; box-shadow: none; }
 .vnext #view-orders .search-input { background: transparent; border: 0; font-family: var(--vn-font); font-size: 15px; }
 .vnext #view-orders .stage-strip { gap: 6px; }
 .vnext #view-orders .stage-chip { min-height: 40px; border: 1px solid var(--vn-line); border-radius: var(--vn-pill); background: #fff; color: var(--vn-muted); font: 700 13px var(--vn-font); }
@@ -1325,10 +1321,10 @@ body.vnext { background: var(--vn-canvas); }
 .vnext #view-orders .stage-count { background: var(--vn-soft); color: var(--vn-berry); }
 .vnext #view-orders .stage-chip.is-current .stage-count { background: #ffffff2b; color: #fff; }
 .vnext #view-orders .order-results { color: var(--vn-muted); font-size: 13px; }
-.vnext #view-orders .request-banner { margin-bottom: 18px; border: 1px solid #f4dce3; border-radius: var(--vn-r); background: var(--vn-soft); box-shadow: none; }
+.vnext #view-orders .request-banner { margin-bottom: 18px; border: 1px solid #C9D8F2; border-radius: var(--vn-r); background: var(--vn-rose); box-shadow: none; }
 .vnext #view-orders .request-banner .button { background: var(--vn-berry); border-color: var(--vn-berry); color: #fff; border-radius: var(--vn-pill); }
 .vnext #view-orders .tip, .vnext #view-month .tip, .vnext #view-settings .tip { border-radius: var(--vn-r-ctl); background: var(--vn-soft); border: 0; font-family: var(--vn-font); }
-.vn-inbox-banner { display: flex; align-items: center; gap: 14px; margin: 16px 0 18px; padding: 18px 20px; border: 1px solid #f4dce3; border-radius: var(--vn-r); background: var(--vn-soft); }
+.vn-inbox-banner { display: flex; align-items: center; gap: 14px; margin: 16px 0 18px; padding: 18px 20px; border: 1px solid #C9D8F2; border-radius: var(--vn-r); background: var(--vn-rose); }
 .vnext .vn-inbox-banner h2 { margin: 0; font-size: 19px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .vn-inbox-banner p { margin: 4px 0 0; color: var(--vn-muted); font-size: 13px; }
 .vn-inbox-banner .vn-inbox-counts { color: var(--vn-wine); font-weight: 700; }
@@ -1352,7 +1348,7 @@ body.vnext { background: var(--vn-canvas); }
 .vn-inbox-list .vn-client, .vn-origin span { overflow-wrap: anywhere; }
 @media (max-width: 760px) { .vn-inbox-banner { align-items: flex-start; padding: 16px; gap: 10px; } }
 .vn-day-label { font-size: .8em; color: var(--vn-muted); font-weight: 500; }
-.vnext #view-orders .empty-state { border: 1px dashed #d9bcc5; border-radius: var(--vn-r); background: #fff9; font-family: var(--vn-font); }
+.vnext #view-orders .empty-state { border: 1px dashed #CBD2DC; border-radius: var(--vn-r); background: #fff9; font-family: var(--vn-font); }
 .vnext #view-orders .empty-state .button-primary { background: var(--vn-berry); border-color: var(--vn-berry); border-radius: var(--vn-pill); }
 .vnext .vn-order-list.orders-full-list { margin-top: 6px; }
 
@@ -1371,7 +1367,7 @@ body.vnext { background: var(--vn-canvas); }
 .vnext #view-month .vn-stat .vn-eyebrow .vn-icon { width: 18px; height: 18px; }
 .vnext #view-month .vn-stat .stat-value { font: 600 28px/1.1 var(--vn-title); color: var(--vn-ink); }
 .vnext #view-month .vn-stat.is-wine { background: var(--vn-wine); border-color: var(--vn-wine); }
-.vnext #view-month .vn-stat.is-wine .vn-eyebrow, .vnext #view-month .vn-stat.is-wine .vn-stat-note { color: #f4cbd5; }
+.vnext #view-month .vn-stat.is-wine .vn-eyebrow, .vnext #view-month .vn-stat.is-wine .vn-stat-note { color: #DCE6F7; }
 .vnext #view-month .vn-stat.is-wine .stat-value { color: #fff; }
 .vnext #view-month .vn-stat.is-green .vn-eyebrow, .vnext #view-month .vn-stat.is-green .stat-value { color: var(--vn-green); }
 .vnext #view-month .vn-stat .vn-badge { align-self: flex-start; }
@@ -1381,9 +1377,9 @@ body.vnext { background: var(--vn-canvas); }
 .vnext #view-month .month-details h2 { font-size: 19px; }
 .vnext #view-month .month-ranking strong, .vnext #view-month .month-lead-value { color: var(--vn-berry); font-family: var(--vn-title); }
 .vnext #view-month .month-note { color: var(--vn-muted); font-size: 13px; }
-.vnext #view-month .empty-state { border: 1px dashed #d9bcc5; border-radius: var(--vn-r); background: #fff9; }
+.vnext #view-month .empty-state { border: 1px dashed #CBD2DC; border-radius: var(--vn-r); background: #fff9; }
 .vnext #view-month .vn-month-note h2 { margin: 12px 0 10px; color: #fff; font-size: 26px; line-height: 1.15; }
-.vn-month-note p { color: #e4bdc9; font-size: 14px; margin: 0 0 10px; }
+.vn-month-note p { color: #CFD8EB; font-size: 14px; margin: 0 0 10px; }
 /* O que ela já guardou: todos os meses somados, mesmas regras (plano RCD 3.1). */
 .vnext #view-month .month-lifetime { margin-top: 18px; padding: 18px; border: 1px solid var(--vn-line-soft); border-radius: var(--vn-r); background: #fff; box-shadow: var(--vn-shadow); }
 .vnext #view-month .month-lifetime h2 { margin: 0; font-size: 19px; }
@@ -1402,21 +1398,21 @@ body.vnext { background: var(--vn-canvas); }
 .vnext :is(#view-clients, #view-settings) .page-heading { margin: 6px 0 24px; }
 .vnext :is(#view-clients, #view-settings) .page-heading h1 { font-size: clamp(30px, 4vw, 38px); font-weight: 600; }
 .vnext :is(#view-clients, #view-settings) .page-heading p { color: var(--vn-muted); font-size: 14px; }
-.vnext :is(#view-clients, #view-settings) :is(.button-primary, .button.button-primary) { background: var(--vn-berry); border-color: var(--vn-berry); color: #fff; border-radius: var(--vn-pill); font-family: var(--vn-font); box-shadow: 0 4px 10px #ad264418; }
+.vnext :is(#view-clients, #view-settings) :is(.button-primary, .button.button-primary) { background: var(--vn-berry); border-color: var(--vn-berry); color: #fff; border-radius: var(--vn-pill); font-family: var(--vn-font); box-shadow: 0 4px 10px rgb(29 68 155 / 16%); }
 .vnext :is(#view-clients, #view-settings) :is(.button-primary, .button.button-primary):hover { background: var(--vn-berry-dark); }
-.vnext :is(#view-clients, #view-settings) :is(.button-quiet, .button-small) { background: var(--vn-soft); border: 1px solid #f3dce3; color: var(--vn-wine); border-radius: var(--vn-pill); font-family: var(--vn-font); }
+.vnext :is(#view-clients, #view-settings) :is(.button-quiet, .button-small) { background: var(--vn-soft); border: 1px solid #CBD2DC; color: var(--vn-wine); border-radius: var(--vn-pill); font-family: var(--vn-font); }
 .vnext :is(#view-clients, #view-settings) .text-link { color: var(--vn-berry); }
-.vnext :is(#view-clients, #view-settings) .search-wrap { border: 0; border-bottom: 1px solid #dfcbd2; border-radius: 0; background: transparent; box-shadow: none; }
+.vnext :is(#view-clients, #view-settings) .search-wrap { border: 0; border-bottom: 1px solid var(--vn-line); border-radius: 0; background: transparent; box-shadow: none; }
 .vnext :is(#view-clients, #view-settings) .search-input { background: transparent; border: 0; font-family: var(--vn-font); }
 .vnext :is(#view-clients, #view-settings) .stage-chip { min-height: 40px; border: 1px solid var(--vn-line); border-radius: var(--vn-pill); background: #fff; color: var(--vn-muted); font: 700 13px var(--vn-font); }
 .vnext :is(#view-clients, #view-settings) .stage-chip.is-current, .vnext :is(#view-clients, #view-settings) .stage-chip[aria-pressed="true"] { background: var(--vn-berry); border-color: var(--vn-berry); color: #fff; }
 .vnext :is(#view-clients, #view-settings) .stage-count { background: var(--vn-soft); color: var(--vn-berry); }
 .vnext :is(#view-clients, #view-settings) :is(.stage-chip.is-current, .stage-chip[aria-pressed="true"]) .stage-count { background: #ffffff2b; color: #fff; }
 .vnext :is(#view-clients, #view-settings) :is(.client-row, .client-reminders, .settings-card, .surface, .backup-card, .empty-state) { border: 1px solid var(--vn-line-soft); border-radius: var(--vn-r); background: #fff; box-shadow: var(--vn-shadow); }
-.vnext :is(#view-clients, #view-settings) .empty-state { border-style: dashed; border-color: #d9bcc5; background: #fff9; box-shadow: none; }
+.vnext :is(#view-clients, #view-settings) .empty-state { border-style: dashed; border-color: #CBD2DC; background: #fff9; box-shadow: none; }
 .vnext #view-clients .client-row:hover { box-shadow: var(--vn-shadow-hover); }
-.vnext #view-clients .client-reminders { background: var(--vn-soft); border-color: #f4dce3; box-shadow: none; }
-.vnext #view-clients :is(.client-tag, .client-status) { border-radius: var(--vn-pill); background: var(--vn-rose); color: #8d2841; font-family: var(--vn-font); }
+.vnext #view-clients .client-reminders { background: var(--vn-rose); border-color: #C9D8F2; box-shadow: none; }
+.vnext #view-clients :is(.client-tag, .client-status) { border-radius: var(--vn-pill); background: var(--vn-rose); color: var(--vn-berry); font-family: var(--vn-font); }
 .vnext #view-settings .settings-card[open] { box-shadow: var(--vn-shadow-hover); }
 .vnext #view-settings .settings-card-title { font: 600 19px var(--vn-title); color: var(--vn-ink); }
 .vnext #view-settings .settings-card-summary { color: var(--vn-muted); font-size: 13px; }
@@ -1425,7 +1421,7 @@ body.vnext { background: var(--vn-canvas); }
 .vnext #view-settings .live-badge { background: #fff; color: var(--vn-green); }
 .vnext #view-settings .product-item { border-color: var(--vn-line-soft); border-radius: var(--vn-r); }
 .vnext #view-settings .style-card:has(input:checked), .vnext #view-settings .swatch:has(input:checked) i { border-color: var(--vn-berry); box-shadow: 0 0 0 1px var(--vn-berry); }
-.vnext :is(#view-clients, #view-settings) .field :is(input, select, textarea), .vnext #view-settings .money-field, .vnext #view-settings .slug-field { border-color: #dcc8cf; border-radius: var(--vn-r-sm); font-family: var(--vn-font); }
+.vnext :is(#view-clients, #view-settings) .field :is(input, select, textarea), .vnext #view-settings .money-field, .vnext #view-settings .slug-field { border-color: var(--border-input); border-radius: var(--vn-r-sm); font-family: var(--vn-font); }
 .vnext :is(#view-clients, #view-settings) .field > span { font-family: var(--vn-font); font-weight: 700; }
 
 /* ---- Etapa 6: barra lateral no computador (mesmos itens; no celular continua a barra inferior) ---- */
@@ -1455,9 +1451,9 @@ body.vnext { background: var(--vn-canvas); }
 /* ---- Uso com uma mão e cores fixas (16/10) ----
    Cores de estado, sempre com texto: âmbar = falta sinal ou conferir Pix; verde = conferido, pronto ou entregue;
    vermelho-tijolo = dia lotado ou atrasado; cinza = fechado ou cancelado. Framboesa fica só para marca e botões. */
-.vnext { --vn-red: #a3341a; --vn-red-soft: #fdebe5; }
+.vnext { --vn-red: #B42318; --vn-red-soft: #FDECEB; }
 .vn-badge.red { background: var(--vn-red-soft); color: var(--vn-red); font-weight: 750; }
-.vn-badge.outline { background: #fff; color: var(--vn-wine); box-shadow: inset 0 0 0 1px #e3cdd4; }
+.vn-badge.outline { background: #fff; color: var(--vn-wine); box-shadow: inset 0 0 0 1px #CBD2DC; }
 .vnext :is(#view-today, #view-orders) .vn-day.is-full:not(.is-selected) .day-availability { color: var(--vn-red); }
 .vnext :is(#view-today, #view-orders) .vn-day.is-closed:not(.is-selected) .day-availability { color: var(--vn-muted); }
 
@@ -1481,7 +1477,7 @@ body.vnext { background: var(--vn-canvas); }
   .vnext .main-nav .nav-item[data-view="month"] { order: 5; }
   .vnext .nav-item { font-size: 13px; }
   .vnext .nav-new-order { color: var(--vn-berry); }
-  .vnext .nav-new-order .nav-icon { width: 52px; height: 52px; margin-top: -20px; border-radius: 50%; box-shadow: 0 6px 16px #ad264433; }
+  .vnext .nav-new-order .nav-icon { width: 52px; height: 52px; margin-top: -20px; border-radius: 50%; box-shadow: 0 6px 16px rgb(29 68 155 / 22%); }
   .vnext .nav-new-order .nav-icon svg { width: 28px; height: 28px; }
 }
 
@@ -1497,7 +1493,7 @@ body.vnext { background: var(--vn-canvas); }
 .vn-collect + .text-link, .vn-collect .text-link { margin-top: 8px; min-height: 44px; }
 .vnext .detail-actions .detail-whatsapp { flex: 1 1 100%; display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
 .vnext .detail-actions .detail-whatsapp ~ .button { flex: 1 1 40%; }
-.vnext .detail-dialog .detail-actions .detail-whatsapp ~ .button-primary { background: var(--vn-soft); border: 1px solid #f3dce3; color: var(--vn-wine); box-shadow: none; }
+.vnext .detail-dialog .detail-actions .detail-whatsapp ~ .button-primary { background: var(--vn-soft); border: 1px solid #CBD2DC; color: var(--vn-wine); box-shadow: none; }
 
 /* ---- Fase 0 da auditoria (16/10): defeitos ---- */
 /* D0: a linha de cima do cartão quebra em vez de empurrar o cartão para fora da tela a 360 px. */
@@ -1509,9 +1505,9 @@ body.vnext { background: var(--vn-canvas); }
 .vnext #view-month .vn-stat .stat-value, .vnext #view-today .vn-wine-panel .stat-value, .vn-total { white-space: nowrap; font-variant-numeric: tabular-nums; }
 .vnext #view-month .vn-stat .stat-value { font-size: clamp(19px, 5.6vw, 28px); }
 /* Contraste: pedido entregue fica apagado só no fundo, não no texto (antes a opacidade derrubava o contraste). */
-.vn-order.is-delivered, .vn-order.is-cancelled { opacity: 1; background: #fbf8f9; }
+.vn-order.is-delivered, .vn-order.is-cancelled { opacity: 1; background: #FBFBF9; }
 .vn-order.is-delivered .vn-thumb, .vn-order.is-cancelled .vn-thumb { opacity: .6; }
-.vnext :is(#view-today, #view-orders) .vn-day .day-count { color: #5f4a51; opacity: 1; }
+.vnext :is(#view-today, #view-orders) .vn-day .day-count { color: var(--vn-muted); opacity: 1; }
 /* D6: "Avançado" com a mesma seta dos outros cartões de Ajustes. */
 details.settings-data-tools > summary { list-style: none; justify-content: space-between; gap: 12px; color: var(--vn-ink); }
 details.settings-data-tools > summary::-webkit-details-marker { display: none; }
@@ -1578,7 +1574,7 @@ body.vnext { font-variant-numeric: tabular-nums; -webkit-tap-highlight-color: tr
 .vn-zap .vn-icon { width: 20px; height: 20px; }
 .vnext .detail-actions .vn-zap { flex: 1 1 100%; }
 .vnext .detail-actions .vn-zap ~ .button { flex: 1 1 40%; }
-.vnext .detail-dialog .detail-actions .vn-zap ~ .button-primary { background: var(--vn-soft); border: 1px solid #ecd9df; color: var(--vn-wine); box-shadow: none; }
+.vnext .detail-dialog .detail-actions .vn-zap ~ .button-primary { background: var(--vn-soft); border: 1px solid #CBD2DC; color: var(--vn-wine); box-shadow: none; }
 /* Título recebe o foco ao abrir, sem anel. */
 .vnext .detail-dialog #detail-title:focus { outline: none; }
 /* Data, modo e telefone como texto, não como botões. */
@@ -1618,7 +1614,7 @@ body.vnext { font-variant-numeric: tabular-nums; -webkit-tap-highlight-color: tr
 .vn-open { all: unset; cursor: pointer; font: inherit; color: inherit; overflow-wrap: anywhere; }
 .vn-open::after { content: ""; position: absolute; inset: 0; z-index: 1; border-radius: inherit; }
 .vn-open:focus-visible { outline: none; }
-.vn-order:has(.vn-open:focus-visible) { outline: 3px solid var(--vn-green); outline-offset: 3px; }
+.vn-order:has(.vn-open:focus-visible) { outline: 3px solid var(--focus); outline-offset: 3px; }
 .vn-order :is(.vn-btn, .vn-zap, a, .vn-card-foot button) { position: relative; z-index: 2; }
 
 /* ---- Rodada 2 (16/10), etapa 0: defeitos ---- */
@@ -1654,14 +1650,14 @@ body.vnext { font-variant-numeric: tabular-nums; -webkit-tap-highlight-color: tr
 .vn-btn.quiet:hover { background: var(--vn-soft); }
 .vnext .detail-dialog .detail-head { display: grid; gap: 0; }
 .vnext .detail-dialog .detail-bar { display: flex; align-items: center; gap: 10px; }
-.vnext .detail-dialog .detail-mode { display: inline-flex; align-items: center; gap: 6px; color: #f0dbe2; font: 600 14px var(--vn-font); }
+.vnext .detail-dialog .detail-mode { display: inline-flex; align-items: center; gap: 6px; color: #DCE6F7; font: 600 14px var(--vn-font); }
 .vnext .detail-dialog .detail-mode .vn-icon { width: 18px; height: 18px; }
 .vnext .detail-dialog .detail-bar .vn-badge { background: #ffffff26; color: #fff; box-shadow: none; }
 .vnext .detail-dialog .detail-tools { display: flex; align-items: center; gap: 6px; margin-left: auto; }
 .vnext .detail-dialog .detail-edit { min-height: 44px; padding: 0 16px; border: 0; border-radius: var(--vn-pill); background: #ffffff1f; color: #fff; font: 700 14px var(--vn-font); cursor: pointer; }
 .vnext .detail-dialog .detail-edit:hover { background: #ffffff33; }
 .vnext .detail-dialog .detail-head .close-dialog { width: 44px; height: 44px; min-width: 44px; min-height: 44px; border-radius: 50%; }
-.vnext .detail-dialog .detail-when { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 10px; margin: 14px 0 0; color: #f0dbe2; font: 600 15px var(--vn-font); }
+.vnext .detail-dialog .detail-when { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 10px; margin: 14px 0 0; color: #DCE6F7; font: 600 15px var(--vn-font); }
 .vnext .detail-dialog .detail-when b { color: #fff; font: 700 40px/.9 var(--vn-title); letter-spacing: -.04em; }
 .vnext .detail-dialog .detail-client { margin: 10px 0 2px; font-size: clamp(24px, 6vw, 30px); line-height: 1.08; }
 .vnext .detail-shell { display: grid; gap: 14px; }
@@ -1727,11 +1723,11 @@ body.vnext { font-variant-numeric: tabular-nums; -webkit-tap-highlight-color: tr
 .vnext :is(#view-today, #view-orders) .vn-weekbar .day-load em { font: 700 12px/1 var(--vn-font); font-style: normal; color: var(--vn-muted); }
 .vnext :is(#view-today, #view-orders) .vn-weekbar .vn-day.is-full .day-load i.on { background: var(--vn-red); }
 .vnext :is(#view-today, #view-orders) .vn-weekbar .vn-day.is-closed { background: transparent; }
-.vnext :is(#view-today, #view-orders) .vn-weekbar .vn-day.is-closed .day-number { color: #b9aab0; }
+.vnext :is(#view-today, #view-orders) .vn-weekbar .vn-day.is-closed .day-number { color: #94A0B2; }
 .vnext :is(#view-today, #view-orders) .vn-weekbar .vn-day.is-today:not(.is-selected) { box-shadow: inset 0 0 0 1.5px var(--vn-line); }
 .vnext :is(#view-today, #view-orders) .vn-weekbar .vn-day:hover:not(.is-selected) { background: var(--vn-soft); }
 .vnext :is(#view-today, #view-orders) .vn-weekbar .vn-day.is-selected { background: var(--vn-wine); color: #fff; box-shadow: none; }
-.vnext :is(#view-today, #view-orders) .vn-weekbar .vn-day.is-selected .day-name { color: #f0dbe2; }
+.vnext :is(#view-today, #view-orders) .vn-weekbar .vn-day.is-selected .day-name { color: #DCE6F7; }
 .vnext :is(#view-today, #view-orders) .vn-weekbar .vn-day.is-selected .day-load i { background: #ffffff40; }
 .vnext :is(#view-today, #view-orders) .vn-weekbar .vn-day.is-selected .day-load i.on { background: #fff; }
 .vnext :is(#view-today, #view-orders) .vn-weekbar .vn-day.is-selected.is-full .day-load i.on { background: #ff9c84; }
@@ -1750,7 +1746,7 @@ body.vnext { font-variant-numeric: tabular-nums; -webkit-tap-highlight-color: tr
 .vn-att-text h3 { margin: 0; font: 700 15px/1.3 var(--vn-font); letter-spacing: 0; color: var(--vn-ink); }
 .vn-att-text p { margin: 2px 0 0; color: var(--vn-muted); font-size: 14px; line-height: 1.35; }
 .vnext .vn-att-row .att-btn { min-height: 44px; padding: 0 16px; border-radius: var(--vn-pill); font: 700 14px var(--vn-font); white-space: nowrap; }
-.vnext .vn-att-row .button.att-btn { border: 1px solid #f0dbe2; background: var(--vn-soft); color: var(--vn-wine); box-shadow: none; }
+.vnext .vn-att-row .button.att-btn { border: 1px solid #CBD2DC; background: var(--vn-soft); color: var(--vn-wine); box-shadow: none; }
 .vnext .vn-att-row .button.att-btn:hover { background: var(--vn-rose); }
 .vn-att-more { border-top: 1px solid var(--vn-line-soft); }
 .vn-att-more > summary { display: flex; align-items: center; justify-content: center; min-height: 48px; color: var(--vn-berry); font: 700 14px var(--vn-font); cursor: pointer; list-style: none; }
@@ -1791,7 +1787,7 @@ body.vnext { font-variant-numeric: tabular-nums; -webkit-tap-highlight-color: tr
 .vn-remind .vn-btn { flex: none; min-height: 44px; text-decoration: none; }
 .vn-line { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 10px; align-items: center; width: 100%; min-height: 58px; padding: 8px 0; border: 0; border-bottom: 1px solid var(--vn-line-soft); background: none; color: var(--vn-ink); text-align: left; font: inherit; cursor: pointer; }
 .vn-line:last-child { border-bottom: 0; }
-.vn-line:focus-visible { outline: 3px solid var(--vn-green); outline-offset: 2px; border-radius: var(--vn-r-sm); }
+.vn-line:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; border-radius: var(--vn-r-sm); }
 .vn-line-time { font: 700 17px/1 var(--vn-title); text-align: right; font-variant-numeric: tabular-nums; }
 .vn-line-main { display: grid; min-width: 0; }
 .vn-line-main b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 700; font-size: 15px; }
@@ -1803,7 +1799,7 @@ body.vnext { font-variant-numeric: tabular-nums; -webkit-tap-highlight-color: tr
 .vnext #view-today .vn-attention { margin-top: 22px; scroll-margin-top: 150px; }
 .vnext #view-today #attention-title { scroll-margin-top: 150px; }
 .vnext #view-today .today-summary { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; }
-.vn-att-jump { display: inline-flex; align-items: center; min-height: 32px; padding: 0 12px; border: 1px solid #f0dbe2; border-radius: var(--vn-pill); background: var(--vn-soft); color: var(--vn-wine); font: 700 13px var(--vn-font); cursor: pointer; }
+.vn-att-jump { display: inline-flex; align-items: center; min-height: 32px; padding: 0 12px; border: 1px solid #CBD2DC; border-radius: var(--vn-pill); background: var(--vn-soft); color: var(--vn-wine); font: 700 13px var(--vn-font); cursor: pointer; }
 .vn-att-jump:hover { background: var(--vn-rose); }
 @media (max-width: 760px) {
   .vnext #view-today .vn-heading { gap: 10px; margin-bottom: 8px; }
@@ -1850,7 +1846,7 @@ body.vnext { font-variant-numeric: tabular-nums; -webkit-tap-highlight-color: tr
 .vnext .zap-demo-dialog .dialog-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; margin-top: 14px; }
 .vnext .zap-demo-dialog .button { border-radius: var(--vn-pill); min-height: 48px; }
 .vnext .zap-demo-dialog .button-primary { background: var(--vn-berry); border-color: var(--vn-berry); color: #fff; }
-.vnext .zap-demo-dialog .button-quiet { background: var(--vn-soft); border: 1px solid #f0dbe2; color: var(--vn-wine); }
+.vnext .zap-demo-dialog .button-quiet { background: var(--vn-soft); border: 1px solid #CBD2DC; color: var(--vn-wine); }
 
 /* ---- Rodada 2: verificação final ---- */
 /* Alvos de toque das peças novas com pelo menos 44 px. */
@@ -1929,7 +1925,7 @@ body.vnext { font-variant-numeric: tabular-nums; -webkit-tap-highlight-color: tr
 .vn-history-more > summary { display: flex; align-items: center; justify-content: center; min-height: 44px; margin-top: 2px; color: var(--vn-berry); font: 700 14px var(--vn-font); cursor: pointer; list-style: none; }
 .vn-history-more > summary::-webkit-details-marker { display: none; }
 .vn-history-more[open] > summary { display: none; }
-.vn-history-more > summary:focus-visible { outline: 3px solid var(--vn-green); outline-offset: 2px; border-radius: var(--vn-pill); }
+.vn-history-more > summary:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; border-radius: var(--vn-pill); }
 /* Botão de etapa para dias mais distantes: o mesmo verbo, sem disputar com o que é para agora. */
 .vn-order.comanda .vn-card-foot .vn-btn.secondary { box-shadow: none; }
 .vn-line-origin { display: inline-flex; align-items: center; gap: 4px; }
@@ -1988,7 +1984,7 @@ body.vnext { font-variant-numeric: tabular-nums; -webkit-tap-highlight-color: tr
 .vnext .link-wizard .dialog-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; margin-top: 18px; }
 .vnext .link-wizard .button { border-radius: var(--vn-pill); min-height: 48px; }
 .vnext .link-wizard .button-primary { background: var(--vn-berry); border-color: var(--vn-berry); color: #fff; }
-.vnext .link-wizard .button-quiet { background: var(--vn-soft); border: 1px solid #f0dbe2; color: var(--vn-wine); }
+.vnext .link-wizard .button-quiet { background: var(--vn-soft); border: 1px solid #CBD2DC; color: var(--vn-wine); }
 .vnext .link-hero .link-wizard-open { margin-top: 12px; }
 .vnext .link-hero .link-hero-or { margin: 8px 0 0; color: var(--vn-muted); font-size: 14px; }
 @media (max-width: 520px) {
@@ -2005,6 +2001,6 @@ body.vnext { font-variant-numeric: tabular-nums; -webkit-tap-highlight-color: tr
 .vnext .special-item { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 12px 14px; border: 1px solid var(--vn-line-soft); border-radius: var(--vn-r); background: #fff; }
 .vnext .special-item div { display: grid; gap: 2px; min-width: 0; }
 .vnext .special-item small { color: var(--vn-muted); font-size: 13px; }
-.vnext .special-item .special-use.is-full { color: var(--vn-red, #a8321c); font-weight: 700; }
+.vnext .special-item .special-use.is-full { color: var(--vn-red, #B42318); font-weight: 700; }
 .vnext .special-new > summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; font-weight: 700; color: var(--vn-berry); }
 .vnext .special-row { grid-template-columns: minmax(0, 1fr) 104px; align-items: end; }

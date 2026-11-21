@@ -154,7 +154,7 @@ try {
     status.textContent = left ? `Falta receber: ${brl(left)}.` : 'Tudo recebido.';
     return left;
   };
-  const sprinkles = ['#f8e6eb', '#9e2647', '#fdf2da', '#e5f1e8', '#3a1220', '#205e3d'];
+  const sprinkles = ['#1D449B', '#E6EEFA', '#161D2B', '#166534', '#E3F4E8', '#FEF2D4'];
   const celebrate = () => {
     if (still()) return;
     for (let i = 0; i < 24; i++) {

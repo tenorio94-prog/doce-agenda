@@ -77,10 +77,12 @@ await build({ entryPoints: [path.join(source, 'ui', 'doce-wa.css')], outfile: pa
 await bundle('public/ui/app-wa.js', path.join(output, 'ui', 'app-wa.js'));
 // Folha escopada da versão completa do app.
 await build({ entryPoints: [path.join(source, 'ui', 'vnext.css')], outfile: path.join(output, 'ui', 'vnext.css'), bundle: true, minify: true, external: ['/fonts/*'] });
-// Marca revista (03/11): uma letra só, Bricolage Grotesque variável com tamanho óptico (OFL, @fontsource-variable 5.3.0).
+// Marca revista (21/11, Louça & Forno): Fraunces e DM Sans variáveis auto-hospedadas (SIL OFL, @fontsource-variable 5.3.0).
 await mkdir(path.join(output, 'fonts', 'vnext'), { recursive: true });
-await copyFile(path.join(root, 'node_modules', '@fontsource-variable', 'bricolage-grotesque', 'files', 'bricolage-grotesque-latin-opsz-normal.woff2'), path.join(output, 'fonts', 'vnext', 'bricolage.woff2'));
-await copyFile(path.join(root, 'node_modules', '@fontsource-variable', 'bricolage-grotesque', 'LICENSE'), path.join(output, 'fonts', 'vnext', 'bricolage-grotesque-OFL.txt'));
+await copyFile(path.join(root, 'node_modules', '@fontsource-variable', 'fraunces', 'files', 'fraunces-latin-full-normal.woff2'), path.join(output, 'fonts', 'vnext', 'fraunces.woff2'));
+await copyFile(path.join(root, 'node_modules', '@fontsource-variable', 'fraunces', 'LICENSE'), path.join(output, 'fonts', 'vnext', 'fraunces-OFL.txt'));
+await copyFile(path.join(root, 'node_modules', '@fontsource-variable', 'dm-sans', 'files', 'dm-sans-latin-opsz-normal.woff2'), path.join(output, 'fonts', 'vnext', 'dm-sans.woff2'));
+await copyFile(path.join(root, 'node_modules', '@fontsource-variable', 'dm-sans', 'LICENSE'), path.join(output, 'fonts', 'vnext', 'dm-sans-OFL.txt'));
 await mkdir(path.join(output, 'account'), { recursive: true });
 for (const name of ['account.css', 'account-ui.js', 'account-controller.js', 'config.js']) await copy(path.join('account', name));
 await copy('account/index.html', 'cadastro/index.html');

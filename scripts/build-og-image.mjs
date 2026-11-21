@@ -22,8 +22,8 @@ try {
   const page = await browser.newPage({ viewport: { width: 1200, height: 630 }, deviceScaleFactor: 1 });
   await page.goto(pathToFileURL(source).href, { waitUntil: "networkidle" });
   await page.evaluate(() => document.fonts.ready);
-  const fontsOk = await page.evaluate(() => document.fonts.check("60px Fredoka") && document.fonts.check("16px Figtree"));
-  if (!fontsOk) throw new Error("Fredoka e Figtree precisam carregar de public/fonts/.");
+  const fontsOk = await page.evaluate(() => document.fonts.check("700 60px Fraunces") && document.fonts.check("16px \"DM Sans\""));
+  if (!fontsOk) throw new Error("Fraunces e DM Sans precisam carregar localmente.");
   await page.screenshot({ path: output, type: "jpeg", quality: 88 });
 } finally {
   await browser.close();

@@ -17,7 +17,7 @@ async function styleFont(style) {
 }
 function drawQr(context, text, x, y, size) {
   const { data } = encode(text, { ecc: 'M', border: 0 }), cell = size / data.length;
-  context.fillStyle = '#231a20';
+  context.fillStyle = '#161D2B';
   data.forEach((row, r) => row.forEach((on, c) => { if (on) context.fillRect(x + c * cell, y + r * cell, Math.ceil(cell), Math.ceil(cell)); }));
 }
 const cover = (context, img, x, y, w, h) => { const s = Math.max(w / img.width, h / img.height); context.drawImage(img, x + (w - img.width * s) / 2, y + (h - img.height * s) / 2, img.width * s, img.height * s); };
@@ -39,11 +39,11 @@ export async function storyImage(page, url) {
   x.textAlign = 'center'; x.textBaseline = 'alphabetic'; x.fillStyle = p.ink;
   let size = 104; x.font = font.replace('{size}', size); while (x.measureText(page.displayName).width > 940 && size > 48) { size -= 4; x.font = font.replace('{size}', size); }
   x.fillText(page.displayName, 540, top + 240);
-  x.fillStyle = '#3b2c34'; x.font = '600 46px "Bricolage Grotesque", sans-serif'; x.fillText('Encomendas abertas', 540, top + 320);
+  x.fillStyle = '#354052'; x.font = '600 46px "DM Sans", sans-serif'; x.fillText('Encomendas abertas', 540, top + 320);
   const qy = top + 390; x.fillStyle = '#ffffff'; round(330, qy, 420, 420, 36); x.fill();
   drawQr(x, url, 365, qy + 35, 350);
-  x.fillStyle = p.ink; x.font = '700 44px "Bricolage Grotesque", sans-serif'; x.fillText(url.replace(/^https:\/\//, ''), 540, qy + 500);
-  x.fillStyle = '#5e5259'; x.font = '600 30px "Bricolage Grotesque", sans-serif'; x.fillText('Fornada · encomendas pelo link', 540, 1872);
+  x.fillStyle = p.ink; x.font = '700 44px "DM Sans", sans-serif'; x.fillText(url.replace(/^https:\/\//, ''), 540, qy + 500);
+  x.fillStyle = '#525B6B'; x.font = '600 30px "DM Sans", sans-serif'; x.fillText('Fornada · encomendas pelo link', 540, 1872);
   return toBlob(canvas);
 }
 
@@ -54,10 +54,10 @@ export async function printQr(page, url) {
   x.textAlign = 'center'; x.fillStyle = p.ink;
   let size = 96; x.font = font.replace('{size}', size); while (x.measureText(page.displayName).width > 1040 && size > 44) { size -= 4; x.font = font.replace('{size}', size); }
   x.fillText(page.displayName, 600, 170);
-  x.fillStyle = '#3b2c34'; x.font = '600 48px "Bricolage Grotesque", sans-serif'; x.fillText('Aponte a câmera para encomendar', 600, 260);
+  x.fillStyle = '#354052'; x.font = '600 48px "DM Sans", sans-serif'; x.fillText('Aponte a câmera para encomendar', 600, 260);
   drawQr(x, url, 200, 340, 800);
-  x.fillStyle = p.ink; x.font = '700 46px "Bricolage Grotesque", sans-serif'; x.fillText(url.replace(/^https:\/\//, ''), 600, 1320);
-  x.fillStyle = '#5e5259'; x.font = '600 30px "Bricolage Grotesque", sans-serif'; x.fillText('Fornada · encomendas pelo link', 600, 1435);
+  x.fillStyle = p.ink; x.font = '700 46px "DM Sans", sans-serif'; x.fillText(url.replace(/^https:\/\//, ''), 600, 1320);
+  x.fillStyle = '#525B6B'; x.font = '600 30px "DM Sans", sans-serif'; x.fillText('Fornada · encomendas pelo link', 600, 1435);
   return toBlob(canvas);
 }
 

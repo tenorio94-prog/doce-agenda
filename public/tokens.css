@@ -1,39 +1,61 @@
-/* Tokens compartilhados do Doce Agenda: paleta minimalista quente e editorial, com contraste WCAG AA.
-   Fonte variável auto-hospedada: Bricolage Grotesque (/fonts/vnext/bricolage.woff2), sem CDN externo. */
-@font-face { font-family: "Bricolage Grotesque"; src: url("/fonts/vnext/bricolage.woff2") format("woff2-variations"), url("/fonts/vnext/bricolage.woff2") format("woff2"); font-weight: 200 800; font-display: swap; }
+/* Tokens compartilhados do Fornada — Direção A ("Louça & Forno", 21/11/2026), WCAG AA.
+   Fontes variáveis auto-hospedadas: Fraunces (/fonts/vnext/fraunces.woff2) e DM Sans (/fonts/vnext/dm-sans.woff2), sem CDN externo. */
+@font-face { font-family: "Fraunces"; src: url("/fonts/vnext/fraunces.woff2") format("woff2-variations"), url("/fonts/vnext/fraunces.woff2") format("woff2"); font-weight: 100 900; font-display: swap; }
+@font-face { font-family: "DM Sans"; src: url("/fonts/vnext/dm-sans.woff2") format("woff2-variations"), url("/fonts/vnext/dm-sans.woff2") format("woff2"); font-weight: 100 1000; font-display: swap; }
 
 :root {
   color-scheme: light;
 
-  /* Marca e paleta editorial */
-  --papel: #faf7f5;        /* Porcelana quente: fundo principal */
-  --surface-soft: #f3ece9; /* Linho quente: áreas secundárias suaves */
-  --branco: #ffffff;       /* Cartões elevados */
-  --ameixa: #2c1821;       /* Espresso-ameixa: texto forte e destaques escuros */
-  --vinho: #3a1220;        /* Vinho profundo: títulos e elementos de contraste */
-  --framboesa: #9e2647;    /* Framboesa editorial: ação principal (7,4:1 com branco) */
-  --framboesa-hover: #831d3a;
-  --glace: #f8e6eb;        /* Blush suave: toques tonais discretos */
-  --baunilha: #fdf2da;     /* Atenção calma: falta sinal */
-  --pistache: #e5f1e8;     /* Tudo certo: pago, conferido */
-  --carimbo: #205e3d;      /* Verde sálvia escuro (7,6:1 no branco, 6,7:1 no pistache) */
+  /* Tokens canônicos — Louça & Forno */
+  --papel-manteiga: #F7F7F4;   /* Fundo principal */
+  --farinha-fina: #EEEDE8;     /* Superfícies suaves e faixas */
+  --porcelana: #FFFFFF;        /* Cartões elevados e janelas */
+  --ferro: #161D2B;            /* Texto forte e títulos (15,72:1 fundo / 16,87:1 cartão) */
+  --tinta-suave: #354052;      /* Subtítulos e texto secundário (9,75:1 / 10,47:1) */
+  --grafite: #525B6B;          /* Texto de apoio (6,38:1 / 6,85:1) */
+  --azul-louca: #1D449B;       /* Marca e ação principal (8,93:1 c/ branco, 8,32:1 no fundo — nunca estado) */
+  --cobalto-profundo: #15347A; /* Hover/pressed da marca (11,64:1 c/ branco) */
+  --nevoa: #E6EEFA;            /* Destaque tonal da marca (7,64:1 c/ marca, 14,44:1 c/ Ferro) */
+  --risco-lapis: #7A8496;      /* Borda de campo >= 3,5:1 (WCAG 1.4.11) */
+  --linha-caderno: #DCE0E6;    /* Divisórias e bordas de cartão */
 
-  /* Texto e bordas */
-  --ink: #26171e;
-  --ink-soft: #4b3641;
-  --muted: #6c5761;        /* >= 6,0:1 no papel e no branco */
-  --link: #8f2242;         /* >= 7,0:1 no papel e no branco */
-  --line: #eae1de;
-  --border-input: #968189; /* >= 3,3:1 para bordas de campos (WCAG 1.4.11) */
-  --placeholder: #7a656f;
-  --segmented: #f2eae7;
-  --error: #a62b2f;
-  --error-soft: #fdeceb;
-  --focus: var(--framboesa);
+  /* Conjunto semântico operacional (separado do azul da marca) */
+  --pago: #166534;
+  --pago-soft: #E3F4E8;
+  --sinal: #854D0E;
+  --sinal-soft: #FEF2D4;
+  --atraso: #B42318;
+  --atraso-soft: #FDECEB;
+  --zap: #0E7A3F;
+
+  /* Aliases legados preservados para zero quebra nos CSSs existentes */
+  --papel: var(--papel-manteiga);
+  --surface-soft: var(--farinha-fina);
+  --branco: var(--porcelana);
+  --ameixa: var(--ferro);
+  --vinho: var(--ferro);
+  --framboesa: var(--azul-louca);
+  --framboesa-hover: var(--cobalto-profundo);
+  --glace: var(--nevoa);
+  --baunilha: var(--sinal-soft);
+  --pistache: var(--pago-soft);
+  --carimbo: var(--pago);
+
+  --ink: var(--ferro);
+  --ink-soft: var(--tinta-suave);
+  --muted: var(--grafite);
+  --link: var(--azul-louca);
+  --line: var(--linha-caderno);
+  --border-input: var(--risco-lapis);
+  --placeholder: #5C6575;
+  --segmented: var(--farinha-fina);
+  --error: var(--atraso);
+  --error-soft: var(--atraso-soft);
+  --focus: var(--azul-louca);
 
   /* Tipografia */
-  --font-title: "Bricolage Grotesque", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-body: var(--font-title);
+  --font-title: "Fraunces", Georgia, ui-serif, serif;
+  --font-body: "DM Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --text-xs: 12px; --text-sm: 13px; --text-md: 15px;
   --text-lg: 18px; --text-xl: 22px; --text-2xl: 28px;
   --text-display: clamp(40px, 6.2vw, 76px);
@@ -43,35 +65,35 @@
   --space-4: 16px; --space-5: 24px; --space-6: 32px; --space-7: 48px;
   --radius-sm: 14px; --radius-md: 20px; --radius-lg: 26px; --radius-pill: 999px;
   --tap: 44px;
-  --shadow-1: 0 2px 10px rgb(38 23 30 / 5%);
-  --shadow-2: 0 14px 36px -8px rgb(38 23 30 / 10%);
+  --shadow-1: 0 2px 10px rgb(22 29 43 / 5%);
+  --shadow-2: 0 14px 36px -8px rgb(22 29 43 / 10%);
 
   --r-xs: 8px; --r-s: 12px; --r-m: 16px; --r-l: 24px;
   --fs-xs: 12px; --fs-sm: 14px; --fs-base: 16px; --fs-lg: 18px; --fs-xl: 20px;
   --fs-2xl: 24px; --fs-3xl: 28px; --fs-4xl: 32px; --fs-5xl: 40px;
   --hairline: 1px solid var(--line);
-  --shadow-s: 0 1px 2px rgb(38 23 30 / 4%), 0 2px 6px rgb(38 23 30 / 4%);
-  --shadow-m: 0 10px 26px -8px rgb(38 23 30 / 12%), 0 2px 6px rgb(38 23 30 / 4%);
-  --shadow-l: 0 24px 48px -14px rgb(38 23 30 / 22%);
+  --shadow-s: 0 1px 2px rgb(22 29 43 / 4%), 0 2px 6px rgb(22 29 43 / 4%);
+  --shadow-m: 0 10px 26px -8px rgb(22 29 43 / 12%), 0 2px 6px rgb(22 29 43 / 4%);
+  --shadow-l: 0 24px 48px -14px rgb(22 29 43 / 22%);
 
-  /* Aliases das folhas antigas, mantidos para compatibilidade */
-  --paper: var(--papel);
-  --card: var(--branco);
-  --surface: var(--branco);
-  --cream: var(--surface-soft);
-  --faint: var(--muted);
-  --coral: var(--framboesa);
-  --coral-dark: var(--framboesa-hover);
-  --coral-soft: var(--glace);
-  --action: var(--framboesa);
-  --action-hover: var(--framboesa-hover);
-  --terracotta: var(--link);
-  --terracotta-dark: #6f1f3c;
-  --sage: var(--carimbo);
-  --sage-soft: var(--pistache);
-  --gold: #7a5200;
-  --gold-soft: var(--baunilha);
-  --da-border: var(--border-input);
+  /* Aliases das folhas antigas */
+  --paper: var(--papel-manteiga);
+  --card: var(--porcelana);
+  --surface: var(--porcelana);
+  --cream: var(--farinha-fina);
+  --faint: var(--grafite);
+  --coral: var(--azul-louca);
+  --coral-dark: var(--cobalto-profundo);
+  --coral-soft: var(--nevoa);
+  --action: var(--azul-louca);
+  --action-hover: var(--cobalto-profundo);
+  --terracotta: var(--azul-louca);
+  --terracotta-dark: var(--cobalto-profundo);
+  --sage: var(--pago);
+  --sage-soft: var(--pago-soft);
+  --gold: var(--sinal);
+  --gold-soft: var(--sinal-soft);
+  --da-border: var(--risco-lapis);
   --da-title: var(--font-title);
   --da-body: var(--font-body);
   --serif: var(--font-title);
